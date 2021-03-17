@@ -1,0 +1,44 @@
+{
+    "width": "600",
+    "data": {
+        "name": "table",
+        "format": {
+            "type": "csv",
+            "header": [
+                "thread",
+                "start",
+                "end",
+                "task"
+            ]
+        },
+        "values": ""
+    },
+    "description": "Gantt chart for which tasks run on which threads.",
+    "encoding": {
+        "color": {
+            "field": "thread",
+            "scale": "category10"
+        },
+        "x": {
+            "field": "start",
+            "scale": {
+                "domain": {
+                    "data": "table",
+                    "field": "start"
+                }
+            },
+            "type": "quantitative"
+        },
+        "x2": {
+            "field": "end",
+            "type": "quantitative"
+        },
+        "y": {
+            "field": "task",
+            "type": "nominal",
+            "scale": { "domain": [0,1,2,3,4,5,6]}
+        },
+        "max_end": {"aggregate": "max", "field": "end", "type": "quantitative"}
+    },
+    "mark": "bar"
+}

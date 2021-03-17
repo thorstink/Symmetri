@@ -1,0 +1,1 @@
+/usr/bin/c++    -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O2 -s   CMakeFiles/mpalg_parser_test.dir/application/test_parse.cc.o  -o mpalg_parser_test  libmpalg_parser.a 

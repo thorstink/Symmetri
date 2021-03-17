@@ -1,0 +1,1 @@
+/usr/bin/c++    -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O2 -s   CMakeFiles/mpalg_app.dir/application/main.cc.o CMakeFiles/mpalg_app.dir/application/model.cc.o CMakeFiles/mpalg_app.dir/application/functions.cc.o  -o mpalg_app  -Wl,-rpath,/usr/local/lib: libmpalg_parser.a -lpthread /usr/local/lib/libseasocks.so 

@@ -1,0 +1,6 @@
+/home/thomas/Projects/petri-net-program/install/web/load_scheme.json
+/home/thomas/Projects/petri-net-program/install/web/app.js
+/home/thomas/Projects/petri-net-program/install/web/lib/jquery.min.js
+/home/thomas/Projects/petri-net-program/install/web/index.html
+/home/thomas/Projects/petri-net-program/install/mpalg_app
+/home/thomas/Projects/petri-net-program/install/libmpalg_parser.a

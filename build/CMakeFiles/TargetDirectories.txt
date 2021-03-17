@@ -1,0 +1,10 @@
+/home/thomas/Projects/petri-net-program/build/CMakeFiles/install/strip.dir
+/home/thomas/Projects/petri-net-program/build/CMakeFiles/install/local.dir
+/home/thomas/Projects/petri-net-program/build/CMakeFiles/install.dir
+/home/thomas/Projects/petri-net-program/build/CMakeFiles/list_install_components.dir
+/home/thomas/Projects/petri-net-program/build/CMakeFiles/rebuild_cache.dir
+/home/thomas/Projects/petri-net-program/build/CMakeFiles/edit_cache.dir
+/home/thomas/Projects/petri-net-program/build/CMakeFiles/test.dir
+/home/thomas/Projects/petri-net-program/build/CMakeFiles/mpalg_parser_test.dir
+/home/thomas/Projects/petri-net-program/build/CMakeFiles/mpalg_app.dir
+/home/thomas/Projects/petri-net-program/build/CMakeFiles/mpalg_parser.dir
