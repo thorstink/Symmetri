@@ -1,2 +1,0 @@
-/usr/bin/ar qc libmpalg_parser.a  CMakeFiles/mpalg_parser.dir/application/parser.cc.o
-/usr/bin/ranlib libmpalg_parser.a
