@@ -67,8 +67,8 @@ using TransitionActionMap =
                        std::function<OptionalReducer()>>;
 
 const static TransitionActionMap local_store = {
-    {0, &action0}, {1, &action1}, {2, &action2}, {3, &action3},
-    {4, &action4}, {5, &action5}, {6, &action6}};
+    {"t0", &action0}, {"t1", &action1}, {"t2", &action2}, {"t3", &action3},
+    {"t4", &action4}, {"t5", &action5}, {"t6", &action6}};
 
 OptionalReducer execute(const transitions::Transition &transition) {
   return local_store.at(transition)();

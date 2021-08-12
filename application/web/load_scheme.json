@@ -36,7 +36,7 @@
         "y": {
             "field": "task",
             "type": "nominal",
-            "scale": { "domain": [0,1,2,3,4,5,6]}
+            "scale": { "domain": ["t0","t1","t2","t3","t4","t5","t6"]}
         },
         "max_end": {"aggregate": "max", "field": "end", "type": "quantitative"}
     },

@@ -1,0 +1,690 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pnml xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="upnpnml.xsd">
+	<net id="n1" type="UPNPNML">
+		<place id="p19">
+			<graphics>
+				<position x="334" y="228"/>
+			</graphics>
+			<name>
+				<value>C5</value>
+			</name>
+			<initialMarking>
+				<value>1</value>
+			</initialMarking>
+			<attributeX>
+				<value>1.23</value>
+			</attributeX>
+			<attributeY>
+				<value>1</value>
+			</attributeY>
+		</place>
+		<place id="p20">
+			<graphics>
+				<position x="277" y="269"/>
+			</graphics>
+			<name>
+				<value>M5</value>
+			</name>
+			<initialMarking>
+				<value>1</value>
+			</initialMarking>
+			<attributeX>
+				<value>0.00</value>
+			</attributeX>
+			<attributeY>
+				<value>0</value>
+			</attributeY>
+		</place>
+		<place id="p21">
+			<graphics>
+				<position x="227" y="315"/>
+			</graphics>
+			<name>
+				<value>C1</value>
+			</name>
+			<initialMarking>
+				<value>1</value>
+			</initialMarking>
+			<attributeX>
+				<value>0.00</value>
+			</attributeX>
+			<attributeY>
+				<value>0</value>
+			</attributeY>
+		</place>
+		<place id="p22">
+			<graphics>
+				<position x="425" y="315"/>
+			</graphics>
+			<name>
+				<value>C4</value>
+			</name>
+			<initialMarking>
+				<value>1</value>
+			</initialMarking>
+			<attributeX>
+				<value>0.00</value>
+			</attributeX>
+			<attributeY>
+				<value>0</value>
+			</attributeY>
+		</place>
+		<place id="p23">
+			<graphics>
+				<position x="250" y="366"/>
+			</graphics>
+			<name>
+				<value>M1</value>
+			</name>
+			<initialMarking>
+				<value>1</value>
+			</initialMarking>
+			<attributeX>
+				<value>0.00</value>
+			</attributeX>
+			<attributeY>
+				<value>0</value>
+			</attributeY>
+		</place>
+		<place id="p24">
+			<graphics>
+				<position x="377" y="272"/>
+			</graphics>
+			<name>
+				<value>M4</value>
+			</name>
+			<initialMarking>
+				<value>1</value>
+			</initialMarking>
+			<attributeX>
+				<value>0.00</value>
+			</attributeX>
+			<attributeY>
+				<value>0</value>
+			</attributeY>
+		</place>
+		<place id="p25">
+			<graphics>
+				<position x="407" y="366"/>
+			</graphics>
+			<name>
+				<value>M3</value>
+			</name>
+			<initialMarking>
+				<value>1</value>
+			</initialMarking>
+			<attributeX>
+				<value>0.00</value>
+			</attributeX>
+			<attributeY>
+				<value>0</value>
+			</attributeY>
+		</place>
+		<place id="p26">
+			<graphics>
+				<position x="387" y="418"/>
+			</graphics>
+			<name>
+				<value>C3</value>
+			</name>
+			<initialMarking>
+				<value>1</value>
+			</initialMarking>
+			<attributeX>
+				<value>0.00</value>
+			</attributeX>
+			<attributeY>
+				<value>0</value>
+			</attributeY>
+		</place>
+		<place id="p27">
+			<graphics>
+				<position x="281" y="418"/>
+			</graphics>
+			<name>
+				<value>C2</value>
+			</name>
+			<initialMarking>
+				<value>1</value>
+			</initialMarking>
+			<attributeX>
+				<value>0.00</value>
+			</attributeX>
+			<attributeY>
+				<value>0</value>
+			</attributeY>
+		</place>
+		<place id="p28">
+			<graphics>
+				<position x="334" y="418"/>
+			</graphics>
+			<name>
+				<value>M2</value>
+			</name>
+			<initialMarking>
+				<value>1</value>
+			</initialMarking>
+			<attributeX>
+				<value>0.00</value>
+			</attributeX>
+			<attributeY>
+				<value>0</value>
+			</attributeY>
+		</place>
+		<place id="p29">
+			<graphics>
+				<position x="172" y="208"/>
+			</graphics>
+			<name>
+				<value>J5</value>
+			</name>
+			<initialMarking>
+				<value>0</value>
+			</initialMarking>
+			<attributeX>
+				<value>0.00</value>
+			</attributeX>
+			<attributeY>
+				<value>0</value>
+			</attributeY>
+		</place>
+		<place id="p30">
+			<graphics>
+				<position x="500" y="208"/>
+			</graphics>
+			<name>
+				<value>J4</value>
+			</name>
+			<initialMarking>
+				<value>0</value>
+			</initialMarking>
+			<attributeX>
+				<value>0.00</value>
+			</attributeX>
+			<attributeY>
+				<value>0</value>
+			</attributeY>
+		</place>
+		<place id="p31">
+			<graphics>
+				<position x="500" y="437"/>
+			</graphics>
+			<name>
+				<value>J3</value>
+			</name>
+			<initialMarking>
+				<value>0</value>
+			</initialMarking>
+			<attributeX>
+				<value>0.00</value>
+			</attributeX>
+			<attributeY>
+				<value>0</value>
+			</attributeY>
+		</place>
+		<place id="p32">
+			<graphics>
+				<position x="172" y="449"/>
+			</graphics>
+			<name>
+				<value>J1</value>
+			</name>
+			<initialMarking>
+				<value>0</value>
+			</initialMarking>
+			<attributeX>
+				<value>0.00</value>
+			</attributeX>
+			<attributeY>
+				<value>0</value>
+			</attributeY>
+		</place>
+		<place id="p33">
+			<graphics>
+				<position x="334" y="552"/>
+			</graphics>
+			<name>
+				<value>J2</value>
+			</name>
+			<initialMarking>
+				<value>0</value>
+			</initialMarking>
+			<attributeX>
+				<value>0.00</value>
+			</attributeX>
+			<attributeY>
+				<value>0</value>
+			</attributeY>
+		</place>
+		<transition id="t18">
+			<graphics>
+				<position x="460" y="418"/>
+			</graphics>
+			<name>
+				<value>t31</value>
+			</name>
+		</transition>
+		<transition id="t19">
+			<graphics>
+				<position x="460" y="231"/>
+			</graphics>
+			<name>
+				<value>t41</value>
+			</name>
+		</transition>
+		<transition id="t20">
+			<graphics>
+				<position x="208" y="418"/>
+			</graphics>
+			<name>
+				<value>t11</value>
+			</name>
+		</transition>
+		<transition id="t21">
+			<graphics>
+				<position x="334" y="511"/>
+			</graphics>
+			<name>
+				<value>t21</value>
+			</name>
+		</transition>
+		<transition id="t22">
+			<graphics>
+				<position x="208" y="231"/>
+			</graphics>
+			<name>
+				<value>t51</value>
+			</name>
+		</transition>
+		<transition id="t25">
+			<graphics>
+				<position x="128" y="184"/>
+			</graphics>
+			<name>
+				<value>t52</value>
+			</name>
+		</transition>
+		<transition id="t26">
+			<graphics>
+				<position x="551" y="184"/>
+			</graphics>
+			<name>
+				<value>t42</value>
+			</name>
+		</transition>
+		<transition id="t27">
+			<graphics>
+				<position x="551" y="453"/>
+			</graphics>
+			<name>
+				<value>t32</value>
+			</name>
+		</transition>
+		<transition id="t28">
+			<graphics>
+				<position x="128" y="476"/>
+			</graphics>
+			<name>
+				<value>t12</value>
+			</name>
+		</transition>
+		<transition id="t29">
+			<graphics>
+				<position x="334" y="601"/>
+			</graphics>
+			<name>
+				<value>t22</value>
+			</name>
+		</transition>
+	<arc id="a0" source="p28" target="t21">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a1" source="t21" target="p33">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a2" source="p23" target="t20">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a3" source="t20" target="p32">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a4" source="p20" target="t22">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a5" source="t22" target="p29">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a6" source="p24" target="t19">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a7" source="t19" target="p30">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a8" source="p25" target="t18">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a9" source="t18" target="p31">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a10" source="p21" target="t22">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a11" source="p19" target="t22">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a12" source="p19" target="t19">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a13" source="p22" target="t19">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a14" source="p22" target="t18">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a15" source="p26" target="t18">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a16" source="p26" target="t21">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a17" source="p27" target="t21">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a18" source="p27" target="t20">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a19" source="p21" target="t20">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a20" source="p29" target="t25">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a21" source="p30" target="t26">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a22" source="p31" target="t27">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a23" source="p33" target="t29">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a24" source="p32" target="t28">
+		<graphics/>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a25" source="t25" target="p19">
+		<graphics>
+			<position x="247" y="173"/>
+		</graphics>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a26" source="t25" target="p21">
+		<graphics>
+			<position x="159" y="253"/>
+		</graphics>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a27" source="t26" target="p19">
+		<graphics>
+			<position x="433" y="171"/>
+		</graphics>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a28" source="t26" target="p22">
+		<graphics>
+			<position x="530" y="239"/>
+		</graphics>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a29" source="t27" target="p22">
+		<graphics>
+			<position x="514" y="370"/>
+		</graphics>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a30" source="t27" target="p26">
+		<graphics>
+			<position x="478" y="478"/>
+		</graphics>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a31" source="t29" target="p26">
+		<graphics>
+			<position x="387" y="505"/>
+		</graphics>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a32" source="t29" target="p27">
+		<graphics>
+			<position x="292" y="504"/>
+		</graphics>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a33" source="t28" target="p27">
+		<graphics>
+			<position x="224" y="465"/>
+		</graphics>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a34" source="t28" target="p21">
+		<graphics>
+			<position x="159" y="368"/>
+		</graphics>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a35" source="t25" target="p20">
+		<graphics>
+			<position x="220" y="181"/>
+		</graphics>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a36" source="t26" target="p24">
+		<graphics>
+			<position x="437" y="184"/>
+		</graphics>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a37" source="t27" target="p25">
+		<graphics>
+			<position x="505" y="391"/>
+		</graphics>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a38" source="t29" target="p28">
+		<graphics>
+			<position x="364" y="507"/>
+		</graphics>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	<arc id="a39" source="t28" target="p23">
+		<graphics>
+			<position x="169" y="408"/>
+		</graphics>
+		<inscription>
+			<value>1</value>
+			<graphics/>
+		</inscription>
+		<type value="normal"/>
+	</arc>
+	</net>
+</pnml>

@@ -8,19 +8,23 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O2 -s")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O2 -s")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O2 -s")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O2 -s")
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O2 -s")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O2 -s")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wno-psabi  -march=native -O2 -s")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wno-psabi -march=native -O2 -s")
 
 find_package(Eigen3 REQUIRED)
 find_package(Seasocks REQUIRED)
 
-include_directories(${EIGEN3_INCLUDE_DIRS} ${SEASOCKS_INCLUDE_DIRS} )
+include_directories(${EIGEN3_INCLUDE_DIRS} ${SEASOCKS_INCLUDE_DIRS} submodules )
 
 add_library(${PROJECT_NAME}_parser application/parser.cc)
 
+add_library(${PROJECT_NAME}_pnml_parser application/pnml_parser.cc submodules/tinyxml2/tinyxml2.cpp)
+
 #app
 add_executable(${PROJECT_NAME}_app application/main.cc application/model.cc application/functions.cc)
-target_link_libraries(${PROJECT_NAME}_app ${PROJECT_NAME}_parser pthread Seasocks::seasocks)
+target_link_libraries(${PROJECT_NAME}_app pthread Seasocks::seasocks ${PROJECT_NAME}_pnml_parser)
 
 #test
 add_executable(${PROJECT_NAME}_parser_test application/test_parse.cc)

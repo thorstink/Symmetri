@@ -1,9 +1,10 @@
 #include "actions.h"
 #include "application.hpp"
-#include "functions.h" 
+#include "functions.h"
 #include "keyboard_input.h"
 #include "model.hpp"
-#include "parser.h"
+// #include "parser.h"
+#include "pnml_parser.h"
 #include "ws_interface.hpp"
 #include <csignal>
 #include <rxcpp/rx.hpp>
@@ -24,21 +25,8 @@ int main(int argc, const char *argv[]) {
     exit(signum);
   });
 
-  nlohmann::json net;
-  if (argc == 2 && std::ifstream(argv[1]).good()) {
-    std::ifstream i(argv[1]);
-    if (i.good()) {
-      i >> net;
-    }
-  }
-  else
-  {
-    std::cout << "something went wrong" << std::endl;
-  }
-
-  const auto &[Dm, Dp, initial_marking] = constructTransitionMutationMatrices(net);
-  Eigen::VectorXi M0 = Eigen::Map<const Eigen::VectorXi>(initial_marking.data(), initial_marking.size());
-  std::cout << "initial maring: " << M0.transpose() << std::endl;
+  const auto &[Dm, Dp, M0] =
+      constructTransitionMutationMatrices(std::string(argv[1]));
 
   seasocks::Server server(
       std::make_shared<seasocks::PrintfLogger>(seasocks::Logger::Level::Error));
@@ -51,7 +39,8 @@ int main(int argc, const char *argv[]) {
   const std::array<rxcpp::observable<Reducer>, 3> reducers = {
       itemSource(), serverSource(server),
       transitions.get_observable() |
-          flat_map(executeTransition(rxcpp::observe_on_event_loop(), &execute))};
+          flat_map(
+              executeTransition(rxcpp::observe_on_event_loop(), &execute))};
 
   const auto actions = iterate(reducers) | merge(mainthread);
   const auto models =
@@ -65,7 +54,7 @@ int main(int argc, const char *argv[]) {
                // dispatch the transitions
                for (auto transition : transitions)
                  dispatcher.on_next(transition);
-                 
+
                r.data->timestamp = mainthread.now();
                return r;
              } catch (const std::exception &e) {
@@ -94,7 +83,11 @@ int main(int argc, const char *argv[]) {
                      });
 
   views.subscribe(
-      lifetime, [](const model::Model::shared &) {}, [] {});
+      lifetime, [](const model::Model::shared &) {},
+      [](rxcpp::util::error_ptr ep) {
+        printf("OnError: %s\n", rxcpp::util::what(ep).c_str());
+      },
+      [] {});
 
   server.addWebSocketHandler("/output", output);
   server.startListening(2222);

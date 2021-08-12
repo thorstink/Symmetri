@@ -26,7 +26,7 @@ struct Model {
     mutable Marking M;
     const TransitionMutation Dm;
     const TransitionMutation Dp;
-    mutable std::vector<std::tuple<size_t, int64_t, int64_t, int>> log;
+    mutable std::vector<std::tuple<size_t, int64_t, int64_t, transitions::Transition>> log;
   };
   std::shared_ptr<shared> data;
 };

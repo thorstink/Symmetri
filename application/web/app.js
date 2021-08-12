@@ -39,7 +39,7 @@ $(function begin() {
         // insert data as it arrives from the socket
         conn.onmessage = function(message) {
         // var fooField = vega.field('end');
-        data = vega.read(message.data, {type: 'csv', 'header': ['thread','start','end','task'] ,parse: {'thread': 'number', 'start': 'number', 'end':'number', 'task':'number'}});
+        data = vega.read(message.data, {type: 'csv', 'header': ['thread','start','end','task'] ,parse: {'thread': 'number', 'start': 'number', 'end':'number', 'task':'string'}});
         var changeSet = vega
             .changeset()
             .insert(data)

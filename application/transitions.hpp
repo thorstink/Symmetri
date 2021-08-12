@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 namespace transitions {
-using Transition = int;
+using Transition = std::string;
 } // namespace transitions
