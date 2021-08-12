@@ -1,4 +1,3 @@
-// #include "application.hpp"
 #include "pnml_parser.h"
 #include "tinyxml2/tinyxml2.h"
 #include <iostream>
@@ -38,6 +37,7 @@ constructTransitionMutationMatrices(std::string file) {
 
   tinyxml2::XMLElement *levelElement =
       net.FirstChildElement("pnml")->FirstChildElement("net");
+
   for (tinyxml2::XMLElement *child = levelElement->FirstChildElement("place");
        child != NULL; child = child->NextSiblingElement("place")) {
     // do something with each child element
@@ -45,15 +45,20 @@ constructTransitionMutationMatrices(std::string file) {
         child->FirstChildElement("name")->FirstChildElement("value")->GetText();
 
     auto place_id = child->Attribute("id");
-    auto initial_marking = std::stoi(child->FirstChildElement("initialMarking")
-                                         ->FirstChildElement("value")
-                                         ->GetText());
+
+    auto initial_marking =
+        (child->FirstChildElement("initialMarking") == nullptr)
+            ? 0
+            : std::stoi(child->FirstChildElement("initialMarking")
+                            ->FirstChildElement("value")
+                            ->GetText());
+
     place_initialMarking.insert({place_id, initial_marking});
 
     std::cout << "place: " << place_name << ", " << place_id << ", "
               << initial_marking << std::endl;
 
-    places.push_back(place_id);
+    places.push_back(std::string(place_id));
   }
 
   for (tinyxml2::XMLElement *child =
@@ -108,8 +113,6 @@ constructTransitionMutationMatrices(std::string file) {
   }
 
   std::cout << Dp - Dm << std::endl;
-
-
 
   int transition_count = transitions.size();
   std::unordered_map<std::string, Eigen::VectorXi> pre_map, post_map;

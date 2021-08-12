@@ -16,3 +16,5 @@ interface online at http://localhost:2222/
 ```
 
 and kick off by going to `http://localhost:2222/` and push the button.
+
+            // "scale": { "domain": ["t18","t19","t20","t21","t22","t23","t24","t25","t26","t27","t28","t29"]}

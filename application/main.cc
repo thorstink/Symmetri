@@ -1,9 +1,7 @@
 #include "actions.h"
 #include "application.hpp"
 #include "functions.h"
-#include "keyboard_input.h"
 #include "model.hpp"
-// #include "parser.h"
 #include "pnml_parser.h"
 #include "ws_interface.hpp"
 #include <csignal>
@@ -36,8 +34,7 @@ int main(int argc, const char *argv[]) {
 
   const rxcpp::subjects::subject<Transition> transitions(lifetime);
 
-  const std::array<rxcpp::observable<Reducer>, 3> reducers = {
-      itemSource(), serverSource(server),
+  const std::array<rxcpp::observable<Reducer>, 2> reducers = {serverSource(server),
       transitions.get_observable() |
           flat_map(
               executeTransition(rxcpp::observe_on_event_loop(), &execute))};
