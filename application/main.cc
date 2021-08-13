@@ -1,18 +1,15 @@
-#include "actions.h"
-#include "application.hpp"
 #include "functions.h"
-#include "model.hpp"
+#include "actions.h"
+#include "types.h"
 #include "pnml_parser.h"
 #include "ws_interface.hpp"
 #include <csignal>
 #include <rxcpp/rx.hpp>
-#include <seasocks/PrintfLogger.h>
-#include <seasocks/Server.h>
 
 using namespace rxcpp::rxo;
 using namespace model;
 using namespace actions;
-using namespace application;
+using namespace types;
 
 rxcpp::composite_subscription lifetime;
 schedulers::run_loop rl;
@@ -34,10 +31,11 @@ int main(int argc, const char *argv[]) {
 
   const rxcpp::subjects::subject<Transition> transitions(lifetime);
 
-  const std::array<rxcpp::observable<Reducer>, 2> reducers = {serverSource(server),
+  const std::array<rxcpp::observable<Reducer>, 2> reducers = {
+      serverSource(server),
       transitions.get_observable() |
           flat_map(
-              executeTransition(rxcpp::observe_on_event_loop(), &execute))};
+              executeTransition(rxcpp::observe_on_event_loop(), getStore()))};
 
   const auto actions = iterate(reducers) | merge(mainthread);
   const auto models =

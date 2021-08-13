@@ -2,13 +2,15 @@
 #include <cstdlib>
 #include <iostream>
 #include <thread>
-#include <unordered_map>
+
+using namespace model;
 
 void sleep(std::chrono::milliseconds ms) {
   auto start = std::chrono::high_resolution_clock::now();
-  while ((std::chrono::high_resolution_clock::now() - start) < ms) {
-    std::this_thread::yield();
-  }
+  // while ((std::chrono::high_resolution_clock::now() - start) < ms) {
+  //   std::this_thread::yield();
+  // }
+  std::this_thread::sleep_for(std::chrono::milliseconds(ms));
   return;
 }
 
@@ -23,7 +25,7 @@ OptionalReducer action1() {
             << '\n';
   sleep(std::chrono::milliseconds(700));
 
-  return model::Reducer([](model::Model model) {
+  return Reducer([](model::Model model) {
     // if you'd really want, here you could put stuff in the model.
     return model;
   });
@@ -60,26 +62,4 @@ OptionalReducer action6() {
             << '\n';
   sleep(std::chrono::milliseconds(250));
   return std::nullopt;
-}
-using TransitionActionMap =
-    std::unordered_map<transitions::Transition,
-                       std::function<OptionalReducer()>>;
-
-const static TransitionActionMap local_store = {
-    {"t0", &action0}, {"t1", &action1}, {"t2", &action2}, {"t3", &action3},
-    {"t4", &action4}, {"t5", &action5}, {"t6", &action6}};
-
-// const static TransitionActionMap local_store = {
-//     {"t18", &action0}, {"t19", &action1}, {"t20", &action2}, {"t21", &action3},
-//     {"t22", &action4}, {"t23", &action5}, {"t24", &action6}, {"t25", &action3},
-//     {"t26", &action4}, {"t27", &action5}, {"t28", &action6}, {"t29", &action6}};
-
-OptionalReducer execute(const transitions::Transition &transition) {
-  auto fun_ptr = local_store.find(transition);
-  return (fun_ptr != local_store.end())
-             ? fun_ptr->second()
-             : model::Reducer([=](model::Model model) {
-                 throw std::runtime_error("the following Transition is not in the store: '" + transition);
-                 return model;
-               });
 }

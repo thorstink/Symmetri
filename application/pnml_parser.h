@@ -1,7 +1,7 @@
 #pragma once
-#include "application.hpp"
+#include "types.h"
 #include <tuple>
 
-std::tuple<application::TransitionMutation, application::TransitionMutation,
-           application::Marking>
+std::tuple<types::TransitionMutation, types::TransitionMutation,
+           types::Marking>
 constructTransitionMutationMatrices(std::string file);

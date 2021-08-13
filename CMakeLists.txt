@@ -18,25 +18,19 @@ find_package(Seasocks REQUIRED)
 
 include_directories(${EIGEN3_INCLUDE_DIRS} ${SEASOCKS_INCLUDE_DIRS} submodules )
 
-add_library(${PROJECT_NAME}_parser application/parser.cc)
 
 add_library(${PROJECT_NAME}_pnml_parser application/pnml_parser.cc submodules/tinyxml2/tinyxml2.cpp)
 
 #app
-add_executable(${PROJECT_NAME}_app application/main.cc application/model.cc application/functions.cc)
+add_executable(${PROJECT_NAME}_app application/main.cc application/model.cc application/actions.cc application/functions.cc)
 target_link_libraries(${PROJECT_NAME}_app pthread Seasocks::seasocks ${PROJECT_NAME}_pnml_parser)
-
-#test
-add_executable(${PROJECT_NAME}_parser_test application/test_parse.cc)
-target_link_libraries(${PROJECT_NAME}_parser_test ${PROJECT_NAME}_parser)
-
 
 set(ui_files
   ${CMAKE_CURRENT_SOURCE_DIR}/application/web
 )
 set(targets
   ${PROJECT_NAME}_app
-  ${PROJECT_NAME}_parser
+  # ${PROJECT_NAME}_parser
 )
 
 install(DIRECTORY ${ui_files} DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/install)

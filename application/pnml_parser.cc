@@ -26,8 +26,8 @@ bool contains(std::vector<std::string> v, const std::string &K) {
   return it != v.end();
 }
 
-std::tuple<application::TransitionMutation, application::TransitionMutation,
-           application::Marking>
+std::tuple<types::TransitionMutation, types::TransitionMutation,
+           types::Marking>
 constructTransitionMutationMatrices(std::string file) {
   XMLDocument net;
   net.LoadFile(file.c_str());
@@ -145,17 +145,3 @@ constructTransitionMutationMatrices(std::string file) {
   std::cout << "initial marking: " << M0.transpose() << std::endl;
   return {pre_map, post_map, M0};
 }
-
-// int main(int argc, const char *argv[]) {
-
-//   if (argc == 2) {
-//     // doc.LoadFile(argv[1]);
-//   } else {
-//     std::cout << "something went wrong" << std::endl;
-//   }
-
-//   const auto &[Dm, Dp, initial_marking] =
-//       constructTransitionMutationMatrices(std::string(argv[1]));
-//   std::cout << "initial maring: " << initial_marking.transpose() <<
-//   std::endl;
-// }

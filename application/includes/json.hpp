@@ -24835,7 +24835,7 @@ class basic_json
     @param[in] json_patch  JSON patch document
     @return patched document
 
-    @note The application of a patch is atomic: Either all operations succeed
+    @note The types of a patch is atomic: Either all operations succeed
           and the patched document is returned or an exception is thrown. In
           any case, the original value is not changed: the patch is applied
           to a copy of the value.

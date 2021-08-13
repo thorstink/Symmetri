@@ -1,11 +1,15 @@
 #pragma once
 
-#include "transitions.hpp"
 #include <Eigen/Dense>
+#include <optional>
+#include <string>
 #include <unordered_map>
-namespace application {
-using namespace transitions;
+
+namespace types {
+using Transition = std::string;
 using Marking = Eigen::VectorXi;
 using TransitionMutation = std::unordered_map<Transition, Marking>;
+using Transitions = std::vector<Transition>;
 
-} // namespace application
+
+} // namespace types
