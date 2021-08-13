@@ -1,6 +1,6 @@
 
 cmake_minimum_required(VERSION 3.10)
-project(mpalg VERSION 1.0.0)
+project(Systemetri VERSION 1.0.0)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -16,21 +16,23 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wno-psabi -march=native -O2 -s")
 find_package(Eigen3 REQUIRED)
 find_package(Seasocks REQUIRED)
 
-include_directories(${EIGEN3_INCLUDE_DIRS} ${SEASOCKS_INCLUDE_DIRS} submodules )
+include_directories(${EIGEN3_INCLUDE_DIRS} ${SEASOCKS_INCLUDE_DIRS} submodules .)
 
+add_library(${PROJECT_NAME}_pnml_parser Systemetri/pnml_parser.cc submodules/tinyxml2/tinyxml2.cpp)
 
-add_library(${PROJECT_NAME}_pnml_parser application/pnml_parser.cc submodules/tinyxml2/tinyxml2.cpp)
+#lib
+add_library(lib${PROJECT_NAME} Systemetri/systemetri.cc Systemetri/model.cc Systemetri/actions.cc)
+target_link_libraries(lib${PROJECT_NAME} pthread Seasocks::seasocks ${PROJECT_NAME}_pnml_parser)
 
-#app
-add_executable(${PROJECT_NAME}_app application/main.cc application/model.cc application/actions.cc application/functions.cc)
-target_link_libraries(${PROJECT_NAME}_app pthread Seasocks::seasocks ${PROJECT_NAME}_pnml_parser)
+#an app
+add_executable(${PROJECT_NAME}_app application/main.cc application/transitions.cc)
+target_link_libraries(${PROJECT_NAME}_app lib${PROJECT_NAME})
 
 set(ui_files
-  ${CMAKE_CURRENT_SOURCE_DIR}/application/web
+  ${CMAKE_CURRENT_SOURCE_DIR}/Systemetri/web
 )
 set(targets
   ${PROJECT_NAME}_app
-  # ${PROJECT_NAME}_parser
 )
 
 install(DIRECTORY ${ui_files} DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/install)
@@ -43,7 +45,6 @@ enable_testing()
 set(TEST_SOURCES
 catch.cc
 tests.cc
-# legged_loco_test.cc
 )
 
 # add_executable(${PROJECT_NAME}_test ${TEST_SOURCES})

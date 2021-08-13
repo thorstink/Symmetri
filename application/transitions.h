@@ -1,6 +1,5 @@
 #pragma once
-#include "types.h"
-#include "model.h"
+#include "Systemetri/model.h"
 
 model::OptionalReducer action0();
 model::OptionalReducer action1();
