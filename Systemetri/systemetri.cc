@@ -37,7 +37,7 @@ std::function<void()> start(const std::string &pnml_path,
     const auto actions = iterate(reducers) | merge(mainthread);
     const auto models =
         actions |
-        scan(Model(mainthread.now(), M0, Dm, Dp),
+        scan(Model(model::clock_t::now(), M0, Dm, Dp),
              [&mainthread, dispatcher = transitions.get_subscriber()](
                  Model m, const Reducer &f) {
                try {
@@ -47,7 +47,7 @@ std::function<void()> start(const std::string &pnml_path,
                  for (auto transition : transitions)
                    dispatcher.on_next(transition);
 
-                 r.data->timestamp = mainthread.now();
+                 r.data->timestamp = model::clock_t::now();
                  return r;
                } catch (const std::exception &e) {
                  std::cerr << e.what() << '\n';
@@ -81,7 +81,7 @@ std::function<void()> start(const std::string &pnml_path,
         },
         [] {});
 
-    server.addWebSocketHandler("/output", output);
+    server.addWebSocketHandler("/transition_data", output);
     server.startListening(2222);
     server.setStaticPath("web");
     std::cout << "interface online at http://localhost:2222/" << std::endl;

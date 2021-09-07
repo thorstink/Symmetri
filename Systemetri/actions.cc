@@ -4,7 +4,12 @@ namespace actions {
 using namespace rxcpp;
 
 auto now() {
-  return std::chrono::steady_clock::now().time_since_epoch().count();
+
+  return std::chrono::duration_cast<std::chrono::milliseconds>(
+             model::clock_t::now().time_since_epoch())
+      .count();
+
+  // return model::clock_t::now().time_since_epoch().count();
 }
 
 auto getThreadId() {
@@ -24,8 +29,7 @@ r_type executeTransition(const observe_on_one_worker &scheduler,
                          const model::TransitionActionMap &local_store) {
   return [=](const types::Transition &transition) {
     return observable<>::just(transition, scheduler) |
-           operators::map([local_store](
-                              const types::Transition &transition) {
+           operators::map([local_store](const types::Transition &transition) {
              const auto start_time = now();
              auto fun_ptr = local_store.find(transition);
              auto model_update = (fun_ptr != local_store.end())

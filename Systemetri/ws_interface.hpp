@@ -33,7 +33,7 @@ rxcpp::observable<model::Reducer> serverSource(seasocks::Server &server) {
   ptr = &server;
   auto ws = rxcpp::observable<>::create<const char *>(
       [ptr](rxcpp::subscriber<const char *> dest) {
-        ptr->addWebSocketHandler("/ws", std::make_shared<Handler>(dest));
+        ptr->addWebSocketHandler("/start", std::make_shared<Handler>(dest));
       });
 
   return ws.map([](const char *data) {

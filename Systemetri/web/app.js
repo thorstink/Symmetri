@@ -13,7 +13,7 @@ $(function begin() {
         e.preventDefault();
     });
     // Test the protocol support...
-    ws = new WebSocket('ws://' + document.location.host + '/ws');
+    ws = new WebSocket('ws://' + document.location.host + '/start');
     ws.onopen = function () {
         console.log('onopen');
     };
@@ -34,7 +34,7 @@ $(function begin() {
     .then(function(result) {
         const view = result.view;
     
-        conn = new WebSocket('ws://' + document.location.host + '/output');
+        conn = new WebSocket('ws://' + document.location.host + '/transition_data');
         var window = 15 // sec
         // insert data as it arrives from the socket
         conn.onmessage = function(message) {

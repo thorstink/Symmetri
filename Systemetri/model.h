@@ -14,15 +14,16 @@ using OptionalReducer = std::optional<Reducer>;
 using TransitionActionMap =
     std::unordered_map<types::Transition, std::function<OptionalReducer()>>;
 
+using clock_t = std::chrono::system_clock;
 struct Model {
-  Model(const std::chrono::steady_clock::time_point &t, const types::Marking &M,
+  Model(const clock_t::time_point &t, const types::Marking &M,
         const types::TransitionMutation &Dm, const types::TransitionMutation &Dp)
       : data(std::make_shared<shared>(t, M, Dm, Dp)) {}
   struct shared {
-    shared(const std::chrono::steady_clock::time_point &t, const types::Marking &M,
+    shared(const clock_t::time_point &t, const types::Marking &M,
            const types::TransitionMutation &Dm, const types::TransitionMutation &Dp)
         : timestamp(t), M(M), Dm(Dm), Dp(Dp) {}
-    mutable std::chrono::steady_clock::time_point timestamp;
+    mutable clock_t::time_point timestamp;
     mutable types::Marking M;
     const types::TransitionMutation Dm;
     const types::TransitionMutation Dp;
