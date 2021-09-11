@@ -1,4 +1,4 @@
-#include "systemetri.h"
+#include "symmetri.h"
 #include "actions.h"
 #include "pnml_parser.h"
 #include "types.h"
@@ -6,7 +6,7 @@
 #include <csignal>
 #include <rxcpp/rx.hpp>
 
-namespace systemetri {
+namespace symmetri {
 using namespace rxcpp::rxo;
 using namespace rxcpp;
 using namespace types;
@@ -94,4 +94,4 @@ std::function<void()> start(const std::string &pnml_path,
     }
   };
 }
-} // namespace systemetri
+} // namespace symmetri
