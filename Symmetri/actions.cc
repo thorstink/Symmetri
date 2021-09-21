@@ -4,7 +4,7 @@ namespace actions {
 using namespace moodycamel;
 
 auto now() {
-  return std::chrono::duration_cast<std::chrono::milliseconds>(
+  return std::chrono::duration_cast<std::chrono::microseconds>(
              model::clock_t::now().time_since_epoch())
       .count();
 }
@@ -34,7 +34,7 @@ executeTransition(const model::TransitionActionMap &local_store,
   std::vector<std::thread> pool(thread_count);
 
   auto worker = [&] {
-    types::Transition transition = "42tg";
+    types::Transition transition;
     while (true) {
       actions.wait_dequeue(transition);
 
