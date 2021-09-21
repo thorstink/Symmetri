@@ -16,6 +16,26 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-field-initializers -Wno-psa
 find_package(Eigen3 REQUIRED)
 find_package(Seasocks REQUIRED)
 
+include(FetchContent)
+
+FetchContent_Declare(
+  readerwriterqueue
+  GIT_REPOSITORY    https://github.com/cameron314/readerwriterqueue
+  GIT_TAG           master
+)
+
+FetchContent_MakeAvailable(readerwriterqueue)
+
+include(FetchContent)
+
+FetchContent_Declare(
+  concurrentqueue
+  GIT_REPOSITORY    https://github.com/cameron314/concurrentqueue
+  GIT_TAG           master
+)
+
+FetchContent_MakeAvailable(concurrentqueue)
+
 add_subdirectory(submodules/MPMCQueue MPMCQueue)
 
 include_directories(${EIGEN3_INCLUDE_DIRS} ${SEASOCKS_INCLUDE_DIRS} submodules .)
@@ -24,15 +44,11 @@ add_library(${PROJECT_NAME}_pnml_parser Symmetri/pnml_parser.cc submodules/tinyx
 
 #lib
 add_library(lib${PROJECT_NAME} Symmetri/symmetri.cc Symmetri/model.cc Symmetri/actions.cc)
-target_link_libraries(lib${PROJECT_NAME} pthread Seasocks::seasocks ${PROJECT_NAME}_pnml_parser)
+target_link_libraries(lib${PROJECT_NAME} pthread Seasocks::seasocks ${PROJECT_NAME}_pnml_parser concurrentqueue)
 
 #an app
 add_executable(${PROJECT_NAME}_app application/main.cc application/transitions.cc)
 target_link_libraries(${PROJECT_NAME}_app lib${PROJECT_NAME})
-
-#an app
-add_executable(${PROJECT_NAME}_toy application/exp.cc)
-target_link_libraries(${PROJECT_NAME}_toy -lpthread MPMCQueue)
 
 set(ui_files
   ${CMAKE_CURRENT_SOURCE_DIR}/Symmetri/web

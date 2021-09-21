@@ -5,3 +5,6 @@
 [submodule "submodules/MPMCQueue"]
 	path = submodules/MPMCQueue
 	url = https://github.com/rigtorp/MPMCQueue
+[submodule "submodules/concurrentqueue"]
+	path = submodules/concurrentqueue
+	url = https://github.com/cameron314/concurrentqueue.git
