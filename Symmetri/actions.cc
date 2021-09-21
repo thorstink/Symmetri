@@ -4,7 +4,6 @@ namespace actions {
 using namespace moodycamel;
 
 auto now() {
-
   return std::chrono::duration_cast<std::chrono::milliseconds>(
              model::clock_t::now().time_since_epoch())
       .count();
@@ -28,9 +27,13 @@ executeTransition(const model::TransitionActionMap &local_store,
                   BlockingConcurrentQueue<model::Reducer> &reducers,
                   BlockingConcurrentQueue<types::Transition> &actions) {
 
-  std::vector<std::thread> pool;
+  unsigned int n = std::thread::hardware_concurrency();
+  unsigned int thread_count = std::max<unsigned int>(1, n / 2);
+  thread_count = 3;
+  std::cout << thread_count << " concurrent threads are supported.\n";
+  std::vector<std::thread> pool(thread_count);
 
-  pool.push_back(std::thread([&] {
+  auto worker = [&] {
     types::Transition transition = "42tg";
     while (true) {
       actions.wait_dequeue(transition);
@@ -60,7 +63,11 @@ executeTransition(const model::TransitionActionMap &local_store,
                   return model;
                 }));
     }
-  }));
+  };
+  // populate the pool
+  std::generate(std::begin(pool), std::end(pool),
+                [worker]() { return std::thread(worker); });
+
   return pool;
 }
 } // namespace actions
