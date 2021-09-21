@@ -36,8 +36,6 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(concurrentqueue)
 
-add_subdirectory(submodules/MPMCQueue MPMCQueue)
-
 include_directories(${EIGEN3_INCLUDE_DIRS} ${SEASOCKS_INCLUDE_DIRS} submodules .)
 
 add_library(${PROJECT_NAME}_pnml_parser Symmetri/pnml_parser.cc submodules/tinyxml2/tinyxml2.cpp)
