@@ -44,7 +44,7 @@ $(function begin() {
             .changeset()
             .insert(data)
             .remove(function (t) {
-                return t.end < (vega.peek(view.data('table')).end - window*1000000000)
+                return t.end < (vega.peek(view.data('table')).end - window*1000000)
             });
             view.change('table', changeSet).run();
         }
