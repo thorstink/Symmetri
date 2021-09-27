@@ -65,11 +65,11 @@ std::function<void()> start(const std::string &pnml_path,
       for (const auto &[a, b, c, d] : data.log) {
         log_data << a << ',' << b << ',' << c << ',' << d << '\n';
       }
-      output_file.open("example2.csv",std::ios_base::app); 
-      output_file << log_data.str();
-      output_file.close();
-      // output->send(log_data.str());
-      // server.poll(1);
+      // output_file.open("example2.csv",std::ios_base::app); 
+      // output_file << log_data.str();
+      // output_file.close();
+      output->send(log_data.str());
+      server.poll(1);
     };
   };
 }
