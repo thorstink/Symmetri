@@ -48,12 +48,18 @@ target_link_libraries(${PROJECT_NAME}_app ${PROJECT_NAME})
 set(ui_files
   ${CMAKE_CURRENT_SOURCE_DIR}/Symmetri/web
 )
+
+set(net_files   
+  ${CMAKE_CURRENT_SOURCE_DIR}/nets
+)
+
 set(targets
   ${PROJECT_NAME}_app
   ${PROJECT_NAME}
 )
 
 install(DIRECTORY ${ui_files} DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/install)
+install(DIRECTORY ${net_files} DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/install/web)
 install(TARGETS ${targets} DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/install)
 
 # if(BUILD_TESTING)

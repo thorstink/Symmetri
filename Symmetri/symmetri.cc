@@ -42,8 +42,8 @@ std::function<void()> start(const std::string &pnml_path,
     std::ofstream output_file;
 
 
+    Reducer f = noop;
     while (true) {
-      Reducer f = noop;
       reducers.wait_dequeue(f);
       try {
         // run the reducer

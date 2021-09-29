@@ -3,25 +3,66 @@
 
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Application</title>
-    <script src='lib/jquery.min.js'></script>
-    <script src='app.js'></script>
+  <title>Application</title>
+  <script src='lib/jquery.min.js'></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
 
+  <script src='app.js'></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/vega@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@4"></script>
+  <script src="lib/d3.v3.min.js"></script>
+  <script src="lib/lodash.min.js"></script>
+  <script src="lib/petrinet.js"></script>
 <body>
-<h2>Overview</h2>
-<form id="form">
+  <h2>Overview</h2>
+  <!-- <form id="form">
     <input id="submit" type="submit">
-</form>
-<pre id="chat-area" style="height:400px"></pre>
-<div id="vis"></div>
-<script type="text/javascript">
+  </form> -->
+  <p id="demo" onclick="myFunction()">Click me to change my text color.</p>
+  <div id="petri-net"></div>
+  <div id="vis"></div>
+  <script type="text/javascript">
+    var net = new Array();
+    var states = [];
+    var transitions = [];
+    var marking = {};
+
+    $.getJSON("net.json", function (json) {
+      console.log(json); // this will show the info it in firebug console
+      net = json
+    })
+      .done(function () {
+        console.log("JSON loaded!");
+ 
+        states = net.states
+        transitions = net.transitions
+        marking = { };
+
+        function scaleModel(sx, sy) {
+          (states.concat(transitions)).forEach(function (s) { s.x *= sx; s.y *= sy })
+        }
+
+        scaleModel(0.5, 0.5);
+
+        let script = document.createElement('script');
+        script.src = "lib/app.js";
+        document.body.append(script);
+      });
+
+    function myFunction() {
+      // scaleModel(4, 8);
+      marking = {};
+      redraw();
+    }
+    // states = net.states
 
   </script>
-</body>
-</html>
 
+  <!-- <script defer="defer" src="lib/app.js"></script> -->
+</body>
+
+</html>

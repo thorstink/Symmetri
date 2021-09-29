@@ -1,0 +1,23 @@
+svg {
+	border: 1px dashed gray;
+}
+
+body {
+	font-family: monospace;
+	font-size: 1.1em;
+	fill: orange;
+}
+svg text {
+	fill: black;
+}
+svg *::selection {
+	background: transparent;
+}
+
+svg *::-moz-selection {
+    background: transparent;
+}
+
+svg *::-webkit-selection {
+	background: transparent;
+}
