@@ -3,9 +3,9 @@
 #include "model.h"
 #include "pnml_parser.h"
 #include "types.h"
-#include <functional>
 #include "ws_interface.hpp"
 #include <fstream>
+#include <functional>
 
 namespace symmetri {
 using namespace model;
@@ -19,16 +19,19 @@ std::function<void()> start(const std::string &pnml_path,
                             const model::TransitionActionMap &store) {
 
   return [=]() {
-    const auto &[Dm, Dp, M0] = constructTransitionMutationMatrices(pnml_path);
+    const auto &[Dm, Dp, M0, json_net, index_place_map] =
+        constructTransitionMutationMatrices(pnml_path);
 
     BlockingConcurrentQueue<Reducer> reducers(256);
     BlockingConcurrentQueue<types::Transition> actions(1024);
 
     seasocks::Server server(std::make_shared<seasocks::PrintfLogger>(
         seasocks::Logger::Level::Error));
-    auto output = std::make_shared<Output>();
+    auto time_data = std::make_shared<Output>();
+    auto marking_transition = std::make_shared<Output>();
 
-    server.addWebSocketHandler("/transition_data", output);
+    server.addWebSocketHandler("/transition_data", time_data);
+    server.addWebSocketHandler("/marking_transition_data", marking_transition);
     server.startListening(2222);
     server.setStaticPath("web");
     std::cout << "interface online at http://localhost:2222/" << std::endl;
@@ -41,14 +44,13 @@ std::function<void()> start(const std::string &pnml_path,
 
     std::ofstream output_file;
 
-
     Reducer f = noop;
     while (true) {
       reducers.wait_dequeue(f);
       try {
         // run the reducer
         auto [r, transitions] = run(f(m));
-        m = std::move(r);
+        m = std::move(r); 
         // dispatch the transitions
         for (auto transition : transitions)
           actions.enqueue(transition);
@@ -58,17 +60,21 @@ std::function<void()> start(const std::string &pnml_path,
         std::cerr << e.what() << '\n';
       }
 
-      //
       auto data = (*m.data);
       m.data->log.clear();
       std::stringstream log_data;
       for (const auto &[a, b, c, d] : data.log) {
         log_data << a << ',' << b << ',' << c << ',' << d << '\n';
       }
-      // output_file.open("example2.csv",std::ios_base::app); 
+
+      auto j = webMarking(m.data->M, index_place_map);
+      // std::cout << j.dump(2) << std::endl;
+
+      // output_file.open("example2.csv",std::ios_base::app);
       // output_file << log_data.str();
       // output_file.close();
-      output->send(log_data.str());
+      marking_transition->send(j.dump());
+      time_data->send(log_data.str());
       server.poll(1);
     };
   };

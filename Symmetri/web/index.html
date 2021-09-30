@@ -6,17 +6,17 @@
 
 <head>
   <title>Application</title>
+  <script src="vega_entry.js"></script>
   <script src='lib/jquery.min.js'></script>
-
-
-  <script src='app.js'></script>
-
+  <script src='vega_entry.js'></script>
   <script src="https://cdn.jsdelivr.net/npm/vega@4"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@4"></script>
   <script src="lib/d3.v3.min.js"></script>
   <script src="lib/lodash.min.js"></script>
   <script src="lib/petrinet.js"></script>
+  <script src="https://unpkg.com/rxjs@^7/dist/bundles/rxjs.umd.min.js"></script>
+
 <body>
   <h2>Overview</h2>
   <!-- <form id="form">
@@ -37,10 +37,10 @@
     })
       .done(function () {
         console.log("JSON loaded!");
- 
+
         states = net.states
         transitions = net.transitions
-        marking = { };
+        marking = {};
 
         function scaleModel(sx, sy) {
           (states.concat(transitions)).forEach(function (s) { s.x *= sx; s.y *= sy })
@@ -58,11 +58,19 @@
       marking = {};
       redraw();
     }
-    // states = net.states
+
+    const { range } = rxjs;
+    const { map, filter } = rxjs.operators;
+    const { webSocket } = rxjs.webSocket;
+    const subject = webSocket('ws://' + document.location.host + '/marking_transition_data');
+
+    subject.subscribe(
+      msg => {marking = msg; redraw()}, 
+      err => console.log(err), 
+      () => console.log('complete')
+    );
 
   </script>
-
-  <!-- <script defer="defer" src="lib/app.js"></script> -->
 </body>
 
 </html>

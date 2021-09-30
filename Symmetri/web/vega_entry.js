@@ -35,7 +35,7 @@ $(function begin() {
         const view = result.view;
     
         conn = new WebSocket('ws://' + document.location.host + '/transition_data');
-        var window = 15 // sec
+        var window = 75 // sec
         // insert data as it arrives from the socket
         conn.onmessage = function(message) {
         // var fooField = vega.field('end');

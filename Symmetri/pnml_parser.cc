@@ -29,7 +29,8 @@ bool contains(std::vector<std::string> v, const std::string &K) {
   return it != v.end();
 }
 
-std::tuple<types::TransitionMutation, types::TransitionMutation, types::Marking>
+std::tuple<types::TransitionMutation, types::TransitionMutation, types::Marking,
+           nlohmann::json, std::map<uint8_t, std::string>>
 constructTransitionMutationMatrices(std::string file) {
   XMLDocument net;
   net.LoadFile(file.c_str());
@@ -186,5 +187,22 @@ constructTransitionMutationMatrices(std::string file) {
 
   std::cout << "initial marking: " << M0.transpose() << std::endl;
 
-  return {pre_map, post_map, M0};
+  std::map<uint8_t, std::string> index_place_id_map;
+  for(uint8_t i = 0; i < places.size(); i++)
+  {
+    index_place_id_map.insert({i, places.at(i)});
+  }  
+  return {pre_map, post_map, M0, j, index_place_id_map};
+}
+
+nlohmann::json webMarking(const types::Marking& M, const std::map<uint8_t, std::string>& index_marking_map)
+
+{
+  nlohmann::json j;
+
+  for (uint8_t i = 0; i<M.size(); i++)
+  {
+    j.emplace(index_marking_map.at(i), M(i));
+  }
+  return j;
 }
