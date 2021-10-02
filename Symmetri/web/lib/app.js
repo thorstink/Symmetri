@@ -39,7 +39,7 @@ places.selectAll('circle')
 
 // take a multiset dictionary 'label => multiplicity'
 // and return a list of [{x, y, weight}]
-function mapLocations (mset) {
+function mapLocations(mset) {
   return _.map(mset,
     function (multiplicity, label) {
       var s = _.find(states, 'label', label)
@@ -88,7 +88,7 @@ Arcs.selectAll('path')
 
 var transitionG = svg.append('g')
 
-function tokens () {
+function tokens() {
   return _.map(marking, function (val, key) {
     return {
       state: key,
@@ -99,13 +99,15 @@ function tokens () {
 
 var tokensG = svg.append('g')
 
-function redrawTransitions () {
-  var transitionSvg = transitionG.selectAll('rect')
+function redrawTransitions() {
+  var transitionSvg = transitionG.selectAll('g')
     .data(transitions)
 
   // create or update
-  transitionSvg.enter()
-    .append('rect')
+  var a = transitionSvg.enter()
+    .append('g')
+
+  a.append('rect')
     .attr({
       stroke: 'black',
       width: w * 2,
@@ -117,23 +119,41 @@ function redrawTransitions () {
       updateMarking(t.pre, t.post)
     })
 
+  a.append('text')
+
   // update new
-  transitionSvg.attr({
-    fill: function (d) {
-      return isEnabled(d.pre) ? 'rgba(0,0,255,.3)' : 'rgba(0,0,0,.3)'
-    },
-    cursor: function (d) {
-      return isEnabled(d.pre) ? 'pointer' : 'default'
-    },
-    x: function (d) { return d.x - w - 0.5 },
-    y: function (d) { return d.y - h - 0.5 }
-  })
+  transitionG.selectAll('rect')
+    .data(transitions).attr({
+      fill: function (d) {
+        // return isEnabled(d.pre) ? 'rgba(0,0,255,.3)' : 'rgba(0,0,0,.3)'
+        // console.log(d.label)
+        // console.log(active_transitions)
+        return (active_transitions.includes(d.label)) ? 'rgba(0,0,255,.3)' : 'rgba(0,0,0,.3)'
+      },
+      cursor: function (d) {
+        return isEnabled(d.pre) ? 'pointer' : 'default'
+      },
+      x: function (d) { return d.x - w - 0.5 },
+      y: function (d) { return d.y - h - 0.5 },
+      id: function(d) {return d.label}
+    })
+
+  transitionG.selectAll('text')
+    .data(transitions)
+    .attr({
+      x: function (d) { return d.x  },
+      y: function (d) { return d.y },
+      dy: h / 2
+    })
+    .text(function (d) {
+      return d.label
+    }).style("text-anchor", "middle") 
 
   // remove on exit
   transitionSvg.exit().remove()
 }
 
-function redrawTokens () {
+function redrawTokens() {
   var tokenSvg = tokensG
     .selectAll('text')
     .data(tokens())
@@ -162,7 +182,7 @@ function redrawTokens () {
     .remove()
 }
 
-function redraw () {
+function redraw() {
   redrawTokens()
   redrawTransitions()
 }

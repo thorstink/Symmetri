@@ -6,7 +6,6 @@
 
 <head>
   <title>Application</title>
-  <script src="vega_entry.js"></script>
   <script src='lib/jquery.min.js'></script>
   <script src='vega_entry.js'></script>
   <script src="https://cdn.jsdelivr.net/npm/vega@4"></script>
@@ -15,60 +14,48 @@
   <script src="lib/d3.v3.min.js"></script>
   <script src="lib/lodash.min.js"></script>
   <script src="lib/petrinet.js"></script>
+  <!-- <script src="rxjs.umd.min.js"></script> -->
   <script src="https://unpkg.com/rxjs@^7/dist/bundles/rxjs.umd.min.js"></script>
 
 <body>
   <h2>Overview</h2>
-  <!-- <form id="form">
-    <input id="submit" type="submit">
-  </form> -->
-  <p id="demo" onclick="myFunction()">Click me to change my text color.</p>
   <div id="petri-net"></div>
   <div id="vis"></div>
   <script type="text/javascript">
     var net = new Array();
     var states = [];
     var transitions = [];
+    var active_transitions = [];
     var marking = {};
 
-    $.getJSON("net.json", function (json) {
-      console.log(json); // this will show the info it in firebug console
-      net = json
-    })
-      .done(function () {
-        console.log("JSON loaded!");
-
-        states = net.states
-        transitions = net.transitions
-        marking = {};
-
-        function scaleModel(sx, sy) {
-          (states.concat(transitions)).forEach(function (s) { s.x *= sx; s.y *= sy })
-        }
-
-        scaleModel(0.5, 0.5);
-
-        let script = document.createElement('script');
-        script.src = "lib/app.js";
-        document.body.append(script);
-      });
-
-    function myFunction() {
-      // scaleModel(4, 8);
-      marking = {};
-      redraw();
-    }
-
-    const { range } = rxjs;
-    const { map, filter } = rxjs.operators;
+    const { concat } = rxjs
+    const { map, filter, retry, take, tap } = rxjs.operators;
     const { webSocket } = rxjs.webSocket;
-    const subject = webSocket('ws://' + document.location.host + '/marking_transition_data');
 
-    subject.subscribe(
-      msg => {marking = msg; redraw()}, 
-      err => console.log(err), 
+    let ws_address = 'ws://' + document.location.host + '/marking_transition_data'
+    let netws = webSocket(ws_address)
+
+    set_net = netws.pipe(filter(j => j.hasOwnProperty('states')), tap(net => {
+      console.log(net); states = net.states;
+      transitions = net.transitions;
+      marking = {};
+      function scaleModel(sx, sy) {
+        (states.concat(transitions)).forEach(function (s) { s.x *= sx; s.y *= sy })
+      }
+      scaleModel(0.5, 0.5);
+      let script = document.createElement('script');
+      script.src = "lib/app.js";
+      document.body.append(script);
+    }), take(1))
+
+    update_marking = webSocket(ws_address).pipe(filter(j => !j.hasOwnProperty('states')), tap(msg => { marking = msg.marking; active_transitions = msg.active_transitions; redraw(); }))
+
+    concat(set_net, update_marking).subscribe(
+      msg => console.log("yay"),
+      err => console.log(err),
       () => console.log('complete')
     );
+
 
   </script>
 </body>

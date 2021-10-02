@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <tuple>
+#include <set>
 
 namespace model {
 
@@ -28,6 +29,7 @@ struct Model {
         : timestamp(t), M(M), Dm(Dm), Dp(Dp) {}
     mutable clock_t::time_point timestamp;
     mutable types::Marking M;
+    mutable std::set<types::Transition> active_transitions;
     const types::TransitionMutation Dm;
     const types::TransitionMutation Dp;
     mutable std::vector<std::tuple<size_t, int64_t, int64_t, types::Transition>>

@@ -1,7 +1,6 @@
 #include "pnml_parser.h"
 #include "nlohmann/json.hpp"
 #include "tinyxml2/tinyxml2.h"
-#include <fstream>
 #include <iostream>
 
 using namespace tinyxml2;
@@ -146,14 +145,6 @@ constructTransitionMutationMatrices(std::string file) {
                 << " is not connecting a place to a transition." << std::endl;
     }
   }
-
-  std::cout << "json: \n\n" << j.dump(2) << std::endl;
-
-  std::ofstream output_file;
-
-  output_file.open("net.json");
-  output_file << j.dump(2);
-  output_file.close();
 
   std::cout << Dp - Dm << std::endl;
 

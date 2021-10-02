@@ -11,6 +11,7 @@ std::pair<Model, types::Transitions> run(Model model) {
     if (((M - dM_i).array() >= 0).all()) {
       M -= dM_i;
       T.push_back(T_i);
+      model.data->active_transitions.insert(T_i);
     }
   }
 

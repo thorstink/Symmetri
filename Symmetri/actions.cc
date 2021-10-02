@@ -52,12 +52,16 @@ executeTransition(const model::TransitionActionMap &local_store,
               ? model::Reducer([=, update = std::move(model_update)](
                                    model::Model model) mutable {
                   model.data->M += model.data->Dp.at(transition);
+                  model.data->active_transitions.erase(transition);
+
                   model.data->log.emplace_back(std::make_tuple(
                       thread_id, start_time, end_time, transition));
                   return update.value()(model);
                 })
               : model::Reducer([=](model::Model model) {
                   model.data->M += model.data->Dp.at(transition);
+                  model.data->active_transitions.erase(transition);
+
                   model.data->log.emplace_back(std::make_tuple(
                       thread_id, start_time, end_time, transition));
                   return model;
