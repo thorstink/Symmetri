@@ -1,7 +1,5 @@
 #pragma once
-// #include "model.h"
 #include "nlohmann/json.hpp"
-#include <iostream>
 #include <seasocks/PrintfLogger.h>
 #include <seasocks/Server.h>
 

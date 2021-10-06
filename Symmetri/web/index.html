@@ -32,31 +32,28 @@
     const { map, filter, retry, take, tap } = rxjs.operators;
     const { webSocket } = rxjs.webSocket;
 
-    let ws_address = 'ws://' + document.location.host + '/marking_transition_data'
-    let netws = webSocket(ws_address)
+    var ws_address = 'ws://' + document.location.host + '/marking_transition_data'
 
-    set_net = netws.pipe(filter(j => j.hasOwnProperty('states')), tap(net => {
+    var set_net = webSocket(ws_address).pipe(filter(j => j.hasOwnProperty('states')), tap(net => {
       console.log(net); states = net.states;
       transitions = net.transitions;
       marking = {};
       function scaleModel(sx, sy) {
         (states.concat(transitions)).forEach(function (s) { s.x *= sx; s.y *= sy })
       }
-      scaleModel(0.5, 0.5);
+      scaleModel(0.7, 0.7);
       let script = document.createElement('script');
       script.src = "lib/app.js";
       document.body.append(script);
     }), take(1))
 
-    update_marking = webSocket(ws_address).pipe(filter(j => !j.hasOwnProperty('states')), tap(msg => { marking = msg.marking; active_transitions = msg.active_transitions; redraw(); }))
+    var update_marking = webSocket(ws_address).pipe(filter(j => !j.hasOwnProperty('states')), tap(msg => { marking = msg.marking; active_transitions = msg.active_transitions; redraw(); }))
 
     concat(set_net, update_marking).subscribe(
-      msg => console.log("yay"),
+      msg => {},
       err => console.log(err),
       () => console.log('complete')
     );
-
-
   </script>
 </body>
 
