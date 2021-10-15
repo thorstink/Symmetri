@@ -5,37 +5,14 @@ function add(text) {
     chat.text(text);
 }
 
-$(function begin() {
-    $('#form').submit(function onSubmit(e) {
-        var ci = $("");
-        ws.send(ci);
-        ci.val("");
-        e.preventDefault();
-    });
-    // Test the protocol support...
-    ws = new WebSocket('ws://' + document.location.host + '/start');
-    ws.onopen = function () {
-        console.log('onopen');
-    };
-    ws.onclose = function () {
-        add('Lost connection.');
-        console.log('onclose');
-    };
-    ws.onmessage = function (message) {
-       
-        add(message.data);
-    };
-    ws.onerror = function (error) {
-        add("ERROR: " + error);
-    };
-        
+$(function begin() {        
     const spec = "http://localhost:2222/load_scheme.json";
     vegaEmbed('#vis', spec, {defaultStyle: true})
     .then(function(result) {
         const view = result.view;
     
         conn = new WebSocket('ws://' + document.location.host + '/transition_data');
-        var window = 15 // sec
+        var window = 75 // sec
         // insert data as it arrives from the socket
         conn.onmessage = function(message) {
         // var fooField = vega.field('end');

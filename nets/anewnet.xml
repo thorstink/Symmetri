@@ -2,9 +2,6 @@
 <pnml xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="upnpnml.xsd">
 	<net id="n1" type="UPNPNML">
 		<place id="p0">
-			<graphics>
-				<position x="450" y="75"/>
-			</graphics>
 			<name>
 				<value>P0</value>
 			</name>
@@ -13,9 +10,6 @@
 			</initialMarking>
 		</place>
 		<place id="p1">
-			<graphics>
-				<position x="550" y="60"/>
-			</graphics>
 			<name>
 				<value>P1</value>
 			</name>
@@ -24,9 +18,6 @@
 			</initialMarking>
 		</place>
 		<place id="p2">
-			<graphics>
-				<position x="650" y="45"/>
-			</graphics>
 			<name>
 				<value>P2</value>
 			</name>
@@ -35,9 +26,6 @@
 			</initialMarking>
 		</place>
 		<place id="p3">
-			<graphics>
-				<position x="550" y="300"/>
-			</graphics>
 			<name>
 				<value>P3</value>
 			</name>
@@ -46,9 +34,6 @@
 			</initialMarking>
 		</place>
 		<place id="p4">
-			<graphics>
-				<position x="350" y="200"/>
-			</graphics>
 			<name>
 				<value>P4</value>
 			</name>
@@ -57,9 +42,6 @@
 			</initialMarking>
 		</place>
 		<place id="p5">
-			<graphics>
-				<position x="550" y="200"/>
-			</graphics>
 			<name>
 				<value>P5</value>
 			</name>
@@ -68,9 +50,6 @@
 			</initialMarking>
 		</place>
 		<place id="p6">
-			<graphics>
-				<position x="800" y="200"/>
-			</graphics>
 			<name>
 				<value>P6</value>
 			</name>
@@ -79,9 +58,6 @@
 			</initialMarking>
 		</place>
 		<place id="p7">
-			<graphics>
-				<position x="450" y="400"/>
-			</graphics>
 			<name>
 				<value>P7</value>
 			</name>
@@ -90,9 +66,6 @@
 			</initialMarking>
 		</place>
 		<place id="p8">
-			<graphics>
-				<position x="650" y="400"/>
-			</graphics>
 			<name>
 				<value>P8</value>
 			</name>
@@ -101,41 +74,26 @@
 			</initialMarking>
 		</place>
 		<transition id="t0">
-			<graphics>
-				<position x="200" y="200"/>
-			</graphics>
 			<name>
 				<value>TO</value>
 			</name>
 		</transition>
 		<transition id="t1">
-			<graphics>
-				<position x="450" y="200"/>
-			</graphics>
 			<name>
 				<value>T1</value>
 			</name>
 		</transition>
 		<transition id="t2">
-			<graphics>
-				<position x="700" y="200"/>
-			</graphics>
 			<name>
 				<value>T2</value>
 			</name>
 		</transition>
 		<transition id="t3">
-			<graphics>
-				<position x="950" y="200"/>
-			</graphics>
 			<name>
 				<value>T3</value>
 			</name>
 		</transition>
 		<transition id="t4">
-			<graphics>
-				<position x="550" y="400"/>
-			</graphics>
 			<name>
 				<value>T4</value>
 			</name>

@@ -1,6 +1,8 @@
 #include "pnml_parser.h"
+#include "nlohmann/json.hpp"
 #include "tinyxml2/tinyxml2.h"
 #include <iostream>
+
 using namespace tinyxml2;
 
 // Function to print the
@@ -26,11 +28,13 @@ bool contains(std::vector<std::string> v, const std::string &K) {
   return it != v.end();
 }
 
-std::tuple<types::TransitionMutation, types::TransitionMutation,
-           types::Marking>
+std::tuple<types::TransitionMutation, types::TransitionMutation, types::Marking,
+           nlohmann::json, std::map<uint8_t, std::string>>
 constructTransitionMutationMatrices(std::string file) {
   XMLDocument net;
   net.LoadFile(file.c_str());
+  nlohmann::json j;
+  // j["states"] = {};
 
   std::vector<std::string> places, transitions;
   std::unordered_map<std::string, int> place_initialMarking;
@@ -54,9 +58,17 @@ constructTransitionMutationMatrices(std::string file) {
                             ->GetText());
 
     place_initialMarking.insert({place_id, initial_marking});
+    int x = std::stoi(child->FirstChildElement("graphics")
+                          ->FirstChildElement("position")
+                          ->Attribute("x"));
+    int y = std::stoi(child->FirstChildElement("graphics")
+                          ->FirstChildElement("position")
+                          ->Attribute("y"));
 
     std::cout << "place: " << place_name << ", " << place_id << ", "
-              << initial_marking << std::endl;
+              << initial_marking << ", x:" << x << ", y: " << y << std::endl;
+    j["states"].push_back(
+        nlohmann::json({{"label", std::string(place_id)}, {"y", y}, {"x", x}}));
 
     places.push_back(std::string(place_id));
   }
@@ -70,8 +82,17 @@ constructTransitionMutationMatrices(std::string file) {
 
     auto transition_id = child->Attribute("id");
 
+    int x = std::stoi(child->FirstChildElement("graphics")
+                          ->FirstChildElement("position")
+                          ->Attribute("x"));
+    int y = std::stoi(child->FirstChildElement("graphics")
+                          ->FirstChildElement("position")
+                          ->Attribute("y"));
+
     std::cout << "transition: " << transition_name << ", " << transition_id
-              << std::endl;
+              << ", x:" << x << ", y: " << y << std::endl;
+    j["transitions"].push_back(nlohmann::json(
+        {{"label", std::string(transition_id)}, {"y", y}, {"x", x}}));
 
     transitions.push_back(transition_id);
   }
@@ -98,6 +119,12 @@ constructTransitionMutationMatrices(std::string file) {
       std::cout << "place-source: " << arc_id << ", " << source_id << ", "
                 << target_id << std::endl;
       Dm(s_idx, t_idx) += 1;
+      // pre
+      for (auto &[key, val] : j["transitions"].items()) {
+        if (val["label"] == std::string(target_id)) {
+          val["pre"].emplace(std::string(source_id), 1);
+        }
+      }
     } else if (contains(places, target_id) &&
                contains(transitions, source_id)) {
       auto s_idx = getIndex(transitions, source_id);
@@ -106,6 +133,13 @@ constructTransitionMutationMatrices(std::string file) {
                 << target_id << std::endl;
       // if the destination is a place, tokens are produced.
       Dp(t_idx, s_idx) += 1;
+      for (auto &[key, val] : j["transitions"].items()) {
+        if (val["label"] == source_id) {
+          nlohmann::json object = val;
+          val["post"].emplace(std::string(target_id), 1);
+        }
+      }
+      // post
     } else {
       std::cout << "error: arc " << arc_id
                 << " is not connecting a place to a transition." << std::endl;
@@ -143,5 +177,23 @@ constructTransitionMutationMatrices(std::string file) {
   }
 
   std::cout << "initial marking: " << M0.transpose() << std::endl;
-  return {pre_map, post_map, M0};
+
+  std::map<uint8_t, std::string> index_place_id_map;
+  for(uint8_t i = 0; i < places.size(); i++)
+  {
+    index_place_id_map.insert({i, places.at(i)});
+  }  
+  return {pre_map, post_map, M0, j, index_place_id_map};
+}
+
+nlohmann::json webMarking(const types::Marking& M, const std::map<uint8_t, std::string>& index_marking_map)
+
+{
+  nlohmann::json j;
+
+  for (uint8_t i = 0; i<M.size(); i++)
+  {
+    j.emplace(index_marking_map.at(i), M(i));
+  }
+  return j;
 }
