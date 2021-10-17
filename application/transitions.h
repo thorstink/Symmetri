@@ -1,13 +1,13 @@
 #pragma once
 #include "Symmetri/symmetri.h"
 
-symmetri::OptionalMarkingMutation action0();
-symmetri::OptionalMarkingMutation action1();
-symmetri::OptionalMarkingMutation action2();
-symmetri::OptionalMarkingMutation action3();
-symmetri::OptionalMarkingMutation action4();
-symmetri::OptionalMarkingMutation action5();
-symmetri::OptionalMarkingMutation action6();
+symmetri::OptionalError action0();
+symmetri::OptionalError action1();
+symmetri::OptionalError action2();
+symmetri::OptionalError action3();
+symmetri::OptionalError action4();
+symmetri::OptionalError action5();
+symmetri::OptionalError action6();
 
 inline symmetri::TransitionActionMap getStore() {
   return {{"t0", &action0},  {"t1", &action1},  {"t2", &action2},

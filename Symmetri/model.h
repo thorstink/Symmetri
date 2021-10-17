@@ -11,7 +11,8 @@
 
 namespace symmetri {
 struct Model;
-using Reducer = symmetri::task<Model(Model)>;
+// using Reducer = symmetri::task<Model(Model)>;
+using Reducer = std::function<Model(Model)>;
 
 using clock_t = std::chrono::system_clock;
 struct Model {

@@ -1,4 +1,5 @@
 #include "actions.h"
+#include "Symmetri/expected.hpp"
 
 namespace symmetri {
 using namespace moodycamel;
@@ -22,11 +23,18 @@ std::optional<Reducer> noTransitionInStore(const Transition &t) {
   });
 }
 
-std::optional<Reducer> markingMutation(const MarkingMutation &dM) {
-  return Reducer([=](Model model) {
-    model.data->M += dM;
-    return model;
-  });
+tl::expected<std::function<OptionalError()>, std::string>
+getAction(const TransitionActionMap &local_store, const Transition &t) {
+  auto fun_ptr = local_store.find(t);
+  if (fun_ptr != local_store.end()) {
+    return fun_ptr->second;
+  } else {
+    return tl::make_unexpected("noop");
+  }
+}
+
+OptionalError executeAction(std::function<OptionalError()> action) {
+  return action();
 }
 
 std::vector<std::thread>
@@ -44,36 +52,34 @@ executeTransition(const TransitionActionMap &local_store,
     Transition transition;
     while (true) {
       actions.wait_dequeue(transition);
-
       const auto start_time = now();
-      auto fun_ptr = local_store.find(transition);
-      auto model_update = (fun_ptr != local_store.end() && fun_ptr->second().has_value())
-                              ? markingMutation(fun_ptr->second().value())
-                              : noTransitionInStore(transition);
 
-      const auto end_time = now();
-      const auto thread_id = getThreadId();
+      auto t = getAction(local_store, transition);
 
-      reducers.enqueue(
-          model_update.has_value()
-              ? Reducer([=, update = std::move(model_update)](
-                                   Model model) mutable {
-                  model.data->M += model.data->Dp.at(transition);
-                  model.data->active_transitions.erase(transition);
-
-                  model.data->log.emplace_back(std::make_tuple(
-                      thread_id, start_time, end_time, transition));
-                  return update.value()(model);
-                })
-              : Reducer([=](Model model) {
-                  model.data->M += model.data->Dp.at(transition);
-                  model.data->active_transitions.erase(transition);
-
-                  model.data->log.emplace_back(std::make_tuple(
-                      thread_id, start_time, end_time, transition));
-                  return model;
-                }));
-    }
+      if (t.has_value()) {
+        auto optional_error = t.value()();
+        const auto end_time = now();
+        const auto thread_id = getThreadId();
+        if (optional_error.has_value()) {
+          MarkingMutation error_mutation = optional_error.value();
+          reducers.enqueue(Reducer([=](Model model) {
+            model.data->M += error_mutation;
+            model.data->active_transitions.erase(transition);
+            model.data->log.emplace_back(
+                std::make_tuple(thread_id, start_time, end_time, transition));
+            return model;
+          }));
+        } else {
+          reducers.enqueue(Reducer([=](Model model) {
+            model.data->M += model.data->Dp.at(transition);
+            model.data->active_transitions.erase(transition);
+            model.data->log.emplace_back(
+                std::make_tuple(thread_id, start_time, end_time, transition));
+            return model;
+          }));
+        }
+      }
+    };
   };
   // populate the pool
   std::generate(std::begin(pool), std::end(pool),
