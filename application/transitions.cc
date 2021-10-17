@@ -48,7 +48,7 @@ OptionalError action3() {
 OptionalError action4() {
   std::cout << "Executing Transition 4 on thread " << std::this_thread::get_id()
             << '\n';
-  auto dur = 200*5 + std::rand() / ((RAND_MAX + 1500u) / 1500);
+  auto dur = 1800 + 200*5 + std::rand() / ((RAND_MAX + 1500u) / 1500);
   sleep(std::chrono::milliseconds(dur));
   return std::nullopt;
 }

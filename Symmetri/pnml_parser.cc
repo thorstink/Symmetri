@@ -30,7 +30,7 @@ bool contains(std::vector<std::string> v, const std::string &K) {
 }
 
 std::tuple<TransitionMutation, TransitionMutation, Marking, nlohmann::json,
-           std::map<Eigen::Index, std::string>, Conversions, Conversions>
+           Conversions, Conversions>
 constructTransitionMutationMatrices(std::string file) {
   XMLDocument net;
   net.LoadFile(file.c_str());
@@ -185,10 +185,21 @@ constructTransitionMutationMatrices(std::string file) {
     index_place_id_map.insert({i, places.at(i)});
   }
 
-  Conversions transition_mapper(index_place_id_map);
+  std::map<Eigen::Index, std::string> index_transition_id_map;
+  for (size_t i = 0; i < transitions.size(); i++) {
+    index_transition_id_map.insert({i, transitions.at(i)});
+  }
+
+  Conversions transition_mapper(index_transition_id_map);
   Conversions marking_mapper(index_place_id_map);
-  return {pre_map,           post_map,      M0, j, index_place_id_map,
-          transition_mapper, marking_mapper};
+
+  for (auto [id, name] : index_transition_id_map)
+    std::cout << "id: " << id << ", name: " << name << std::endl;
+
+  for (auto [id, name] : index_place_id_map)
+    std::cout << "id: " << id << ", name: " << name << std::endl;
+
+  return {pre_map, post_map, M0, j, transition_mapper, marking_mapper};
 }
 
 nlohmann::json

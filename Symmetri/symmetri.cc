@@ -18,7 +18,7 @@ std::function<void()> start(const std::string &pnml_path,
                             const TransitionActionMap &store) {
 
   return [=]() {
-    const auto &[Dm, Dp, M0, json_net, index_place_map, C,D] =
+    const auto &[Dm, Dp, M0, json_net, transitions, places] =
         constructTransitionMutationMatrices(pnml_path);
 
     BlockingConcurrentQueue<Reducer> reducers(256);
@@ -70,7 +70,7 @@ std::function<void()> start(const std::string &pnml_path,
       // output_file.close();
       nlohmann::json j;
       j["active_transitions"] = nlohmann::json(m.data->active_transitions);
-      j["marking"] = webMarking(m.data->M, index_place_map);
+      j["marking"] = webMarking(m.data->M, places.id_to_label_);
       marking_transition->send(j.dump());
       time_data->send(log_data.str());
       server.poll(10);
