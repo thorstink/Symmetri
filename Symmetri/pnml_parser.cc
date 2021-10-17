@@ -4,6 +4,7 @@
 #include <iostream>
 
 using namespace tinyxml2;
+using namespace symmetri;
 
 // Function to print the
 // index of an element
@@ -28,13 +29,12 @@ bool contains(std::vector<std::string> v, const std::string &K) {
   return it != v.end();
 }
 
-std::tuple<types::TransitionMutation, types::TransitionMutation, types::Marking,
+std::tuple<TransitionMutation, TransitionMutation, Marking,
            nlohmann::json, std::map<uint8_t, std::string>>
 constructTransitionMutationMatrices(std::string file) {
   XMLDocument net;
   net.LoadFile(file.c_str());
   nlohmann::json j;
-  // j["states"] = {};
 
   std::vector<std::string> places, transitions;
   std::unordered_map<std::string, int> place_initialMarking;
@@ -186,7 +186,7 @@ constructTransitionMutationMatrices(std::string file) {
   return {pre_map, post_map, M0, j, index_place_id_map};
 }
 
-nlohmann::json webMarking(const types::Marking& M, const std::map<uint8_t, std::string>& index_marking_map)
+nlohmann::json webMarking(const Marking& M, const std::map<uint8_t, std::string>& index_marking_map)
 
 {
   nlohmann::json j;

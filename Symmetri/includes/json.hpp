@@ -18491,7 +18491,7 @@ class basic_json
     lists elements must be pairs, and their first elements must be strings. If
     the initializer list is empty, the empty object `{}` is created.
 
-    @note This function is only added for symmetry reasons. In contrast to the
+    @note This function is only added for symmetri reasons. In contrast to the
     related function @ref array(initializer_list_t), there are
     no cases which can only be expressed by this function. That is, any
     initializer list @a init can also be passed to the initializer list

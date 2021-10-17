@@ -1,11 +1,11 @@
 #include "actions.h"
 
-namespace actions {
+namespace symmetri {
 using namespace moodycamel;
 
 auto now() {
   return std::chrono::duration_cast<std::chrono::microseconds>(
-             model::clock_t::now().time_since_epoch())
+             clock_t::now().time_since_epoch())
       .count();
 }
 
@@ -13,8 +13,8 @@ auto getThreadId() {
   return std::hash<std::thread::id>{}(std::this_thread::get_id());
 }
 
-std::optional<model::Reducer> noTransitionInStore(const types::Transition &t) {
-  return model::Reducer([=](model::Model model) {
+std::optional<Reducer> noTransitionInStore(const Transition &t) {
+  return Reducer([=](Model model) {
     std::stringstream s;
     s << "Transition " << t << " is not in the store.";
     throw std::runtime_error(s.str());
@@ -22,10 +22,17 @@ std::optional<model::Reducer> noTransitionInStore(const types::Transition &t) {
   });
 }
 
+std::optional<Reducer> markingMutation(const MarkingMutation &dM) {
+  return Reducer([=](Model model) {
+    model.data->M += dM;
+    return model;
+  });
+}
+
 std::vector<std::thread>
-executeTransition(const model::TransitionActionMap &local_store,
-                  BlockingConcurrentQueue<model::Reducer> &reducers,
-                  BlockingConcurrentQueue<types::Transition> &actions) {
+executeTransition(const TransitionActionMap &local_store,
+                  BlockingConcurrentQueue<Reducer> &reducers,
+                  BlockingConcurrentQueue<Transition> &actions) {
 
   unsigned int n = std::thread::hardware_concurrency();
   unsigned int thread_count = std::max<unsigned int>(1, n / 2);
@@ -34,14 +41,14 @@ executeTransition(const model::TransitionActionMap &local_store,
   std::vector<std::thread> pool(thread_count);
 
   auto worker = [&] {
-    types::Transition transition;
+    Transition transition;
     while (true) {
       actions.wait_dequeue(transition);
 
       const auto start_time = now();
       auto fun_ptr = local_store.find(transition);
-      auto model_update = (fun_ptr != local_store.end())
-                              ? fun_ptr->second()
+      auto model_update = (fun_ptr != local_store.end() && fun_ptr->second().has_value())
+                              ? markingMutation(fun_ptr->second().value())
                               : noTransitionInStore(transition);
 
       const auto end_time = now();
@@ -49,8 +56,8 @@ executeTransition(const model::TransitionActionMap &local_store,
 
       reducers.enqueue(
           model_update.has_value()
-              ? model::Reducer([=, update = std::move(model_update)](
-                                   model::Model model) mutable {
+              ? Reducer([=, update = std::move(model_update)](
+                                   Model model) mutable {
                   model.data->M += model.data->Dp.at(transition);
                   model.data->active_transitions.erase(transition);
 
@@ -58,7 +65,7 @@ executeTransition(const model::TransitionActionMap &local_store,
                       thread_id, start_time, end_time, transition));
                   return update.value()(model);
                 })
-              : model::Reducer([=](model::Model model) {
+              : Reducer([=](Model model) {
                   model.data->M += model.data->Dp.at(transition);
                   model.data->active_transitions.erase(transition);
 
@@ -74,4 +81,4 @@ executeTransition(const model::TransitionActionMap &local_store,
 
   return pool;
 }
-} // namespace actions
+} // namespace symmetri

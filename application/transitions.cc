@@ -3,7 +3,7 @@
 #include <iostream>
 #include <thread>
 
-using namespace model;
+using namespace symmetri;
 
 void sleep(std::chrono::milliseconds ms) {
   // auto start = std::chrono::high_resolution_clock::now();
@@ -14,35 +14,31 @@ void sleep(std::chrono::milliseconds ms) {
   return;
 }
 
-OptionalReducer action0() {
+OptionalMarkingMutation action0() {
   std::cout << "Executing Transition 0 on thread " << std::this_thread::get_id()
             << '\n';
   sleep(std::chrono::milliseconds(190*5));
   return std::nullopt;
 }
-OptionalReducer action1() {
+OptionalMarkingMutation action1() {
   std::cout << "Executing Transition 1 on thread " << std::this_thread::get_id()
             << '\n';
   sleep(std::chrono::milliseconds(700*5));
-
-  return Reducer([](model::Model model) {
-    // if you'd really want, here you could put stuff in the model.
-    return model;
-  });
+  return std::nullopt;
 }
-OptionalReducer action2() {
+OptionalMarkingMutation action2() {
   std::cout << "Executing Transition 2 on thread " << std::this_thread::get_id()
             << '\n';
   sleep(std::chrono::milliseconds(200*5));
   return std::nullopt;
 }
-OptionalReducer action3() {
+OptionalMarkingMutation action3() {
   std::cout << "Executing Transition 3 on thread " << std::this_thread::get_id()
             << '\n';
   sleep(std::chrono::milliseconds(600*5));
   return std::nullopt;
 }
-OptionalReducer action4() {
+OptionalMarkingMutation action4() {
   std::cout << "Executing Transition 4 on thread " << std::this_thread::get_id()
             << '\n';
   auto dur = 200*5 + std::rand() / ((RAND_MAX + 1500u) / 1500);
@@ -50,14 +46,14 @@ OptionalReducer action4() {
   return std::nullopt;
 }
 
-OptionalReducer action5() {
+OptionalMarkingMutation action5() {
   std::cout << "Executing Transition 5 on thread " << std::this_thread::get_id()
             << '\n';
   sleep(std::chrono::milliseconds(450*5));
   return std::nullopt;
 }
 
-OptionalReducer action6() {
+OptionalMarkingMutation action6() {
   std::cout << "Executing Transition 6 on thread " << std::this_thread::get_id()
             << '\n';
   sleep(std::chrono::milliseconds(250*5));

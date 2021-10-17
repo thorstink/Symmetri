@@ -1,12 +1,12 @@
 #include "model.h"
 #include <optional>
 
-namespace model {
+namespace symmetri {
 
 Model run_all(Model model) {
   auto &M = model.data->M;
   const auto &Dm = model.data->Dm;
-  types::Transitions T;
+  Transitions T;
 
   for (const auto &[T_i, dM_i] : Dm) {
     if (((M - dM_i).array() >= 0).all()) {
@@ -24,11 +24,10 @@ std::optional<Model> run_one(Model model) {
   auto &M = model.data->M;
   const auto &Dm = model.data->Dm;
 
-  auto iterator =
-      std::find_if(Dm.begin(), Dm.end(), [&M](const auto &tup) {
-        const auto &[T_i, dM_i] = tup;
-        return ((M - dM_i).array() >= 0).all();
-      });
+  auto iterator = std::find_if(Dm.begin(), Dm.end(), [&M](const auto &tup) {
+    const auto &[T_i, dM_i] = tup;
+    return ((M - dM_i).array() >= 0).all();
+  });
 
   if (iterator != Dm.end()) {
     const auto &[T_i, dM_i] = *iterator;
@@ -40,4 +39,4 @@ std::optional<Model> run_one(Model model) {
     return std::nullopt;
   }
 }
-} // namespace model
+} // namespace symmetri
