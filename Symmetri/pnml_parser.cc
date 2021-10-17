@@ -30,7 +30,7 @@ bool contains(std::vector<std::string> v, const std::string &K) {
 }
 
 std::tuple<TransitionMutation, TransitionMutation, Marking, nlohmann::json,
-           std::map<uint8_t, std::string>>
+           std::map<Eigen::Index, std::string>, Conversions, Conversions>
 constructTransitionMutationMatrices(std::string file) {
   XMLDocument net;
   net.LoadFile(file.c_str());
@@ -112,6 +112,7 @@ constructTransitionMutationMatrices(std::string file) {
     auto source_id = child->Attribute("source");
     auto target_id = child->Attribute("target");
 
+    // if (contains(places, source_id) && contains(transitions, target_id)) {
     if (contains(places, source_id) && contains(transitions, target_id)) {
       auto s_idx = getIndex(places, source_id);
       auto t_idx = getIndex(transitions, target_id);
@@ -179,16 +180,20 @@ constructTransitionMutationMatrices(std::string file) {
 
   std::cout << "initial marking: " << M0.transpose() << std::endl;
 
-  std::map<uint8_t, std::string> index_place_id_map;
-  for (uint8_t i = 0; i < places.size(); i++) {
+  std::map<Eigen::Index, std::string> index_place_id_map;
+  for (size_t i = 0; i < places.size(); i++) {
     index_place_id_map.insert({i, places.at(i)});
   }
-  return {pre_map, post_map, M0, j, index_place_id_map};
+
+  Conversions transition_mapper(index_place_id_map);
+  Conversions marking_mapper(index_place_id_map);
+  return {pre_map,           post_map,      M0, j, index_place_id_map,
+          transition_mapper, marking_mapper};
 }
 
 nlohmann::json
 webMarking(const Marking &M,
-           const std::map<uint8_t, std::string> &index_marking_map)
+           const std::map<Eigen::Index, std::string> &index_marking_map)
 
 {
   nlohmann::json j;

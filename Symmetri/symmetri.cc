@@ -18,7 +18,7 @@ std::function<void()> start(const std::string &pnml_path,
                             const TransitionActionMap &store) {
 
   return [=]() {
-    const auto &[Dm, Dp, M0, json_net, index_place_map] =
+    const auto &[Dm, Dp, M0, json_net, index_place_map, C,D] =
         constructTransitionMutationMatrices(pnml_path);
 
     BlockingConcurrentQueue<Reducer> reducers(256);

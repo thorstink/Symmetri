@@ -60,7 +60,7 @@ set(targets
   ${PROJECT_NAME}
 )
 
-install(DIRECTORY ${ui_files} include DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/install)
+install(DIRECTORY ${ui_files} Symmetri/include DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/install)
 install(DIRECTORY ${net_files} DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/install/web)
 install(TARGETS ${targets} DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/install)
 
