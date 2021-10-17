@@ -28,15 +28,16 @@ OptionalError action2() {
   std::cout << "Executing Transition 2 on thread " << std::this_thread::get_id()
             << '\n';
   sleep(std::chrono::milliseconds(200*5));
-  // const double chance = 0.3; // this is the chance of getting true, between 0 and 1;
-  // std::random_device rd;
-  // std::mt19937 mt(rd());
-  // std::bernoulli_distribution dist(chance);
-  // bool err = dist(mt);
-  // if (err)
-  // {
-  //   return tl::make_unexpected("noop");
-  // }
+  const double chance = 0.3; // this is the chance of getting true, between 0 and 1;
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::bernoulli_distribution dist(chance);
+  bool err = dist(mt);
+  if (err)
+  {
+    std::cout << "error nr2" << std::endl;
+    return MarkingMutation{{"p6", 1}};
+  }
   return std::nullopt;
 }
 OptionalError action3() {

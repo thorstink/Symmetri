@@ -9,7 +9,7 @@ symmetri::OptionalError action4();
 symmetri::OptionalError action5();
 symmetri::OptionalError action6();
 
-inline symmetri::TransitionActionMap getStore() {
+inline static symmetri::TransitionActionMap getStore() {
   return {{"t0", &action0},  {"t1", &action1},  {"t2", &action2},
           {"t3", &action3},  {"t4", &action4},  {"t5", &action5},
           {"t6", &action6},  {"t18", &action0}, {"t19", &action1},
