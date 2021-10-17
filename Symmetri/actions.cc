@@ -37,15 +37,16 @@ OptionalError executeAction(std::function<OptionalError()> action) {
   return action();
 }
 
+unsigned int threadcount() {
+  return std::max<unsigned int>(std::thread::hardware_concurrency() / 4, 1);
+}
+
 std::vector<std::thread>
 executeTransition(const TransitionActionMap &local_store,
                   BlockingConcurrentQueue<Reducer> &reducers,
-                  BlockingConcurrentQueue<Transition> &actions) {
+                  BlockingConcurrentQueue<Transition> &actions,
+                  unsigned int thread_count) {
 
-  unsigned int n = std::thread::hardware_concurrency();
-  unsigned int thread_count = std::max<unsigned int>(1, n / 2);
-  thread_count = 3;
-  std::cout << thread_count << " concurrent threads are supported.\n";
   std::vector<std::thread> pool(thread_count);
 
   auto worker = [&] {

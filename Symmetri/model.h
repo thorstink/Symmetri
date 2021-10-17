@@ -1,6 +1,5 @@
 #pragma once
 #include "Symmetri/types.h"
-#include "task.hpp"
 #include <blockingconcurrentqueue.h>
 #include <chrono>
 #include <functional>
@@ -11,7 +10,6 @@
 
 namespace symmetri {
 struct Model;
-// using Reducer = symmetri::task<Model(Model)>;
 using Reducer = std::function<Model(Model)>;
 
 using clock_t = std::chrono::system_clock;

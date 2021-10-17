@@ -34,7 +34,7 @@ std::function<void()> start(const std::string &pnml_path,
     server.setStaticPath("web");
     std::cout << "interface online at http://localhost:2222/" << std::endl;
 
-    auto tp = executeTransition(store, reducers, actions);
+    auto tp = executeTransition(store, reducers, actions, 3);
     auto m = Model(clock_t::now(), M0, Dm, Dp, actions);
 
     // auto start

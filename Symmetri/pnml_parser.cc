@@ -29,8 +29,8 @@ bool contains(std::vector<std::string> v, const std::string &K) {
   return it != v.end();
 }
 
-std::tuple<TransitionMutation, TransitionMutation, Marking,
-           nlohmann::json, std::map<uint8_t, std::string>>
+std::tuple<TransitionMutation, TransitionMutation, Marking, nlohmann::json,
+           std::map<uint8_t, std::string>>
 constructTransitionMutationMatrices(std::string file) {
   XMLDocument net;
   net.LoadFile(file.c_str());
@@ -149,13 +149,13 @@ constructTransitionMutationMatrices(std::string file) {
   std::cout << Dp - Dm << std::endl;
 
   int transition_count = transitions.size();
-  std::unordered_map<std::string, Eigen::VectorXi> pre_map, post_map;
+  std::unordered_map<std::string, symmetri::Marking> pre_map, post_map;
   Eigen::VectorXi T(transition_count);
   for (const auto &transition_id : transitions) {
     T.setZero();
     T(getIndex(transitions, transition_id)) = 1;
-    pre_map.insert({transition_id, (Dm * T).eval()});
-    post_map.insert({transition_id, (Dp * T).eval()});
+    pre_map.insert({transition_id, (Dm * T).eval().sparseView()});
+    post_map.insert({transition_id, (Dp * T).eval().sparseView()});
   }
 
   std::vector<int> initial_marking;
@@ -165,8 +165,9 @@ constructTransitionMutationMatrices(std::string file) {
                    return place_initialMarking.at(s);
                  });
 
-  Eigen::VectorXi M0 = Eigen::Map<const Eigen::VectorXi>(
-      initial_marking.data(), initial_marking.size());
+  symmetri::Marking M0 = Eigen::Map<const Eigen::VectorXi>(
+                             initial_marking.data(), initial_marking.size())
+                             .sparseView();
 
   for (auto [i, dM] : pre_map) {
     std::cout << "deduct " << i << ": " << dM.transpose() << std::endl;
@@ -179,21 +180,21 @@ constructTransitionMutationMatrices(std::string file) {
   std::cout << "initial marking: " << M0.transpose() << std::endl;
 
   std::map<uint8_t, std::string> index_place_id_map;
-  for(uint8_t i = 0; i < places.size(); i++)
-  {
+  for (uint8_t i = 0; i < places.size(); i++) {
     index_place_id_map.insert({i, places.at(i)});
-  }  
+  }
   return {pre_map, post_map, M0, j, index_place_id_map};
 }
 
-nlohmann::json webMarking(const Marking& M, const std::map<uint8_t, std::string>& index_marking_map)
+nlohmann::json
+webMarking(const Marking &M,
+           const std::map<uint8_t, std::string> &index_marking_map)
 
 {
   nlohmann::json j;
 
-  for (uint8_t i = 0; i<M.size(); i++)
-  {
-    j.emplace(index_marking_map.at(i), M(i));
+  for (uint8_t i = 0; i < M.size(); i++) {
+    j.emplace(index_marking_map.at(i), M.coeff(i));
   }
   return j;
 }
