@@ -6,16 +6,31 @@ project(Symmetri VERSION 1.0.0)
 # 	set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR})
 # endif()
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wno-missing-field-initializers -fsanitize=address -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O2 -s")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wno-missing-field-initializers -fsanitize=address -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O0 -s")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-field-initializers -fsanitize=address -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O2 -s")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wno-missing-field-initializers -fsanitize=address -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O0 -s")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O2 -s")
 
 find_package(Eigen3 REQUIRED)
 find_package(Seasocks REQUIRED)
 # find_package(catkin REQUIRED COMPONENTS roscpp std_msgs)
+# catkin_package()
+
+find_package( roscpp )
+find_package( std_msgs )
+
+set(catkin_INCLUDE_DIRS
+  ${roscpp_INCLUDE_DIRS}
+  ${std_msgs_INCLUDE_DIRS}
+)
+
+set(catkin_LIBRARIES
+  ${roscpp_LIBRARIES}
+  ${std_msgs_LIBRARIES}
+)
 
 include(FetchContent)
 
@@ -33,8 +48,7 @@ if(NOT concurrentqueue_POPULATED)
   add_subdirectory(${concurrentqueue_SOURCE_DIR} ${concurrentqueue_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
-# include_directories(${EIGEN3_INCLUDE_DIRS} ${SEASOCKS_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} submodules .)
-include_directories(Symmetri/include ${EIGEN3_INCLUDE_DIRS} ${SEASOCKS_INCLUDE_DIRS} submodules )
+include_directories(Symmetri/include ${EIGEN3_INCLUDE_DIRS} ${SEASOCKS_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS}  submodules )
 
 add_library(${PROJECT_NAME}_pnml_parser Symmetri/pnml_parser.cc submodules/tinyxml2/tinyxml2.cpp)
 
@@ -43,9 +57,8 @@ add_library(${PROJECT_NAME} Symmetri/symmetri.cc Symmetri/model.cc Symmetri/acti
 target_link_libraries(${PROJECT_NAME} PRIVATE pthread Seasocks::seasocks ${PROJECT_NAME}_pnml_parser concurrentqueue)
 
 #an app
-add_executable(${PROJECT_NAME}_app application/main.cc application/transitions.cc)
-target_link_libraries(${PROJECT_NAME}_app ${PROJECT_NAME} concurrentqueue)
-# target_link_libraries(${PROJECT_NAME}_app ${PROJECT_NAME} ${catkin_LIBRARIES})
+add_executable(${PROJECT_NAME}_app application/main.cc application/namespace_share_data.cc)
+target_link_libraries(${PROJECT_NAME}_app ${PROJECT_NAME} ${catkin_LIBRARIES} concurrentqueue)
 
 set(ui_files
   ${CMAKE_CURRENT_SOURCE_DIR}/Symmetri/web
