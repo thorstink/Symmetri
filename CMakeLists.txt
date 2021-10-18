@@ -16,11 +16,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi -Wno-unused-parameter -Werror
 
 find_package(Eigen3 REQUIRED)
 find_package(Seasocks REQUIRED)
-# find_package(catkin REQUIRED COMPONENTS roscpp std_msgs)
-# catkin_package()
-
-find_package( roscpp )
-find_package( std_msgs )
+find_package(roscpp REQUIRED)
+find_package(std_msgs REQUIRED)
 
 set(catkin_INCLUDE_DIRS
   ${roscpp_INCLUDE_DIRS}
@@ -48,17 +45,32 @@ if(NOT concurrentqueue_POPULATED)
   add_subdirectory(${concurrentqueue_SOURCE_DIR} ${concurrentqueue_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
+FetchContent_Declare(
+  readerwriterqueue
+  GIT_REPOSITORY    https://github.com/cameron314/readerwriterqueue
+  GIT_TAG           master
+)
+
+# FetchContent_MakeAvailable(readerwriterqueue)
+# https://stackoverflow.com/questions/65527126/disable-install-for-fetchcontent
+FetchContent_GetProperties(readerwriterqueue)
+if(NOT readerwriterqueue)
+  FetchContent_Populate(readerwriterqueue)
+  add_subdirectory(${readerwriterqueue_SOURCE_DIR} ${readerwriterqueue_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
+
+
 include_directories(Symmetri/include ${EIGEN3_INCLUDE_DIRS} ${SEASOCKS_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS}  submodules )
 
 add_library(${PROJECT_NAME}_pnml_parser Symmetri/pnml_parser.cc submodules/tinyxml2/tinyxml2.cpp)
 
 #lib
 add_library(${PROJECT_NAME} Symmetri/symmetri.cc Symmetri/model.cc Symmetri/actions.cc)
-target_link_libraries(${PROJECT_NAME} PRIVATE pthread Seasocks::seasocks ${PROJECT_NAME}_pnml_parser concurrentqueue)
+target_link_libraries(${PROJECT_NAME} PRIVATE pthread Seasocks::seasocks ${PROJECT_NAME}_pnml_parser concurrentqueue readerwriterqueue)
 
 #an app
 add_executable(${PROJECT_NAME}_app application/main.cc application/namespace_share_data.cc)
-target_link_libraries(${PROJECT_NAME}_app ${PROJECT_NAME} ${catkin_LIBRARIES} concurrentqueue)
+target_link_libraries(${PROJECT_NAME}_app ${PROJECT_NAME} ${catkin_LIBRARIES} concurrentqueue readerwriterqueue)
 
 set(ui_files
   ${CMAKE_CURRENT_SOURCE_DIR}/Symmetri/web
@@ -72,6 +84,9 @@ set(targets
   ${PROJECT_NAME}_app
   ${PROJECT_NAME}
 )
+
+set_target_properties(${PROJECT_NAME}_app PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
+# SET(CMAKE_INSTALL_RPATH "${CMAKE_CURRENT_SOURCE_DIR}/install")
 
 install(DIRECTORY ${ui_files} Symmetri/include DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/install)
 install(DIRECTORY ${net_files} DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/install/web)
