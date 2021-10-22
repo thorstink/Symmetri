@@ -72,6 +72,10 @@ target_link_libraries(${PROJECT_NAME} PRIVATE pthread Seasocks::seasocks ${PROJE
 add_executable(${PROJECT_NAME}_app application/main.cc application/namespace_share_data.cc)
 target_link_libraries(${PROJECT_NAME}_app ${PROJECT_NAME} ${catkin_LIBRARIES} concurrentqueue readerwriterqueue)
 
+#an app
+add_executable(${PROJECT_NAME}_hello_world hello_world/main.cc)
+target_link_libraries(${PROJECT_NAME}_hello_world ${PROJECT_NAME} concurrentqueue readerwriterqueue)
+
 set(ui_files
   ${CMAKE_CURRENT_SOURCE_DIR}/Symmetri/web
 )
@@ -81,6 +85,7 @@ set(net_files
 )
 
 set(targets
+  ${PROJECT_NAME}_hello_world
   ${PROJECT_NAME}_app
   ${PROJECT_NAME}
 )

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Symmetri/expected.hpp"
 #include <Eigen/SparseCore>
 #include <optional>
 #include <string>

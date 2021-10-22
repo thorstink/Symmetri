@@ -23,6 +23,12 @@ int getIndex(std::vector<std::string> v, const std::string &K) {
   }
 }
 
+std::string toLower(std::string str)
+{
+  transform(str.begin(), str.end(), str.begin(), ::tolower);
+  return str;
+}
+
 bool contains(std::vector<std::string> v, const std::string &K) {
   auto it = find(v.begin(), v.end(), K);
   // If element was found
@@ -40,22 +46,32 @@ constructTransitionMutationMatrices(std::string file) {
   std::unordered_map<std::string, int> place_initialMarking;
 
   tinyxml2::XMLElement *levelElement =
-      net.FirstChildElement("pnml")->FirstChildElement("net");
+      net.FirstChildElement("pnml")->FirstChildElement("net")->FirstChildElement("page");
 
   for (tinyxml2::XMLElement *child = levelElement->FirstChildElement("place");
        child != NULL; child = child->NextSiblingElement("place")) {
     // do something with each child element
-    auto place_name =
-        child->FirstChildElement("name")->FirstChildElement("value")->GetText();
+    auto place_name = toLower(child->Attribute("id"));
+    // auto place_name =
+    //     child->FirstChildElement("name")->FirstChildElement("value")->GetText();
 
-    auto place_id = child->Attribute("id");
+    auto place_id = toLower(child->Attribute("id"));
 
+    auto only_digits = [](std::string source) {
+      std::string target = "";
+      for (char c : source) {
+        if (std::isdigit(c))
+          target += c;
+      }
+      return target;
+    };
+    
     auto initial_marking =
         (child->FirstChildElement("initialMarking") == nullptr)
             ? 0
-            : std::stoi(child->FirstChildElement("initialMarking")
-                            ->FirstChildElement("value")
-                            ->GetText());
+            : std::stoi(only_digits(child->FirstChildElement("initialMarking")
+                                        ->FirstChildElement("text")
+                                        ->GetText()));
 
     place_initialMarking.insert({place_id, initial_marking});
     int x = std::stoi(child->FirstChildElement("graphics")
@@ -77,10 +93,10 @@ constructTransitionMutationMatrices(std::string file) {
            levelElement->FirstChildElement("transition");
        child != NULL; child = child->NextSiblingElement("transition")) {
     // do something with each child element
-    auto transition_name =
-        child->FirstChildElement("name")->FirstChildElement("value")->GetText();
-
-    auto transition_id = child->Attribute("id");
+    // auto transition_name =
+    //     child->FirstChildElement("name")->FirstChildElement("value")->GetText();
+    auto transition_name = toLower(child->Attribute("id"));
+    auto transition_id = toLower(child->Attribute("id"));
 
     int x = std::stoi(child->FirstChildElement("graphics")
                           ->FirstChildElement("position")
@@ -108,9 +124,9 @@ constructTransitionMutationMatrices(std::string file) {
        child != NULL; child = child->NextSiblingElement("arc")) {
     // do something with each child element
 
-    auto arc_id = child->Attribute("id");
-    auto source_id = child->Attribute("source");
-    auto target_id = child->Attribute("target");
+    auto arc_id = toLower(child->Attribute("id"));
+    auto source_id = toLower(child->Attribute("source"));
+    auto target_id = toLower(child->Attribute("target"));
 
     // if (contains(places, source_id) && contains(transitions, target_id)) {
     if (contains(places, source_id) && contains(transitions, target_id)) {

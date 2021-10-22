@@ -11,7 +11,7 @@ void sleep(std::chrono::milliseconds ms) {
   return;
 }
 namespace T1 {
-static bool Boo = true;
+bool Boo = true;
 
 OptionalError action0() {
   T1::Boo = true;
@@ -28,6 +28,7 @@ OptionalError action1() {
   return std::nullopt;
 }
 } // namespace T1
+
 OptionalError action2() {
   std::cout << "Executing Transition 2 on thread " << std::this_thread::get_id()
             << '\n';

@@ -18,7 +18,6 @@ int main(int argc, char *argv[]) {
 
   auto pnml_path = std::string(argv[1]);
   auto store = getStore();
-  // store.insert({"t4", boost::bind(&ros_example::somePub::publish, &pub)});
   store.insert({"t4", [&]() { return pub.publish(); }});
 
   auto go = symmetri::start(pnml_path, store);

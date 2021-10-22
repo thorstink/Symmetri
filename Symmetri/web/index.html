@@ -14,13 +14,13 @@
   <script src="lib/d3.v3.min.js"></script>
   <script src="lib/lodash.min.js"></script>
   <script src="lib/petrinet.js"></script>
-  <!-- <script src="rxjs.umd.min.js"></script> -->
-  <script src="https://unpkg.com/rxjs@^7/dist/bundles/rxjs.umd.min.js"></script>
+  <script src="rxjs.umd.min.js"></script>
+  <!-- <script src="https://unpkg.com/rxjs@^7/dist/bundles/rxjs.umd.min.js"></script> -->
 
-<body>
+<body style="height: 400px;">
   <h2>Overview</h2>
-  <div id="petri-net"></div>
   <div id="vis"></div>
+  <div id="petri-net"></div>
   <script type="text/javascript">
     var net = new Array();
     var states = [];
@@ -41,7 +41,7 @@
       function scaleModel(sx, sy) {
         (states.concat(transitions)).forEach(function (s) { s.x *= sx; s.y *= sy })
       }
-      scaleModel(0.7, 0.7);
+      scaleModel(1.5, 1.5);
       let script = document.createElement('script');
       script.src = "lib/app.js";
       document.body.append(script);
