@@ -3,7 +3,7 @@ name: CI
 on: [push]
 
 jobs:
-  build:
+  build-project:
     runs-on: ubuntu-latest
     container:
       runs-on: ubuntu-latest
