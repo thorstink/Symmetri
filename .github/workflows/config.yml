@@ -26,7 +26,6 @@ jobs:
       run: |
         mkdir build
         cd build
-        source /opt/ros/noetic/setup.bash
         cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DCODE_COVERAGE=ON  ..
         make
 
