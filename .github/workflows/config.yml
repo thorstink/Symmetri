@@ -3,7 +3,8 @@ name: CI
 on: [push]
 
 jobs:
-  build-backend:
+  build:
+    runs-on: ubuntu-latest
     container:
       runs-on: ubuntu-latest
       container: ros:noetic-ros-core-focal
