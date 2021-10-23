@@ -5,9 +5,7 @@ on: [push]
 jobs:
   build-project:
     runs-on: ubuntu-latest
-    container:
-      runs-on: ubuntu-latest
-      container: ros:noetic-ros-core-focal
+    container: ros:noetic-ros-core-focal
     steps:
     - uses: actions/checkout@v1
 
