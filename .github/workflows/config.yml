@@ -23,6 +23,7 @@ jobs:
 
     - name: "build project"
       run: |
+        git submodule update --init --recursive
         mkdir build
         cd build
         bash -c 'source /opt/ros/$ROS_DISTRO/setup.bash'
