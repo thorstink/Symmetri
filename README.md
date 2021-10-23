@@ -18,3 +18,15 @@ interface online at http://localhost:2222/
 and kick off by going to `http://localhost:2222/` and push the button.
 
             // "scale": { "domain": ["t18","t19","t20","t21","t22","t23","t24","t25","t26","t27","t28","t29"]}
+
+
+# WIP / TODO
+
+- Remove webinterface from main loop
+- Memoize run func
+- Create external input possibilities
+- Write some tests
+- CI + pre-commit hooks
+- redo examples with own cmake
+- research transition guards/coloured nets
+- ros clear kill process

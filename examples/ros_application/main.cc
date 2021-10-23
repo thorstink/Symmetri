@@ -1,7 +1,7 @@
 #include "Symmetri/symmetri.h"
 #include "namespace_share_data.h"
 #include "some_ros.hpp"
-#include <readerwriterqueue.h>
+// #include <readerwriterqueue.h>
 
 inline static symmetri::TransitionActionMap getStore() {
   return {{"t0", &T1::action0}, {"t1", &T1::action1}, {"t2", &action2},
@@ -11,7 +11,7 @@ inline static symmetri::TransitionActionMap getStore() {
 int main(int argc, char *argv[]) {
   ros::init(argc, argv, "rosthingy");
 
-  moodycamel::ReaderWriterQueue<symmetri::MarkingMutation> q(100);
+  // moodycamel::ReaderWriterQueue<symmetri::MarkingMutation> q(100);
 
   ros_example::someSub sub;
   ros_example::somePub pub;
