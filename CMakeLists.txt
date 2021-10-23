@@ -69,11 +69,11 @@ add_library(${PROJECT_NAME} Symmetri/symmetri.cc Symmetri/model.cc Symmetri/acti
 target_link_libraries(${PROJECT_NAME} PRIVATE pthread Seasocks::seasocks ${PROJECT_NAME}_pnml_parser concurrentqueue readerwriterqueue)
 
 #an app
-add_executable(${PROJECT_NAME}_app application/main.cc application/namespace_share_data.cc)
+add_executable(${PROJECT_NAME}_app examples/ros_application/main.cc examples/ros_application/namespace_share_data.cc)
 target_link_libraries(${PROJECT_NAME}_app ${PROJECT_NAME} ${catkin_LIBRARIES} concurrentqueue readerwriterqueue)
 
 #an app
-add_executable(${PROJECT_NAME}_hello_world hello_world/main.cc)
+add_executable(${PROJECT_NAME}_hello_world examples/hello_world/main.cc)
 target_link_libraries(${PROJECT_NAME}_hello_world ${PROJECT_NAME} concurrentqueue readerwriterqueue)
 
 set(ui_files
