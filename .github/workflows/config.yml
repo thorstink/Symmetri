@@ -1,0 +1,33 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build-backend:
+    runs-on: noetic-ros-core-focal
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: apt dependencies
+      run: |
+        sudo apt-get install -y lcov gcovr libeigen3-dev
+
+    - name: seasocks
+      run: |
+        git clone https://github.com/mattgodbolt/seasocks.git
+        cd seasocks && mkdir build && cd build
+        cmake -DCMAKE_BUILD_TYPE=Debug -DUNITTESTS=OFF ..
+        sudo make install
+
+    - name: "build project"
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DCODE_COVERAGE=ON  ..
+        make
+
+    - name: "test and coverage"
+      run: |
+        cd build
+        ctest -VV
+        gcovr -r ../ .
