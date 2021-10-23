@@ -22,6 +22,7 @@ jobs:
         sudo make install
 
     - name: "build project"
+      container: ros:noetic-ros-core-focal
       run: |
         mkdir build
         cd build
