@@ -35,9 +35,9 @@ public:
   }
 };
 
-inline Marking
-mutationVectorFromMap(const Conversions &convertor, int state_size,
-                      const MarkingMutation& mutation) {
+inline Marking mutationVectorFromMap(const Conversions &convertor,
+                                     int state_size,
+                                     const MarkingMutation &mutation) {
   // create a mutation vector from a map.
   Marking dM;
   dM.resize(state_size);

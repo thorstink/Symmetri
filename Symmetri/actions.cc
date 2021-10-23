@@ -39,15 +39,14 @@ OptionalError executeAction(std::function<OptionalError()> action) {
 
 std::vector<std::thread>
 executeTransition(const TransitionActionMap &local_store,
-                  const Conversions& marking_mapper,
+                  const Conversions &marking_mapper,
                   BlockingConcurrentQueue<Reducer> &reducers,
-                  BlockingConcurrentQueue<Transition> &actions,
-                  int state_size,
+                  BlockingConcurrentQueue<Transition> &actions, int state_size,
                   unsigned int thread_count) {
 
   std::vector<std::thread> pool(thread_count);
 
-  auto worker = [&,state_size] {
+  auto worker = [&, state_size] {
     Transition transition;
     while (true) {
       actions.wait_dequeue(transition);
@@ -60,7 +59,8 @@ executeTransition(const TransitionActionMap &local_store,
         const auto end_time = now();
         const auto thread_id = getThreadId();
         if (optional_error.has_value()) {
-          Marking error_mutation = mutationVectorFromMap(marking_mapper, state_size, optional_error.value());
+          Marking error_mutation = mutationVectorFromMap(
+              marking_mapper, state_size, optional_error.value());
           reducers.enqueue(Reducer([=](Model model) {
             model.data->M += error_mutation;
             model.data->active_transitions.erase(transition);
