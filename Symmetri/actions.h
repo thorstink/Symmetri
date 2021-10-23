@@ -4,11 +4,13 @@
 #include <thread>
 #include <vector>
 
-namespace actions {
+namespace symmetri {
 
-std::vector<std::thread> executeTransition(
-    const model::TransitionActionMap &local_store,
-    moodycamel::BlockingConcurrentQueue<model::Reducer> &reducers,
-    moodycamel::BlockingConcurrentQueue<types::Transition> &actions);
+std::vector<std::thread>
+executeTransition(const TransitionActionMap &local_store,
+                  const Conversions &marking_mapper,
+                  moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
+                  moodycamel::BlockingConcurrentQueue<Transition> &actions,
+                  int state_size, unsigned int thread_count);
 
-} // namespace actions
+} // namespace symmetri

@@ -4,6 +4,7 @@
 #include <iostream>
 
 using namespace tinyxml2;
+using namespace symmetri;
 
 // Function to print the
 // index of an element
@@ -22,40 +23,55 @@ int getIndex(std::vector<std::string> v, const std::string &K) {
   }
 }
 
+std::string toLower(std::string str)
+{
+  transform(str.begin(), str.end(), str.begin(), ::tolower);
+  return str;
+}
+
 bool contains(std::vector<std::string> v, const std::string &K) {
   auto it = find(v.begin(), v.end(), K);
   // If element was found
   return it != v.end();
 }
 
-std::tuple<types::TransitionMutation, types::TransitionMutation, types::Marking,
-           nlohmann::json, std::map<uint8_t, std::string>>
+std::tuple<TransitionMutation, TransitionMutation, Marking, nlohmann::json,
+           Conversions, Conversions>
 constructTransitionMutationMatrices(std::string file) {
   XMLDocument net;
   net.LoadFile(file.c_str());
   nlohmann::json j;
-  // j["states"] = {};
 
   std::vector<std::string> places, transitions;
   std::unordered_map<std::string, int> place_initialMarking;
 
   tinyxml2::XMLElement *levelElement =
-      net.FirstChildElement("pnml")->FirstChildElement("net");
+      net.FirstChildElement("pnml")->FirstChildElement("net")->FirstChildElement("page");
 
   for (tinyxml2::XMLElement *child = levelElement->FirstChildElement("place");
        child != NULL; child = child->NextSiblingElement("place")) {
     // do something with each child element
-    auto place_name =
-        child->FirstChildElement("name")->FirstChildElement("value")->GetText();
+    auto place_name = toLower(child->Attribute("id"));
+    // auto place_name =
+    //     child->FirstChildElement("name")->FirstChildElement("value")->GetText();
 
-    auto place_id = child->Attribute("id");
+    auto place_id = toLower(child->Attribute("id"));
 
+    auto only_digits = [](std::string source) {
+      std::string target = "";
+      for (char c : source) {
+        if (std::isdigit(c))
+          target += c;
+      }
+      return target;
+    };
+    
     auto initial_marking =
         (child->FirstChildElement("initialMarking") == nullptr)
             ? 0
-            : std::stoi(child->FirstChildElement("initialMarking")
-                            ->FirstChildElement("value")
-                            ->GetText());
+            : std::stoi(only_digits(child->FirstChildElement("initialMarking")
+                                        ->FirstChildElement("text")
+                                        ->GetText()));
 
     place_initialMarking.insert({place_id, initial_marking});
     int x = std::stoi(child->FirstChildElement("graphics")
@@ -77,10 +93,10 @@ constructTransitionMutationMatrices(std::string file) {
            levelElement->FirstChildElement("transition");
        child != NULL; child = child->NextSiblingElement("transition")) {
     // do something with each child element
-    auto transition_name =
-        child->FirstChildElement("name")->FirstChildElement("value")->GetText();
-
-    auto transition_id = child->Attribute("id");
+    // auto transition_name =
+    //     child->FirstChildElement("name")->FirstChildElement("value")->GetText();
+    auto transition_name = toLower(child->Attribute("id"));
+    auto transition_id = toLower(child->Attribute("id"));
 
     int x = std::stoi(child->FirstChildElement("graphics")
                           ->FirstChildElement("position")
@@ -108,10 +124,11 @@ constructTransitionMutationMatrices(std::string file) {
        child != NULL; child = child->NextSiblingElement("arc")) {
     // do something with each child element
 
-    auto arc_id = child->Attribute("id");
-    auto source_id = child->Attribute("source");
-    auto target_id = child->Attribute("target");
+    auto arc_id = toLower(child->Attribute("id"));
+    auto source_id = toLower(child->Attribute("source"));
+    auto target_id = toLower(child->Attribute("target"));
 
+    // if (contains(places, source_id) && contains(transitions, target_id)) {
     if (contains(places, source_id) && contains(transitions, target_id)) {
       auto s_idx = getIndex(places, source_id);
       auto t_idx = getIndex(transitions, target_id);
@@ -149,13 +166,13 @@ constructTransitionMutationMatrices(std::string file) {
   std::cout << Dp - Dm << std::endl;
 
   int transition_count = transitions.size();
-  std::unordered_map<std::string, Eigen::VectorXi> pre_map, post_map;
+  std::unordered_map<std::string, symmetri::Marking> pre_map, post_map;
   Eigen::VectorXi T(transition_count);
   for (const auto &transition_id : transitions) {
     T.setZero();
     T(getIndex(transitions, transition_id)) = 1;
-    pre_map.insert({transition_id, (Dm * T).eval()});
-    post_map.insert({transition_id, (Dp * T).eval()});
+    pre_map.insert({transition_id, (Dm * T).eval().sparseView()});
+    post_map.insert({transition_id, (Dp * T).eval().sparseView()});
   }
 
   std::vector<int> initial_marking;
@@ -165,8 +182,9 @@ constructTransitionMutationMatrices(std::string file) {
                    return place_initialMarking.at(s);
                  });
 
-  Eigen::VectorXi M0 = Eigen::Map<const Eigen::VectorXi>(
-      initial_marking.data(), initial_marking.size());
+  symmetri::Marking M0 = Eigen::Map<const Eigen::VectorXi>(
+                             initial_marking.data(), initial_marking.size())
+                             .sparseView();
 
   for (auto [i, dM] : pre_map) {
     std::cout << "deduct " << i << ": " << dM.transpose() << std::endl;
@@ -178,22 +196,37 @@ constructTransitionMutationMatrices(std::string file) {
 
   std::cout << "initial marking: " << M0.transpose() << std::endl;
 
-  std::map<uint8_t, std::string> index_place_id_map;
-  for(uint8_t i = 0; i < places.size(); i++)
-  {
+  std::map<Eigen::Index, std::string> index_place_id_map;
+  for (size_t i = 0; i < places.size(); i++) {
     index_place_id_map.insert({i, places.at(i)});
-  }  
-  return {pre_map, post_map, M0, j, index_place_id_map};
+  }
+
+  std::map<Eigen::Index, std::string> index_transition_id_map;
+  for (size_t i = 0; i < transitions.size(); i++) {
+    index_transition_id_map.insert({i, transitions.at(i)});
+  }
+
+  Conversions transition_mapper(index_transition_id_map);
+  Conversions marking_mapper(index_place_id_map);
+
+  for (auto [id, name] : index_transition_id_map)
+    std::cout << "id: " << id << ", name: " << name << std::endl;
+
+  for (auto [id, name] : index_place_id_map)
+    std::cout << "id: " << id << ", name: " << name << std::endl;
+
+  return {pre_map, post_map, M0, j, transition_mapper, marking_mapper};
 }
 
-nlohmann::json webMarking(const types::Marking& M, const std::map<uint8_t, std::string>& index_marking_map)
+nlohmann::json
+webMarking(const Marking &M,
+           const std::map<Eigen::Index, std::string> &index_marking_map)
 
 {
   nlohmann::json j;
 
-  for (uint8_t i = 0; i<M.size(); i++)
-  {
-    j.emplace(index_marking_map.at(i), M(i));
+  for (uint8_t i = 0; i < M.size(); i++) {
+    j.emplace(index_marking_map.at(i), M.coeff(i));
   }
   return j;
 }

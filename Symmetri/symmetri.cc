@@ -1,30 +1,28 @@
-#include "symmetri.h"
+#include "Symmetri/symmetri.h"
+#include "Symmetri/types.h"
 #include "actions.h"
 #include "model.h"
 #include "pnml_parser.h"
-#include "types.h"
 #include "ws_interface.hpp"
 #include <fstream>
 #include <functional>
 #include <tuple>
 
 namespace symmetri {
-using namespace model;
-using namespace actions;
 using namespace moodycamel;
 using namespace seasocks;
 
-constexpr auto noop = [](const model::Model &m) { return m; };
+constexpr auto noop = [](const Model &m) { return m; };
 
 std::function<void()> start(const std::string &pnml_path,
-                            const model::TransitionActionMap &store) {
+                            const TransitionActionMap &store) {
 
   return [=]() {
-    const auto &[Dm, Dp, M0, json_net, index_place_map] =
+    const auto &[Dm, Dp, M0, json_net, transitions, places] =
         constructTransitionMutationMatrices(pnml_path);
 
     BlockingConcurrentQueue<Reducer> reducers(256);
-    BlockingConcurrentQueue<types::Transition> actions(1024);
+    BlockingConcurrentQueue<Transition> actions(1024);
 
     seasocks::Server server(std::make_shared<seasocks::PrintfLogger>(
         seasocks::Logger::Level::Error));
@@ -35,9 +33,8 @@ std::function<void()> start(const std::string &pnml_path,
     server.startListening(2222);
     server.setStaticPath("web");
     std::cout << "interface online at http://localhost:2222/" << std::endl;
-
-    auto tp = executeTransition(store, reducers, actions);
-    auto m = Model(model::clock_t::now(), M0, Dm, Dp, actions);
+    auto tp = executeTransition(store, places, reducers, actions, M0.size(), 3);
+    auto m = Model(clock_t::now(), M0, Dm, Dp, actions);
 
     // auto start
     reducers.enqueue(noop);
@@ -52,7 +49,7 @@ std::function<void()> start(const std::string &pnml_path,
     while (true) {
       // get a reducer.
       while (reducers.try_dequeue(f)) {
-        m.data->timestamp = model::clock_t::now();
+        m.data->timestamp = clock_t::now();
         try {
           m = run_all(f(m));
         } catch (const std::exception &e) {
@@ -72,7 +69,7 @@ std::function<void()> start(const std::string &pnml_path,
       // output_file.close();
       nlohmann::json j;
       j["active_transitions"] = nlohmann::json(m.data->active_transitions);
-      j["marking"] = webMarking(m.data->M, index_place_map);
+      j["marking"] = webMarking(m.data->M, places.id_to_label_);
       marking_transition->send(j.dump());
       time_data->send(log_data.str());
       server.poll(10);

@@ -1,10 +1,12 @@
 #pragma once
+#include "Symmetri/types.h"
 #include "nlohmann/json.hpp"
-#include "types.h"
 #include <tuple>
 
-std::tuple<types::TransitionMutation, types::TransitionMutation, types::Marking,
-           nlohmann::json, std::map<uint8_t, std::string>>
+std::tuple<symmetri::TransitionMutation, symmetri::TransitionMutation,
+           symmetri::Marking, nlohmann::json, symmetri::Conversions, symmetri::Conversions>
 constructTransitionMutationMatrices(std::string file);
 
-nlohmann::json webMarking(const types::Marking& M, const std::map<uint8_t, std::string>& index_marking_map);
+nlohmann::json
+webMarking(const symmetri::Marking &M,
+           const std::map<Eigen::Index, std::string> &index_marking_map);
