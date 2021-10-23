@@ -22,15 +22,15 @@ jobs:
         sudo make install
 
     - name: "build project"
-      container: ros:noetic-ros-core-focal
       run: |
         mkdir build
         cd build
+        bash -c 'source /opt/ros/noetic/setup.bash'
         cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DCODE_COVERAGE=ON  ..
         make
 
-    - name: "test and coverage"
-      run: |
-        cd build
-        ctest -VV
-        gcovr -r ../ .
+    # - name: "test and coverage"
+    #   run: |
+    #     cd build
+    #     ctest -VV
+    #     gcovr -r ../ .
