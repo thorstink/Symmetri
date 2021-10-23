@@ -12,7 +12,7 @@ jobs:
     - name: apt dependencies
       run: |
         sudo apt update
-        sudo apt install -y lcov gcovr libeigen3-dev git
+        sudo apt install -y build-essential lcov gcovr libeigen3-dev git libtool pkg-config
 
     - name: seasocks
       run: |
