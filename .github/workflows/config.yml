@@ -4,7 +4,9 @@ on: [push]
 
 jobs:
   build-backend:
-    runs-on: noetic-ros-core-focal
+    container:
+      runs-on: ubuntu-latest
+      container: ros:noetic-ros-core-focal
     steps:
     - uses: actions/checkout@v1
 
