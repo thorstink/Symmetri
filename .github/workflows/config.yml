@@ -34,7 +34,7 @@ jobs:
         mkdir build
         cd build
         echo $ROS_DISTRO
-        bash -c 'source /opt/ros/$ROS_DISTRO/setup.bash && cmak -GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DCODE_COVERAGE=ON ..'
+        bash -c 'source /opt/ros/$ROS_DISTRO/setup.bash && cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DCODE_COVERAGE=ON ..'
         make
 
     - name: "test and coverage"
