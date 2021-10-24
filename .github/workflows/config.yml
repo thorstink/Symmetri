@@ -26,7 +26,6 @@ jobs:
         git submodule update --init --recursive
         mkdir build
         cd build
-        bash -c 'source /opt/ros/$ROS_DISTRO/setup.bash'
         echo $ROS_DISTRO
         bash -c 'source /opt/ros/$ROS_DISTRO/setup.bash && cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DCODE_COVERAGE=ON  ..'
         make

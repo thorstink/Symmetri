@@ -47,13 +47,11 @@ endif()
 message(STATUS "Building Symmetri - shared: ${BUILD_SHARED_LIBS}")
 
 
-include_directories(include ${EIGEN3_INCLUDE_DIRS} ${SEASOCKS_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS}  submodules )
-
-add_library(${PROJECT_NAME}_pnml_parser pnml_parser.cc submodules/tinyxml2/tinyxml2.cpp)
+include_directories(include includes submodules ${EIGEN3_INCLUDE_DIRS} ${SEASOCKS_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} )
 
 #lib
-add_library(${PROJECT_NAME} symmetri.cc model.cc actions.cc)
-target_link_libraries(${PROJECT_NAME} PRIVATE pthread Seasocks::seasocks ${PROJECT_NAME}_pnml_parser concurrentqueue readerwriterqueue)
+add_library(${PROJECT_NAME} symmetri.cc model.cc actions.cc pnml_parser.cc submodules/tinyxml2/tinyxml2.cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE pthread Seasocks::seasocks concurrentqueue readerwriterqueue)
 
 target_include_directories(${PROJECT_NAME} INTERFACE include)
 
@@ -90,7 +88,7 @@ install(TARGETS ${targets} DESTINATION ${PROJECT_SOURCE_DIR}/install)
 # if(BUILD_TESTING)
 # Enable testing for the project
 enable_testing()
-# concat testfiles 
+# concat testfiles
 set(TEST_SOURCES
 catch.cc
 tests.cc

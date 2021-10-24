@@ -9,5 +9,3 @@ repos:
     rev: v1.3.4
     hooks:
       - id: clang-format
-        args: [--style=Google]
-      - id: include-what-you-use

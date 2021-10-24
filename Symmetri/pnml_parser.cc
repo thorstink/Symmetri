@@ -1,5 +1,5 @@
 #include "pnml_parser.h"
-#include "nlohmann/json.hpp"
+#include "json.hpp"
 #include "tinyxml2/tinyxml2.h"
 #include <iostream>
 
@@ -23,8 +23,7 @@ int getIndex(std::vector<std::string> v, const std::string &K) {
   }
 }
 
-std::string toLower(std::string str)
-{
+std::string toLower(std::string str) {
   transform(str.begin(), str.end(), str.begin(), ::tolower);
   return str;
 }
@@ -45,8 +44,9 @@ constructTransitionMutationMatrices(std::string file) {
   std::vector<std::string> places, transitions;
   std::unordered_map<std::string, int> place_initialMarking;
 
-  tinyxml2::XMLElement *levelElement =
-      net.FirstChildElement("pnml")->FirstChildElement("net")->FirstChildElement("page");
+  tinyxml2::XMLElement *levelElement = net.FirstChildElement("pnml")
+                                           ->FirstChildElement("net")
+                                           ->FirstChildElement("page");
 
   for (tinyxml2::XMLElement *child = levelElement->FirstChildElement("place");
        child != NULL; child = child->NextSiblingElement("place")) {
@@ -65,7 +65,7 @@ constructTransitionMutationMatrices(std::string file) {
       }
       return target;
     };
-    
+
     auto initial_marking =
         (child->FirstChildElement("initialMarking") == nullptr)
             ? 0
