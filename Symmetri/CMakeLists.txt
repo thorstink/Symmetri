@@ -53,47 +53,27 @@ include_directories(include includes submodules ${EIGEN3_INCLUDE_DIRS} ${SEASOCK
 add_library(${PROJECT_NAME} symmetri.cc model.cc actions.cc pnml_parser.cc submodules/tinyxml2/tinyxml2.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE pthread Seasocks::seasocks concurrentqueue readerwriterqueue)
 target_link_libraries(${PROJECT_NAME} PUBLIC Eigen3::Eigen)
-
 target_include_directories(${PROJECT_NAME} INTERFACE include)
-
-# target_include_directories(${PROJECT_NAME} PUBLIC
-#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/Symmetri>
-#   $<INSTALL_INTERFACE:include/Symmetri>  # <prefix>/include/mylib
-# )
-
-
-# #an app
-# add_executable(${PROJECT_NAME}_app examples/ros_application/main.cc examples/ros_application/namespace_share_data.cc)
-# target_link_libraries(${PROJECT_NAME}_app ${PROJECT_NAME} ${catkin_LIBRARIES} concurrentqueue readerwriterqueue)
-
-# #an app
-# add_executable(${PROJECT_NAME}_hello_world examples/hello_world/main.cc)
-# target_link_libraries(${PROJECT_NAME}_hello_world ${PROJECT_NAME} concurrentqueue readerwriterqueue)
 
 set(ui_files
   ${CMAKE_CURRENT_SOURCE_DIR}/web
 )
 
 set(targets
-#   ${PROJECT_NAME}_hello_world
-#   ${PROJECT_NAME}_app
   ${PROJECT_NAME}
 )
-
-# set_target_properties(${PROJECT_NAME}_app PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
-# SET(CMAKE_INSTALL_RPATH "${CMAKE_CURRENT_SOURCE_DIR}/install")
 
 install(DIRECTORY ${ui_files} include DESTINATION ${PROJECT_SOURCE_DIR}/install)
 install(TARGETS ${targets} DESTINATION ${PROJECT_SOURCE_DIR}/install)
 
 # if(BUILD_TESTING)
 # Enable testing for the project
-enable_testing()
+# enable_testing()
 # concat testfiles
-set(TEST_SOURCES
-catch.cc
-tests.cc
-)
+# set(TEST_SOURCES
+# catch.cc
+# tests.cc
+# )
 
 # add_executable(${PROJECT_NAME}_test ${TEST_SOURCES})
 # add_test(${PROJECT_NAME}_test ${PROJECT_NAME}_test)
