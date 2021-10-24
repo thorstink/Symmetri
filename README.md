@@ -10,7 +10,7 @@ cd ../install
 outputs somehting like
 
 ```
-18:13 $ ./mpalg_app ../nets/big7.json 
+18:13 $ ./mpalg_app ../nets/big7.json
 initial maring: 1 1 1 1 0 0 0 0 0
 interface online at http://localhost:2222/
 ```
@@ -26,7 +26,5 @@ and kick off by going to `http://localhost:2222/` and push the button.
 - Memoize run func
 - Create external input possibilities
 - Write some tests
-- CI + pre-commit hooks
-- redo examples with own cmake
 - research transition guards/coloured nets
 - ros clear kill process

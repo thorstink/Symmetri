@@ -69,23 +69,4 @@ install(TARGETS ${targets} DESTINATION ${PROJECT_SOURCE_DIR}/install)
 
 if(BUILD_TESTING)
 add_subdirectory(tests)
-# FetchContent_Declare(
-#   Catch2
-#   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-#   GIT_TAG        devel
-# )
-
-# FetchContent_MakeAvailable(Catch2)
-
-# list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
-# include(CTest)
-# include(Catch)
-
-# add_executable(${PROJECT_NAME}_test tests/catch.cc tests/test.cc)
-# target_link_libraries(${PROJECT_NAME}_test PRIVATE Catch2::Catch2)
-# # target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME})
-# # add_test(${PROJECT_NAME}_test ${PROJECT_SOURCE_DIR}/build/${PROJECT_NAME}_test)
-# add_test(${PROJECT_NAME}Test ${PROJECT_NAME}_test)
-# # catch_discover_tests(${PROJECT_NAME}_test)
-
 endif()
