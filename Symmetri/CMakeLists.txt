@@ -52,6 +52,7 @@ include_directories(include includes submodules ${EIGEN3_INCLUDE_DIRS} ${SEASOCK
 #lib
 add_library(${PROJECT_NAME} symmetri.cc model.cc actions.cc pnml_parser.cc submodules/tinyxml2/tinyxml2.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE pthread Seasocks::seasocks concurrentqueue readerwriterqueue)
+target_link_libraries(${PROJECT_NAME} PUBLIC Eigen3::Eigen)
 
 target_include_directories(${PROJECT_NAME} INTERFACE include)
 
