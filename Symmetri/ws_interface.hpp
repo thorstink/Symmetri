@@ -1,5 +1,5 @@
 #pragma once
-#include "nlohmann/json.hpp"
+#include "json.hpp"
 #include <seasocks/PrintfLogger.h>
 #include <seasocks/Server.h>
 

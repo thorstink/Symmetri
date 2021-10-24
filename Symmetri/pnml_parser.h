@@ -1,10 +1,11 @@
 #pragma once
 #include "Symmetri/types.h"
-#include "nlohmann/json.hpp"
+#include "json.hpp"
 #include <tuple>
 
 std::tuple<symmetri::TransitionMutation, symmetri::TransitionMutation,
-           symmetri::Marking, nlohmann::json, symmetri::Conversions, symmetri::Conversions>
+           symmetri::Marking, nlohmann::json, symmetri::Conversions,
+           symmetri::Conversions>
 constructTransitionMutationMatrices(std::string file);
 
 nlohmann::json

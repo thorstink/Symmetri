@@ -1,0 +1,44 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build-project:
+    runs-on: ubuntu-latest
+    container: ros:noetic-ros-core-focal
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: apt dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y build-essential lcov gcovr ninja-build libeigen3-dev git libtool pkg-config
+
+    - name: seasocks
+      run: |
+        git clone https://github.com/mattgodbolt/seasocks.git
+        cd seasocks && mkdir build && cd build
+        cmake -DCMAKE_BUILD_TYPE=Debug -DUNITTESTS=OFF ..
+        sudo make install
+
+    - name: catch2
+      run: |
+        git clone https://github.com/catchorg/Catch2.git
+        cd Catch2 && mkdir build && cd build
+        cmake -Bbuild -H. -DBUILD_TESTING=OFF ..
+        sudo cmake --build build/ --target install
+
+    - name: "build project"
+      run: |
+        git submodule update --init --recursive
+        mkdir build
+        cd build
+        echo $ROS_DISTRO
+        bash -c 'source /opt/ros/$ROS_DISTRO/setup.bash && cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DCODE_COVERAGE=ON ..'
+        ninja
+
+    - name: "test and coverage"
+      run: |
+        cd build
+        ctest -VV
+        # gcovr -r ../ .
