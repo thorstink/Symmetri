@@ -68,11 +68,11 @@ install(TARGETS ${targets} DESTINATION ${PROJECT_SOURCE_DIR}/install)
 
 enable_testing()
 
-# if(BUILD_TESTING)
+if(BUILD_TESTING)
 include(CTest)
 # Enable testing for the project
 enable_testing()
 add_executable(${PROJECT_NAME}_test tests/catch.cc tests/test.cc)
 target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME})
 add_test(${PROJECT_NAME}_test ${PROJECT_NAME}_test)
-# endif()
+endif()
