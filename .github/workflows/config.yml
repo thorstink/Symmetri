@@ -12,7 +12,7 @@ jobs:
     - name: apt dependencies
       run: |
         sudo apt update
-        sudo apt install -y build-essential lcov gcovr libeigen3-dev git libtool pkg-config
+        sudo apt install -y build-essential lcov gcovr ninja-build libeigen3-dev git libtool pkg-config
 
     - name: seasocks
       run: |
@@ -34,7 +34,7 @@ jobs:
         mkdir build
         cd build
         echo $ROS_DISTRO
-        bash -c 'source /opt/ros/$ROS_DISTRO/setup.bash && cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DCODE_COVERAGE=ON  ..'
+        bash -c 'source /opt/ros/$ROS_DISTRO/setup.bash && cmak -GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DCODE_COVERAGE=ON ..'
         make
 
     - name: "test and coverage"
