@@ -1,12 +1,14 @@
 #include "Symmetri/symmetri.h"
+
+#include <fstream>
+#include <functional>
+#include <tuple>
+
 #include "Symmetri/types.h"
 #include "actions.h"
 #include "model.h"
 #include "pnml_parser.h"
 #include "ws_interface.hpp"
-#include <fstream>
-#include <functional>
-#include <tuple>
 
 namespace symmetri {
 using namespace moodycamel;
@@ -16,7 +18,6 @@ constexpr auto noop = [](const Model &m) { return m; };
 
 std::function<void()> start(const std::string &pnml_path,
                             const TransitionActionMap &store) {
-
   return [=]() {
     const auto &[Dm, Dp, M0, json_net, transitions, places] =
         constructTransitionMutationMatrices(pnml_path);
@@ -76,4 +77,4 @@ std::function<void()> start(const std::string &pnml_path,
     };
   };
 }
-} // namespace symmetri
+}  // namespace symmetri
