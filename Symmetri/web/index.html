@@ -17,7 +17,7 @@
   <script src="rxjs.umd.min.js"></script>
   <!-- <script src="https://unpkg.com/rxjs@^7/dist/bundles/rxjs.umd.min.js"></script> -->
 
-<body style="height: 400px;">
+<body>
   <h2>Overview</h2>
   <div id="vis"></div>
   <div id="petri-net"></div>
@@ -50,7 +50,7 @@
     var update_marking = webSocket(ws_address).pipe(filter(j => !j.hasOwnProperty('states')), tap(msg => { marking = msg.marking; active_transitions = msg.active_transitions; redraw(); }))
 
     concat(set_net, update_marking).subscribe(
-      msg => {},
+      msg => { },
       err => console.log(err),
       () => console.log('complete')
     );

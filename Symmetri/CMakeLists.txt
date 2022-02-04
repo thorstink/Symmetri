@@ -1,17 +1,5 @@
 find_package(Eigen3 REQUIRED)
 find_package(Seasocks REQUIRED)
-find_package(roscpp REQUIRED)
-find_package(std_msgs REQUIRED)
-
-set(catkin_INCLUDE_DIRS
-  ${roscpp_INCLUDE_DIRS}
-  ${std_msgs_INCLUDE_DIRS}
-)
-
-set(catkin_LIBRARIES
-  ${roscpp_LIBRARIES}
-  ${std_msgs_LIBRARIES}
-)
 
 include(FetchContent)
 
