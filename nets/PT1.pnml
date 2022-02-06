@@ -18,7 +18,7 @@
 					<text>P0</text>
 				</name>
 				<graphics>
-					<position x="40" y="60"/>
+					<position x="20" y="60"/>
 				</graphics>
 				<initialMarking>
 					<text>1</text>
@@ -44,7 +44,7 @@
 					<text>T0</text>
 				</name>
 				<graphics>
-					<position x="95" y="60"/>
+					<position x="85" y="60"/>
 				</graphics>
 			</transition>
 			<!-- List of arcs -->

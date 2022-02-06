@@ -8,10 +8,12 @@ inline static symmetri::TransitionActionMap getStore() {
 };
 
 int main(int argc, char *argv[]) {
-  auto pnml_path = std::string(argv[1]);
+  auto pnml1 = std::string(argv[1]);
+  auto pnml2 = std::string(argv[2]);
+  auto pnml3 = std::string(argv[3]);
   auto store = getStore();
 
-  auto go = symmetri::start(pnml_path, store);
+  auto go = symmetri::start({pnml1, pnml2, pnml3}, store);
 
   go();
 }

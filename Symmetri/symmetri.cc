@@ -41,11 +41,11 @@ void webIFace(const nlohmann::json &json_net) {
   }
 }
 
-std::function<void()> start(const std::string &pnml_path,
+std::function<void()> start(const std::set<std::string>& files,
                             const TransitionActionMap &store) {
   return [=]() {
     const auto &[Dm, Dp, M0, json_net, transitions, places] =
-        constructTransitionMutationMatrices(pnml_path);
+        constructTransitionMutationMatrices(files);
 
     web_t_ = std::thread(&webIFace, json_net);
 
