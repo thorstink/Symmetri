@@ -237,7 +237,8 @@ std::tuple<TransitionMutation, TransitionMutation, Marking, nlohmann::json,
 constructTransitionMutationMatrices(const std::set<std::string> &files) {
   std::vector<std::string> places, transitions;
   std::unordered_map<std::string, int> place_initialMarking;
-
+  int offset_x = 0;
+  int offset_y = 0;
   nlohmann::json j;
   for (auto file : files) {
     XMLDocument net;
@@ -247,6 +248,21 @@ constructTransitionMutationMatrices(const std::set<std::string> &files) {
     tinyxml2::XMLElement *levelElement = net.FirstChildElement("pnml")
                                              ->FirstChildElement("net")
                                              ->FirstChildElement("page");
+
+    for (tinyxml2::XMLElement *child = levelElement->FirstChildElement("place");
+         child != NULL; child = child->NextSiblingElement("place")) {
+      auto place_id = toLower(child->Attribute("id"));
+
+      if (std::find(places.begin(), places.end(), place_id) != places.end()) {
+        offset_x += std::stoi(child->FirstChildElement("graphics")
+                                  ->FirstChildElement("position")
+                                  ->Attribute("x"));
+        offset_y += std::stoi(child->FirstChildElement("graphics")
+                                  ->FirstChildElement("position")
+                                  ->Attribute("y"));
+        break;
+      }
+    }
 
     for (tinyxml2::XMLElement *child = levelElement->FirstChildElement("place");
          child != NULL; child = child->NextSiblingElement("place")) {
@@ -275,10 +291,12 @@ constructTransitionMutationMatrices(const std::set<std::string> &files) {
       place_initialMarking.insert({place_id, initial_marking});
       int x = std::stoi(child->FirstChildElement("graphics")
                             ->FirstChildElement("position")
-                            ->Attribute("x"));
+                            ->Attribute("x")) +
+              offset_x;
       int y = std::stoi(child->FirstChildElement("graphics")
                             ->FirstChildElement("position")
-                            ->Attribute("y"));
+                            ->Attribute("y")) +
+              offset_y;
 
       if (std::find(places.begin(), places.end(), place_id) != places.end()) {
         /* v contains x */
@@ -293,6 +311,8 @@ constructTransitionMutationMatrices(const std::set<std::string> &files) {
       }
     }
 
+
+
     for (tinyxml2::XMLElement *child =
              levelElement->FirstChildElement("transition");
          child != NULL; child = child->NextSiblingElement("transition")) {
@@ -304,10 +324,10 @@ constructTransitionMutationMatrices(const std::set<std::string> &files) {
 
       int x = std::stoi(child->FirstChildElement("graphics")
                             ->FirstChildElement("position")
-                            ->Attribute("x"));
+                            ->Attribute("x"))+offset_x;
       int y = std::stoi(child->FirstChildElement("graphics")
                             ->FirstChildElement("position")
-                            ->Attribute("y"));
+                            ->Attribute("y"))+offset_y;
 
       if (std::find(transitions.begin(), transitions.end(), transition_id) !=
           transitions.end()) {
