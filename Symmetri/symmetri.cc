@@ -20,6 +20,7 @@ BlockingConcurrentQueue<std::function<void()>> web(256);
 std::thread web_t_;
 std::shared_ptr<Wsio> marking_transition;
 std::shared_ptr<Output> time_data;
+std::atomic<bool> runweb = true;
 
 void webIFace(const nlohmann::json &json_net) {
   seasocks::Server server(
@@ -33,15 +34,16 @@ void webIFace(const nlohmann::json &json_net) {
   std::cout << "interface online at http://localhost:2222/" << std::endl;
 
   std::function<void()> task;
-  while (true) {
+  while (runweb.load()) {
     while (web.try_dequeue(task)) {
       task();
     }
     server.poll(10);
   }
+  server.terminate();
 }
 
-std::function<void()> start(const std::set<std::string>& files,
+std::function<void()> start(const std::set<std::string> &files,
                             const TransitionActionMap &store) {
   return [=]() {
     const auto &[Dm, Dp, M0, json_net, transitions, places] =
@@ -89,8 +91,16 @@ std::function<void()> start(const std::set<std::string>& files,
 
       web.try_enqueue([j]() { marking_transition->send(j.dump()); });
       web.try_enqueue([l = log_data.str()]() { time_data->send(l); });
+      std::cout << "active: " << m.data->active_transitions.size() << std::endl;
+      if (m.data->active_transitions.size() == 0) {
+        runweb.store(false);
+        break;
+      }
     };
     web_t_.join();
+    for (auto &&t : tp) {
+      t.detach();
+    }
   };
 }
 }  // namespace symmetri

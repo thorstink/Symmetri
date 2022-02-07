@@ -1,12 +1,14 @@
 #pragma once
-#include "Symmetri/types.h"
 #include <blockingconcurrentqueue.h>
+
 #include <chrono>
 #include <functional>
 #include <memory>
 #include <set>
 #include <string>
 #include <tuple>
+
+#include "Symmetri/types.h"
 
 namespace symmetri {
 struct Model;
@@ -31,10 +33,10 @@ struct Model {
     mutable std::vector<std::tuple<size_t, int64_t, int64_t, Transition>> log;
   };
   std::shared_ptr<shared> data;
-  std::shared_ptr<moodycamel::BlockingConcurrentQueue<Transition>> transitions_;
+  moodycamel::BlockingConcurrentQueue<Transition> *transitions_;
 };
 
 Model run_all(Model model);
 std::optional<Model> run_one(Model model);
 
-} // namespace symmetri
+}  // namespace symmetri

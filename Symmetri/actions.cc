@@ -1,6 +1,8 @@
 #include "actions.h"
-#include "expected.hpp"
+
 #include <iostream>
+
+#include "expected.hpp"
 namespace symmetri {
 using namespace moodycamel;
 
@@ -23,8 +25,8 @@ std::optional<Reducer> noTransitionInStore(const Transition &t) {
   });
 }
 
-tl::expected<std::function<OptionalError()>, std::string>
-getAction(const TransitionActionMap &local_store, const Transition &t) {
+tl::expected<std::function<OptionalError()>, std::string> getAction(
+    const TransitionActionMap &local_store, const Transition &t) {
   auto fun_ptr = local_store.find(t);
   if (fun_ptr != local_store.end()) {
     return fun_ptr->second;
@@ -37,13 +39,11 @@ OptionalError executeAction(std::function<OptionalError()> action) {
   return action();
 }
 
-std::vector<std::thread>
-executeTransition(const TransitionActionMap &local_store,
-                  const Conversions &marking_mapper,
-                  BlockingConcurrentQueue<Reducer> &reducers,
-                  BlockingConcurrentQueue<Transition> &actions, int state_size,
-                  unsigned int thread_count) {
-
+std::vector<std::thread> executeTransition(
+    const TransitionActionMap &local_store, const Conversions &marking_mapper,
+    BlockingConcurrentQueue<Reducer> &reducers,
+    BlockingConcurrentQueue<Transition> &actions, int state_size,
+    unsigned int thread_count) {
   std::vector<std::thread> pool(thread_count);
 
   auto worker = [&, state_size] {
@@ -86,4 +86,4 @@ executeTransition(const TransitionActionMap &local_store,
 
   return pool;
 }
-} // namespace symmetri
+}  // namespace symmetri
