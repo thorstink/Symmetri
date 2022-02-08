@@ -31,6 +31,7 @@ struct Model {
     const TransitionMutation Dm;
     const TransitionMutation Dp;
     mutable std::vector<std::tuple<size_t, int64_t, int64_t, Transition>> log;
+    std::unordered_map<std::size_t, std::pair<Marking, Transitions>> cache;
   };
   std::shared_ptr<shared> data;
   moodycamel::BlockingConcurrentQueue<Transition> *transitions_;
