@@ -32,12 +32,12 @@
 					<position x="140" y="60"/>
 				</graphics>
 			</place>
-			<place id="P4">
+			<place id="P0">
 				<name>
 					<graphics>
 						<offset x="0" y="15"/>
 					</graphics>
-					<text>P4</text>
+					<text>P0</text>
 				</name>
 				<graphics>
 					<position x="140" y="110"/>
@@ -60,7 +60,7 @@
 			</arc>
 			<arc id="id2" source="T2" target="P3">
 			</arc>
-			<arc id="id3" source="T2" target="P4">
+			<arc id="id3" source="T2" target="P0">
 			</arc>
 		</page>
 	</net>

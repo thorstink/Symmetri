@@ -9,39 +9,10 @@
 #include "model.h"
 #include "pnml_parser.h"
 #include "ws_interface.hpp"
-
 namespace symmetri {
 using namespace moodycamel;
-using namespace seasocks;
 
 constexpr auto noop = [](const Model &m) { return m; };
-
-BlockingConcurrentQueue<std::function<void()>> web(256);
-std::thread web_t_;
-std::shared_ptr<Wsio> marking_transition;
-std::shared_ptr<Output> time_data;
-std::atomic<bool> runweb = true;
-
-void webIFace(const nlohmann::json &json_net) {
-  seasocks::Server server(
-      std::make_shared<seasocks::PrintfLogger>(seasocks::Logger::Level::Error));
-  time_data = std::make_shared<Output>();
-  marking_transition = std::make_shared<Wsio>(json_net);
-  server.addWebSocketHandler("/transition_data", time_data);
-  server.addWebSocketHandler("/marking_transition_data", marking_transition);
-  server.startListening(2222);
-  server.setStaticPath("web");
-  std::cout << "interface online at http://localhost:2222/" << std::endl;
-
-  std::function<void()> task;
-  while (runweb.load()) {
-    while (web.try_dequeue(task)) {
-      task();
-    }
-    server.poll(10);
-  }
-  server.terminate();
-}
 
 std::function<void()> start(const std::set<std::string> &files,
                             const TransitionActionMap &store) {
@@ -49,7 +20,7 @@ std::function<void()> start(const std::set<std::string> &files,
     const auto &[Dm, Dp, M0, json_net, transitions, places] =
         constructTransitionMutationMatrices(files);
 
-    web_t_ = std::thread(&webIFace, json_net);
+    WsServer *server = WsServer::Instance(json_net);
 
     BlockingConcurrentQueue<Reducer> reducers(256);
     BlockingConcurrentQueue<Transition> actions(1024);
@@ -89,15 +60,14 @@ std::function<void()> start(const std::set<std::string> &files,
       j["active_transitions"] = nlohmann::json(m.data->active_transitions);
       j["marking"] = webMarking(m.data->M, places.id_to_label_);
 
-      web.try_enqueue([j]() { marking_transition->send(j.dump()); });
-      web.try_enqueue([l = log_data.str()]() { time_data->send(l); });
-      std::cout << "active: " << m.data->active_transitions.size() << std::endl;
+      server->queueTask([=]() { server->marking_transition->send(j.dump()); });
+      server->queueTask(
+          [=, l = log_data.str()]() { server->time_data->send(l); });
+
       if (m.data->active_transitions.size() == 0) {
-        runweb.store(false);
         break;
       }
     };
-    web_t_.join();
     for (auto &&t : tp) {
       t.detach();
     }

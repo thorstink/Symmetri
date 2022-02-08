@@ -6,7 +6,8 @@
 
 <head>
   <title>Application</title>
-  <script src='lib/jquery.min.js'></script>
+  <script src="node_modules/jquery/dist/jquery.min.js"></script>
+  <script src="node_modules/rxjs/dist/bundles/rxjs.umd.min.js"></script>
   <script src='vega_entry.js'></script>
   <script src="https://cdn.jsdelivr.net/npm/vega@4"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
@@ -14,13 +15,13 @@
   <script src="lib/d3.v3.min.js"></script>
   <script src="lib/lodash.min.js"></script>
   <script src="lib/petrinet.js"></script>
-  <script src="rxjs.umd.min.js"></script>
-  <!-- <script src="https://unpkg.com/rxjs@^7/dist/bundles/rxjs.umd.min.js"></script> -->
+
 
 <body>
   <h2>Overview</h2>
   <div id="vis"></div>
   <div id="petri-net"></div>
+
   <script type="text/javascript">
     var net = new Array();
     var states = [];

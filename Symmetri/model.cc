@@ -47,7 +47,7 @@ Model run_all(Model model) {
         T.push_back(T_i);
       }
     }
-    cache[hash] = {M, T};
+    // cache[hash] = {M, T};
   }
 
   for (auto T_i : T) {
