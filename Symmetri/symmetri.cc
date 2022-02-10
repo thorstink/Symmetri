@@ -19,7 +19,7 @@ std::function<symmetri::OptionalError()> start(
   const auto &[Dm, Dp, M0, json_net, transitions, places] =
       constructTransitionMutationMatrices(files);
   return [=]() {
-    WsServer *server = WsServer::Instance(json_net);
+    auto server = WsServer::Instance(json_net);
     BlockingConcurrentQueue<Reducer> reducers(256);
     BlockingConcurrentQueue<Transition> actions(1024);
 

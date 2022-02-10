@@ -47,7 +47,7 @@ class WsServer {
  public:
   std::shared_ptr<Output> time_data;
   std::shared_ptr<Wsio> marking_transition;
-  static WsServer *Instance(const nlohmann::json &json_net);
+  static std::shared_ptr<WsServer> Instance(const nlohmann::json &json_net);
   void queueTask(const std::function<void()> &task) { server->execute(task); }
   void stop() {
     server->terminate();
@@ -77,17 +77,17 @@ class WsServer {
     return *this;
   }  // Assignment operator is private.
 
-  static WsServer *instance_;
+  static std::shared_ptr<WsServer> instance_;
   std::shared_ptr<seasocks::Server> server;
   std::atomic<bool> runweb;
   std::thread web_t_;
 };
 
-WsServer *WsServer::instance_ = NULL;
+std::shared_ptr<WsServer> WsServer::instance_ = NULL;
 
-WsServer *WsServer::Instance(const nlohmann::json &json_net) {
+std::shared_ptr<WsServer> WsServer::Instance(const nlohmann::json &json_net) {
   if (!instance_) {
-    instance_ = new WsServer(json_net);
+    instance_.reset(new WsServer(json_net));
   }
 
   return instance_;
