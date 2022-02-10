@@ -14,14 +14,12 @@ using namespace moodycamel;
 
 constexpr auto noop = [](const Model &m) { return m; };
 
-std::function<void()> start(const std::set<std::string> &files,
-                            const TransitionActionMap &store) {
+std::function<symmetri::OptionalError()> start(
+    const std::set<std::string> &files, const TransitionActionMap &store) {
+  const auto &[Dm, Dp, M0, json_net, transitions, places] =
+      constructTransitionMutationMatrices(files);
   return [=]() {
-    const auto &[Dm, Dp, M0, json_net, transitions, places] =
-        constructTransitionMutationMatrices(files);
-
     WsServer *server = WsServer::Instance(json_net);
-
     BlockingConcurrentQueue<Reducer> reducers(256);
     BlockingConcurrentQueue<Transition> actions(1024);
 
@@ -30,12 +28,6 @@ std::function<void()> start(const std::set<std::string> &files,
 
     // auto start
     reducers.enqueue(noop);
-
-    std::ofstream output_file;
-    std::ofstream json_output_file;
-    json_output_file.open("net.json");
-    json_output_file << json_net.dump(2);
-    json_output_file.close();
 
     Reducer f = noop;
     while (true) {
@@ -71,6 +63,7 @@ std::function<void()> start(const std::set<std::string> &files,
     for (auto &&t : tp) {
       t.detach();
     }
+    return std::nullopt;
   };
 }
 }  // namespace symmetri

@@ -1,5 +1,5 @@
 #pragma once
-#include <blockingconcurrentqueue.h>
+
 #include <seasocks/PrintfLogger.h>
 #include <seasocks/Server.h>
 
@@ -48,9 +48,9 @@ class WsServer {
   std::shared_ptr<Output> time_data;
   std::shared_ptr<Wsio> marking_transition;
   static WsServer *Instance(const nlohmann::json &json_net);
-  void queueTask(const std::function<void()> &task) { web.try_enqueue(task); }
+  void queueTask(const std::function<void()> &task) { server->execute(task); }
   void stop() {
-    runweb.store(false);
+    server->terminate();
     web_t_.join();
   }
 
@@ -58,27 +58,19 @@ class WsServer {
   WsServer(const nlohmann::json &json_net)
       : time_data(std::make_shared<Output>()),
         marking_transition(std::make_shared<Wsio>(json_net)),
-        web(256),
-        runweb(true),
         web_t_([this] {
-          seasocks::Server server(std::make_shared<seasocks::PrintfLogger>(
-              seasocks::Logger::Level::Error));
-          server.addWebSocketHandler("/transition_data", time_data);
-          server.addWebSocketHandler("/marking_transition_data",
-                                     marking_transition);
-          server.startListening(2222);
-          server.setStaticPath("web");
+          server = std::make_shared<seasocks::Server>(
+              std::make_shared<seasocks::PrintfLogger>(
+                  seasocks::Logger::Level::Error));
+          server->addWebSocketHandler("/transition_data", time_data);
+          server->addWebSocketHandler("/marking_transition_data",
+                                      marking_transition);
+          server->startListening(2222);
+          server->setStaticPath("web");
           std::cout << "interface online at http://localhost:2222/"
                     << std::endl;
 
-          std::function<void()> task;
-          while (runweb.load()) {
-            while (web.try_dequeue(task)) {
-              task();
-            }
-            server.poll(10);
-          }
-          server.terminate();
+          server->loop();
         }) {}                    // Constructor is private.
   WsServer(WsServer const &) {}  // Copy constructor is private.
   WsServer &operator=(WsServer const &) {
@@ -86,8 +78,7 @@ class WsServer {
   }  // Assignment operator is private.
 
   static WsServer *instance_;
-
-  moodycamel::BlockingConcurrentQueue<std::function<void()>> web;
+  std::shared_ptr<seasocks::Server> server;
   std::atomic<bool> runweb;
   std::thread web_t_;
 };

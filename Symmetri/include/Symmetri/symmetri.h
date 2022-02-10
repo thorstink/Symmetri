@@ -5,6 +5,6 @@
 #include "Symmetri/types.h"
 namespace symmetri {
 
-std::function<void()> start(const std::set<std::string> &path_to_petri,
-                            const TransitionActionMap &);
+std::function<symmetri::OptionalError()> start(
+    const std::set<std::string> &path_to_petri, const TransitionActionMap &);
 }  // namespace symmetri

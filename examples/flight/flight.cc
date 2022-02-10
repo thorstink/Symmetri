@@ -8,14 +8,10 @@ int main(int argc, char *argv[]) {
   auto pnml2 = std::string(argv[2]);
   auto pnml3 = std::string(argv[3]);
 
-  auto action = [subnet = symmetri::start({pnml1}, {{"t0", &action5}})]()
-      -> symmetri::OptionalError {
-    subnet();
-    return std::nullopt;
-  };
-
   symmetri::TransitionActionMap store = {
-      {"t0", action}, {"t1", &T1::action0}, {"t2", &T1::action1}};
+      {"t0", symmetri::start({pnml1}, {{"t0", &action5}})},
+      {"t1", &T1::action0},
+      {"t2", &T1::action1}};
 
   auto bignet = symmetri::start({pnml1, pnml2, pnml3}, store);
 
