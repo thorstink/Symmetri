@@ -5,7 +5,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O2 -s")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O2 -s")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O2 -s")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O0")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O0")
 
 enable_testing()
 
@@ -13,5 +16,6 @@ enable_testing()
 add_subdirectory(Symmetri)
 
 # some examples using the lib
-add_subdirectory(examples/ros_application)
+# add_subdirectory(examples/ros_application)
+add_subdirectory(examples/flight)
 add_subdirectory(examples/hello_world)

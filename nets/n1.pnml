@@ -18,7 +18,7 @@
 					<text>P0</text>
 				</name>
 				<graphics>
-					<position x="50" y="30"/>
+					<position x="110" y="110"/>
 				</graphics>
 				<initialMarking>
 					<text>1</text>
@@ -32,7 +32,7 @@
 					<text>P1</text>
 				</name>
 				<graphics>
-					<position x="110" y="20"/>
+					<position x="150" y="150"/>
 				</graphics>
 				<initialMarking>
 					<text>1</text>
@@ -46,7 +46,7 @@
 					<text>P2</text>
 				</name>
 				<graphics>
-					<position x="170" y="10"/>
+					<position x="190" y="190"/>
 				</graphics>
 				<initialMarking>
 					<text>1</text>
@@ -60,7 +60,7 @@
 					<text>P3</text>
 				</name>
 				<graphics>
-					<position x="110" y="100"/>
+					<position x="70" y="70"/>
 				</graphics>
 				<initialMarking>
 					<text>1</text>
@@ -74,7 +74,7 @@
 					<text>P4</text>
 				</name>
 				<graphics>
-					<position x="50" y="70"/>
+					<position x="230" y="110"/>
 				</graphics>
 			</place>
 			<place id="P5">
@@ -85,7 +85,7 @@
 					<text>P5</text>
 				</name>
 				<graphics>
-					<position x="110" y="70"/>
+					<position x="310" y="150"/>
 				</graphics>
 			</place>
 			<place id="P6">
@@ -96,7 +96,7 @@
 					<text>P6</text>
 				</name>
 				<graphics>
-					<position x="170" y="70"/>
+					<position x="230" y="230"/>
 				</graphics>
 			</place>
 			<place id="P7">
@@ -107,7 +107,7 @@
 					<text>P7</text>
 				</name>
 				<graphics>
-					<position x="50" y="110"/>
+					<position x="190" y="30"/>
 				</graphics>
 			</place>
 			<place id="P8">
@@ -118,7 +118,7 @@
 					<text>P8</text>
 				</name>
 				<graphics>
-					<position x="170" y="100"/>
+					<position x="30" y="30"/>
 				</graphics>
 			</place>
 			<!-- List of transitions -->
@@ -130,7 +130,7 @@
 					<text>t1</text>
 				</name>
 				<graphics>
-					<position x="88" y="70"/>
+					<position x="235" y="150"/>
 				</graphics>
 			</transition>
 			<transition id="t0">
@@ -141,7 +141,7 @@
 					<text>t0</text>
 				</name>
 				<graphics>
-					<position x="18" y="70"/>
+					<position x="155" y="110"/>
 				</graphics>
 			</transition>
 			<transition id="t2">
@@ -152,7 +152,7 @@
 					<text>t2</text>
 				</name>
 				<graphics>
-					<position x="148" y="70"/>
+					<position x="275" y="230"/>
 				</graphics>
 			</transition>
 			<transition id="t3">
@@ -163,7 +163,7 @@
 					<text>t3</text>
 				</name>
 				<graphics>
-					<position x="228" y="70"/>
+					<position x="115" y="230"/>
 				</graphics>
 			</transition>
 			<transition id="t4">
@@ -174,7 +174,7 @@
 					<text>t4</text>
 				</name>
 				<graphics>
-					<position x="98" y="150"/>
+					<position x="75" y="30"/>
 				</graphics>
 			</transition>
 			<!-- List of arcs -->
@@ -189,24 +189,42 @@
 			<arc id="id5" source="t1" target="P5">
 			</arc>
 			<arc id="id6" source="P5" target="t2">
+				<graphics>
+					<position x="320" y="240"/>
+				</graphics>
 			</arc>
 			<arc id="id7" source="t2" target="P6">
 			</arc>
 			<arc id="id8" source="P6" target="t3">
 			</arc>
 			<arc id="id9" source="t3" target="P3">
+				<graphics>
+					<position x="80" y="200"/>
+				</graphics>
 			</arc>
 			<arc id="id10" source="P3" target="t0">
+				<graphics>
+					<position x="160" y="80"/>
+				</graphics>
 			</arc>
 			<arc id="id11" source="t0" target="P7">
+				<graphics>
+					<position x="200" y="80"/>
+				</graphics>
 			</arc>
 			<arc id="id12" source="P7" target="t4">
 			</arc>
 			<arc id="id13" source="t4" target="P8">
 			</arc>
 			<arc id="id14" source="P8" target="t3">
+				<graphics>
+					<position x="40" y="240"/>
+				</graphics>
 			</arc>
 			<arc id="id15" source="P2" target="t2">
+				<graphics>
+					<position x="280" y="200"/>
+				</graphics>
 			</arc>
 			<arc id="id16" source="t3" target="P2">
 			</arc>

@@ -9,47 +9,30 @@
 #include "model.h"
 #include "pnml_parser.h"
 #include "ws_interface.hpp"
-
 namespace symmetri {
 using namespace moodycamel;
-using namespace seasocks;
 
 constexpr auto noop = [](const Model &m) { return m; };
 
-std::function<void()> start(const std::string &pnml_path,
-                            const TransitionActionMap &store) {
+std::function<symmetri::OptionalError()> start(
+    const std::set<std::string> &files, const TransitionActionMap &store) {
+  const auto &[Dm, Dp, M0, json_net, transitions, places] =
+      constructTransitionMutationMatrices(files);
   return [=]() {
-    const auto &[Dm, Dp, M0, json_net, transitions, places] =
-        constructTransitionMutationMatrices(pnml_path);
-
+    auto server = WsServer::Instance(json_net);
     BlockingConcurrentQueue<Reducer> reducers(256);
     BlockingConcurrentQueue<Transition> actions(1024);
 
-    seasocks::Server server(std::make_shared<seasocks::PrintfLogger>(
-        seasocks::Logger::Level::Error));
-    auto time_data = std::make_shared<Output>();
-    auto marking_transition = std::make_shared<Wsio>(json_net);
-    server.addWebSocketHandler("/transition_data", time_data);
-    server.addWebSocketHandler("/marking_transition_data", marking_transition);
-    server.startListening(2222);
-    server.setStaticPath("web");
-    std::cout << "interface online at http://localhost:2222/" << std::endl;
     auto tp = executeTransition(store, places, reducers, actions, M0.size(), 3);
     auto m = Model(clock_t::now(), M0, Dm, Dp, actions);
 
     // auto start
     reducers.enqueue(noop);
 
-    std::ofstream output_file;
-    std::ofstream json_output_file;
-    json_output_file.open("net.json");
-    json_output_file << json_net.dump(2);
-    json_output_file.close();
-
     Reducer f = noop;
     while (true) {
       // get a reducer.
-      while (reducers.try_dequeue(f)) {
+      while (reducers.wait_dequeue_timed(f, std::chrono::seconds(1))) {
         m.data->timestamp = clock_t::now();
         try {
           m = run_all(f(m));
@@ -65,16 +48,22 @@ std::function<void()> start(const std::string &pnml_path,
         log_data << a << ',' << b << ',' << c << ',' << d << '\n';
       }
 
-      // output_file.open("example2.csv",std::ios_base::app);
-      // output_file << log_data.str();
-      // output_file.close();
       nlohmann::json j;
       j["active_transitions"] = nlohmann::json(m.data->active_transitions);
       j["marking"] = webMarking(m.data->M, places.id_to_label_);
-      marking_transition->send(j.dump());
-      time_data->send(log_data.str());
-      server.poll(10);
+
+      server->queueTask([=]() { server->marking_transition->send(j.dump()); });
+      server->queueTask(
+          [=, l = log_data.str()]() { server->time_data->send(l); });
+
+      if (m.data->active_transitions.size() == 0) {
+        break;
+      }
     };
+    for (auto &&t : tp) {
+      t.detach();
+    }
+    return std::nullopt;
   };
 }
 }  // namespace symmetri

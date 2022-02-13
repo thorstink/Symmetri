@@ -1,9 +1,10 @@
 #pragma once
-#include "Symmetri/types.h"
+#include <set>
 #include <string>
 
+#include "Symmetri/types.h"
 namespace symmetri {
 
-std::function<void()> start(const std::string &path_to_petri,
-                            const TransitionActionMap &);
-} // namespace symmetri
+std::function<symmetri::OptionalError()> start(
+    const std::set<std::string> &path_to_petri, const TransitionActionMap &);
+}  // namespace symmetri

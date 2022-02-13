@@ -1,7 +1,12 @@
 #pragma once
-#include "json.hpp"
+
 #include <seasocks/PrintfLogger.h>
 #include <seasocks/Server.h>
+
+#include <thread>
+
+#include "json.hpp"
+using namespace seasocks;
 
 struct Output : seasocks::WebSocket::Handler {
   std::set<seasocks::WebSocket *> connections;
@@ -36,4 +41,54 @@ struct Wsio : seasocks::WebSocket::Handler {
       con->send(msg);
     }
   }
+};
+
+class WsServer {
+ public:
+  std::shared_ptr<Output> time_data;
+  std::shared_ptr<Wsio> marking_transition;
+  static std::shared_ptr<WsServer> Instance(const nlohmann::json &json_net);
+  void queueTask(const std::function<void()> &task) { server->execute(task); }
+  void stop() {
+    server->terminate();
+    web_t_.join();
+  }
+
+ private:
+  WsServer(const nlohmann::json &json_net)
+      : time_data(std::make_shared<Output>()),
+        marking_transition(std::make_shared<Wsio>(json_net)),
+        web_t_([this] {
+          server = std::make_shared<seasocks::Server>(
+              std::make_shared<seasocks::PrintfLogger>(
+                  seasocks::Logger::Level::Error));
+          server->addWebSocketHandler("/transition_data", time_data);
+          server->addWebSocketHandler("/marking_transition_data",
+                                      marking_transition);
+          server->startListening(2222);
+          server->setStaticPath("web");
+          std::cout << "interface online at http://localhost:2222/"
+                    << std::endl;
+
+          server->loop();
+        }) {}                    // Constructor is private.
+  WsServer(WsServer const &) {}  // Copy constructor is private.
+  WsServer &operator=(WsServer const &) {
+    return *this;
+  }  // Assignment operator is private.
+
+  static std::shared_ptr<WsServer> instance_;
+  std::shared_ptr<seasocks::Server> server;
+  std::atomic<bool> runweb;
+  std::thread web_t_;
+};
+
+std::shared_ptr<WsServer> WsServer::instance_ = NULL;
+
+std::shared_ptr<WsServer> WsServer::Instance(const nlohmann::json &json_net) {
+  if (!instance_) {
+    instance_.reset(new WsServer(json_net));
+  }
+
+  return instance_;
 };

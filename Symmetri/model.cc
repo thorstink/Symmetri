@@ -28,15 +28,16 @@ bool transition_enabled(Marking M, Marking dM) {
 }
 
 // this cache belongs to run_all!
-static std::unordered_map<std::size_t, std::pair<Marking, Transitions>> cache;
+// static std::unordered_map<std::size_t, std::pair<Marking, Transitions>>
+// cache;
 
 Model run_all(Model model) {
   auto &M = model.data->M;
   const auto hash = hashf(M);
-  const auto cached = cache.find(hash);
+  const auto cached = model.data->cache.find(hash);
   Transitions T;
 
-  if (cached != cache.end()) {
+  if (cached != model.data->cache.end()) {
     M = cached->second.first;
     T = cached->second.second;
   } else {
@@ -47,7 +48,7 @@ Model run_all(Model model) {
         T.push_back(T_i);
       }
     }
-    cache[hash] = {M, T};
+    model.data->cache[hash] = {M, T};
   }
 
   for (auto T_i : T) {
