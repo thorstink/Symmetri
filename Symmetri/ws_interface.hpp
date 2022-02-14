@@ -6,6 +6,7 @@
 #include <thread>
 
 #include "json.hpp"
+#include "spdlog/spdlog.h"
 using namespace seasocks;
 
 struct Output : seasocks::WebSocket::Handler {
@@ -65,11 +66,10 @@ class WsServer {
           server->addWebSocketHandler("/transition_data", time_data);
           server->addWebSocketHandler("/marking_transition_data",
                                       marking_transition);
-          server->startListening(2222);
+          auto port = 2222;
+          server->startListening(port);
           server->setStaticPath("web");
-          std::cout << "interface online at http://localhost:2222/"
-                    << std::endl;
-
+          spdlog::info("interface online at http://localhost:{0}/", port);
           server->loop();
         }) {}                    // Constructor is private.
   WsServer(WsServer const &) {}  // Copy constructor is private.

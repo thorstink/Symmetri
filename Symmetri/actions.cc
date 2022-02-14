@@ -1,8 +1,7 @@
 #include "actions.h"
 
-#include <iostream>
-
 #include "expected.hpp"
+#include "spdlog/spdlog.h"
 namespace symmetri {
 using namespace moodycamel;
 
@@ -14,15 +13,6 @@ auto now() {
 
 auto getThreadId() {
   return std::hash<std::thread::id>{}(std::this_thread::get_id());
-}
-
-std::optional<Reducer> noTransitionInStore(const Transition &t) {
-  return Reducer([=](Model model) {
-    std::stringstream s;
-    s << "Transition " << t << " is not in the store.";
-    throw std::runtime_error(s.str());
-    return model;
-  });
 }
 
 tl::expected<std::function<OptionalError()>, std::string> getAction(
@@ -55,7 +45,10 @@ std::vector<std::thread> executeTransition(
       auto t = getAction(local_store, transition);
 
       if (t.has_value()) {
+        spdlog::info("Transition {0} started.", transition);
         auto optional_error = t.value()();
+        spdlog::info("Transition {0} ended.", transition);
+
         const auto end_time = now();
         const auto thread_id = getThreadId();
         if (optional_error.has_value()) {
@@ -77,6 +70,9 @@ std::vector<std::thread> executeTransition(
             return model;
           }));
         }
+      } else {
+        spdlog::error("No function assigned to transition label {0}.",
+                      transition);
       }
     };
   };

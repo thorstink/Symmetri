@@ -1,8 +1,8 @@
 #include "pnml_parser.h"
 
-#include <iostream>
-
 #include "json.hpp"
+#include "spdlog/fmt/ostr.h"  // must be included
+#include "spdlog/spdlog.h"
 #include "tinyxml2/tinyxml2.h"
 
 using namespace tinyxml2;
@@ -60,7 +60,7 @@ constructTransitionMutationMatrices(const std::set<std::string> &files) {
   for (auto file : files) {
     XMLDocument net;
     net.LoadFile(file.c_str());
-    std::cout << "file: " << file << std::endl;
+    spdlog::info("PNML file-path: {0}", file);
 
     tinyxml2::XMLElement *levelElement = net.FirstChildElement("pnml")
                                              ->FirstChildElement("net")
@@ -118,9 +118,6 @@ constructTransitionMutationMatrices(const std::set<std::string> &files) {
       if (std::find(places.begin(), places.end(), place_id) != places.end()) {
         /* v contains x */
       } else {
-        std::cout << "place: " << place_name << ", " << place_id << ", "
-                  << initial_marking << ", x:" << x << ", y: " << y
-                  << std::endl;
         j["states"].push_back(nlohmann::json(
             {{"label", std::string(place_id)}, {"y", y}, {"x", x}}));
 
@@ -150,8 +147,6 @@ constructTransitionMutationMatrices(const std::set<std::string> &files) {
           transitions.end()) {
         /* v contains x */
       } else {
-        std::cout << "transition: " << transition_name << ", " << transition_id
-                  << ", x:" << x << ", y: " << y << std::endl;
         j["transitions"].push_back(nlohmann::json(
             {{"label", std::string(transition_id)}, {"y", y}, {"x", x}}));
 
@@ -187,8 +182,6 @@ constructTransitionMutationMatrices(const std::set<std::string> &files) {
         auto s_idx = getIndex(places, source_id);
         auto t_idx = getIndex(transitions, target_id);
         // if the source is a place, tokens are consumed.
-        std::cout << "place-source: " << arc_id << ", " << source_id << ", "
-                  << target_id << std::endl;
         Dm(s_idx, t_idx) += 1;
         // pre
         for (auto &[key, val] : j["transitions"].items()) {
@@ -200,8 +193,6 @@ constructTransitionMutationMatrices(const std::set<std::string> &files) {
                  contains(transitions, source_id)) {
         auto s_idx = getIndex(transitions, source_id);
         auto t_idx = getIndex(places, target_id);
-        std::cout << "trans-source: " << arc_id << ", " << source_id << ", "
-                  << target_id << std::endl;
         // if the destination is a place, tokens are produced.
         Dp(t_idx, s_idx) += 1;
         for (auto &[key, val] : j["transitions"].items()) {
@@ -212,12 +203,13 @@ constructTransitionMutationMatrices(const std::set<std::string> &files) {
         }
         // post
       } else {
-        std::cout << "error: arc " << arc_id
-                  << " is not connecting a place to a transition." << std::endl;
+        spdlog::error(
+            "error: arc {0} is not connecting a place to a transition.",
+            arc_id);
       }
     }
   }
-  std::cout << Dp - Dm << std::endl;
+  spdlog::debug(Dp - Dm);
 
   int transition_count = transitions.size();
   std::unordered_map<std::string, symmetri::Marking> pre_map, post_map;
@@ -241,14 +233,14 @@ constructTransitionMutationMatrices(const std::set<std::string> &files) {
                              .sparseView();
 
   for (auto [i, dM] : pre_map) {
-    std::cout << "deduct " << i << ": " << dM.transpose() << std::endl;
+    spdlog::debug("deduct {0}: {1}", i, dM.transpose());
   }
 
   for (auto [i, dM] : post_map) {
-    std::cout << "add " << i << ": " << dM.transpose() << std::endl;
+    spdlog::debug("deduct {0}: {1}", i, dM.transpose());
   }
 
-  std::cout << "initial marking: " << M0.transpose() << std::endl;
+  spdlog::info("initial marking for total net: {0}", M0.transpose());
 
   std::map<Eigen::Index, std::string> index_place_id_map;
   for (size_t i = 0; i < places.size(); i++) {
@@ -263,13 +255,13 @@ constructTransitionMutationMatrices(const std::set<std::string> &files) {
   Conversions transition_mapper(index_transition_id_map);
   Conversions marking_mapper(index_place_id_map);
 
-  for (auto [id, name] : index_transition_id_map)
-    std::cout << "id: " << id << ", name: " << name << std::endl;
+  // for (auto [id, name] : index_transition_id_map)
+  //   std::cout << "id: " << id << ", name: " << name << std::endl;
 
-  for (auto [id, name] : index_place_id_map)
-    std::cout << "id: " << id << ", name: " << name << std::endl;
+  // for (auto [id, name] : index_place_id_map)
+  //   std::cout << "id: " << id << ", name: " << name << std::endl;
 
-  std::cout << j << std::endl;
+  // std::cout << j << std::endl;
 
   return {pre_map, post_map, M0, j, transition_mapper, marking_mapper};
 }

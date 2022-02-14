@@ -8,7 +8,9 @@
 #include "actions.h"
 #include "model.h"
 #include "pnml_parser.h"
+#include "spdlog/spdlog.h"
 #include "ws_interface.hpp"
+
 namespace symmetri {
 using namespace moodycamel;
 
@@ -22,7 +24,6 @@ std::function<symmetri::OptionalError()> start(
     auto server = WsServer::Instance(json_net);
     BlockingConcurrentQueue<Reducer> reducers(256);
     BlockingConcurrentQueue<Transition> actions(1024);
-
     auto tp = executeTransition(store, places, reducers, actions, M0.size(), 3);
     auto m = Model(clock_t::now(), M0, Dm, Dp, actions);
 
@@ -37,7 +38,7 @@ std::function<symmetri::OptionalError()> start(
         try {
           m = run_all(f(m));
         } catch (const std::exception &e) {
-          std::cerr << e.what() << '\n';
+          spdlog::error(e.what());
         }
       }
 
