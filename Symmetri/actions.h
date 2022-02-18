@@ -1,16 +1,17 @@
 #pragma once
-#include "model.h"
 #include <blockingconcurrentqueue.h>
+
 #include <thread>
 #include <vector>
 
+#include "model.h"
+
 namespace symmetri {
 
-std::vector<std::thread>
-executeTransition(const TransitionActionMap &local_store,
-                  const Conversions &marking_mapper,
-                  moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
-                  moodycamel::BlockingConcurrentQueue<Transition> &actions,
-                  int state_size, unsigned int thread_count);
+std::vector<std::thread> executeTransition(
+    const TransitionActionMap &local_store, const Conversions &marking_mapper,
+    moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
+    moodycamel::BlockingConcurrentQueue<Transition> &actions, int state_size,
+    unsigned int thread_count, const std::string &case_id);
 
-} // namespace symmetri
+}  // namespace symmetri
