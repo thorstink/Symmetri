@@ -1,6 +1,5 @@
 #include "Symmetri/symmetri.h"
 
-#include <spdlog/pattern_formatter.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
