@@ -12,6 +12,6 @@ std::vector<std::thread> executeTransition(
     const TransitionActionMap &local_store, const Conversions &marking_mapper,
     moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
     moodycamel::BlockingConcurrentQueue<Transition> &actions, int state_size,
-    unsigned int thread_count);
+    unsigned int thread_count, const std::string &case_id);
 
 }  // namespace symmetri

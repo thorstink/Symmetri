@@ -33,7 +33,7 @@ std::vector<std::thread> executeTransition(
     const TransitionActionMap &local_store, const Conversions &marking_mapper,
     BlockingConcurrentQueue<Reducer> &reducers,
     BlockingConcurrentQueue<Transition> &actions, int state_size,
-    unsigned int thread_count) {
+    unsigned int thread_count, const std::string &case_id) {
   std::vector<std::thread> pool(thread_count);
 
   auto worker = [&, state_size] {
@@ -45,9 +45,9 @@ std::vector<std::thread> executeTransition(
       auto t = getAction(local_store, transition);
 
       if (t.has_value()) {
-        spdlog::info("Transition {0} started.", transition);
+        spdlog::get(case_id)->info("Transition {0} started.", transition);
         auto optional_error = t.value()();
-        spdlog::info("Transition {0} ended.", transition);
+        spdlog::get(case_id)->info("Transition {0} ended.", transition);
 
         const auto end_time = now();
         const auto thread_id = getThreadId();
@@ -71,8 +71,8 @@ std::vector<std::thread> executeTransition(
           }));
         }
       } else {
-        spdlog::error("No function assigned to transition label {0}.",
-                      transition);
+        spdlog::get(case_id)->error(
+            "No function assigned to transition label {0}.", transition);
       }
     };
   };

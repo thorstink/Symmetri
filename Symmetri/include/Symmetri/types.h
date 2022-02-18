@@ -16,7 +16,7 @@ using TransitionActionMap =
     std::unordered_map<Transition, std::function<OptionalError()>>;
 
 struct Conversions {
-public:
+ public:
   Conversions(const std::map<std::string, Eigen::Index> &label_to_id)
       : label_to_id_(label_to_id) {
     for (auto i = label_to_id_.begin(); i != label_to_id_.end(); ++i)
@@ -47,4 +47,4 @@ inline Marking mutationVectorFromMap(const Conversions &convertor,
   return dM;
 }
 
-} // namespace symmetri
+}  // namespace symmetri
