@@ -1,8 +1,9 @@
 #include "pnml_parser.h"
 
+#include <spdlog/fmt/ostr.h>  // must be included
+#include <spdlog/spdlog.h>
+
 #include "json.hpp"
-#include "spdlog/fmt/ostr.h"  // must be included
-#include "spdlog/spdlog.h"
 #include "tinyxml2/tinyxml2.h"
 
 using namespace tinyxml2;

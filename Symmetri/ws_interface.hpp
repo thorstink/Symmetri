@@ -2,11 +2,11 @@
 
 #include <seasocks/PrintfLogger.h>
 #include <seasocks/Server.h>
+#include <spdlog/spdlog.h>
 
 #include <thread>
 
 #include "json.hpp"
-#include "spdlog/spdlog.h"
 using namespace seasocks;
 
 struct Output : seasocks::WebSocket::Handler {

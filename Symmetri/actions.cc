@@ -1,7 +1,8 @@
 #include "actions.h"
 
+#include <spdlog/spdlog.h>
+
 #include "expected.hpp"
-#include "spdlog/spdlog.h"
 namespace symmetri {
 using namespace moodycamel;
 
