@@ -22,17 +22,14 @@ struct Output : seasocks::WebSocket::Handler {
       con->send(msg);
     }
   }
+  bool hasConnections() { return connections.size() > 0; }
 };
 
 struct Wsio : seasocks::WebSocket::Handler {
-  Wsio(const std::string &net) : net_(net) {}
+  Wsio() {}
   std::set<seasocks::WebSocket *> connections;
-  const std::string net_;
   void onConnect(seasocks::WebSocket *socket) override {
     connections.insert(socket);
-    for (auto *con : connections) {
-      con->send(net_);
-    }
   }
   void onDisconnect(seasocks::WebSocket *socket) override {
     connections.erase(socket);
@@ -42,13 +39,14 @@ struct Wsio : seasocks::WebSocket::Handler {
       con->send(msg);
     }
   }
+  bool hasConnections() { return connections.size() > 0; }
 };
 
 class WsServer {
  public:
   std::shared_ptr<Output> time_data;
   std::shared_ptr<Wsio> marking_transition;
-  static std::shared_ptr<WsServer> Instance(const std::string &json_net);
+  static std::shared_ptr<WsServer> Instance();
   void queueTask(const std::function<void()> &task) { server->execute(task); }
   void stop() {
     server->terminate();
@@ -56,9 +54,9 @@ class WsServer {
   }
 
  private:
-  WsServer(const std::string &json_net)
+  WsServer()
       : time_data(std::make_shared<Output>()),
-        marking_transition(std::make_shared<Wsio>(json_net)),
+        marking_transition(std::make_shared<Wsio>()),
         web_t_([this] {
           server = std::make_shared<seasocks::Server>(
               std::make_shared<seasocks::PrintfLogger>(
@@ -85,9 +83,9 @@ class WsServer {
 
 std::shared_ptr<WsServer> WsServer::instance_ = NULL;
 
-std::shared_ptr<WsServer> WsServer::Instance(const std::string &json_net) {
+std::shared_ptr<WsServer> WsServer::Instance() {
   if (!instance_) {
-    instance_.reset(new WsServer(json_net));
+    instance_.reset(new WsServer());
   }
 
   return instance_;

@@ -20,12 +20,12 @@ constexpr auto noop = [](const Model &m) { return m; };
 
 const std::string active = "active";
 const std::string active_tag = ":::" + active;
-const std::string active_def = "classDef " + active + " fill:#f96;\n";
+const std::string active_def = "classDef " + active + " fill:#6fd0a7;\n";
 const std::string passive = "passive";
 const std::string passive_tag = ":::" + passive;
-const std::string passive_def = "classDef " + passive + " fill:#c4c;\n";
+const std::string passive_def = "classDef " + passive + " fill:#bad1ce;\n";
 const std::string conn = "---";
-const std::string header = "graph TB\n" + active_def + passive_def;
+const std::string header = "graph LR\n" + active_def + passive_def;
 
 std::string placeFormatter(const std::string &id, int marking = 0) {
   return id + "((" + id + " : " + std::to_string(marking) + "))";
@@ -42,21 +42,26 @@ auto getPlaceMarking(
 }
 
 auto genNet(const nlohmann::json &j,
-            const std::map<std::string, int> &id_marking_map) {
+            const std::map<std::string, int> &id_marking_map,
+            const std::set<std::string> &active_transitions) {
   std::stringstream mermaid;
   mermaid << header;
-  for (const auto &x : j["transitions"]) {
-    for (const auto &post : x["post"].items()) {
+  for (const auto &trnstn : j["transitions"]) {
+    for (const auto &post : trnstn["post"].items()) {
+      auto t_id = trnstn["label"].get<std::string>();
       int marking = id_marking_map.at(post.key());
 
-      mermaid << x["label"].get<std::string>() + passive_tag << conn
-              << placeFormatter(post.key(), marking) << "\n";
+      mermaid << t_id
+              << (active_transitions.contains(t_id) ? active_tag : passive_tag)
+              << conn << placeFormatter(post.key(), marking) << "\n";
     }
-    for (const auto &pre : x["pre"].items()) {
+    for (const auto &pre : trnstn["pre"].items()) {
+      auto t_id = trnstn["label"].get<std::string>();
       int marking = id_marking_map.at(pre.key());
 
-      mermaid << placeFormatter(pre.key(), marking) << conn
-              << x["label"].get<std::string>() + passive_tag << "\n";
+      mermaid << placeFormatter(pre.key(), marking) << conn << t_id
+              << (active_transitions.contains(t_id) ? active_tag : passive_tag)
+              << "\n";
     }
   }
 
@@ -77,8 +82,7 @@ std::function<symmetri::OptionalError()> start(
 
   return [=]() {
     auto server =
-        interface ? std::optional(WsServer::Instance(genNet(json_net, getPlaceMarking(places.id_to_label_, M0))))
-                  : std::nullopt;
+        interface ? std::optional(WsServer::Instance()) : std::nullopt;
     BlockingConcurrentQueue<Reducer> reducers(256);
     BlockingConcurrentQueue<Transition> actions(1024);
     auto tp = executeTransition(store, places, reducers, actions, M0.size(), 3,
@@ -100,35 +104,35 @@ std::function<symmetri::OptionalError()> start(
         }
       }
 
-      auto data = (*m.data);
-      m.data->log.clear();
-      std::stringstream log_data;
+      // server stuffies
+      if (server.has_value() &&
+          server.value()->marking_transition->hasConnections()) {
+        auto data = (*m.data);
 
-      for (auto &&[task_id, task_instance] : data.log) {
-        auto &&[start, end, thread_id] = task_instance;
-        log_data << thread_id << ','
-                 << std::chrono::duration_cast<std::chrono::milliseconds>(
-                        start.time_since_epoch())
-                        .count()
-                 << ','
-                 << std::chrono::duration_cast<std::chrono::milliseconds>(
-                        end.value_or(m.data->timestamp).time_since_epoch())
-                        .count()
-                 << ',' << task_id << '\n';
-      }
-      auto net =
-          genNet(json_net, getPlaceMarking(places.id_to_label_, m.data->M));
-      spdlog::info(net);
+        std::stringstream log_data;
 
-      nlohmann::json j;
-      j["active_transitions"] = nlohmann::json(m.data->active_transitions);
+        for (auto &&[task_id, task_instance] : data.log) {
+          auto &&[start, end, thread_id] = task_instance;
+          log_data << thread_id << ','
+                   << std::chrono::duration_cast<std::chrono::milliseconds>(
+                          start.time_since_epoch())
+                          .count()
+                   << ','
+                   << std::chrono::duration_cast<std::chrono::milliseconds>(
+                          end.value_or(m.data->timestamp).time_since_epoch())
+                          .count()
+                   << ',' << task_id << '\n';
+        }
+        auto net =
+            genNet(json_net, getPlaceMarking(places.id_to_label_, m.data->M),
+                   m.data->active_transitions);
 
-      if (server.has_value()) {
         server.value()->queueTask(
             [=]() { server.value()->marking_transition->send(net); });
         server.value()->queueTask(
             [=, l = log_data.str()]() { server.value()->time_data->send(l); });
       }
+      m.data->log.clear();
 
       if (m.data->active_transitions.size() == 0) {
         break;
