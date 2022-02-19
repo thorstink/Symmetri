@@ -4,6 +4,7 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <map>
 #include <set>
 #include <string>
 #include <tuple>
@@ -15,6 +16,11 @@ struct Model;
 using Reducer = std::function<Model(Model)>;
 
 using clock_t = std::chrono::system_clock;
+
+using TaskInstance =
+    std::tuple<clock_t::time_point,
+               std::optional<clock_t::time_point>, size_t>;
+
 struct Model {
   Model(const clock_t::time_point &t, const Marking &M,
         const TransitionMutation &Dm, const TransitionMutation &Dp,
@@ -30,7 +36,7 @@ struct Model {
     mutable std::set<Transition> active_transitions;
     const TransitionMutation Dm;
     const TransitionMutation Dp;
-    mutable std::vector<std::tuple<size_t, int64_t, int64_t, Transition>> log;
+    std::multimap<Transition, TaskInstance> log;
     std::unordered_map<std::size_t, std::pair<Marking, Transitions>> cache;
   };
   std::shared_ptr<shared> data;

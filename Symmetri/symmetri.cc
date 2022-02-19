@@ -31,7 +31,6 @@ std::function<symmetri::OptionalError()> start(
   console->set_pattern(s.str());
 
   return [=]() {
-    // auto server = WsServer::Instance(json_net);
     auto server =
         interface ? std::optional(WsServer::Instance(json_net)) : std::nullopt;
     BlockingConcurrentQueue<Reducer> reducers(256);
@@ -58,8 +57,18 @@ std::function<symmetri::OptionalError()> start(
       auto data = (*m.data);
       m.data->log.clear();
       std::stringstream log_data;
-      for (const auto &[a, b, c, d] : data.log) {
-        log_data << a << ',' << b << ',' << c << ',' << d << '\n';
+
+      for (auto &&[task_id, task_instance] : data.log) {
+        auto &&[start, end, thread_id] = task_instance;
+        log_data << thread_id << ','
+                 << std::chrono::duration_cast<std::chrono::milliseconds>(
+                        start.time_since_epoch())
+                        .count()
+                 << ','
+                 << std::chrono::duration_cast<std::chrono::milliseconds>(
+                        end.value_or(m.data->timestamp).time_since_epoch())
+                        .count()
+                 << ',' << task_id << '\n';
       }
 
       nlohmann::json j;
@@ -77,8 +86,9 @@ std::function<symmetri::OptionalError()> start(
         break;
       }
     };
-    for (auto &&t : tp) {
-      t.detach();
+    tp.stop->store(true);
+    for (auto &&t : tp.pool) {
+      t.join();
     }
     return std::nullopt;
   };
