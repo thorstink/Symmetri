@@ -86,10 +86,7 @@ std::function<symmetri::OptionalError()> start(
         break;
       }
     };
-    tp.stop->store(true);
-    for (auto &&t : tp.pool) {
-      t.join();
-    }
+    tp.stop();
     return std::nullopt;
   };
 }

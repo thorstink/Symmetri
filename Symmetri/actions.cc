@@ -6,8 +6,6 @@
 namespace symmetri {
 using namespace moodycamel;
 
-auto nowInMilliseconds() { return clock_t::now(); }
-
 auto getThreadId() {
   return static_cast<size_t>(
       std::hash<std::thread::id>()(std::this_thread::get_id()));
@@ -27,20 +25,19 @@ OptionalError executeAction(std::function<OptionalError()> action) {
   return action();
 }
 
-RetType executeTransition(
-    const TransitionActionMap &local_store, const Conversions &marking_mapper,
-    BlockingConcurrentQueue<Reducer> &reducers,
-    BlockingConcurrentQueue<Transition> &actions, int state_size,
-    unsigned int thread_count, const std::string &case_id) {
-  RetType R;
-  R.pool.resize(thread_count);
-
-  auto worker = [&, state_size] {
+StoppablePool executeTransition(const TransitionActionMap &local_store,
+                                const Conversions &marking_mapper,
+                                BlockingConcurrentQueue<Reducer> &reducers,
+                                BlockingConcurrentQueue<Transition> &actions,
+                                int state_size, unsigned int thread_count,
+                                const std::string &case_id) {
+  auto stop_token = std::make_shared<std::atomic<bool>>(false);
+  auto worker = [&, state_size, stop_token] {
     Transition transition;
-    while ((*R.stop).load() == false) {
+    while (stop_token->load() == false) {
       if (actions.wait_dequeue_timed(transition,
                                      std::chrono::milliseconds(250))) {
-        const auto start_time = nowInMilliseconds();
+        const auto start_time = clock_t::now();
 
         auto t = getAction(local_store, transition);
 
@@ -49,7 +46,7 @@ RetType executeTransition(
           auto optional_error = t.value()();
           spdlog::get(case_id)->info("Transition {0} ended.", transition);
 
-          const auto end_time = nowInMilliseconds();
+          const auto end_time = clock_t::now();
           const auto thread_id = getThreadId();
           if (optional_error.has_value()) {
             Marking error_mutation = mutationVectorFromMap(
@@ -78,10 +75,6 @@ RetType executeTransition(
     };
   };
 
-  // populate the pool
-  std::generate(std::begin(R.pool), std::end(R.pool),
-                [worker]() { return std::thread(worker); });
-
-  return R;
+  return StoppablePool(thread_count, stop_token, worker);
 }
 }  // namespace symmetri
