@@ -18,6 +18,51 @@ using namespace moodycamel;
 
 constexpr auto noop = [](const Model &m) { return m; };
 
+const std::string active = "active";
+const std::string active_tag = ":::" + active;
+const std::string active_def = "classDef " + active + " fill:#f96;\n";
+const std::string passive = "passive";
+const std::string passive_tag = ":::" + passive;
+const std::string passive_def = "classDef " + passive + " fill:#c4c;\n";
+const std::string conn = "---";
+const std::string header = "graph TB\n" + active_def + passive_def;
+
+std::string placeFormatter(const std::string &id, int marking = 0) {
+  return id + "((" + id + " : " + std::to_string(marking) + "))";
+}
+
+auto getPlaceMarking(
+    const std::map<Eigen::Index, std::string> &index_marking_map,
+    const Marking &marking) {
+  std::map<std::string, int> id_marking_map;
+  for (const auto &[idx, id] : index_marking_map) {
+    id_marking_map.emplace(id, marking.coeff(idx));
+  }
+  return id_marking_map;
+}
+
+auto genNet(const nlohmann::json &j,
+            const std::map<std::string, int> &id_marking_map) {
+  std::stringstream mermaid;
+  mermaid << header;
+  for (const auto &x : j["transitions"]) {
+    for (const auto &post : x["post"].items()) {
+      int marking = id_marking_map.at(post.key());
+
+      mermaid << x["label"].get<std::string>() + passive_tag << conn
+              << placeFormatter(post.key(), marking) << "\n";
+    }
+    for (const auto &pre : x["pre"].items()) {
+      int marking = id_marking_map.at(pre.key());
+
+      mermaid << placeFormatter(pre.key(), marking) << conn
+              << x["label"].get<std::string>() + passive_tag << "\n";
+    }
+  }
+
+  return mermaid.str();
+}
+
 std::function<symmetri::OptionalError()> start(
     const std::set<std::string> &files, const TransitionActionMap &store,
     const std::string &case_id, bool interface) {
@@ -32,7 +77,8 @@ std::function<symmetri::OptionalError()> start(
 
   return [=]() {
     auto server =
-        interface ? std::optional(WsServer::Instance(json_net)) : std::nullopt;
+        interface ? std::optional(WsServer::Instance(genNet(json_net, getPlaceMarking(places.id_to_label_, M0))))
+                  : std::nullopt;
     BlockingConcurrentQueue<Reducer> reducers(256);
     BlockingConcurrentQueue<Transition> actions(1024);
     auto tp = executeTransition(store, places, reducers, actions, M0.size(), 3,
@@ -70,14 +116,16 @@ std::function<symmetri::OptionalError()> start(
                         .count()
                  << ',' << task_id << '\n';
       }
+      auto net =
+          genNet(json_net, getPlaceMarking(places.id_to_label_, m.data->M));
+      spdlog::info(net);
 
       nlohmann::json j;
       j["active_transitions"] = nlohmann::json(m.data->active_transitions);
-      j["marking"] = webMarking(m.data->M, places.id_to_label_);
 
       if (server.has_value()) {
         server.value()->queueTask(
-            [=]() { server.value()->marking_transition->send(j.dump()); });
+            [=]() { server.value()->marking_transition->send(net); });
         server.value()->queueTask(
             [=, l = log_data.str()]() { server.value()->time_data->send(l); });
       }

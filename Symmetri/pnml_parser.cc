@@ -262,7 +262,7 @@ constructTransitionMutationMatrices(const std::set<std::string> &files) {
   // for (auto [id, name] : index_place_id_map)
   //   std::cout << "id: " << id << ", name: " << name << std::endl;
 
-  // std::cout << j << std::endl;
+  spdlog::info(j.dump());
 
   return {pre_map, post_map, M0, j, transition_mapper, marking_mapper};
 }

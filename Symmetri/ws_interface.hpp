@@ -25,13 +25,13 @@ struct Output : seasocks::WebSocket::Handler {
 };
 
 struct Wsio : seasocks::WebSocket::Handler {
-  Wsio(const nlohmann::json &net) : net_(net) {}
+  Wsio(const std::string &net) : net_(net) {}
   std::set<seasocks::WebSocket *> connections;
-  const nlohmann::json net_;
+  const std::string net_;
   void onConnect(seasocks::WebSocket *socket) override {
     connections.insert(socket);
     for (auto *con : connections) {
-      con->send(net_.dump());
+      con->send(net_);
     }
   }
   void onDisconnect(seasocks::WebSocket *socket) override {
@@ -48,7 +48,7 @@ class WsServer {
  public:
   std::shared_ptr<Output> time_data;
   std::shared_ptr<Wsio> marking_transition;
-  static std::shared_ptr<WsServer> Instance(const nlohmann::json &json_net);
+  static std::shared_ptr<WsServer> Instance(const std::string &json_net);
   void queueTask(const std::function<void()> &task) { server->execute(task); }
   void stop() {
     server->terminate();
@@ -56,7 +56,7 @@ class WsServer {
   }
 
  private:
-  WsServer(const nlohmann::json &json_net)
+  WsServer(const std::string &json_net)
       : time_data(std::make_shared<Output>()),
         marking_transition(std::make_shared<Wsio>(json_net)),
         web_t_([this] {
@@ -85,7 +85,7 @@ class WsServer {
 
 std::shared_ptr<WsServer> WsServer::instance_ = NULL;
 
-std::shared_ptr<WsServer> WsServer::Instance(const nlohmann::json &json_net) {
+std::shared_ptr<WsServer> WsServer::Instance(const std::string &json_net) {
   if (!instance_) {
     instance_.reset(new WsServer(json_net));
   }

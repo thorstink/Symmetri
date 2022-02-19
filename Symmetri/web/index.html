@@ -7,55 +7,17 @@
 <head>
   <title>Application</title>
   <script src="lib/jquery.min.js"></script>
-  <script src="lib/rxjs.umd.min.js"></script>
-  <script src='vega_entry.js'></script>
+  <script src='lib/vega_entry.js'></script>
+  <script src="lib/net.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega@4"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@4"></script>
-  <script src="lib/d3.v3.min.js"></script>
-  <script src="lib/lodash.min.js"></script>
-  <script src="lib/petrinet.js"></script>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.14.0/mermaid.min.js"></script>
 
 <body>
-  <h2>Overview</h2>
+  <h2>System overview</h2>
   <div id="vis"></div>
-  <div id="petri-net"></div>
-
-  <script type="text/javascript">
-    var net = new Array();
-    var states = [];
-    var transitions = [];
-    var active_transitions = [];
-    var marking = {};
-
-    const { concat } = rxjs
-    const { map, filter, retry, take, tap } = rxjs.operators;
-    const { webSocket } = rxjs.webSocket;
-
-    var ws_address = 'ws://' + document.location.host + '/marking_transition_data'
-
-    var set_net = webSocket(ws_address).pipe(filter(j => j.hasOwnProperty('states')), tap(net => {
-      console.log(net); states = net.states;
-      transitions = net.transitions;
-      marking = {};
-      function scaleModel(sx, sy) {
-        (states.concat(transitions)).forEach(function (s) { s.x *= sx; s.y *= sy })
-      }
-      scaleModel(1.5, 1.5);
-      let script = document.createElement('script');
-      script.src = "lib/app.js";
-      document.body.append(script);
-    }), take(1))
-
-    var update_marking = webSocket(ws_address).pipe(filter(j => !j.hasOwnProperty('states')), tap(msg => { marking = msg.marking; active_transitions = msg.active_transitions; redraw(); }))
-
-    concat(set_net, update_marking).subscribe(
-      msg => { },
-      err => console.log(err),
-      () => console.log('complete')
-    );
-  </script>
+  <div id="mermaid-net"></div>
 </body>
 
 </html>
