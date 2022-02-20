@@ -4,7 +4,6 @@
 
 #include "Symmetri/symmetri.h"
 symmetri::OptionalError helloWorld() {
-  std::cout << "hello world!" << std::endl;
   std::this_thread::sleep_for(std::chrono::seconds(1));
   return std::nullopt;
 }

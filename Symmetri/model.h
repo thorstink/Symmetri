@@ -19,7 +19,7 @@ using clock_t = std::chrono::system_clock;
 
 using TaskInstance =
     std::tuple<clock_t::time_point,
-               std::optional<clock_t::time_point>, size_t>;
+               clock_t::time_point, size_t>;
 
 struct Model {
   Model(const clock_t::time_point &t, const Marking &M,
