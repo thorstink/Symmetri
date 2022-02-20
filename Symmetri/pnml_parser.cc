@@ -37,24 +37,13 @@ bool contains(std::vector<std::string> v, const std::string &K) {
   return it != v.end();
 }
 
-nlohmann::json webMarking(
-    const Marking &M,
-    const std::map<Eigen::Index, std::string> &index_marking_map)
-
-{
-  nlohmann::json j;
-
-  for (uint8_t i = 0; i < M.size(); i++) {
-    j.emplace(index_marking_map.at(i), M.coeff(i));
-  }
-  return j;
-}
-
-std::tuple<TransitionMutation, TransitionMutation, Marking, nlohmann::json,
+std::tuple<TransitionMutation, TransitionMutation, Marking, ArcList,
            Conversions, Conversions>
 constructTransitionMutationMatrices(const std::set<std::string> &files) {
   std::vector<std::string> places, transitions;
   std::unordered_map<std::string, int> place_initialMarking;
+  ArcList arcs;
+
   int offset_x = 0;
   int offset_y = 0;
   nlohmann::json j;
@@ -188,6 +177,8 @@ constructTransitionMutationMatrices(const std::set<std::string> &files) {
         for (auto &[key, val] : j["transitions"].items()) {
           if (val["label"] == std::string(target_id)) {
             val["pre"].emplace(std::string(source_id), 1);
+            arcs.push_back(
+                {true, std::string(source_id), std::string(target_id)});
           }
         }
       } else if (contains(places, target_id) &&
@@ -200,6 +191,8 @@ constructTransitionMutationMatrices(const std::set<std::string> &files) {
           if (val["label"] == source_id) {
             nlohmann::json object = val;
             val["post"].emplace(std::string(target_id), 1);
+            arcs.push_back(
+                {false, std::string(target_id), std::string(source_id)});
           }
         }
         // post
@@ -256,13 +249,9 @@ constructTransitionMutationMatrices(const std::set<std::string> &files) {
   Conversions transition_mapper(index_transition_id_map);
   Conversions marking_mapper(index_place_id_map);
 
-  // for (auto [id, name] : index_transition_id_map)
-  //   std::cout << "id: " << id << ", name: " << name << std::endl;
+  // sorting and reversing makes nicer mermaids diagrams.
+  std::sort(std::begin(arcs), std::end(arcs));
+  std::reverse(std::begin(arcs), std::end(arcs));
 
-  // for (auto [id, name] : index_place_id_map)
-  //   std::cout << "id: " << id << ", name: " << name << std::endl;
-
-  // std::cout << j << std::endl;
-
-  return {pre_map, post_map, M0, j, transition_mapper, marking_mapper};
+  return {pre_map, post_map, M0, arcs, transition_mapper, marking_mapper};
 }

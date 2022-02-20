@@ -15,7 +15,7 @@ bool Boo = true;
 
 OptionalError action0() {
   T1::Boo = true;
-  sleep(std::chrono::milliseconds(190 * 5));
+  sleep(std::chrono::milliseconds(500 * 5));
   return std::nullopt;
 }
 OptionalError action1() {

@@ -16,10 +16,10 @@ inline size_t hashf(const T &matrix) {
   return seed;
 }
 
-bool transition_enabled(Marking M, Marking dM) {
+bool transition_enabled(const Marking &M, const Marking &dM) {
   bool enabled = true;
   for (Eigen::SparseVector<int16_t>::InnerIterator it(dM); it; ++it) {
-    if (M.coeffRef(it.index()) < it.value()) {
+    if (M.coeff(it.index()) < it.value()) {
       enabled = false;
       break;
     }

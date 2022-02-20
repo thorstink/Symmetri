@@ -6,6 +6,7 @@
 #include <unordered_map>
 
 namespace symmetri {
+using ArcList = std::vector<std::tuple<bool, std::string, std::string>>;
 using Transition = std::string;
 using Marking = Eigen::SparseVector<int16_t>;
 using MarkingMutation = std::unordered_map<std::string, int16_t>;

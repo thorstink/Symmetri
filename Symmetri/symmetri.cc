@@ -10,9 +10,11 @@
 
 #include "Symmetri/types.h"
 #include "actions.h"
+#include "mermaid.hpp"
 #include "model.h"
 #include "pnml_parser.h"
 #include "ws_interface.hpp"
+
 namespace symmetri {
 using namespace moodycamel;
 
@@ -21,7 +23,7 @@ constexpr auto noop = [](const Model &m) { return m; };
 std::function<symmetri::OptionalError()> start(
     const std::set<std::string> &files, const TransitionActionMap &store,
     const std::string &case_id, bool interface) {
-  const auto &[Dm, Dp, M0, json_net, transitions, places] =
+  const auto &[Dm, Dp, M0, arc_list, transitions, places] =
       constructTransitionMutationMatrices(files);
 
   std::stringstream s;
@@ -31,13 +33,12 @@ std::function<symmetri::OptionalError()> start(
   console->set_pattern(s.str());
 
   return [=]() {
-    // auto server = WsServer::Instance(json_net);
     auto server =
-        interface ? std::optional(WsServer::Instance(json_net)) : std::nullopt;
+        interface ? std::optional(WsServer::Instance()) : std::nullopt;
     BlockingConcurrentQueue<Reducer> reducers(256);
     BlockingConcurrentQueue<Transition> actions(1024);
-    auto tp = executeTransition(store, places, reducers, actions, M0.size(), 3,
-                                case_id);
+    auto stp = executeTransition(store, places, reducers, actions, M0.size(), 3,
+                                 case_id);
     auto m = Model(clock_t::now(), M0, Dm, Dp, actions);
 
     // auto start
@@ -55,31 +56,28 @@ std::function<symmetri::OptionalError()> start(
         }
       }
 
-      auto data = (*m.data);
+      // server stuffies
+      if (server.has_value() &&
+          server.value()->marking_transition->hasConnections()) {
+        auto data = (*m.data);
+
+        server.value()->queueTask(
+            [=, net = genNet(arc_list,
+                             getPlaceMarking(places.id_to_label_, m.data->M),
+                             m.data->active_transitions)]() {
+              server.value()->marking_transition->send(net);
+            });
+        server.value()->queueTask([=, log = logToCsv(data.log)]() {
+          server.value()->time_data->send(log);
+        });
+      }
       m.data->log.clear();
-      std::stringstream log_data;
-      for (const auto &[a, b, c, d] : data.log) {
-        log_data << a << ',' << b << ',' << c << ',' << d << '\n';
-      }
-
-      nlohmann::json j;
-      j["active_transitions"] = nlohmann::json(m.data->active_transitions);
-      j["marking"] = webMarking(m.data->M, places.id_to_label_);
-
-      if (server.has_value()) {
-        server.value()->queueTask(
-            [=]() { server.value()->marking_transition->send(j.dump()); });
-        server.value()->queueTask(
-            [=, l = log_data.str()]() { server.value()->time_data->send(l); });
-      }
 
       if (m.data->active_transitions.size() == 0) {
         break;
       }
     };
-    for (auto &&t : tp) {
-      t.detach();
-    }
+    stp.stop();
     return std::nullopt;
   };
 }
