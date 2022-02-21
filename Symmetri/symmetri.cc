@@ -20,9 +20,13 @@ using namespace moodycamel;
 
 constexpr auto noop = [](const Model &m) { return m; };
 
+void registerQueue(input &input, std::function<void(const std::string &)> f) {
+  input.p = f;
+};
+
 std::function<symmetri::OptionalError()> start(
     const std::set<std::string> &files, const TransitionActionMap &store,
-    const std::string &case_id, bool interface) {
+    input &input, const std::string &case_id, bool interface) {
   const auto &[Dm, Dp, M0, arc_list, transitions, places] =
       constructTransitionMutationMatrices(files);
 
@@ -32,11 +36,15 @@ std::function<symmetri::OptionalError()> start(
 
   console->set_pattern(s.str());
 
-  return [=]() {
+  return [=, &input]() {
     auto server =
         interface ? std::optional(WsServer::Instance()) : std::nullopt;
     BlockingConcurrentQueue<Reducer> reducers(256);
-    BlockingConcurrentQueue<Transition> actions(1024);
+    BlockingConcurrentQueue<Transition> actions(256);
+    // register
+    registerQueue(input,
+                  [&a = actions](const std::string &t) { a.enqueue(t); });
+
     auto stp = executeTransition(store, places, reducers, actions, M0.size(), 3,
                                  case_id);
     auto m = Model(clock_t::now(), M0, Dm, Dp, actions);
@@ -78,6 +86,7 @@ std::function<symmetri::OptionalError()> start(
       }
     };
     stp.stop();
+    // input.p = std::nullopt;
     return std::nullopt;
   };
 }
