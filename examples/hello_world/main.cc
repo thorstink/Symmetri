@@ -4,10 +4,7 @@
 #include <thread>
 
 #include "Symmetri/symmetri.h"
-symmetri::OptionalError helloWorld() {
-  std::this_thread::sleep_for(std::chrono::seconds(1));
-  return std::nullopt;
-}
+void helloWorld() { std::this_thread::sleep_for(std::chrono::seconds(1)); }
 
 int main(int argc, char *argv[]) {
   auto pnml_path = std::string(argv[1]);
@@ -20,7 +17,6 @@ int main(int argc, char *argv[]) {
   auto t = std::async(std::launch::async, [f = net.push<float>("t99")] {
     float a;
     std::cin >> a;
-    std::cout << a << std::endl;
     f(a);
   });
 

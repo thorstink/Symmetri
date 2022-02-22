@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-#include "Symmetri/types.h"
+#include "types.h"
 
 namespace symmetri {
 

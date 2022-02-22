@@ -3,13 +3,13 @@
 
 #include <chrono>
 #include <functional>
-#include <memory>
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
 #include <tuple>
 
-#include "Symmetri/types.h"
+#include "types.h"
 
 namespace symmetri {
 struct Model;
@@ -18,8 +18,7 @@ using Reducer = std::function<Model(Model)>;
 using clock_t = std::chrono::system_clock;
 
 using TaskInstance =
-    std::tuple<clock_t::time_point,
-               clock_t::time_point, size_t>;
+    std::tuple<clock_t::time_point, clock_t::time_point, size_t>;
 
 struct Model {
   Model(const clock_t::time_point &t, const Marking &M,

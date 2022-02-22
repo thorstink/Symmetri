@@ -1,27 +1,29 @@
 #pragma once
 
-#include <optional>
+#include <functional>
 #include <set>
 #include <string>
-
-#include "Symmetri/types.h"
+#include <unordered_map>
 
 namespace symmetri {
+
+using TransitionActionMap =
+    std::unordered_map<std::string, std::function<void()>>;
 
 struct Application {
  private:
   std::function<void(const std::string &t)> p;
-  std::function<symmetri::OptionalError()> run;
+  std::function<void()> run;
 
  public:
   Application(const std::set<std::string> &path_to_petri,
-              const TransitionActionMap &,
+              const TransitionActionMap &store,
               const std::string &case_id = "NOCASE", bool use_webserver = true);
-  symmetri::OptionalError operator()() const;
+  void operator()() const;
 
   template <typename T>
-  inline std::function<void(T)> push(const symmetri::Transition &t) const {
-    return [t, this](T) { p(t); };
+  inline std::function<void(T)> push(const std::string &transition) const {
+    return [transition, this](T) { p(transition); };
   }
 };
 

@@ -1,9 +1,11 @@
 #pragma once
-#include "Symmetri/types.h"
 #include <ros/ros.h>
 #include <std_msgs/String.h>
+
 #include <chrono>
 #include <thread>
+
+#include "types.h"
 
 namespace ros_example {
 
@@ -20,7 +22,7 @@ struct somePub {
   somePub() { pub = n.advertise<std_msgs::String>("other_chatter", 1000); };
   ros::NodeHandle n;
   ros::Publisher pub;
-  symmetri::OptionalError publish() {
+  void publish() {
     std::cout << "Executing Transition 4 on thread "
               << std::this_thread::get_id() << '\n';
     auto dur = 1800 + 200 * 5 + std::rand() / ((RAND_MAX + 1500u) / 1500);
@@ -32,4 +34,4 @@ struct somePub {
     return std::nullopt;
   }
 };
-}; // namespace ros_example
+};  // namespace ros_example

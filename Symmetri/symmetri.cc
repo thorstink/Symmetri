@@ -8,11 +8,11 @@
 #include <memory>
 #include <tuple>
 
-#include "Symmetri/types.h"
 #include "actions.h"
 #include "mermaid.hpp"
 #include "model.h"
 #include "pnml_parser.h"
+#include "types.h"
 #include "ws_interface.hpp"
 
 namespace symmetri {
@@ -82,10 +82,9 @@ Application::Application(const std::set<std::string> &files,
       }
     };
     stp.stop();
-    return std::nullopt;
   };
 }
 
-symmetri::OptionalError Application::operator()() const { return run(); };
+void Application::operator()() const { return run(); };
 
 }  // namespace symmetri
