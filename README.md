@@ -37,3 +37,9 @@ and look at `http://localhost:2222/` for a live view of the activity.
 - Put in different eventloop?
 - Never fired semantics?
 - makde example apps more flexible (multiple nets etc)
+
+# Cloc
+
+```
+cloc --exclude-list-file=.clocignore .
+```
