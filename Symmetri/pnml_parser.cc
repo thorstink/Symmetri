@@ -211,7 +211,17 @@ constructTransitionMutationMatrices(const std::set<std::string> &files) {
   for (const auto &transition_id : transitions) {
     T.setZero();
     T(getIndex(transitions, transition_id)) = 1;
-    pre_map.insert({transition_id, (Dm * T).eval().sparseView()});
+    // check if transition is 'genesis transisition', otherwise it's normal.
+    // https://statebox.org/primer/
+    auto ptr = std::find_if(arcs.begin(), arcs.end(),
+                            [transition_id](const auto &arc) {
+                              const auto &[b, s, t] = arc;
+                              return (b && t == transition_id);
+                            });
+
+    if (ptr != arcs.end()) {
+      pre_map.insert({transition_id, (Dm * T).eval().sparseView()});
+    }
     post_map.insert({transition_id, (Dp * T).eval().sparseView()});
   }
 
@@ -227,11 +237,11 @@ constructTransitionMutationMatrices(const std::set<std::string> &files) {
                              .sparseView();
 
   for (auto [i, dM] : pre_map) {
-    spdlog::debug("deduct {0}: {1}", i, dM.transpose());
+    spdlog::info("deduct {0}: {1}", i, dM.transpose());
   }
 
   for (auto [i, dM] : post_map) {
-    spdlog::debug("deduct {0}: {1}", i, dM.transpose());
+    spdlog::info("add {0}: {1}", i, dM.transpose());
   }
 
   spdlog::info("initial marking for total net: {0}", M0.transpose());

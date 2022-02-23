@@ -30,11 +30,10 @@ and look at `http://localhost:2222/` for a live view of the activity.
 # WIP / TODO
 
 - Write some tests
-- Consider removing optionalError from functions.
-- Add net where we need to trigger with external event
 - research transition guards/coloured nets
 - do checks when creating Application struct: all transitions in net avaibable for instance. Or that each transition is in the store.
 - Create piano
 - Create bigger ROS example / example binding callbacks.
 - Put in different eventloop?
-- enum types for transitions?
+- Never fired semantics?
+- makde example apps more flexible (multiple nets etc)

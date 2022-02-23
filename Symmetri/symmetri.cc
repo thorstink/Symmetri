@@ -78,7 +78,8 @@ Application::Application(const std::set<std::string> &files,
       m.data->log.clear();
 
       if (m.data->active_transitions.size() == 0) {
-        break;
+        // fix mee!!! too simple check.
+        // break;
       }
     };
     stp.stop();
