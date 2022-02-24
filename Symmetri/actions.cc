@@ -11,7 +11,6 @@ auto getThreadId() {
 }
 
 StoppablePool executeTransition(const TransitionActionMap &local_store,
-                                const Conversions &marking_mapper,
                                 BlockingConcurrentQueue<Reducer> &reducers,
                                 BlockingConcurrentQueue<Transition> &actions,
                                 int state_size, unsigned int thread_count,
@@ -32,7 +31,9 @@ StoppablePool executeTransition(const TransitionActionMap &local_store,
           const auto end_time = clock_t::now();
           const auto thread_id = getThreadId();
           reducers.enqueue(Reducer([=](Model model) {
-            model.data->M += model.data->Dp.at(transition);
+            for (const auto &m_p : model.data->net.at(transition).second) {
+              model.data->M[m_p] += 1;
+            }
             model.data->active_transitions.erase(transition);
             model.data->log.emplace(
                 transition, TaskInstance{start_time, end_time, thread_id});

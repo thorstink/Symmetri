@@ -5,7 +5,5 @@
 #include "json.hpp"
 #include "types.h"
 
-std::tuple<symmetri::TransitionMutation, symmetri::TransitionMutation,
-           symmetri::Marking, symmetri::ArcList, symmetri::Conversions,
-           symmetri::Conversions>
+std::tuple<symmetri::ArcList, symmetri::StateNet, symmetri::NetMarking>
 constructTransitionMutationMatrices(const std::set<std::string> &files);

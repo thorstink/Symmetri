@@ -1,4 +1,6 @@
 #pragma once
+#include <iostream>
+#include <sstream>
 #include <string>
 
 #include "types.h"
@@ -18,23 +20,12 @@ std::string placeFormatter(const std::string &id, int marking = 0) {
   return id + "((" + id + " : " + std::to_string(marking) + "))";
 }
 
-auto getPlaceMarking(
-    const std::map<Eigen::Index, std::string> &index_marking_map,
-    const Marking &marking) {
-  std::map<std::string, int> id_marking_map;
-  for (const auto &[idx, id] : index_marking_map) {
-    id_marking_map.emplace(id, marking.coeff(idx));
-  }
-  return id_marking_map;
-}
-
-auto genNet(const ArcList &arc_list,
-            const std::map<std::string, int> &id_marking_map,
+auto genNet(const ArcList &arc_list, const NetMarking &id_marking_map,
             const std::set<std::string> &active_transitions) {
   std::stringstream mermaid;
   mermaid << header;
 
-  for (const auto &[to_place, p, t] : arc_list) {
+  for (const auto &[to_place, t, p] : arc_list) {
     int marking = id_marking_map.at(p);
     if (to_place) {
       mermaid << t

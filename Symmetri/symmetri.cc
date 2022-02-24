@@ -23,8 +23,7 @@ constexpr auto noop = [](const Model &m) { return m; };
 Application::Application(const std::set<std::string> &files,
                          const TransitionActionMap &store,
                          const std::string &case_id, bool interface) {
-  const auto &[Dm, Dp, M0, arc_list, transitions, places] =
-      constructTransitionMutationMatrices(files);
+  const auto &[arc_list, net, m0] = constructTransitionMutationMatrices(files);
 
   std::stringstream s;
   s << "[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] [" << case_id << "] %v";
@@ -41,9 +40,9 @@ Application::Application(const std::set<std::string> &files,
     // register a function that puts transitions into the queue.
     p = [&a = actions](const std::string &t) { a.enqueue(t); };
 
-    auto stp = executeTransition(store, places, reducers, actions, M0.size(), 3,
-                                 case_id);
-    auto m = Model(clock_t::now(), M0, Dm, Dp, actions);
+    auto stp =
+        executeTransition(store, reducers, actions, m0.size(), 3, case_id);
+    auto m = Model(clock_t::now(), net, m0, actions);
 
     // auto start
     reducers.enqueue(noop);
@@ -66,9 +65,8 @@ Application::Application(const std::set<std::string> &files,
         auto data = (*m.data);
 
         server.value()->queueTask(
-            [=, net = genNet(arc_list,
-                             getPlaceMarking(places.id_to_label_, m.data->M),
-                             m.data->active_transitions)]() {
+            [=,
+             net = genNet(arc_list, m.data->M, m.data->active_transitions)]() {
               server.value()->marking_transition->send(net);
             });
         server.value()->queueTask([=, log = logToCsv(data.log)]() {

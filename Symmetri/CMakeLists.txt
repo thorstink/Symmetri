@@ -1,4 +1,3 @@
-find_package(Eigen3 REQUIRED)
 find_package(Seasocks REQUIRED)
 find_package(spdlog REQUIRED)
 
@@ -41,7 +40,6 @@ include_directories(include includes submodules ${EIGEN3_INCLUDE_DIRS} ${SEASOCK
 #lib
 add_library(${PROJECT_NAME} symmetri.cc model.cc actions.cc pnml_parser.cc submodules/tinyxml2/tinyxml2.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE pthread Seasocks::seasocks readerwriterqueue spdlog::spdlog concurrentqueue)
-target_link_libraries(${PROJECT_NAME} PUBLIC Eigen3::Eigen)
 target_include_directories(${PROJECT_NAME} INTERFACE include)
 
 set(ui_files

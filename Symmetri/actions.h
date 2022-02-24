@@ -29,7 +29,7 @@ struct StoppablePool {
 };
 
 StoppablePool executeTransition(
-    const TransitionActionMap &local_store, const Conversions &marking_mapper,
+    const TransitionActionMap &local_store,
     moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
     moodycamel::BlockingConcurrentQueue<std::string> &actions, int state_size,
     unsigned int thread_count, const std::string &case_id);
