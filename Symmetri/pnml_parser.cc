@@ -5,7 +5,6 @@
 
 #include <iostream>
 
-#include "json.hpp"
 #include "tinyxml2/tinyxml2.h"
 
 using namespace tinyxml2;
@@ -29,7 +28,6 @@ std::tuple<ArcList, StateNet, NetMarking> constructTransitionMutationMatrices(
   ArcList arcs;
   StateNet state_net;
 
-  nlohmann::json j;
   for (auto file : files) {
     XMLDocument net;
     net.LoadFile(file.c_str());
@@ -132,6 +130,7 @@ std::tuple<ArcList, StateNet, NetMarking> constructTransitionMutationMatrices(
 
   // sorting and reversing makes nicer mermaids diagrams.
   std::sort(std::begin(arcs), std::end(arcs));
+  std::reverse(std::begin(arcs), std::end(arcs));
 
   for (auto [transition, mut] : state_net) {
     auto [pre, post] = mut;

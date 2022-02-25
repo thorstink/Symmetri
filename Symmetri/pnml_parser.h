@@ -2,7 +2,6 @@
 #include <set>
 #include <tuple>
 
-#include "json.hpp"
 #include "types.h"
 
 std::tuple<symmetri::ArcList, symmetri::StateNet, symmetri::NetMarking>

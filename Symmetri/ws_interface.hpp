@@ -6,7 +6,6 @@
 
 #include <thread>
 
-#include "json.hpp"
 using namespace seasocks;
 
 struct Output : seasocks::WebSocket::Handler {

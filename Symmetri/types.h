@@ -3,6 +3,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace symmetri {
 using ArcList = std::vector<std::tuple<bool, std::string, std::string>>;

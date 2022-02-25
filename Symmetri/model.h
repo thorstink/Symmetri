@@ -32,6 +32,7 @@ struct Model {
     clock_t::time_point timestamp;
     const StateNet net;
     NetMarking M;
+    int iteration = 0;
     std::set<Transition> active_transitions;
     std::multimap<Transition, TaskInstance> log;
   };
