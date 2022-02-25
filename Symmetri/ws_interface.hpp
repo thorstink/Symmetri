@@ -6,7 +6,6 @@
 
 #include <thread>
 
-#include "json.hpp"
 using namespace seasocks;
 
 struct Output : seasocks::WebSocket::Handler {
@@ -47,10 +46,17 @@ class WsServer {
   std::shared_ptr<Output> time_data;
   std::shared_ptr<Wsio> marking_transition;
   static std::shared_ptr<WsServer> Instance();
-  void queueTask(const std::function<void()> &task) { server->execute(task); }
+  void sendNet(const std::string &net) {
+    server->execute([net, this]() { marking_transition->send(net); });
+  }
+  void sendLog(const std::string &log) {
+    server->execute([log, this]() { time_data->send(log); });
+  }
   void stop() {
     server->terminate();
-    web_t_.join();
+    if (web_t_.joinable()) {
+      web_t_.join();
+    }
   }
 
  private:

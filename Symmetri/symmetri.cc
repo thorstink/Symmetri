@@ -6,13 +6,14 @@
 #include <fstream>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <tuple>
 
-#include "Symmetri/types.h"
 #include "actions.h"
 #include "mermaid.hpp"
 #include "model.h"
 #include "pnml_parser.h"
+#include "types.h"
 #include "ws_interface.hpp"
 
 namespace symmetri {
@@ -20,11 +21,10 @@ using namespace moodycamel;
 
 constexpr auto noop = [](const Model &m) { return m; };
 
-std::function<symmetri::OptionalError()> start(
-    const std::set<std::string> &files, const TransitionActionMap &store,
-    const std::string &case_id, bool interface) {
-  const auto &[Dm, Dp, M0, arc_list, transitions, places] =
-      constructTransitionMutationMatrices(files);
+Application::Application(const std::set<std::string> &files,
+                         const TransitionActionMap &store,
+                         const std::string &case_id, bool interface) {
+  const auto &[net, m0] = constructTransitionMutationMatrices(files);
 
   std::stringstream s;
   s << "[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] [" << case_id << "] %v";
@@ -32,19 +32,22 @@ std::function<symmetri::OptionalError()> start(
 
   console->set_pattern(s.str());
 
-  return [=]() {
+  run = [=, this]() {
     auto server =
         interface ? std::optional(WsServer::Instance()) : std::nullopt;
     BlockingConcurrentQueue<Reducer> reducers(256);
-    BlockingConcurrentQueue<Transition> actions(1024);
-    auto stp = executeTransition(store, places, reducers, actions, M0.size(), 3,
-                                 case_id);
-    auto m = Model(clock_t::now(), M0, Dm, Dp, actions);
+    BlockingConcurrentQueue<Transition> actions(256);
+
+    // register a function that puts transitions into the queue.
+    p = [&a = actions](const std::string &t) { a.enqueue(t); };
+
+    auto stp = executeTransition(store, reducers, actions, 3, case_id);
+    auto m = Model(clock_t::now(), net, m0, actions);
 
     // auto start
     reducers.enqueue(noop);
 
-    Reducer f = noop;
+    Reducer f;
     while (true) {
       // get a reducer.
       while (reducers.wait_dequeue_timed(f, std::chrono::seconds(1))) {
@@ -57,28 +60,25 @@ std::function<symmetri::OptionalError()> start(
       }
 
       // server stuffies
-      if (server.has_value() &&
-          server.value()->marking_transition->hasConnections()) {
-        auto data = (*m.data);
-
-        server.value()->queueTask(
-            [=, net = genNet(arc_list,
-                             getPlaceMarking(places.id_to_label_, m.data->M),
-                             m.data->active_transitions)]() {
-              server.value()->marking_transition->send(net);
-            });
-        server.value()->queueTask([=, log = logToCsv(data.log)]() {
-          server.value()->time_data->send(log);
-        });
-      }
+      if (server.has_value()) {
+        server.value()->sendNet(
+            genNet(m.data->net, m.data->M, m.data->active_transitions));
+        server.value()->sendLog(logToCsv(m.data->log));
+      };
       m.data->log.clear();
 
-      if (m.data->active_transitions.size() == 0) {
+      if (m.data->active_transitions.size() == 0 && m.data->iteration > 0) {
+        spdlog::get(case_id)->info("Deadlock of {0}-net", case_id);
         break;
       }
     };
+    if (server.has_value()) {
+      server.value()->stop();
+    }
     stp.stop();
-    return std::nullopt;
   };
 }
+
+void Application::operator()() const { return run(); };
+
 }  // namespace symmetri

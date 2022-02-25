@@ -4,6 +4,7 @@
 #include <thread>
 #include <vector>
 
+#include "Symmetri/symmetri.h"
 #include "model.h"
 
 namespace symmetri {
@@ -21,15 +22,16 @@ struct StoppablePool {
       t.join();
     }
   }
+
  private:
   std::vector<std::thread> pool;
   std::shared_ptr<std::atomic<bool>> stop_flag;
 };
 
 StoppablePool executeTransition(
-    const TransitionActionMap &local_store, const Conversions &marking_mapper,
+    const TransitionActionMap &local_store,
     moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
-    moodycamel::BlockingConcurrentQueue<Transition> &actions, int state_size,
+    moodycamel::BlockingConcurrentQueue<std::string> &actions,
     unsigned int thread_count, const std::string &case_id);
 
 }  // namespace symmetri

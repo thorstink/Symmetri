@@ -3,50 +3,19 @@
 #include <spdlog/fmt/ostr.h>  // must be included
 #include <spdlog/spdlog.h>
 
-#include "json.hpp"
+#include <sstream>
+
 #include "tinyxml2/tinyxml2.h"
 
 using namespace tinyxml2;
 using namespace symmetri;
 
-// Function to print the
-// index of an element
-int getIndex(std::vector<std::string> v, const std::string &K) {
-  auto it = find(v.begin(), v.end(), K);
-  // If element was found
-  if (it != v.end()) {
-    // calculating the index
-    // of K
-    int index = it - v.begin();
-    return index;
-  } else {
-    // If the element is not
-    // present in the vector
-    return -1;
-  }
-}
+std::tuple<StateNet, NetMarking> constructTransitionMutationMatrices(
+    const std::set<std::string> &files) {
+  std::set<std::string> places, transitions;
+  NetMarking place_initialMarking;
+  StateNet state_net;
 
-std::string toLower(std::string str) {
-  transform(str.begin(), str.end(), str.begin(), ::tolower);
-  return str;
-}
-
-bool contains(std::vector<std::string> v, const std::string &K) {
-  auto it = find(v.begin(), v.end(), K);
-  // If element was found
-  return it != v.end();
-}
-
-std::tuple<TransitionMutation, TransitionMutation, Marking, ArcList,
-           Conversions, Conversions>
-constructTransitionMutationMatrices(const std::set<std::string> &files) {
-  std::vector<std::string> places, transitions;
-  std::unordered_map<std::string, int> place_initialMarking;
-  ArcList arcs;
-
-  int offset_x = 0;
-  int offset_y = 0;
-  nlohmann::json j;
   for (auto file : files) {
     XMLDocument net;
     net.LoadFile(file.c_str());
@@ -56,202 +25,90 @@ constructTransitionMutationMatrices(const std::set<std::string> &files) {
                                              ->FirstChildElement("net")
                                              ->FirstChildElement("page");
 
+    // loop places.
     for (tinyxml2::XMLElement *child = levelElement->FirstChildElement("place");
          child != NULL; child = child->NextSiblingElement("place")) {
-      auto place_id = toLower(child->Attribute("id"));
-
-      if (std::find(places.begin(), places.end(), place_id) != places.end()) {
-        offset_x += std::stoi(child->FirstChildElement("graphics")
-                                  ->FirstChildElement("position")
-                                  ->Attribute("x"));
-        offset_y += std::stoi(child->FirstChildElement("graphics")
-                                  ->FirstChildElement("position")
-                                  ->Attribute("y"));
-        break;
-      }
-    }
-
-    for (tinyxml2::XMLElement *child = levelElement->FirstChildElement("place");
-         child != NULL; child = child->NextSiblingElement("place")) {
-      // do something with each child element
-      auto place_name = toLower(child->Attribute("id"));
-      // auto place_name =
-      //     child->FirstChildElement("name")->FirstChildElement("value")->GetText();
-
-      auto place_id = toLower(child->Attribute("id"));
-
-      auto only_digits = [](std::string source) {
-        std::string target = "";
-        for (char c : source) {
-          if (std::isdigit(c)) target += c;
-        }
-        return target;
-      };
-
+      auto place_id = child->Attribute("id");
       auto initial_marking =
           (child->FirstChildElement("initialMarking") == nullptr)
               ? 0
-              : std::stoi(only_digits(child->FirstChildElement("initialMarking")
-                                          ->FirstChildElement("text")
-                                          ->GetText()));
+              : std::stoi(child->FirstChildElement("initialMarking")
+                              ->FirstChildElement("text")
+                              ->GetText());
 
       place_initialMarking.insert({place_id, initial_marking});
-      int x = std::stoi(child->FirstChildElement("graphics")
-                            ->FirstChildElement("position")
-                            ->Attribute("x")) +
-              offset_x;
-      int y = std::stoi(child->FirstChildElement("graphics")
-                            ->FirstChildElement("position")
-                            ->Attribute("y")) +
-              offset_y;
-
-      if (std::find(places.begin(), places.end(), place_id) != places.end()) {
-        /* v contains x */
-      } else {
-        j["states"].push_back(nlohmann::json(
-            {{"label", std::string(place_id)}, {"y", y}, {"x", x}}));
-
-        places.push_back(std::string(place_id));
-      }
+      places.insert(std::string(place_id));
     }
 
+    // loop transitions
     for (tinyxml2::XMLElement *child =
              levelElement->FirstChildElement("transition");
          child != NULL; child = child->NextSiblingElement("transition")) {
-      // do something with each child element
-      // auto transition_name =
-      //     child->FirstChildElement("name")->FirstChildElement("value")->GetText();
-      auto transition_name = toLower(child->Attribute("id"));
-      auto transition_id = toLower(child->Attribute("id"));
-
-      int x = std::stoi(child->FirstChildElement("graphics")
-                            ->FirstChildElement("position")
-                            ->Attribute("x")) +
-              offset_x;
-      int y = std::stoi(child->FirstChildElement("graphics")
-                            ->FirstChildElement("position")
-                            ->Attribute("y")) +
-              offset_y;
-
-      if (std::find(transitions.begin(), transitions.end(), transition_id) !=
-          transitions.end()) {
-        /* v contains x */
-      } else {
-        j["transitions"].push_back(nlohmann::json(
-            {{"label", std::string(transition_id)}, {"y", y}, {"x", x}}));
-
-        transitions.push_back(transition_id);
-      }
+      auto transition_id = child->Attribute("id");
+      transitions.insert(transition_id);
     }
-  }
-  Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic> Dp(places.size(),
-                                                        transitions.size()),
-      Dm(places.size(), transitions.size());
 
-  Dp.setZero();
-  Dm.setZero();
-
-  for (auto file : files) {
-    XMLDocument net;
-    net.LoadFile(file.c_str());
-
-    tinyxml2::XMLElement *levelElement = net.FirstChildElement("pnml")
-                                             ->FirstChildElement("net")
-                                             ->FirstChildElement("page");
-
+    // loop arcs
     for (tinyxml2::XMLElement *child = levelElement->FirstChildElement("arc");
          child != NULL; child = child->NextSiblingElement("arc")) {
       // do something with each child element
 
-      auto arc_id = toLower(child->Attribute("id"));
-      auto source_id = toLower(child->Attribute("source"));
-      auto target_id = toLower(child->Attribute("target"));
+      auto source_id = child->Attribute("source");
+      auto target_id = child->Attribute("target");
+      auto multiplicity =
+          (child->FirstChildElement("inscription") == nullptr)
+              ? 1
+              : std::stoi(child->FirstChildElement("inscription")
+                              ->FirstChildElement("text")
+                              ->GetText());
 
-      // if (contains(places, source_id) && contains(transitions, target_id)) {
-      if (contains(places, source_id) && contains(transitions, target_id)) {
-        auto s_idx = getIndex(places, source_id);
-        auto t_idx = getIndex(transitions, target_id);
-        // if the source is a place, tokens are consumed.
-        Dm(s_idx, t_idx) += 1;
-        // pre
-        for (auto &[key, val] : j["transitions"].items()) {
-          if (val["label"] == std::string(target_id)) {
-            val["pre"].emplace(std::string(source_id), 1);
-            arcs.push_back(
-                {true, std::string(source_id), std::string(target_id)});
+      for (int i = 0; i < multiplicity; i++) {
+        if (places.contains(source_id)) {
+          // if the source is a place, tokens are consumed.
+          if (state_net.contains(target_id)) {
+            state_net.find(target_id)->second.first.insert(source_id);
+          } else {
+            state_net.insert({target_id, {{source_id}, {}}});
           }
-        }
-      } else if (contains(places, target_id) &&
-                 contains(transitions, source_id)) {
-        auto s_idx = getIndex(transitions, source_id);
-        auto t_idx = getIndex(places, target_id);
-        // if the destination is a place, tokens are produced.
-        Dp(t_idx, s_idx) += 1;
-        for (auto &[key, val] : j["transitions"].items()) {
-          if (val["label"] == source_id) {
-            nlohmann::json object = val;
-            val["post"].emplace(std::string(target_id), 1);
-            arcs.push_back(
-                {false, std::string(target_id), std::string(source_id)});
+        } else if (transitions.contains(source_id)) {
+          // if the destination is a place, tokens are produced.
+          if (state_net.contains(source_id)) {
+            state_net.find(source_id)->second.second.insert(target_id);
+          } else {
+            state_net.insert({source_id, {{}, {target_id}}});
           }
+        } else {
+          auto arc_id = child->Attribute("id");
+          spdlog::error(
+              "error: arc {0} is not connecting a place to a transition.",
+              arc_id);
         }
-        // post
-      } else {
-        spdlog::error(
-            "error: arc {0} is not connecting a place to a transition.",
-            arc_id);
       }
     }
   }
-  spdlog::debug(Dp - Dm);
 
-  int transition_count = transitions.size();
-  std::unordered_map<std::string, symmetri::Marking> pre_map, post_map;
-  Eigen::VectorXi T(transition_count);
-  for (const auto &transition_id : transitions) {
-    T.setZero();
-    T(getIndex(transitions, transition_id)) = 1;
-    pre_map.insert({transition_id, (Dm * T).eval().sparseView()});
-    post_map.insert({transition_id, (Dp * T).eval().sparseView()});
+  std::stringstream netstring;
+  netstring << "\n========\n";
+  for (auto [transition, mut] : state_net) {
+    auto [pre, post] = mut;
+    netstring << "transition: " << transition;
+    netstring << ", pre: ";
+    for (auto p : pre) {
+      netstring << p << ",";
+    }
+    netstring << "post: ";
+    for (auto p : post) {
+      netstring << p << ",";
+    }
+    netstring << std::endl;
   }
 
-  std::vector<int> initial_marking;
-  std::transform(places.begin(), places.end(),
-                 std::back_inserter(initial_marking),
-                 [&place_initialMarking](const std::string &s) {
-                   return place_initialMarking.at(s);
-                 });
-
-  symmetri::Marking M0 = Eigen::Map<const Eigen::VectorXi>(
-                             initial_marking.data(), initial_marking.size())
-                             .sparseView();
-
-  for (auto [i, dM] : pre_map) {
-    spdlog::debug("deduct {0}: {1}", i, dM.transpose());
+  for (auto [p, tokens] : place_initialMarking) {
+    netstring << p << " : " << tokens << "\n";
   }
+  netstring << "========\n";
 
-  for (auto [i, dM] : post_map) {
-    spdlog::debug("deduct {0}: {1}", i, dM.transpose());
-  }
+  spdlog::info(netstring.str());
 
-  spdlog::info("initial marking for total net: {0}", M0.transpose());
-
-  std::map<Eigen::Index, std::string> index_place_id_map;
-  for (size_t i = 0; i < places.size(); i++) {
-    index_place_id_map.insert({i, places.at(i)});
-  }
-
-  std::map<Eigen::Index, std::string> index_transition_id_map;
-  for (size_t i = 0; i < transitions.size(); i++) {
-    index_transition_id_map.insert({i, transitions.at(i)});
-  }
-
-  Conversions transition_mapper(index_transition_id_map);
-  Conversions marking_mapper(index_place_id_map);
-
-  // sorting and reversing makes nicer mermaids diagrams.
-  std::sort(std::begin(arcs), std::end(arcs));
-  std::reverse(std::begin(arcs), std::end(arcs));
-
-  return {pre_map, post_map, M0, arcs, transition_mapper, marking_mapper};
+  return {state_net, place_initialMarking};
 }

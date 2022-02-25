@@ -1,20 +1,25 @@
 #include <chrono>
+#include <future>
 #include <iostream>
 #include <thread>
 
 #include "Symmetri/symmetri.h"
-symmetri::OptionalError helloWorld() {
-  std::this_thread::sleep_for(std::chrono::seconds(1));
-  return std::nullopt;
-}
+void helloWorld() { std::this_thread::sleep_for(std::chrono::seconds(1)); }
 
 int main(int argc, char *argv[]) {
-  auto pnml_path = std::string(argv[1]);
-  auto store = symmetri::TransitionActionMap{{"t0", &helloWorld},
-                                             {"t1", &helloWorld},
-                                             {"t2", &helloWorld},
-                                             {"t3", &helloWorld},
-                                             {"t4", &helloWorld}};
-  auto go = symmetri::start({pnml_path}, store);
-  go();  // infinite loop
+  auto pnml_path_start = std::string(argv[1]);
+  auto pnml_path_passive = std::string(argv[2]);
+  auto store = symmetri::TransitionActionMap{
+      {"t0", &helloWorld}, {"t1", &helloWorld}, {"t2", &helloWorld},
+      {"t3", &helloWorld}, {"t4", &helloWorld}, {"t50", &helloWorld}};
+
+  symmetri::Application net({pnml_path_start, pnml_path_passive}, store);
+
+  auto t = std::async(std::launch::async, [f = net.push<float>("t50")] {
+    float a;
+    std::cin >> a;
+    f(a);
+  });
+
+  net();  // infinite loop
 }

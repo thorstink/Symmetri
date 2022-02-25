@@ -1,7 +1,9 @@
 #pragma once
+#include <iostream>
+#include <sstream>
 #include <string>
 
-#include "Symmetri/types.h"
+#include "types.h"
 
 namespace symmetri {
 
@@ -14,34 +16,33 @@ const std::string passive_def = "classDef " + passive + " fill:#bad1ce;\n";
 const std::string conn = "---";
 const std::string header = "graph RL\n" + active_def + passive_def;
 
+std::string multi(uint16_t m) { return "|" + std::to_string(m) + "|"; }
+
 std::string placeFormatter(const std::string &id, int marking = 0) {
   return id + "((" + id + " : " + std::to_string(marking) + "))";
 }
 
-auto getPlaceMarking(
-    const std::map<Eigen::Index, std::string> &index_marking_map,
-    const Marking &marking) {
-  std::map<std::string, int> id_marking_map;
-  for (const auto &[idx, id] : index_marking_map) {
-    id_marking_map.emplace(id, marking.coeff(idx));
-  }
-  return id_marking_map;
-}
-
-auto genNet(const ArcList &arc_list,
-            const std::map<std::string, int> &id_marking_map,
+auto genNet(const StateNet &net, const NetMarking &id_marking_map,
             const std::set<std::string> &active_transitions) {
   std::stringstream mermaid;
   mermaid << header;
 
-  for (const auto &[to_place, p, t] : arc_list) {
-    int marking = id_marking_map.at(p);
-    if (to_place) {
+  for (const auto &[t, mut] : net) {
+    const auto &[pre, post] = mut;
+    for (auto p = pre.begin(); p != pre.end(); p = pre.upper_bound(*p)) {
+      int marking = id_marking_map.at(*p);
+      int count = pre.count(*p);
       mermaid << t
               << (active_transitions.contains(t) ? active_tag : passive_tag)
-              << conn << placeFormatter(p, marking) << "\n";
-    } else {
-      mermaid << placeFormatter(p, marking) << conn << t
+              << conn << (count > 1 ? multi(count) : "")
+              << placeFormatter(*p, marking) << "\n";
+    }
+
+    for (auto p = post.begin(); p != post.end(); p = post.upper_bound(*p)) {
+      int marking = id_marking_map.at(*p);
+      int count = post.count(*p);
+      mermaid << placeFormatter(*p, marking) << conn
+              << (count > 1 ? multi(count) : "") << t
               << (active_transitions.contains(t) ? active_tag : passive_tag)
               << "\n";
     }

@@ -2,10 +2,7 @@
 #include <set>
 #include <tuple>
 
-#include "Symmetri/types.h"
-#include "json.hpp"
+#include "types.h"
 
-std::tuple<symmetri::TransitionMutation, symmetri::TransitionMutation,
-           symmetri::Marking, symmetri::ArcList, symmetri::Conversions,
-           symmetri::Conversions>
+std::tuple<symmetri::StateNet, symmetri::NetMarking>
 constructTransitionMutationMatrices(const std::set<std::string> &files);
