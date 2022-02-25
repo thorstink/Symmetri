@@ -49,7 +49,9 @@ class WsServer {
   void queueTask(const std::function<void()> &task) { server->execute(task); }
   void stop() {
     server->terminate();
-    web_t_.join();
+    if (web_t_.joinable()) {
+      web_t_.join();
+    }
   }
 
  private:

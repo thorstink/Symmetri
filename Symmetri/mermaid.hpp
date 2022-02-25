@@ -16,6 +16,8 @@ const std::string passive_def = "classDef " + passive + " fill:#bad1ce;\n";
 const std::string conn = "---";
 const std::string header = "graph RL\n" + active_def + passive_def;
 
+std::string multi(uint16_t m) { return "|" + std::to_string(m) + "|"; }
+
 std::string placeFormatter(const std::string &id, int marking = 0) {
   return id + "((" + id + " : " + std::to_string(marking) + "))";
 }
@@ -27,16 +29,20 @@ auto genNet(const StateNet &net, const NetMarking &id_marking_map,
 
   for (const auto &[t, mut] : net) {
     const auto &[pre, post] = mut;
-    for (const auto &p : pre) {
-      int marking = id_marking_map.at(p);
+    for (auto p = pre.begin(); p != pre.end(); p = pre.upper_bound(*p)) {
+      int marking = id_marking_map.at(*p);
+      int count = pre.count(*p);
       mermaid << t
               << (active_transitions.contains(t) ? active_tag : passive_tag)
-              << conn << placeFormatter(p, marking) << "\n";
+              << conn << (count > 1 ? multi(count) : "")
+              << placeFormatter(*p, marking) << "\n";
     }
 
-    for (const auto &p : post) {
-      int marking = id_marking_map.at(p);
-      mermaid << placeFormatter(p, marking) << conn << t
+    for (auto p = post.begin(); p != post.end(); p = post.upper_bound(*p)) {
+      int marking = id_marking_map.at(*p);
+      int count = post.count(*p);
+      mermaid << placeFormatter(*p, marking) << conn
+              << (count > 1 ? multi(count) : "") << t
               << (active_transitions.contains(t) ? active_tag : passive_tag)
               << "\n";
     }

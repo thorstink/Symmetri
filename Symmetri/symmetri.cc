@@ -6,6 +6,7 @@
 #include <fstream>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <tuple>
 
 #include "actions.h"
@@ -76,10 +77,13 @@ Application::Application(const std::set<std::string> &files,
       m.data->log.clear();
 
       if (m.data->active_transitions.size() == 0 && m.data->iteration > 0) {
-        // fix mee!!! too simple check.
+        spdlog::get(case_id)->info("Deadlock of {0}-net", case_id);
         break;
       }
     };
+    if (server.has_value()) {
+      server.value()->stop();
+    }
     stp.stop();
   };
 }

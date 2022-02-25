@@ -53,33 +53,36 @@ std::tuple<StateNet, NetMarking> constructTransitionMutationMatrices(
          child != NULL; child = child->NextSiblingElement("arc")) {
       // do something with each child element
 
-      auto arc_id = child->Attribute("id");
       auto source_id = child->Attribute("source");
       auto target_id = child->Attribute("target");
+      auto multiplicity =
+          (child->FirstChildElement("inscription") == nullptr)
+              ? 1
+              : std::stoi(child->FirstChildElement("inscription")
+                              ->FirstChildElement("text")
+                              ->GetText());
 
-      if (places.contains(source_id) && transitions.contains(target_id)) {
-        // if the source is a place, tokens are consumed.
-
-        if (state_net.contains(target_id)) {
-          state_net.find(target_id)->second.first.insert(source_id);
+      for (int i = 0; i < multiplicity; i++) {
+        if (places.contains(source_id)) {
+          // if the source is a place, tokens are consumed.
+          if (state_net.contains(target_id)) {
+            state_net.find(target_id)->second.first.insert(source_id);
+          } else {
+            state_net.insert({target_id, {{source_id}, {}}});
+          }
+        } else if (transitions.contains(source_id)) {
+          // if the destination is a place, tokens are produced.
+          if (state_net.contains(source_id)) {
+            state_net.find(source_id)->second.second.insert(target_id);
+          } else {
+            state_net.insert({source_id, {{}, {target_id}}});
+          }
         } else {
-          state_net.insert({target_id, {{source_id}, {}}});
+          auto arc_id = child->Attribute("id");
+          spdlog::error(
+              "error: arc {0} is not connecting a place to a transition.",
+              arc_id);
         }
-
-      } else if (places.contains(target_id) &&
-                 transitions.contains(source_id)) {
-        // if the destination is a place, tokens are produced.
-
-        if (state_net.contains(source_id)) {
-          state_net.find(source_id)->second.second.insert(target_id);
-        } else {
-          state_net.insert({source_id, {{}, {target_id}}});
-        }
-
-      } else {
-        spdlog::error(
-            "error: arc {0} is not connecting a place to a transition.",
-            arc_id);
       }
     }
   }

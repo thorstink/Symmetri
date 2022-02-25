@@ -1,7 +1,7 @@
 #pragma once
 
 #include <map>
-#include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -10,7 +10,7 @@ using Transition = std::string;
 using Transitions = std::vector<Transition>;
 using StateNet =
     std::map<std::string,
-             std::pair<std::set<std::string>, std::set<std::string>>>;
-using NetMarking = std::map<std::string, int16_t>;
+             std::pair<std::multiset<std::string>, std::multiset<std::string>>>;
+using NetMarking = std::map<std::string, uint16_t>;
 
 }  // namespace symmetri
