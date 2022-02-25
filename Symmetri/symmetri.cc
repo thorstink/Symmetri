@@ -41,14 +41,13 @@ Application::Application(const std::set<std::string> &files,
     // register a function that puts transitions into the queue.
     p = [&a = actions](const std::string &t) { a.enqueue(t); };
 
-    auto stp =
-        executeTransition(store, reducers, actions, m0.size(), 3, case_id);
+    auto stp = executeTransition(store, reducers, actions, 3, case_id);
     auto m = Model(clock_t::now(), net, m0, actions);
 
     // auto start
     reducers.enqueue(noop);
 
-    Reducer f = noop;
+    Reducer f;
     while (true) {
       // get a reducer.
       while (reducers.wait_dequeue_timed(f, std::chrono::seconds(1))) {
@@ -61,8 +60,7 @@ Application::Application(const std::set<std::string> &files,
       }
 
       // server stuffies
-      if (server.has_value() &&
-          server.value()->marking_transition->hasConnections()) {
+      if (server.has_value()) {
         server.value()->sendNet(
             genNet(m.data->net, m.data->M, m.data->active_transitions));
         server.value()->sendLog(logToCsv(m.data->log));

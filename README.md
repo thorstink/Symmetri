@@ -36,7 +36,11 @@ and look at `http://localhost:2222/` for a live view of the activity.
 - Create bigger ROS example / example binding callbacks.
 - Put in different eventloop?
 - Never fired semantics?
-- makde example apps more flexible (multiple nets etc)
+- make example apps more flexible (multiple nets etc)
+- colouring/visualize/track transition activity
+- config/parameter struct
+- hashing the state
+- reinvestigate return types/codes for transitions
 
 # Cloc
 

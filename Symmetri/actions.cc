@@ -13,10 +13,10 @@ auto getThreadId() {
 StoppablePool executeTransition(const TransitionActionMap &local_store,
                                 BlockingConcurrentQueue<Reducer> &reducers,
                                 BlockingConcurrentQueue<Transition> &actions,
-                                int state_size, unsigned int thread_count,
+                                unsigned int thread_count,
                                 const std::string &case_id) {
   auto stop_token = std::make_shared<std::atomic<bool>>(false);
-  auto worker = [&, state_size, stop_token] {
+  auto worker = [&, stop_token] {
     Transition transition;
     while (stop_token->load() == false) {
       if (actions.wait_dequeue_timed(transition,
