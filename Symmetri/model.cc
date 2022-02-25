@@ -14,7 +14,6 @@ Model run_all(Model model) {
       for (auto &m_p : pre) {
         model.data->M[m_p] -= 1;
       }
-      model.data->iteration++;
       T.push_back(T_i);
       model.data->active_transitions.insert(T_i);
     }

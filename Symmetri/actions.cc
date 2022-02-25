@@ -35,6 +35,7 @@ StoppablePool executeTransition(const TransitionActionMap &local_store,
               model.data->M[m_p] += 1;
             }
             model.data->active_transitions.erase(transition);
+            model.data->trace.push_back(transition);
             model.data->log.emplace(
                 transition, TaskInstance{start_time, end_time, thread_id});
             return model;

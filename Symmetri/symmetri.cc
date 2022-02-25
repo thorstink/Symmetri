@@ -6,6 +6,7 @@
 #include <fstream>
 #include <functional>
 #include <memory>
+#include <numeric>
 #include <optional>
 #include <tuple>
 
@@ -67,8 +68,11 @@ Application::Application(const std::set<std::string> &files,
       };
       m.data->log.clear();
 
-      if (m.data->active_transitions.size() == 0 && m.data->iteration > 0) {
-        spdlog::get(case_id)->info("Deadlock of {0}-net", case_id);
+      if (m.data->active_transitions.size() == 0 && !m.data->trace.empty()) {
+        auto sum = std::hash<std::string>{}(std::accumulate(
+            m.data->trace.begin(), m.data->trace.end(), std::string("trace:")));
+        spdlog::get(case_id)->info("Deadlock of {0}-net. End trace is {1}",
+                                   case_id, sum);
         break;
       }
     };
