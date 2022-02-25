@@ -8,11 +8,11 @@ int main(int argc, char *argv[]) {
   auto pnml2 = std::string(argv[2]);
   auto pnml3 = std::string(argv[3]);
 
-  symmetri::Application subnet({pnml1}, {{"t0", &action5}}, "pluto|charon",
+  symmetri::Application subnet({pnml1}, {{"T0", &action5}}, "pluto|charon",
                                false);
 
   symmetri::TransitionActionMap store = {
-      {"t0", subnet}, {"t1", &T1::action0}, {"t2", &T1::action1}};
+      {"T0", subnet}, {"T1", &T1::action0}, {"T2", &T1::action1}};
 
   symmetri::Application bignet({pnml1, pnml2, pnml3}, store, "pluto", true);
 

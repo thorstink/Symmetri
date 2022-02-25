@@ -22,19 +22,19 @@
 				</graphics>
 			</place>
 			<!-- List of transitions -->
-			<transition id="T50">
+			<transition id="t50">
 				<name>
 					<graphics>
 						<offset x="0" y="-15"/>
 					</graphics>
-					<text>T50</text>
+					<text>t50</text>
 				</name>
 				<graphics>
 					<position x="55" y="60"/>
 				</graphics>
 			</transition>
 			<!-- List of arcs -->
-			<arc id="id1" source="T50" target="P0">
+			<arc id="id1" source="t50" target="P0">
 			</arc>
 		</page>
 	</net>

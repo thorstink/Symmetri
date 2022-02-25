@@ -6,7 +6,6 @@
 #include <vector>
 
 namespace symmetri {
-using ArcList = std::vector<std::tuple<bool, std::string, std::string>>;
 using Transition = std::string;
 using Transitions = std::vector<Transition>;
 using StateNet =

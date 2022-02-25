@@ -23,7 +23,7 @@ constexpr auto noop = [](const Model &m) { return m; };
 Application::Application(const std::set<std::string> &files,
                          const TransitionActionMap &store,
                          const std::string &case_id, bool interface) {
-  const auto &[arc_list, net, m0] = constructTransitionMutationMatrices(files);
+  const auto &[net, m0] = constructTransitionMutationMatrices(files);
 
   std::stringstream s;
   s << "[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] [" << case_id << "] %v";
@@ -65,8 +65,8 @@ Application::Application(const std::set<std::string> &files,
         auto data = (*m.data);
 
         server.value()->queueTask(
-            [=,
-             net = genNet(arc_list, m.data->M, m.data->active_transitions)]() {
+            [=, net = genNet(m.data->net, m.data->M,
+                             m.data->active_transitions)]() {
               server.value()->marking_transition->send(net);
             });
         server.value()->queueTask([=, log = logToCsv(data.log)]() {

@@ -20,18 +20,22 @@ std::string placeFormatter(const std::string &id, int marking = 0) {
   return id + "((" + id + " : " + std::to_string(marking) + "))";
 }
 
-auto genNet(const ArcList &arc_list, const NetMarking &id_marking_map,
+auto genNet(const StateNet &net, const NetMarking &id_marking_map,
             const std::set<std::string> &active_transitions) {
   std::stringstream mermaid;
   mermaid << header;
 
-  for (const auto &[to_place, t, p] : arc_list) {
-    int marking = id_marking_map.at(p);
-    if (to_place) {
+  for (const auto &[t, mut] : net) {
+    const auto &[pre, post] = mut;
+    for (const auto &p : pre) {
+      int marking = id_marking_map.at(p);
       mermaid << t
               << (active_transitions.contains(t) ? active_tag : passive_tag)
               << conn << placeFormatter(p, marking) << "\n";
-    } else {
+    }
+
+    for (const auto &p : post) {
+      int marking = id_marking_map.at(p);
       mermaid << placeFormatter(p, marking) << conn << t
               << (active_transitions.contains(t) ? active_tag : passive_tag)
               << "\n";
