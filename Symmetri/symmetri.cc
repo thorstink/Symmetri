@@ -63,17 +63,10 @@ Application::Application(const std::set<std::string> &files,
       // server stuffies
       if (server.has_value() &&
           server.value()->marking_transition->hasConnections()) {
-        auto data = (*m.data);
-
-        server.value()->queueTask(
-            [=, net = genNet(m.data->net, m.data->M,
-                             m.data->active_transitions)]() {
-              server.value()->marking_transition->send(net);
-            });
-        server.value()->queueTask([=, log = logToCsv(data.log)]() {
-          server.value()->time_data->send(log);
-        });
-      }
+        server.value()->sendNet(
+            genNet(m.data->net, m.data->M, m.data->active_transitions));
+        server.value()->sendLog(logToCsv(m.data->log));
+      };
       m.data->log.clear();
 
       if (m.data->active_transitions.size() == 0 && m.data->iteration > 0) {
