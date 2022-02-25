@@ -2,9 +2,8 @@
 
 namespace symmetri {
 
-Model run_all(Model model) {
+std::pair<Model, std::vector<Transition>> run_all(Model &&model) {
   Transitions T;
-
   for (const auto &[T_i, mut] : model.data->net) {
     const auto &pre = mut.first;
     if (!pre.empty() &&
@@ -18,8 +17,7 @@ Model run_all(Model model) {
       model.data->active_transitions.insert(T_i);
     }
   }
-  model.transitions_->enqueue_bulk(T.begin(), T.size());
-  return model;
+  return {model, T};
 }
 
 }  // namespace symmetri

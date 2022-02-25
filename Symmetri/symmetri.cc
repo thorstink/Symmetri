@@ -20,7 +20,7 @@
 namespace symmetri {
 using namespace moodycamel;
 
-constexpr auto noop = [](const Model &m) { return m; };
+constexpr auto noop = [](Model &&m) { return std::forward<Model>(m); };
 
 Application::Application(const std::set<std::string> &files,
                          const TransitionActionMap &store,
@@ -42,19 +42,24 @@ Application::Application(const std::set<std::string> &files,
     // register a function that puts transitions into the queue.
     p = [&a = actions](const std::string &t) { a.enqueue(t); };
 
+    // returns a simple stoppable threadpool.
     auto stp = executeTransition(store, reducers, actions, 3, case_id);
-    auto m = Model(clock_t::now(), net, m0, actions);
+
+    // the initial state
+    auto m = Model(clock_t::now(), net, m0);
 
     // auto start
     reducers.enqueue(noop);
 
     Reducer f;
+    Transitions T;
     while (true) {
       // get a reducer.
       while (reducers.wait_dequeue_timed(f, std::chrono::seconds(1))) {
         m.data->timestamp = clock_t::now();
         try {
-          m = run_all(f(m));
+          std::tie(m, T) = run_all(f(std::move(m)));
+          actions.enqueue_bulk(T.begin(), T.size());
         } catch (const std::exception &e) {
           spdlog::get(case_id)->error(e.what());
         }
@@ -68,11 +73,12 @@ Application::Application(const std::set<std::string> &files,
       };
       m.data->log.clear();
 
+      // end critiria. If there are no active transitions anymore.
       if (m.data->active_transitions.size() == 0 && !m.data->trace.empty()) {
-        auto sum = std::hash<std::string>{}(std::accumulate(
+        auto trace_hash = std::hash<std::string>{}(std::accumulate(
             m.data->trace.begin(), m.data->trace.end(), std::string("trace:")));
         spdlog::get(case_id)->info("Deadlock of {0}-net. End trace is {1}",
-                                   case_id, sum);
+                                   case_id, trace_hash);
         break;
       }
     };
