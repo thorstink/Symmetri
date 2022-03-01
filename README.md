@@ -32,7 +32,6 @@ and look at `http://localhost:2222/` for a live view of the activity.
 - Put in different eventloop?
 - reinvestigate return types/codes for transitions
 - do checks when creating Application struct: all transitions in net avaibable for instance. Or that each transition is in the store.
-- colouring/visualize/track transition activity
 - config/parameter struct
 - Write some tests
 - Create piano
