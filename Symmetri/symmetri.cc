@@ -11,7 +11,6 @@
 #include <tuple>
 
 #include "actions.h"
-#include "mermaid.hpp"
 #include "model.h"
 #include "pnml_parser.h"
 #include "types.h"
@@ -67,9 +66,10 @@ Application::Application(const std::set<std::string> &files,
 
       // server stuffies
       if (server.has_value()) {
-        server.value()->sendNet(
-            genNet(m.data->net, m.data->M, m.data->active_transitions));
-        server.value()->sendLog(logToCsv(m.data->log));
+        server.value()->sendNet(m.data->timestamp, m.data->net, m.data->M,
+                                m.data->active_transitions,
+                                m.data->transition_end_times);
+        server.value()->sendLog(m.data->log);
       };
       m.data->log.clear();
 

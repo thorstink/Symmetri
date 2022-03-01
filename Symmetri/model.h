@@ -24,13 +24,18 @@ struct Model {
   struct shared {
     shared(const clock_t::time_point &t, const StateNet &net,
            const NetMarking &M)
-        : timestamp(t), net(net), M(M) {}
+        : timestamp(t), net(net), M(M) {
+      for (const auto &[transition, mut] : net) {
+        transition_end_times[transition] = t;
+      }
+    }
     clock_t::time_point timestamp;
     const StateNet net;
     NetMarking M;
     std::set<Transition> active_transitions;
     std::vector<Transition> trace;
     std::multimap<Transition, TaskInstance> log;
+    std::map<Transition, clock_t::time_point> transition_end_times;
   };
 
   std::shared_ptr<shared> data;
