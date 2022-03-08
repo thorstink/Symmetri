@@ -30,11 +30,13 @@ StoppablePool executeTransition(const TransitionActionMap &local_store,
 
           const auto end_time = clock_t::now();
           const auto thread_id = getThreadId();
-          reducers.enqueue(Reducer([=](Model model) {
+          reducers.enqueue(Reducer([=](Model &&model) {
             for (const auto &m_p : model.data->net.at(transition).second) {
               model.data->M[m_p] += 1;
             }
             model.data->active_transitions.erase(transition);
+            model.data->trace.push_back(transition);
+            model.data->transition_end_times[transition] = end_time;
             model.data->log.emplace(
                 transition, TaskInstance{start_time, end_time, thread_id});
             return model;

@@ -1,8 +1,9 @@
 #pragma once
-#include <blockingconcurrentqueue.h>
 
 #include <chrono>
+#include <functional>
 #include <map>
+#include <memory>
 #include <set>
 #include <tuple>
 
@@ -10,7 +11,7 @@
 
 namespace symmetri {
 struct Model;
-using Reducer = std::function<Model(Model)>;
+using Reducer = std::function<Model(Model &&)>;
 
 using clock_t = std::chrono::system_clock;
 
@@ -18,25 +19,28 @@ using TaskInstance =
     std::tuple<clock_t::time_point, clock_t::time_point, size_t>;
 
 struct Model {
-  Model(const clock_t::time_point &t, const StateNet &net, const NetMarking &M0,
-        moodycamel::BlockingConcurrentQueue<Transition> &transitions)
-      : data(std::make_shared<shared>(t, net, M0)),
-        transitions_(&transitions) {}
+  Model(const clock_t::time_point &t, const StateNet &net, const NetMarking &M0)
+      : data(std::make_shared<shared>(t, net, M0)) {}
   struct shared {
     shared(const clock_t::time_point &t, const StateNet &net,
            const NetMarking &M)
-        : timestamp(t), net(net), M(M) {}
+        : timestamp(t), net(net), M(M) {
+      for (const auto &[transition, mut] : net) {
+        transition_end_times[transition] = t;
+      }
+    }
     clock_t::time_point timestamp;
     const StateNet net;
     NetMarking M;
-    int iteration = 0;
     std::set<Transition> active_transitions;
+    std::vector<Transition> trace;
     std::multimap<Transition, TaskInstance> log;
+    std::map<Transition, clock_t::time_point> transition_end_times;
   };
+
   std::shared_ptr<shared> data;
-  moodycamel::BlockingConcurrentQueue<Transition> *transitions_;
 };
 
-Model run_all(Model model);
+std::pair<Model, std::vector<Transition>> run_all(Model &&model);
 
 }  // namespace symmetri

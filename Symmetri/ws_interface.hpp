@@ -6,6 +6,8 @@
 
 #include <thread>
 
+#include "mermaid.hpp"
+
 using namespace seasocks;
 
 struct Output : seasocks::WebSocket::Handler {
@@ -46,11 +48,20 @@ class WsServer {
   std::shared_ptr<Output> time_data;
   std::shared_ptr<Wsio> marking_transition;
   static std::shared_ptr<WsServer> Instance();
-  void sendNet(const std::string &net) {
-    server->execute([net, this]() { marking_transition->send(net); });
+  void sendNet(symmetri::clock_t::time_point now, const symmetri::StateNet &net,
+               symmetri::NetMarking M,
+               std::set<symmetri::Transition> active_transitions,
+               std::map<symmetri::Transition, symmetri::clock_t::time_point>
+                   transition_end_times) {
+    server->execute([=, this]() {
+      marking_transition->send(symmetri::genNet(now, net, M, active_transitions,
+                                                transition_end_times));
+    });
   }
-  void sendLog(const std::string &log) {
-    server->execute([log, this]() { time_data->send(log); });
+  void sendLog(
+      std::multimap<symmetri::Transition, symmetri::TaskInstance> log) {
+    server->execute(
+        [log, this]() { time_data->send(symmetri::logToCsv(log)); });
   }
   void stop() {
     server->terminate();
