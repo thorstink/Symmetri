@@ -21,6 +21,18 @@ using namespace moodycamel;
 
 constexpr auto noop = [](Model &&m) { return std::forward<Model>(m); };
 
+bool check(const TransitionActionMap &store, const symmetri::StateNet &net) {
+  return std::all_of(net.cbegin(), net.cend(), [&store](const auto &p) {
+    const auto &t = std::get<0>(p);
+    bool store_has_transition = store.contains(t);
+    if (!store_has_transition) {
+      spdlog::error("Transition {0} is not in store", t);
+    }
+
+    return store_has_transition;
+  });
+}
+
 Application::Application(const std::set<std::string> &files,
                          const TransitionActionMap &store,
                          const std::string &case_id, bool interface) {
@@ -31,7 +43,9 @@ Application::Application(const std::set<std::string> &files,
   auto console = spdlog::stdout_color_mt(case_id);
 
   console->set_pattern(s.str());
-
+  if (!check(store, net)) {
+    spdlog::get(case_id)->error("Error not all transitions are in the store");
+  }
   run = [=, this]() {
     auto server =
         interface ? std::optional(WsServer::Instance()) : std::nullopt;
