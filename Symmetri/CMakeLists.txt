@@ -52,6 +52,6 @@ set(targets
 
 install(DIRECTORY ${ui_files} include DESTINATION ${PROJECT_SOURCE_DIR}/install)
 
-if(BUILD_TESTING)
+# if(BUILD_TESTING)
 add_subdirectory(tests)
-endif()
+# endif()
