@@ -46,7 +46,7 @@ Application::Application(const std::set<std::string> &files,
   if (!check(store, net)) {
     spdlog::get(case_id)->error("Error not all transitions are in the store");
   }
-  run = [=, this]() {
+  run = [=, this]() -> std::vector<Event> {
     auto server =
         interface ? std::optional(WsServer::Instance()) : std::nullopt;
     BlockingConcurrentQueue<Reducer> reducers(256);
@@ -68,11 +68,16 @@ Application::Application(const std::set<std::string> &files,
     Transitions T;
     while (true) {
       // get a reducer.
-      while (reducers.wait_dequeue_timed(f, std::chrono::seconds(1))) {
+      while (
+          m.data->pending_transitions.empty()
+              ? reducers.try_dequeue(f)
+              //  ? reducers.wait_dequeue_timed(f, std::chrono::milliseconds(1))
+              : reducers.wait_dequeue_timed(f, std::chrono::seconds(1))) {
         m.data->timestamp = clock_t::now();
         try {
           std::tie(m, T) = run_all(f(std::move(m)));
           actions.enqueue_bulk(T.begin(), T.size());
+
         } catch (const std::exception &e) {
           spdlog::get(case_id)->error(e.what());
         }
@@ -81,28 +86,41 @@ Application::Application(const std::set<std::string> &files,
       // server stuffies
       if (server.has_value()) {
         server.value()->sendNet(m.data->timestamp, m.data->net, m.data->M,
-                                m.data->active_transitions,
+                                m.data->pending_transitions,
                                 m.data->transition_end_times);
         server.value()->sendLog(m.data->log);
       };
       m.data->log.clear();
 
+      // spam
+      for (const auto &[caseid, t, s, c] : m.data->event_log) {
+        spdlog::get(case_id)->info("{0},{1},{2},{3}", caseid, t, printState(s),
+                                   c.time_since_epoch().count());
+      }
+      spdlog::info("--------------");
+
       // end critiria. If there are no active transitions anymore.
-      if (m.data->active_transitions.size() == 0 && !m.data->trace.empty()) {
+      if (m.data->pending_transitions.empty() && !m.data->trace.empty()) {
         auto trace_hash = std::hash<std::string>{}(std::accumulate(
             m.data->trace.begin(), m.data->trace.end(), std::string("trace:")));
         spdlog::get(case_id)->info("Deadlock of {0}-net. End trace is {1}",
                                    case_id, trace_hash);
+        spdlog::info("BREAK FROO {0}",
+                     clock_t::now().time_since_epoch().count());
+
         break;
       }
     };
+    stp.stop();
     if (server.has_value()) {
       server.value()->stop();
     }
-    stp.stop();
+    spdlog::info("BREAK FREE {0}", clock_t::now().time_since_epoch().count());
+
+    return m.data->event_log;
   };
 }
 
-void Application::operator()() const { return run(); };
+std::vector<Event> Application::operator()() const { return run(); };
 
 }  // namespace symmetri

@@ -30,15 +30,12 @@ and look at `http://localhost:2222/` for a live view of the activity.
 # WIP / TODO
 
 - Put in different eventloop?
-- reinvestigate return types/codes for transitions
-- do checks when creating Application struct: all transitions in net avaibable for instance. Or that each transition is in the store.
-- config/parameter struct
+- reinvestigate return types/codes/errors for transitions
+- investige state = marking + active transitions?
 - Write some tests
 - Create piano
-- Create bigger ROS example / example binding callbacks.
-- make example apps more flexible (multiple nets etc)
 - research transition guards/coloured nets
-
+- State hash?
 # Cloc
 
 ```

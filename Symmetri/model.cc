@@ -14,7 +14,7 @@ std::pair<Model, std::vector<Transition>> run_all(Model &&model) {
         model.data->M[m_p] -= 1;
       }
       T.push_back(T_i);
-      model.data->active_transitions.insert(T_i);
+      model.data->pending_transitions.insert(T_i);
     }
   }
   return {model, T};

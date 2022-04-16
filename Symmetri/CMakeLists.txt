@@ -35,7 +35,7 @@ endif()
 message(STATUS "Building Symmetri - shared: ${BUILD_SHARED_LIBS}")
 
 
-include_directories(include includes submodules ${EIGEN3_INCLUDE_DIRS} ${SEASOCKS_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} )
+include_directories(include includes submodules ${SEASOCKS_INCLUDE_DIRS} )
 
 #lib
 add_library(${PROJECT_NAME} symmetri.cc model.cc actions.cc pnml_parser.cc submodules/tinyxml2/tinyxml2.cpp)

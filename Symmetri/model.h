@@ -13,8 +13,6 @@ namespace symmetri {
 struct Model;
 using Reducer = std::function<Model(Model &&)>;
 
-using clock_t = std::chrono::system_clock;
-
 using TaskInstance =
     std::tuple<clock_t::time_point, clock_t::time_point, size_t>;
 
@@ -32,9 +30,10 @@ struct Model {
     clock_t::time_point timestamp;
     const StateNet net;
     NetMarking M;
-    std::set<Transition> active_transitions;
+    std::set<Transition> pending_transitions;
     std::vector<Transition> trace;
     std::multimap<Transition, TaskInstance> log;
+    std::vector<Event> event_log;
     std::map<Transition, clock_t::time_point> transition_end_times;
   };
 
