@@ -1,7 +1,9 @@
 #include "Symmetri/symmetri.h"
 
+#include <signal.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
+#include <unistd.h>
 
 #include <fstream>
 #include <functional>
@@ -15,6 +17,13 @@
 #include "pnml_parser.h"
 #include "types.h"
 #include "ws_interface.hpp"
+
+// Define the function to be called when ctrl-c (SIGINT) is sent to process
+
+namespace {
+bool EXIT = false;
+inline void signal_handler(int signal) { EXIT = true; }
+}  // namespace
 
 namespace symmetri {
 using namespace moodycamel;

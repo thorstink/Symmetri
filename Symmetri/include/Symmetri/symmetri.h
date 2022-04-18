@@ -1,8 +1,5 @@
 #pragma once
 
-#include <signal.h>
-#include <unistd.h>
-
 #include <chrono>
 #include <cstdlib>
 #include <functional>
@@ -11,13 +8,6 @@
 #include <string>
 #include <unordered_map>
 #include <variant>
-
-// Define the function to be called when ctrl-c (SIGINT) is sent to process
-
-namespace {
-static bool EXIT = false;
-inline void signal_handler(int signal) { EXIT = true; }
-}  // namespace
 
 namespace symmetri {
 
