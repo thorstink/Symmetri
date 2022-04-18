@@ -17,12 +17,6 @@
 #include "ws_interface.hpp"
 
 namespace symmetri {
-// debug
-inline std::string printState(TransitionState s) {
-  return s == TransitionState::Started     ? "Started"
-         : s == TransitionState::Completed ? "Completed"
-                                           : "Error";
-}
 using namespace moodycamel;
 
 constexpr auto noop = [](Model &&m) { return std::forward<Model>(m); };
@@ -44,6 +38,7 @@ Application::Application(const std::set<std::string> &files,
                          const std::string &case_id, bool interface) {
   const auto &[net, m0] = constructTransitionMutationMatrices(files);
 
+  signal(SIGINT, signal_handler);
   std::stringstream s;
   s << "[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] [" << case_id << "] %v";
   auto console = spdlog::stdout_color_mt(case_id);
@@ -72,9 +67,10 @@ Application::Application(const std::set<std::string> &files,
 
     Reducer f;
     Transitions T;
-    while (true) {
+
+    while (!EXIT) {
       // get a reducer.
-      while (m.data->pending_transitions.empty()
+      while ((m.data->pending_transitions.empty() && !m.data->trace.empty())
                  ? reducers.try_dequeue(f)
                  : reducers.wait_dequeue_timed(f, std::chrono::seconds(1))) {
         m.data->timestamp = clock_t::now();
@@ -96,23 +92,23 @@ Application::Application(const std::set<std::string> &files,
       };
       m.data->log.clear();
 
-      // spam
-      for (const auto &[caseid, t, s, c] : m.data->event_log) {
-        spdlog::get(case_id)->info("{0}, {1}, {2}, {3}", caseid, t,
-                                   printState(s), c.time_since_epoch().count());
-      }
-      spdlog::info("--------------");
-
       // end critiria. If there are no active transitions anymore.
       if (m.data->pending_transitions.empty() && !m.data->trace.empty()) {
-        auto trace_hash = std::hash<std::string>{}(std::accumulate(
-            m.data->trace.begin(), m.data->trace.end(), std::string("trace:")));
-        spdlog::get(case_id)->info("Deadlock of {0}-net. End trace is {1}",
-                                   case_id, trace_hash);
         break;
       }
     };
-    // top the thread pool
+
+    // calculate a trace-id
+    auto trace_hash = std::hash<std::string>{}(std::accumulate(
+        m.data->trace.begin(), m.data->trace.end(), std::string("trace:")));
+
+    // publish a log
+    spdlog::get(case_id)->info(
+        std::string(EXIT ? "Forced shutdown" : "Deadlock") +
+            " of {0}-net. End trace is {1}",
+        case_id, trace_hash);
+
+    // stop the thread pool
     stp.stop();
     // if we have a viz server, kill it.
     if (server.has_value()) {

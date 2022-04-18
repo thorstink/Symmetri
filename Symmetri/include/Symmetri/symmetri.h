@@ -1,11 +1,24 @@
 #pragma once
 
+#include <signal.h>
+#include <unistd.h>
+
 #include <chrono>
+#include <cstdlib>
 #include <functional>
+#include <iostream>
 #include <set>
 #include <string>
 #include <unordered_map>
 #include <variant>
+// using namespace std;
+// Define the function to be called when ctrl-c (SIGINT) is sent to process
+
+namespace {
+static bool EXIT = false;
+std::function<void(int)> shutdown_handler([](int) { EXIT = true; });
+inline void signal_handler(int signal) { shutdown_handler(signal); }
+}  // namespace
 
 namespace symmetri {
 

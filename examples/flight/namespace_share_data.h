@@ -2,12 +2,12 @@
 #include <Symmetri/symmetri.h>
 
 namespace T1 {
-std::vector<symmetri::Event> action0();
-void action1();
+std::vector<symmetri::Event> action0() noexcept;
+void action1() noexcept;
 }  // namespace T1
 
-std::vector<symmetri::Event> failsSometimes();
-void action3();
-void action4();
-void action5();
-void action6();
+std::vector<symmetri::Event> failsSometimes() noexcept;
+void action3() noexcept;
+void action4() noexcept;
+void action5() noexcept;
+void action6() noexcept;
