@@ -16,8 +16,7 @@
 
 namespace {
 static bool EXIT = false;
-std::function<void(int)> shutdown_handler([](int) { EXIT = true; });
-inline void signal_handler(int signal) { shutdown_handler(signal); }
+inline void signal_handler(int signal) { EXIT = true; }
 }  // namespace
 
 namespace symmetri {
