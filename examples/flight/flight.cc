@@ -12,7 +12,11 @@ int main(int argc, char *argv[]) {
                                false);
 
   symmetri::TransitionActionMap store = {
-      {"T0", subnet}, {"T1", &T1::action0}, {"T2", &T1::action1}};
+      {"T0", subnet},
+      {"T1", &T1::action1},
+      // {"T2", &failsSometimes}}; // this is a sometimes failing function.
+      // {"T2", &T1::action0}}; // an eventlog function.
+      {"T2", &T1::action1}};
 
   symmetri::Application bignet({pnml1, pnml2, pnml3}, store, "pluto", true);
 

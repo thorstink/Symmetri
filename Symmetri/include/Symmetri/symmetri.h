@@ -1,16 +1,28 @@
 #pragma once
 
+#include <chrono>
 #include <functional>
 #include <set>
 #include <string>
 #include <unordered_map>
 #include <variant>
 
-#include "../../types.h"
 namespace symmetri {
 
 struct Application;
-using Action = std::variant<std::function<void()>, Application>;
+using Transition = std::string;
+using clock_t = std::chrono::system_clock;
+
+enum class TransitionState { Started, Completed, Error };
+
+using Event =
+    std::tuple<std::string, Transition, TransitionState, clock_t::time_point>;
+
+typedef std::vector<Event> (*loggedFunction)();
+typedef void (*nonLoggedFunction)();
+
+using Action = std::variant<loggedFunction, nonLoggedFunction, Application>;
+
 using TransitionActionMap = std::unordered_map<std::string, Action>;
 
 struct Application {

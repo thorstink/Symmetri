@@ -1,8 +1,4 @@
 #include "actions.h"
-
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/spdlog.h>
-
 namespace symmetri {
 using namespace moodycamel;
 template <class... Ts>
@@ -29,45 +25,49 @@ StoppablePool executeTransition(const TransitionActionMap &local_store,
           break;
         }
         const auto start_time = clock_t::now();
-        reducers.enqueue(Reducer([=](Model &&model) {
-          model.data->event_log.push_back(
-              {case_id, transition, TransitionState::Started, start_time});
-          return model;
-        }));
-
-        std::vector<Event> event_log;
-        std::visit(overloaded{
-                       [](const std::function<void()> &arg) { arg(); },
-                       [&event_log](const Application &arg) {
-                         event_log = arg();
-
-                         spdlog::info(
-                             "BREAK MOI {0}",
-                             clock_t::now().time_since_epoch().count());
-                       },
-                   },
-                   local_store.at(transition));
-
-        const auto end_time = clock_t::now();
-
         const auto thread_id = getThreadId();
+
+        const auto &[event_log, end_time] = std::visit(
+            overloaded{
+                [&](const nonLoggedFunction &action)
+                    -> std::pair<std::vector<Event>, clock_t::time_point> {
+                  action();
+                  auto end_time = clock_t::now();
+                  return {{{case_id, transition, TransitionState::Started,
+                            start_time},
+                           {case_id, transition, TransitionState::Completed,
+                            end_time}},
+                          end_time};
+                },
+                [](const loggedFunction &action)
+                    -> std::pair<std::vector<Event>, clock_t::time_point> {
+                  return {action(), clock_t::now()};
+                },
+                [](const Application &action)
+                    -> std::pair<std::vector<Event>, clock_t::time_point> {
+                  return {action(), clock_t::now()};
+                },
+            },
+            local_store.at(transition));
+
         reducers.enqueue(Reducer([=](Model &&model) {
-          for (const auto &m_p : model.data->net.at(transition).second) {
-            model.data->M[m_p] += 1;
+          auto it = std::find_if(
+              event_log.begin(), event_log.end(), [](const auto &e) {
+                return std::get<TransitionState>(e) == TransitionState::Error;
+              });
+          if (it == event_log.end()) {
+            for (const auto &m_p : model.data->net.at(transition).second) {
+              model.data->M[m_p] += 1;
+            }
           }
+          std::move(event_log.begin(), event_log.end(),
+                    std::back_inserter(model.data->event_log));
 
           model.data->pending_transitions.erase(transition);
           model.data->trace.push_back(transition);
           model.data->transition_end_times[transition] = end_time;
           model.data->log.emplace(
               transition, TaskInstance{start_time, end_time, thread_id});
-          if (!event_log.empty()) {
-            std::move(event_log.begin(), event_log.end(),
-                      std::back_inserter(model.data->event_log));
-          }
-          model.data->event_log.push_back(
-              {case_id, transition, TransitionState::Completed, end_time});
-
           return model;
         }));
       }

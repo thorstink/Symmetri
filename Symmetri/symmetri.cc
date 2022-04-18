@@ -17,6 +17,12 @@
 #include "ws_interface.hpp"
 
 namespace symmetri {
+// debug
+inline std::string printState(TransitionState s) {
+  return s == TransitionState::Started     ? "Started"
+         : s == TransitionState::Completed ? "Completed"
+                                           : "Error";
+}
 using namespace moodycamel;
 
 constexpr auto noop = [](Model &&m) { return std::forward<Model>(m); };
@@ -68,11 +74,9 @@ Application::Application(const std::set<std::string> &files,
     Transitions T;
     while (true) {
       // get a reducer.
-      while (
-          m.data->pending_transitions.empty()
-              ? reducers.try_dequeue(f)
-              //  ? reducers.wait_dequeue_timed(f, std::chrono::milliseconds(1))
-              : reducers.wait_dequeue_timed(f, std::chrono::seconds(1))) {
+      while (m.data->pending_transitions.empty()
+                 ? reducers.try_dequeue(f)
+                 : reducers.wait_dequeue_timed(f, std::chrono::seconds(1))) {
         m.data->timestamp = clock_t::now();
         try {
           std::tie(m, T) = run_all(f(std::move(m)));
@@ -94,8 +98,8 @@ Application::Application(const std::set<std::string> &files,
 
       // spam
       for (const auto &[caseid, t, s, c] : m.data->event_log) {
-        spdlog::get(case_id)->info("{0},{1},{2},{3}", caseid, t, printState(s),
-                                   c.time_since_epoch().count());
+        spdlog::get(case_id)->info("{0}, {1}, {2}, {3}", caseid, t,
+                                   printState(s), c.time_since_epoch().count());
       }
       spdlog::info("--------------");
 
@@ -105,17 +109,15 @@ Application::Application(const std::set<std::string> &files,
             m.data->trace.begin(), m.data->trace.end(), std::string("trace:")));
         spdlog::get(case_id)->info("Deadlock of {0}-net. End trace is {1}",
                                    case_id, trace_hash);
-        spdlog::info("BREAK FROO {0}",
-                     clock_t::now().time_since_epoch().count());
-
         break;
       }
     };
+    // top the thread pool
     stp.stop();
+    // if we have a viz server, kill it.
     if (server.has_value()) {
       server.value()->stop();
     }
-    spdlog::info("BREAK FREE {0}", clock_t::now().time_since_epoch().count());
 
     return m.data->event_log;
   };
