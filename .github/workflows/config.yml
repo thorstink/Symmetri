@@ -33,7 +33,7 @@ jobs:
         git clone https://gitlab.com/libeigen/eigen.git
         cd eigen && mkdir build && cd build
         cmake -DBUILD_TESTING=OFF ..
-        sudo cmake --build build/ --target install
+        sudo make install
 
     - name: "build project"
       run: |
