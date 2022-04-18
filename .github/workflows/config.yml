@@ -11,7 +11,7 @@ jobs:
     - name: apt dependencies
       run: |
         sudo apt update
-        sudo apt install -y build-essential lcov gcovr ninja-build libeigen3-dev git libtool pkg-config libspdlog-dev
+        sudo apt install -y build-essential lcov gcovr ninja-build libeigen3-dev git libtool pkg-config libspdlog-dev gcc-11
 
     - name: seasocks
       run: |
@@ -32,7 +32,7 @@ jobs:
         git submodule update --init --recursive
         mkdir build
         cd build
-        bash -c 'cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DCODE_COVERAGE=ON ..'
+        bash -c 'cmake -GNinja -DCXX=gcc-11 -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DCODE_COVERAGE=ON ..'
         ninja
 
     - name: "test and coverage"
