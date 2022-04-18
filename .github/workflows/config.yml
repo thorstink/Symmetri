@@ -28,6 +28,13 @@ jobs:
         cmake -Bbuild -H. -DBUILD_TESTING=OFF ..
         sudo cmake --build build/ --target install
 
+    - name: Eigen
+      run: |
+        git clone https://gitlab.com/libeigen/eigen.git
+        cd Catch2 && mkdir build && cd build
+        cmake -DBUILD_TESTING=OFF ..
+        sudo cmake --build build/ --target install
+
     - name: "build project"
       run: |
         git submodule update --init --recursive
