@@ -27,6 +27,8 @@ using Action = std::variant<loggedFunction, nonLoggedFunction, Application>;
 
 using TransitionActionMap = std::unordered_map<std::string, Action>;
 
+size_t calculateTrace(std::vector<Event> event_log);
+
 struct Application {
  private:
   std::function<void(const std::string &t)> p;

@@ -29,6 +29,24 @@ inline void signal_handler(int signal) { sighandler(signal); }
 namespace symmetri {
 using namespace moodycamel;
 
+size_t calculateTrace(std::vector<Event> event_log) {
+  // calculate a trace-id, in a simple way.
+  std::sort(event_log.begin(), event_log.end(),
+            [](const auto &lhs, const auto &rhs) {
+              return std::get<clock_t::time_point>(lhs) <
+                     std::get<clock_t::time_point>(rhs);
+            });
+
+  auto trace_hash = std::hash<std::string>{}(
+      std::accumulate(event_log.begin(), event_log.end(), std::string(""),
+                      [](const auto &acc, const Event &n) {
+                        return std::get<2>(n) == TransitionState::Completed
+                                   ? acc + std::get<1>(n)
+                                   : acc;
+                      }));
+  return trace_hash;
+}
+
 constexpr auto noop = [](Model &&m) { return std::forward<Model>(m); };
 
 bool check(const TransitionActionMap &store, const symmetri::StateNet &net) {
@@ -111,26 +129,11 @@ Application::Application(const std::set<std::string> &files,
       }
     };
 
-    // calculate a trace-id, in a simple way.
-    std::sort(std::begin(m.data->event_log), std::end(m.data->event_log),
-              [](const auto &lhs, const auto &rhs) {
-                return std::get<clock_t::time_point>(lhs) <
-                       std::get<clock_t::time_point>(rhs);
-              });
-
-    auto trace_hash = std::hash<std::string>{}(
-        std::accumulate(m.data->event_log.begin(), m.data->event_log.end(),
-                        std::string(""), [](const auto &acc, const Event &n) {
-                          return std::get<2>(n) == TransitionState::Completed
-                                     ? acc + std::get<1>(n)
-                                     : acc;
-                        }));
-
     // publish a log
     spdlog::get(case_id)->info(
         std::string(EXIT ? "Forced shutdown" : "Deadlock") +
             " of {0}-net. End trace is {1}",
-        case_id, trace_hash);
+        case_id, calculateTrace(m.data->event_log));
 
     // stop the thread pool
     stp.stop();
