@@ -31,7 +31,6 @@ struct Model {
     const StateNet net;
     NetMarking M;
     std::set<Transition> pending_transitions;
-    std::vector<Transition> trace;
     std::multimap<Transition, TaskInstance> log;
     std::vector<Event> event_log;
     std::map<Transition, clock_t::time_point> transition_end_times;

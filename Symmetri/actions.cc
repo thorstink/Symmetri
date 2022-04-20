@@ -27,19 +27,26 @@ StoppablePool executeTransition(const TransitionActionMap &local_store,
         const auto start_time = clock_t::now();
         const auto thread_id = getThreadId();
 
+        auto logstart = [&](const Event &event) {
+          reducers.enqueue(Reducer([=](Model &&model) {
+            model.data->event_log.push_back(event);
+            return model;
+          }));
+        };
+
         const auto &[event_log, end_time] = std::visit(
             overloaded{
                 [&](const nonLoggedFunction &action)
                     -> std::pair<std::vector<Event>, clock_t::time_point> {
+                  logstart({case_id, transition, TransitionState::Started,
+                            start_time});
                   action();
                   auto end_time = clock_t::now();
-                  return {{{case_id, transition, TransitionState::Started,
-                            start_time},
-                           {case_id, transition, TransitionState::Completed,
+                  return {{{case_id, transition, TransitionState::Completed,
                             end_time}},
                           end_time};
                 },
-                [](const loggedFunction &action)
+                [&](const loggedFunction &action)
                     -> std::pair<std::vector<Event>, clock_t::time_point> {
                   return {action(), clock_t::now()};
                 },
@@ -64,7 +71,6 @@ StoppablePool executeTransition(const TransitionActionMap &local_store,
                     std::back_inserter(model.data->event_log));
 
           model.data->pending_transitions.erase(transition);
-          model.data->trace.push_back(transition);
           model.data->transition_end_times[transition] = end_time;
           model.data->log.emplace(
               transition, TaskInstance{start_time, end_time, thread_id});

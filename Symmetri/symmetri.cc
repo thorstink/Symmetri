@@ -22,7 +22,8 @@
 
 namespace {
 bool EXIT = false;
-inline void signal_handler(int signal) { EXIT = true; }
+std::function<void(int)> sighandler = [](int signal) { EXIT = true; };
+inline void signal_handler(int signal) { sighandler(signal); }
 }  // namespace
 
 namespace symmetri {
@@ -64,6 +65,10 @@ Application::Application(const std::set<std::string> &files,
 
     // register a function that puts transitions into the queue.
     p = [&a = actions](const std::string &t) { a.enqueue(t); };
+    sighandler = [&](int signal) {
+      EXIT = true;
+      reducers.enqueue(noop);
+    };
 
     // returns a simple stoppable threadpool.
     auto stp = executeTransition(store, reducers, actions, 3, case_id);
@@ -79,14 +84,13 @@ Application::Application(const std::set<std::string> &files,
 
     while (!EXIT) {
       // get a reducer.
-      while ((m.data->pending_transitions.empty() && !m.data->trace.empty())
+      while ((m.data->pending_transitions.empty() && m.data->M != m0)
                  ? reducers.try_dequeue(f)
                  : reducers.wait_dequeue_timed(f, std::chrono::seconds(1))) {
         m.data->timestamp = clock_t::now();
         try {
           std::tie(m, T) = run_all(f(std::move(m)));
           actions.enqueue_bulk(T.begin(), T.size());
-
         } catch (const std::exception &e) {
           spdlog::get(case_id)->error(e.what());
         }
@@ -102,14 +106,25 @@ Application::Application(const std::set<std::string> &files,
       m.data->log.clear();
 
       // end critiria. If there are no active transitions anymore.
-      if (m.data->pending_transitions.empty() && !m.data->trace.empty()) {
+      if (m.data->pending_transitions.empty() && m.data->M != m0) {
         break;
       }
     };
 
-    // calculate a trace-id
-    auto trace_hash = std::hash<std::string>{}(std::accumulate(
-        m.data->trace.begin(), m.data->trace.end(), std::string("trace:")));
+    // calculate a trace-id, in a simple way.
+    std::sort(std::begin(m.data->event_log), std::end(m.data->event_log),
+              [](const auto &lhs, const auto &rhs) {
+                return std::get<clock_t::time_point>(lhs) <
+                       std::get<clock_t::time_point>(rhs);
+              });
+
+    auto trace_hash = std::hash<std::string>{}(
+        std::accumulate(m.data->event_log.begin(), m.data->event_log.end(),
+                        std::string(""), [](const auto &acc, const Event &n) {
+                          return std::get<2>(n) == TransitionState::Completed
+                                     ? acc + std::get<1>(n)
+                                     : acc;
+                        }));
 
     // publish a log
     spdlog::get(case_id)->info(
@@ -122,6 +137,7 @@ Application::Application(const std::set<std::string> &files,
     // if we have a viz server, kill it.
     if (server.has_value()) {
       server.value()->stop();
+      spdlog::get(case_id)->info("Server stopped.");
     }
 
     return m.data->event_log;

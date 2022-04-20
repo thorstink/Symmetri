@@ -7,6 +7,7 @@ void action1() noexcept;
 }  // namespace T1
 
 std::vector<symmetri::Event> failsSometimes() noexcept;
+
 void action3() noexcept;
 void action4() noexcept;
 void action5() noexcept;
