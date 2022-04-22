@@ -47,7 +47,7 @@ size_t calculateTrace(std::vector<Event> event_log) {
   return trace_hash;
 }
 
-constexpr auto noop = [](Model &&m) { return std::forward<Model>(m); };
+constexpr auto noop = [](Model &&m) -> Model & { return m; };
 
 bool check(const TransitionActionMap &store, const symmetri::StateNet &net) {
   return std::all_of(net.cbegin(), net.cend(), [&store](const auto &p) {

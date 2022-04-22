@@ -30,12 +30,12 @@ and look at `http://localhost:2222/` for a live view of the activity.
 # WIP / TODO
 
 - Put in different eventloop?
-- reinvestigate return types/codes/errors for transitions
+- simplify visualization/graph
+- refactor to (Testable) functions
 - investige state = marking + active transitions?
 - Write some tests
 - Create piano
 - research transition guards/coloured nets
-- State hash?
 # Cloc
 
 ```

@@ -2,7 +2,7 @@
 
 namespace symmetri {
 
-std::pair<Model, std::vector<Transition>> run_all(Model &&model) {
+std::pair<Model &, std::vector<Transition>> run_all(Model &model) {
   Transitions T;
   for (const auto &[T_i, mut] : model.data->net) {
     const auto &pre = mut.first;

@@ -28,7 +28,7 @@ StoppablePool executeTransition(const TransitionActionMap &local_store,
         const auto thread_id = getThreadId();
 
         auto logstart = [&](const Event &event) {
-          reducers.enqueue(Reducer([=](Model &&model) {
+          reducers.enqueue(Reducer([=](Model &&model) -> Model & {
             model.data->event_log.push_back(event);
             return model;
           }));
@@ -57,7 +57,7 @@ StoppablePool executeTransition(const TransitionActionMap &local_store,
             },
             local_store.at(transition));
 
-        reducers.enqueue(Reducer([=](Model &&model) {
+        reducers.enqueue(Reducer([=](Model &&model) -> Model & {
           auto it = std::find_if(
               event_log.begin(), event_log.end(), [](const auto &e) {
                 return std::get<TransitionState>(e) == TransitionState::Error;

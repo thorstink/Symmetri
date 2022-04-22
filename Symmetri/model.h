@@ -11,7 +11,7 @@
 
 namespace symmetri {
 struct Model;
-using Reducer = std::function<Model(Model &&)>;
+using Reducer = std::function<Model &(Model &&)>;
 
 using TaskInstance =
     std::tuple<clock_t::time_point, clock_t::time_point, size_t>;
@@ -19,6 +19,7 @@ using TaskInstance =
 struct Model {
   Model(const clock_t::time_point &t, const StateNet &net, const NetMarking &M0)
       : data(std::make_shared<shared>(t, net, M0)) {}
+  Model(const Model &) = delete;
   struct shared {
     shared(const clock_t::time_point &t, const StateNet &net,
            const NetMarking &M)
@@ -39,6 +40,6 @@ struct Model {
   std::shared_ptr<shared> data;
 };
 
-std::pair<Model, std::vector<Transition>> run_all(Model &&model);
+std::pair<Model &, std::vector<Transition>> run_all(Model &model);
 
 }  // namespace symmetri
