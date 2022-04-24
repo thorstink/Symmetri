@@ -30,6 +30,7 @@ and look at `http://localhost:2222/` for a live view of the activity.
 # WIP / TODO
 
 - Put in different eventloop?
+- simplify model, base logging/vis on event_log.
 - simplify visualization/graph
 - refactor to (Testable) functions
 - investige state = marking + active transitions?

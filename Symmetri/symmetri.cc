@@ -102,10 +102,9 @@ Application::Application(const std::set<std::string> &files,
 
     while (!EXIT) {
       // get a reducer.
-      while ((m.data->pending_transitions.empty() && m.data->M != m0)
+      while ((m.pending_transitions.empty() && m.M != m0)
                  ? reducers.try_dequeue(f)
                  : reducers.wait_dequeue_timed(f, std::chrono::seconds(1))) {
-        m.data->timestamp = clock_t::now();
         try {
           std::tie(m, T) = run_all(f(std::move(m)));
           actions.enqueue_bulk(T.begin(), T.size());
@@ -116,15 +115,14 @@ Application::Application(const std::set<std::string> &files,
 
       // server stuffies
       if (server.has_value()) {
-        server.value()->sendNet(m.data->timestamp, m.data->net, m.data->M,
-                                m.data->pending_transitions,
-                                m.data->transition_end_times);
-        server.value()->sendLog(m.data->log);
+        server.value()->sendNet(m.timestamp, m.net, m.M, m.pending_transitions,
+                                m.transition_end_times);
+        server.value()->sendLog(m.log);
       };
-      m.data->log.clear();
+      m.log.clear();
 
       // end critiria. If there are no active transitions anymore.
-      if (m.data->pending_transitions.empty() && m.data->M != m0) {
+      if (m.pending_transitions.empty() && m.M != m0) {
         break;
       }
     };
@@ -133,7 +131,7 @@ Application::Application(const std::set<std::string> &files,
     spdlog::get(case_id)->info(
         std::string(EXIT ? "Forced shutdown" : "Deadlock") +
             " of {0}-net. End trace is {1}",
-        case_id, calculateTrace(m.data->event_log));
+        case_id, calculateTrace(m.event_log));
 
     // stop the thread pool
     stp.stop();
@@ -143,7 +141,7 @@ Application::Application(const std::set<std::string> &files,
       spdlog::get(case_id)->info("Server stopped.");
     }
 
-    return m.data->event_log;
+    return m.event_log;
   };
 }
 

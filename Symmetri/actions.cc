@@ -29,7 +29,7 @@ StoppablePool executeTransition(const TransitionActionMap &local_store,
 
         auto logstart = [&](const Event &event) {
           reducers.enqueue(Reducer([=](Model &&model) -> Model & {
-            model.data->event_log.push_back(event);
+            model.event_log.push_back(event);
             return model;
           }));
         };
@@ -63,17 +63,17 @@ StoppablePool executeTransition(const TransitionActionMap &local_store,
                 return std::get<TransitionState>(e) == TransitionState::Error;
               });
           if (it == event_log.end()) {
-            for (const auto &m_p : model.data->net.at(transition).second) {
-              model.data->M[m_p] += 1;
+            for (const auto &m_p : model.net.at(transition).second) {
+              model.M[m_p] += 1;
             }
           }
           std::move(event_log.begin(), event_log.end(),
-                    std::back_inserter(model.data->event_log));
+                    std::back_inserter(model.event_log));
 
-          model.data->pending_transitions.erase(transition);
-          model.data->transition_end_times[transition] = end_time;
-          model.data->log.emplace(
-              transition, TaskInstance{start_time, end_time, thread_id});
+          model.pending_transitions.erase(transition);
+          model.transition_end_times[transition] = end_time;
+          model.log.emplace(transition,
+                            TaskInstance{start_time, end_time, thread_id});
           return model;
         }));
       }
