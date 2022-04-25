@@ -96,7 +96,7 @@ std::tuple<StateNet, NetMarking> constructTransitionMutationMatrices(
     for (auto p : pre) {
       netstring << p << ",";
     }
-    netstring << "post: ";
+    netstring << " post: ";
     for (auto p : post) {
       netstring << p << ",";
     }

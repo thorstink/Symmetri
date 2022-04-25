@@ -11,36 +11,29 @@
 
 namespace symmetri {
 struct Model;
-using Reducer = std::function<Model(Model &&)>;
-
-using clock_t = std::chrono::system_clock;
+using Reducer = std::function<Model &(Model &&)>;
 
 using TaskInstance =
     std::tuple<clock_t::time_point, clock_t::time_point, size_t>;
 
 struct Model {
   Model(const clock_t::time_point &t, const StateNet &net, const NetMarking &M0)
-      : data(std::make_shared<shared>(t, net, M0)) {}
-  struct shared {
-    shared(const clock_t::time_point &t, const StateNet &net,
-           const NetMarking &M)
-        : timestamp(t), net(net), M(M) {
-      for (const auto &[transition, mut] : net) {
-        transition_end_times[transition] = t;
-      }
+      : timestamp(t), net(net), M(M0) {
+    for (const auto &[transition, mut] : net) {
+      transition_end_times[transition] = t;
     }
-    clock_t::time_point timestamp;
-    const StateNet net;
-    NetMarking M;
-    std::set<Transition> active_transitions;
-    std::vector<Transition> trace;
-    std::multimap<Transition, TaskInstance> log;
-    std::map<Transition, clock_t::time_point> transition_end_times;
-  };
+  }
+  Model(const Model &) = delete;
 
-  std::shared_ptr<shared> data;
+  clock_t::time_point timestamp;
+  StateNet net;
+  NetMarking M;
+  std::set<Transition> pending_transitions;
+  std::multimap<Transition, TaskInstance> log;
+  std::vector<Event> event_log;
+  std::map<Transition, clock_t::time_point> transition_end_times;
 };
 
-std::pair<Model, std::vector<Transition>> run_all(Model &&model);
+std::tuple<Model &, Transitions> run_all(Model &model);
 
 }  // namespace symmetri

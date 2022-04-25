@@ -50,7 +50,7 @@ const std::string conn = "---";
 const std::string header = "graph RL\n";
 
 auto genNet(const clock_t::time_point &now, const StateNet &net,
-            const NetMarking &M, std::set<Transition> active_transitions,
+            const NetMarking &M, std::set<Transition> pending_transitions,
             std::map<symmetri::Transition, symmetri::clock_t::time_point>
                 transition_end_times) {
   std::stringstream mermaid;
@@ -65,8 +65,8 @@ auto genNet(const clock_t::time_point &now, const StateNet &net,
       float ratio = getRatio(now, t, transition_end_times);
 
       mermaid << t
-              << (active_transitions.contains(t) ? active_transition_tag
-                                                 : opacity(ratio))
+              << (pending_transitions.contains(t) ? active_transition_tag
+                                                  : opacity(ratio))
               << conn << (count > 1 ? multi(count) : "")
               << placeFormatter(*p, marking) << place_tag << "\n";
     }
@@ -78,8 +78,8 @@ auto genNet(const clock_t::time_point &now, const StateNet &net,
 
       mermaid << placeFormatter(*p, marking) << place_tag << conn
               << (count > 1 ? multi(count) : "") << t
-              << (active_transitions.contains(t) ? active_transition_tag
-                                                 : opacity(ratio))
+              << (pending_transitions.contains(t) ? active_transition_tag
+                                                  : opacity(ratio))
               << "\n";
     }
   }

@@ -137,7 +137,7 @@ bool isIrreducible(const MatrixXd &mat) {
   for (unsigned int i = 1; i < mat.rows(); i++) {
     res = (res + (mat ^ i));
   }
-  return !(res.array() <= epsilon<double>).any();
+  return !((res.array() <= epsilon<double>).any());
 }
 
 // memoize this

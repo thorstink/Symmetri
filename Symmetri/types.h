@@ -1,16 +1,18 @@
 #pragma once
-
 #include <map>
 #include <set>
 #include <string>
+#include <tuple>
 #include <vector>
 
+#include "Symmetri/symmetri.h"
+
 namespace symmetri {
-using Transition = std::string;
+using Place = std::string;
 using Transitions = std::vector<Transition>;
+
 using StateNet =
-    std::map<std::string,
-             std::pair<std::multiset<std::string>, std::multiset<std::string>>>;
-using NetMarking = std::map<std::string, uint16_t>;
+    std::map<Transition, std::pair<std::multiset<Place>, std::multiset<Place>>>;
+using NetMarking = std::map<Place, uint16_t>;
 
 }  // namespace symmetri
