@@ -5,25 +5,30 @@
 #include "Symmetri/symmetri.h"
 #include "namespace_share_data.h"
 
-inline std::string printState(symmetri::TransitionState s) {
-  return s == symmetri::TransitionState::Started     ? "Started"
-         : s == symmetri::TransitionState::Completed ? "Completed"
-                                                     : "Error";
-}
+std::function<void()> helloT(std::string s) {
+  return [s] {
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    spdlog::info(s);
+    return;
+  };
+};
 
 int main(int argc, char *argv[]) {
   auto pnml1 = std::string(argv[1]);
   auto pnml2 = std::string(argv[2]);
   auto pnml3 = std::string(argv[3]);
 
-  symmetri::Application subnet({pnml1}, {{"T0", &action5}}, "charon", false);
+  // symmetri::Application subnet({pnml1}, {{"T0", &action5}}, "charon", false);
+
+  // symmetri::TransitionActionMap store = {
+  //     {"T0", subnet},
+  //     {"T1", &T1::action1},
+  //     // {"T2", &T1::action0}}; // an eventlog function.
+  //     // {"T2", &failsSometimes}}; // this is a sometimes failing function.
+  //     {"T2", &T1::action1}};
 
   symmetri::TransitionActionMap store = {
-      {"T0", subnet},
-      {"T1", &T1::action1},
-      // {"T2", &T1::action0}}; // an eventlog function.
-      // {"T2", &failsSometimes}}; // this is a sometimes failing function.
-      {"T2", &T1::action1}};
+      {"T0", helloT("T0")}, {"T1", helloT("T1")}, {"T2", helloT("T2")}};
 
   symmetri::Application bignet({pnml1, pnml2, pnml3}, store, "pluto", true);
 

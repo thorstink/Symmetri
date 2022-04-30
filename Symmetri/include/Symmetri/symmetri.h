@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <functional>
 #include <iostream>
+#include <memory>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -25,14 +26,46 @@ typedef void (*nonLoggedFunction)();
 
 using Action = std::variant<loggedFunction, nonLoggedFunction, Application>;
 
-using TransitionActionMap = std::unordered_map<std::string, Action>;
-
 size_t calculateTrace(std::vector<Event> event_log);
+inline std::string printState(symmetri::TransitionState s) {
+  return s == symmetri::TransitionState::Started     ? "Started"
+         : s == symmetri::TransitionState::Completed ? "Completed"
+                                                     : "Error";
+}
+template <typename T>
+void run(const T &x) {
+  x();
+}
+class object_t {
+ public:
+  object_t() {}
+  template <typename T>
+  object_t(T x) : self_(std::make_shared<model<T>>(std::move(x))) {}
+
+  friend void run(const object_t &x) { x.self_->run_(); }
+
+ private:
+  struct concept_t {
+    virtual ~concept_t() = default;
+    virtual void run_() const = 0;
+  };
+  template <typename T>
+  struct model final : concept_t {
+    model(T x) : data_(std::move(x)) {}
+    void run_() const override { run(data_); }
+
+    T data_;
+  };
+
+  std::shared_ptr<const concept_t> self_;
+};
+
+using TransitionActionMap = std::unordered_map<std::string, symmetri::object_t>;
 
 struct Application {
  private:
   std::function<void(const std::string &t)> p;
-  std::function<std::vector<Event>()> run;
+  std::function<std::vector<Event>()> runApp;
 
  public:
   Application(const std::set<std::string> &path_to_petri,

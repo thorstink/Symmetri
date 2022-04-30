@@ -10,6 +10,7 @@
 #include "types.h"
 
 namespace symmetri {
+
 struct Model;
 using Reducer = std::function<Model &(Model &&)>;
 
