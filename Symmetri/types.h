@@ -10,7 +10,6 @@
 namespace symmetri {
 using Place = std::string;
 using Transition = std::string;
-using Transitions = std::vector<Transition>;
 
 using StateNet =
     std::map<Transition, std::pair<std::multiset<Place>, std::multiset<Place>>>;

@@ -19,15 +19,12 @@
 #include "types.h"
 #include "ws_interface.hpp"
 
+namespace symmetri {
 // Define the function to be called when ctrl-c (SIGINT) is sent to process
-
-namespace {
 bool EARLY_EXIT = false;
 std::function<void(int)> sighandler = [](int signal) { EARLY_EXIT = true; };
 inline void signal_handler(int signal) { sighandler(signal); }
-}  // namespace
 
-namespace symmetri {
 using namespace moodycamel;
 
 size_t calculateTrace(std::vector<Event> event_log) {
@@ -75,88 +72,96 @@ Application::Application(const std::set<std::string> &files,
   auto console = spdlog::stdout_color_mt(case_id);
 
   console->set_pattern(s.str());
-  if (!check(store, net)) {
-    spdlog::get(case_id)->error("Error not all transitions are in the store");
-  }
-  runApp = [=, this]() -> TransitionResult {
-    auto server =
-        interface ? std::optional(WsServer::Instance()) : std::nullopt;
 
-    BlockingConcurrentQueue<Reducer> reducers(256);
-    BlockingConcurrentQueue<PolyAction> polymorphic_actions(256);
+  runApp =
+      !check(store, net)
+          ? std::function([=, this]() -> TransitionResult {
+              spdlog::get(case_id)->error(
+                  "Error not all transitions are in the store");
+              return {{}, TransitionState::Error};
+            })
+          : std::function([=, this]() -> TransitionResult {
+              auto server = interface ? std::optional(WsServer::Instance())
+                                      : std::nullopt;
 
-    // register a function that "forces" transitions into the queue.
-    p = [&](const std::string &t) {
-      polymorphic_actions.enqueue([&, &task = store.at(t)] {
-        reducers.enqueue(
-            createReducerForTransitionCompletion(t, task, case_id));
-      });
-    };
+              BlockingConcurrentQueue<Reducer> reducers(256);
+              BlockingConcurrentQueue<PolyAction> polymorphic_actions(256);
 
-    // register the signal handler.
-    sighandler = [&](int signal) { EARLY_EXIT = true; };
+              // register a function that "forces" transitions into the queue.
+              p = [&](const std::string &t) {
+                polymorphic_actions.enqueue([&, &task = store.at(t)] {
+                  reducers.enqueue(
+                      createReducerForTransitionCompletion(t, task, case_id));
+                });
+              };
 
-    // returns a simple stoppable threadpool.
-    StoppablePool stp(thread_count, polymorphic_actions);
+              // register the signal handler.
+              sighandler = [&](int signal) { EARLY_EXIT = true; };
 
-    // the initial state
-    auto m = Model(clock_t::now(), net, store, m0);
+              // returns a simple stoppable threadpool.
+              StoppablePool stp(thread_count, polymorphic_actions);
 
-    // enqueue a noop to start, not doing this would require external input to
-    // 'start' (even if the petri net is alive)
-    reducers.enqueue(noop);
+              // the initial state
+              auto m = Model(clock_t::now(), net, store, m0);
 
-    Reducer f;
-    do {
-      // get a reducer.
-      while ((m.pending_transitions.empty() && m.M != m0)
-                 ? reducers.try_dequeue(f)
-                 : reducers.wait_dequeue_timed(f, std::chrono::seconds(1))) {
-        if (EARLY_EXIT) {
-          break;
-        }
-        try {
-          m = run_all(f(std::move(m)), reducers, polymorphic_actions, case_id);
-        } catch (const std::exception &e) {
-          spdlog::get(case_id)->error(e.what());
-        }
-      }
+              // enqueue a noop to start, not doing this would require external
+              // input to 'start' (even if the petri net is alive)
+              reducers.enqueue(noop);
 
-      // server stuffies
-      if (server.has_value()) {
-        server.value()->sendNet(m.timestamp, m.net, m.M, m.pending_transitions,
-                                m.transition_end_times);
-        server.value()->sendLog(m.log);
-      };
-      m.log.clear();
+              Reducer f;
+              do {
+                // get a reducer.
+                while ((m.pending_transitions.empty() && m.M != m0)
+                           ? reducers.try_dequeue(f)
+                           : reducers.wait_dequeue_timed(
+                                 f, std::chrono::seconds(1))) {
+                  if (EARLY_EXIT) {
+                    break;
+                  }
+                  try {
+                    m = run_all(f(std::move(m)), reducers, polymorphic_actions,
+                                case_id);
+                  } catch (const std::exception &e) {
+                    spdlog::get(case_id)->error(e.what());
+                  }
+                }
 
-      // end critiria. If there are no active transitions anymore.
-      if (m.pending_transitions.empty() && m.M != m0) {
-        break;
-      }
-    } while (!EARLY_EXIT);
+                // server stuffies
+                if (server.has_value()) {
+                  server.value()->sendNet(m.timestamp, m.net, m.M,
+                                          m.pending_transitions,
+                                          m.transition_end_times);
+                  server.value()->sendLog(m.log);
+                };
+                m.log.clear();
 
-    // This point is only reached if the petri net deadlocked or we exited the
-    // application early.
+                // end critiria. If there are no active transitions anymore.
+                if (m.pending_transitions.empty() && m.M != m0) {
+                  break;
+                }
+              } while (!EARLY_EXIT);
 
-    // publish a log
-    spdlog::get(case_id)->info(
-        std::string(EARLY_EXIT ? "Forced shutdown" : "Deadlock") +
-            " of {0}-net. Trace-hash is {1}",
-        case_id, calculateTrace(m.event_log));
+              // This point is only reached if the petri net deadlocked or we
+              // exited the application early.
 
-    // stop the thread pool, blocks.
-    stp.stop();
-    // if we have a viz server, kill it. blocks.
-    if (server.has_value()) {
-      server.value()->stop();
-      spdlog::get(case_id)->info("Server stopped.");
-    }
+              // publish a log
+              spdlog::get(case_id)->info(
+                  std::string(EARLY_EXIT ? "Forced shutdown" : "Deadlock") +
+                      " of {0}-net. Trace-hash is {1}",
+                  case_id, calculateTrace(m.event_log));
 
-    // this could have nuance, if maybe an expected state was reached?
-    return {m.event_log,
-            EARLY_EXIT ? TransitionState::Error : TransitionState::Completed};
-  };
+              // stop the thread pool, blocks.
+              stp.stop();
+              // if we have a viz server, kill it. blocks.
+              if (server.has_value()) {
+                server.value()->stop();
+                spdlog::get(case_id)->info("Server stopped.");
+              }
+
+              // this could have nuance, if maybe an expected state was reached?
+              return {m.event_log, EARLY_EXIT ? TransitionState::Error
+                                              : TransitionState::Completed};
+            });
 }
 
 TransitionResult Application::operator()() const { return runApp(); };

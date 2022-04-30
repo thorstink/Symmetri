@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
   auto pnml2 = std::string(argv[2]);
   auto pnml3 = std::string(argv[3]);
 
-  symmetri::Application subnet({pnml1}, {{"T0", helloT("SUB_T0")}}, 1, "charon",
+  symmetri::Application subnet({pnml1}, {{"T4", helloT("SUB_T0")}}, 1, "charon",
                                false);
 
   symmetri::TransitionActionMap store = {
