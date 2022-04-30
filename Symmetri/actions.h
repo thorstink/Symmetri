@@ -5,26 +5,9 @@
 #include <vector>
 
 #include "Symmetri/symmetri.h"
-#include "model.h"
 
 namespace symmetri {
 struct StoppablePool {
-  StoppablePool(unsigned int thread_count,
-                const std::shared_ptr<std::atomic<bool>> &_stop,
-                const std::function<void()> &worker,
-                moodycamel::BlockingConcurrentQueue<std::string> &_actions)
-      : pool(thread_count), stop_flag(_stop), actions(_actions) {
-    std::generate(std::begin(pool), std::end(pool),
-                  [worker]() { return std::thread(worker); });
-  }
-  void stop() {
-    stop_flag->store(true);
-    for (size_t i = 0; i < pool.size(); ++i) {
-      actions.enqueue("stop");
-    }
-    join();
-  }
-
  private:
   void join() {
     for (auto &&t : pool) {
@@ -32,14 +15,37 @@ struct StoppablePool {
     }
   }
   std::vector<std::thread> pool;
-  std::shared_ptr<std::atomic<bool>> stop_flag;
-  moodycamel::BlockingConcurrentQueue<std::string> &actions;
-};
+  std::atomic<bool> stop_flag;
+  moodycamel::BlockingConcurrentQueue<PolyAction> &actions;
 
-StoppablePool executeTransition(
-    const TransitionActionMap &local_store,
-    moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
-    moodycamel::BlockingConcurrentQueue<std::string> &actions,
-    unsigned int thread_count, const std::string &case_id);
+  void loop() const {
+    PolyAction transition;
+    while (stop_flag.load() == false) {
+      if (actions.wait_dequeue_timed(transition,
+                                     std::chrono::milliseconds(250))) {
+        if (stop_flag.load() == true) {
+          break;
+        }
+        run(transition);
+        transition = PolyAction();
+      }
+    };
+  }
+
+ public:
+  StoppablePool(unsigned int thread_count,
+                moodycamel::BlockingConcurrentQueue<PolyAction> &_actions)
+      : pool(thread_count), stop_flag(false), actions(_actions) {
+    std::generate(std::begin(pool), std::end(pool),
+                  [this] { return std::thread(&StoppablePool::loop, this); });
+  }
+  void stop() {
+    stop_flag.store(true);
+    for (size_t i = 0; i < pool.size(); ++i) {
+      actions.enqueue([] {});
+    }
+    join();
+  }
+};
 
 }  // namespace symmetri

@@ -13,14 +13,13 @@ bool Boo = true;
 
 std::vector<symmetri::Event> action0() noexcept {
   std::vector<symmetri::Event> log;
-  log.push_back({"case_id", symmetri::Transition("action0"),
-                 symmetri::TransitionState::Started, symmetri::clock_t::now()});
+  log.push_back({"case_id", "action0", symmetri::TransitionState::Started,
+                 symmetri::clock_t::now()});
 
   T1::Boo = true;
   sleep(std::chrono::milliseconds(500 * 5));
 
-  log.push_back({"case_id", symmetri::Transition("action0"),
-                 symmetri::TransitionState::Completed,
+  log.push_back({"case_id", "action0", symmetri::TransitionState::Completed,
                  symmetri::clock_t::now()});
   return log;
 }
@@ -33,8 +32,8 @@ void action1() noexcept {
 
 std::vector<symmetri::Event> failsSometimes() noexcept {
   std::vector<symmetri::Event> log;
-  log.push_back({"case_id", symmetri::Transition("action2"),
-                 symmetri::TransitionState::Started, symmetri::clock_t::now()});
+  log.push_back({"case_id", "action2", symmetri::TransitionState::Started,
+                 symmetri::clock_t::now()});
 
   sleep(std::chrono::milliseconds(200 * 5));
   const double chance =
@@ -45,11 +44,10 @@ std::vector<symmetri::Event> failsSometimes() noexcept {
   bool err = dist(mt);
 
   if (err) {
-    log.push_back({"case_id", symmetri::Transition("action2"),
-                   symmetri::TransitionState::Error, symmetri::clock_t::now()});
+    log.push_back({"case_id", "action2", symmetri::TransitionState::Error,
+                   symmetri::clock_t::now()});
   } else {
-    log.push_back({"case_id", symmetri::Transition("action2"),
-                   symmetri::TransitionState::Completed,
+    log.push_back({"case_id", "action2", symmetri::TransitionState::Completed,
                    symmetri::clock_t::now()});
   }
   return log;
