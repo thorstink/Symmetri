@@ -32,27 +32,34 @@ inline std::string printState(symmetri::TransitionState s) {
          : s == symmetri::TransitionState::Completed ? "Completed"
                                                      : "Error";
 }
+
 template <typename T>
-void run(const T &x) {
-  x();
+constexpr TransitionState run(const T &x) {
+  if constexpr (std::is_same_v<void, decltype(x())>) {
+    x();
+    return TransitionState::Completed;
+  } else {
+    return x();
+  }
 }
+
 class object_t {
  public:
   object_t() {}
   template <typename T>
   object_t(T x) : self_(std::make_shared<model<T>>(std::move(x))) {}
 
-  friend void run(const object_t &x) { x.self_->run_(); }
+  friend TransitionState run(const object_t &x) { return x.self_->run_(); }
 
  private:
   struct concept_t {
     virtual ~concept_t() = default;
-    virtual void run_() const = 0;
+    virtual TransitionState run_() const = 0;
   };
   template <typename T>
   struct model final : concept_t {
     model(T x) : data_(std::move(x)) {}
-    void run_() const override { run(data_); }
+    TransitionState run_() const override { return run(data_); }
 
     T data_;
   };
