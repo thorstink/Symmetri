@@ -64,7 +64,8 @@ bool check(const TransitionActionMap &store, const symmetri::StateNet &net) {
 
 Application::Application(const std::set<std::string> &files,
                          const TransitionActionMap &store,
-                         const std::string &case_id, bool interface) {
+                         unsigned int thread_count, const std::string &case_id,
+                         bool interface) {
   const auto &[net, m0] = constructTransitionMutationMatrices(files);
 
   signal(SIGINT, signal_handler);
@@ -89,14 +90,10 @@ Application::Application(const std::set<std::string> &files,
     };
 
     // register the signal handler.
-    sighandler = [&](int signal) {
-      EARLY_EXIT = true;
-      // push a noop to wake the reducer-queue so it can break;
-      reducers.enqueue(noop);
-    };
+    sighandler = [&](int signal) { EARLY_EXIT = true; };
 
     // returns a simple stoppable threadpool.
-    StoppablePool stp(3, polymorphic_actions);
+    StoppablePool stp(thread_count, polymorphic_actions);
 
     // the initial state
     auto m = Model(clock_t::now(), net, store, m0);
@@ -108,7 +105,7 @@ Application::Application(const std::set<std::string> &files,
     Reducer f;
 
     do {
-      // get a reducer.
+      // get a reducer.``
       while ((m.pending_transitions.empty() && m.M != m0)
                  ? reducers.try_dequeue(f)
                  : reducers.wait_dequeue_timed(f, std::chrono::seconds(1))) {
@@ -136,15 +133,18 @@ Application::Application(const std::set<std::string> &files,
       }
     } while (!EARLY_EXIT);
 
+    // This point is only reached if the petri net deadlocked or we exited the
+    // application early.
+
     // publish a log
     spdlog::get(case_id)->info(
         std::string(EARLY_EXIT ? "Forced shutdown" : "Deadlock") +
             " of {0}-net. Trace-hash is {1}",
         case_id, calculateTrace(m.event_log));
 
-    // stop the thread pool
+    // stop the thread pool, blocks.
     stp.stop();
-    // if we have a viz server, kill it.
+    // if we have a viz server, kill it. blocks.
     if (server.has_value()) {
       server.value()->stop();
       spdlog::get(case_id)->info("Server stopped.");

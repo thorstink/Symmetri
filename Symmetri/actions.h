@@ -18,25 +18,25 @@ struct StoppablePool {
   std::atomic<bool> stop_flag;
   moodycamel::BlockingConcurrentQueue<object_t> &actions;
 
+  void loop() const {
+    object_t transition;
+    while (stop_flag.load() == false) {
+      if (actions.wait_dequeue_timed(transition,
+                                     std::chrono::milliseconds(250))) {
+        if (stop_flag.load() == true) {
+          break;
+        }
+        run(transition);
+      }
+    };
+  }
+
  public:
   StoppablePool(unsigned int thread_count,
                 moodycamel::BlockingConcurrentQueue<object_t> &_actions)
       : pool(thread_count), stop_flag(false), actions(_actions) {
-    auto worker = [this] {
-      object_t transition;
-      while (stop_flag.load() == false) {
-        if (actions.wait_dequeue_timed(transition,
-                                       std::chrono::milliseconds(250))) {
-          if (stop_flag.load() == true) {
-            break;
-          }
-          run(transition);
-        }
-      };
-    };
-
     std::generate(std::begin(pool), std::end(pool),
-                  [worker]() { return std::thread(worker); });
+                  [this] { return std::thread(&StoppablePool::loop, this); });
   }
   void stop() {
     stop_flag.store(true);

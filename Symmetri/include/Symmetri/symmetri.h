@@ -69,7 +69,7 @@ struct Application {
 
  public:
   Application(const std::set<std::string> &path_to_petri,
-              const TransitionActionMap &store,
+              const TransitionActionMap &store, unsigned int thread_count,
               const std::string &case_id = "NOCASE", bool use_webserver = true);
   std::vector<Event> operator()() const;
 
