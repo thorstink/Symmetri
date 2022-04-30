@@ -32,20 +32,21 @@ using namespace moodycamel;
 
 size_t calculateTrace(std::vector<Event> event_log) {
   // calculate a trace-id, in a simple way.
-  std::sort(event_log.begin(), event_log.end(),
-            [](const auto &lhs, const auto &rhs) {
-              return std::get<clock_t::time_point>(lhs) <
-                     std::get<clock_t::time_point>(rhs);
-            });
+  std::sort(
+      event_log.begin(), event_log.end(),
+      [](const auto &lhs, const auto &rhs) { return lhs.stamp < rhs.stamp; });
 
-  auto trace_hash = std::hash<std::string>{}(
-      std::accumulate(event_log.begin(), event_log.end(), std::string(""),
-                      [](const auto &acc, const Event &n) {
-                        return std::get<2>(n) == TransitionState::Completed
-                                   ? acc + std::get<1>(n)
-                                   : acc;
-                      }));
-  return trace_hash;
+  return std::hash<std::string>{}(std::accumulate(
+      event_log.begin(), event_log.end(), std::string(""),
+      [](const auto &acc, const Event &n) {
+        return n.state == TransitionState::Completed ? acc + n.transition : acc;
+      }));
+}
+
+std::string printState(symmetri::TransitionState s) {
+  return s == symmetri::TransitionState::Started     ? "Started"
+         : s == symmetri::TransitionState::Completed ? "Completed"
+                                                     : "Error";
 }
 
 constexpr auto noop = [](Model &&m) -> Model & { return m; };
@@ -77,21 +78,18 @@ Application::Application(const std::set<std::string> &files,
   if (!check(store, net)) {
     spdlog::get(case_id)->error("Error not all transitions are in the store");
   }
-  runApp = [=, this]() -> std::vector<Event> {
+  runApp = [=, this]() -> TransitionResult {
     auto server =
         interface ? std::optional(WsServer::Instance()) : std::nullopt;
 
     BlockingConcurrentQueue<Reducer> reducers(256);
-    BlockingConcurrentQueue<object_t> polymorphic_actions(256);
+    BlockingConcurrentQueue<PolyAction> polymorphic_actions(256);
 
     // register a function that "forces" transitions into the queue.
     p = [&](const std::string &t) {
       polymorphic_actions.enqueue([&, &task = store.at(t)] {
-        const auto start_time = clock_t::now();
-        run(task);
-        const auto end_time = clock_t::now();
-        reducers.enqueue(createReducerForTransitionCompletion(
-            t, case_id, start_time, end_time));
+        reducers.enqueue(
+            createReducerForTransitionCompletion(t, task, case_id));
       });
     };
 
@@ -109,9 +107,8 @@ Application::Application(const std::set<std::string> &files,
     reducers.enqueue(noop);
 
     Reducer f;
-
     do {
-      // get a reducer.``
+      // get a reducer.
       while ((m.pending_transitions.empty() && m.M != m0)
                  ? reducers.try_dequeue(f)
                  : reducers.wait_dequeue_timed(f, std::chrono::seconds(1))) {
@@ -156,10 +153,12 @@ Application::Application(const std::set<std::string> &files,
       spdlog::get(case_id)->info("Server stopped.");
     }
 
-    return m.event_log;
+    // this could have nuance, if maybe an expected state was reached?
+    return {m.event_log,
+            EARLY_EXIT ? TransitionState::Error : TransitionState::Completed};
   };
 }
 
-std::vector<Event> Application::operator()() const { return runApp(); };
+TransitionResult Application::operator()() const { return runApp(); };
 
 }  // namespace symmetri

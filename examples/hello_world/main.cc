@@ -28,10 +28,12 @@ int main(int argc, char *argv[]) {
     f(a);
   });
 
-  auto el = net();  // infinite loop
+  auto [el, result] = net();  // infinite loop
 
   for (const auto &[caseid, t, s, c] : el) {
     spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),
                  c.time_since_epoch().count());
   }
+
+  return result == symmetri::TransitionState::Completed ? 0 : -1;
 }

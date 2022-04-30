@@ -28,11 +28,12 @@ int main(int argc, char *argv[]) {
 
   symmetri::Application bignet({pnml1, pnml2, pnml3}, store, 3, "pluto", true);
 
-  auto el = bignet();  // infinite loop
+  auto [el, result] = bignet();  // infinite loop
 
-  spdlog::info("Printing trace:\n");
   for (const auto &[caseid, t, s, c] : el) {
     spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),
                  c.time_since_epoch().count());
   }
+
+  return result == symmetri::TransitionState::Completed ? 0 : -1;
 }

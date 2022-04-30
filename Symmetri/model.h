@@ -15,17 +15,17 @@ namespace symmetri {
 
 struct Model;
 using Reducer = std::function<Model &(Model &&)>;
+
 Reducer createReducerForTransitionCompletion(const std::string &T_i,
-                                             const std::string &case_id,
-                                             clock_t::time_point start_time,
-                                             clock_t::time_point end_time);
+                                             const PolyAction &task,
+                                             const std::string &case_id);
 
 using TaskInstance =
     std::tuple<clock_t::time_point, clock_t::time_point, size_t>;
 
 struct Model {
   Model(const clock_t::time_point &t, const StateNet &net,
-        const std::unordered_map<std::string, symmetri::object_t> &store,
+        const std::unordered_map<std::string, symmetri::PolyAction> &store,
         const NetMarking &M0)
       : net(net), store(store), timestamp(t), M(M0) {
     for (const auto &[transition, mut] : net) {
@@ -38,7 +38,7 @@ struct Model {
   Model(const Model &) = delete;
 
   const StateNet net;
-  const std::unordered_map<std::string, symmetri::object_t> store;
+  const std::unordered_map<std::string, symmetri::PolyAction> store;
 
   // this is a random padding struct.. it seems to improve latency between
   // transitions. Need to do it prettier/research it.
@@ -54,7 +54,7 @@ struct Model {
 
 Model &run_all(
     Model &model, moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
-    moodycamel::BlockingConcurrentQueue<object_t> &polymorphic_actions,
+    moodycamel::BlockingConcurrentQueue<PolyAction> &polymorphic_actions,
     const std::string &case_id);
 
 }  // namespace symmetri

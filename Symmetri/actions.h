@@ -16,10 +16,10 @@ struct StoppablePool {
   }
   std::vector<std::thread> pool;
   std::atomic<bool> stop_flag;
-  moodycamel::BlockingConcurrentQueue<object_t> &actions;
+  moodycamel::BlockingConcurrentQueue<PolyAction> &actions;
 
   void loop() const {
-    object_t transition;
+    PolyAction transition;
     while (stop_flag.load() == false) {
       if (actions.wait_dequeue_timed(transition,
                                      std::chrono::milliseconds(250))) {
@@ -27,14 +27,14 @@ struct StoppablePool {
           break;
         }
         run(transition);
-        transition = object_t();
+        transition = PolyAction();
       }
     };
   }
 
  public:
   StoppablePool(unsigned int thread_count,
-                moodycamel::BlockingConcurrentQueue<object_t> &_actions)
+                moodycamel::BlockingConcurrentQueue<PolyAction> &_actions)
       : pool(thread_count), stop_flag(false), actions(_actions) {
     std::generate(std::begin(pool), std::end(pool),
                   [this] { return std::thread(&StoppablePool::loop, this); });
