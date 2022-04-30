@@ -18,15 +18,12 @@
 #include "pnml_parser.h"
 #include "types.h"
 #include "ws_interface.hpp"
-auto getThreadId() {
-  return static_cast<size_t>(
-      std::hash<std::thread::id>()(std::this_thread::get_id()));
-}
+
 // Define the function to be called when ctrl-c (SIGINT) is sent to process
 
 namespace {
-bool EXIT = false;
-std::function<void(int)> sighandler = [](int signal) { EXIT = true; };
+bool EARLY_EXIT = false;
+std::function<void(int)> sighandler = [](int signal) { EARLY_EXIT = true; };
 inline void signal_handler(int signal) { sighandler(signal); }
 }  // namespace
 
@@ -93,57 +90,33 @@ Application::Application(const std::set<std::string> &files,
 
     // register the signal handler.
     sighandler = [&](int signal) {
-      EXIT = true;
+      EARLY_EXIT = true;
+      // push a noop to wake the reducer-queue so it can break;
       reducers.enqueue(noop);
     };
 
     // returns a simple stoppable threadpool.
-    auto stp = executeTransition(polymorphic_actions, 3, case_id);
+    StoppablePool stp(3, polymorphic_actions);
 
     // the initial state
-    auto m = Model(clock_t::now(), net, m0);
+    auto m = Model(clock_t::now(), net, store, m0);
 
-    // auto start
+    // enqueue a noop to start, not doing this would require external input to
+    // 'start' (even if the petri net is alive)
     reducers.enqueue(noop);
 
     Reducer f;
-    Transitions T;
-    // std::vector<object_t> T;
 
-    while (true) {
+    do {
       // get a reducer.
       while ((m.pending_transitions.empty() && m.M != m0)
                  ? reducers.try_dequeue(f)
                  : reducers.wait_dequeue_timed(f, std::chrono::seconds(1))) {
-        if (EXIT) {
+        if (EARLY_EXIT) {
           break;
         }
         try {
-          std::tie(m, T) = run_all(f(std::move(m)));
-          for (const auto &t : T) {
-            polymorphic_actions.enqueue([&, t] {
-              const auto thread_id = getThreadId();
-              const auto start_time = clock_t::now();
-              run(store.at(t));
-              const auto end_time = clock_t::now();
-
-              reducers.enqueue(Reducer([=](Model &&model) -> Model & {
-                for (const auto &m_p : model.net.at(t).second) {
-                  model.M[m_p] += 1;
-                }
-                model.event_log.push_back(
-                    {case_id, t, TransitionState::Started, start_time});
-                model.event_log.push_back(
-                    {case_id, t, TransitionState::Completed, end_time});
-
-                model.pending_transitions.erase(t);
-                model.transition_end_times[t] = end_time;
-                model.log.emplace(
-                    t, TaskInstance{start_time, end_time, thread_id});
-                return model;
-              }));
-            });
-          }
+          m = run_all(f(std::move(m)), reducers, polymorphic_actions, case_id);
         } catch (const std::exception &e) {
           spdlog::get(case_id)->error(e.what());
         }
@@ -158,15 +131,15 @@ Application::Application(const std::set<std::string> &files,
       m.log.clear();
 
       // end critiria. If there are no active transitions anymore.
-      if ((m.pending_transitions.empty() && m.M != m0) || EXIT) {
+      if (m.pending_transitions.empty() && m.M != m0) {
         break;
       }
-    };
+    } while (!EARLY_EXIT);
 
     // publish a log
     spdlog::get(case_id)->info(
-        std::string(EXIT ? "Forced shutdown" : "Deadlock") +
-            " of {0}-net. End trace is {1}",
+        std::string(EARLY_EXIT ? "Forced shutdown" : "Deadlock") +
+            " of {0}-net. Trace-hash is {1}",
         case_id, calculateTrace(m.event_log));
 
     // stop the thread pool

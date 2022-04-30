@@ -5,26 +5,9 @@
 #include <vector>
 
 #include "Symmetri/symmetri.h"
-#include "model.h"
 
 namespace symmetri {
 struct StoppablePool {
-  StoppablePool(unsigned int thread_count,
-                const std::shared_ptr<std::atomic<bool>> &_stop,
-                const std::function<void()> &worker,
-                moodycamel::BlockingConcurrentQueue<object_t> &_actions)
-      : pool(thread_count), stop_flag(_stop), actions(_actions) {
-    std::generate(std::begin(pool), std::end(pool),
-                  [worker]() { return std::thread(worker); });
-  }
-  void stop() {
-    stop_flag->store(true);
-    for (size_t i = 0; i < pool.size(); ++i) {
-      actions.enqueue([] {});
-    }
-    join();
-  }
-
  private:
   void join() {
     for (auto &&t : pool) {
@@ -32,12 +15,36 @@ struct StoppablePool {
     }
   }
   std::vector<std::thread> pool;
-  std::shared_ptr<std::atomic<bool>> stop_flag;
+  std::atomic<bool> stop_flag;
   moodycamel::BlockingConcurrentQueue<object_t> &actions;
-};
 
-StoppablePool executeTransition(
-    moodycamel::BlockingConcurrentQueue<object_t> &actions,
-    unsigned int thread_count, const std::string &case_id);
+ public:
+  StoppablePool(unsigned int thread_count,
+                moodycamel::BlockingConcurrentQueue<object_t> &_actions)
+      : pool(thread_count), stop_flag(false), actions(_actions) {
+    auto worker = [this] {
+      object_t transition;
+      while (stop_flag.load() == false) {
+        if (actions.wait_dequeue_timed(transition,
+                                       std::chrono::milliseconds(250))) {
+          if (stop_flag.load() == true) {
+            break;
+          }
+          run(transition);
+        }
+      };
+    };
+
+    std::generate(std::begin(pool), std::end(pool),
+                  [worker]() { return std::thread(worker); });
+  }
+  void stop() {
+    stop_flag.store(true);
+    for (size_t i = 0; i < pool.size(); ++i) {
+      actions.enqueue([] {});
+    }
+    join();
+  }
+};
 
 }  // namespace symmetri
