@@ -15,6 +15,10 @@ namespace symmetri {
 
 struct Model;
 using Reducer = std::function<Model &(Model &&)>;
+Reducer createReducerForTransitionCompletion(const std::string &T_i,
+                                             const std::string &case_id,
+                                             clock_t::time_point start_time,
+                                             clock_t::time_point end_time);
 
 using TaskInstance =
     std::tuple<clock_t::time_point, clock_t::time_point, size_t>;

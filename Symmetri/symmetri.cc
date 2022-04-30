@@ -85,8 +85,14 @@ Application::Application(const std::set<std::string> &files,
     BlockingConcurrentQueue<object_t> polymorphic_actions(256);
 
     // register a function that "forces" transitions into the queue.
-    p = [&a = polymorphic_actions, &store](const std::string &t) {
-      a.enqueue(store.at(t));
+    p = [&](const std::string &t) {
+      polymorphic_actions.enqueue([&, &task = store.at(t)] {
+        const auto start_time = clock_t::now();
+        run(task);
+        const auto end_time = clock_t::now();
+        reducers.enqueue(createReducerForTransitionCompletion(
+            t, case_id, start_time, end_time));
+      });
     };
 
     // register the signal handler.

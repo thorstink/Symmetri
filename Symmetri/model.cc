@@ -7,6 +7,26 @@ auto getThreadId() {
       std::hash<std::thread::id>()(std::this_thread::get_id()));
 }
 
+Reducer createReducerForTransitionCompletion(const std::string &T_i,
+                                             const std::string &case_id,
+                                             clock_t::time_point start_time,
+                                             clock_t::time_point end_time) {
+  return [=, thread_id = getThreadId()](Model &&model) -> Model & {
+    for (const auto &m_p : model.net.at(T_i).second) {
+      model.M[m_p] += 1;
+    }
+    model.event_log.push_back(
+        {case_id, T_i, TransitionState::Started, start_time});
+    model.event_log.push_back(
+        {case_id, T_i, TransitionState::Completed, end_time});
+
+    model.pending_transitions.erase(T_i);
+    model.transition_end_times[T_i] = end_time;
+    model.log.emplace(T_i, TaskInstance{start_time, end_time, thread_id});
+    return model;
+  };
+}
+
 Model &run_all(
     Model &model, moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
     moodycamel::BlockingConcurrentQueue<object_t> &polymorphic_actions,
@@ -27,21 +47,8 @@ Model &run_all(
         run(task);
         const auto end_time = clock_t::now();
 
-        reducers.enqueue(Reducer([=, thread_id = getThreadId()](
-                                     Model &&model) -> Model & {
-          for (const auto &m_p : model.net.at(T_i).second) {
-            model.M[m_p] += 1;
-          }
-          model.event_log.push_back(
-              {case_id, T_i, TransitionState::Started, start_time});
-          model.event_log.push_back(
-              {case_id, T_i, TransitionState::Completed, end_time});
-
-          model.pending_transitions.erase(T_i);
-          model.transition_end_times[T_i] = end_time;
-          model.log.emplace(T_i, TaskInstance{start_time, end_time, thread_id});
-          return model;
-        }));
+        reducers.enqueue(createReducerForTransitionCompletion(
+            T_i, case_id, start_time, end_time));
       });
       model.pending_transitions.insert(T_i);
     }

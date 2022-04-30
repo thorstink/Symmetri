@@ -8,12 +8,6 @@
 #include "Symmetri/symmetri.h"
 void helloWorld() { std::this_thread::sleep_for(std::chrono::seconds(1)); }
 
-inline std::string printState(symmetri::TransitionState s) {
-  return s == symmetri::TransitionState::Started     ? "Started"
-         : s == symmetri::TransitionState::Completed ? "Completed"
-                                                     : "Error";
-}
-
 int main(int argc, char *argv[]) {
   auto pnml_path_start = std::string(argv[1]);
   auto pnml_path_passive = std::string(argv[2]);
@@ -21,7 +15,7 @@ int main(int argc, char *argv[]) {
       {"t0", &helloWorld}, {"t1", &helloWorld}, {"t2", &helloWorld},
       {"t3", &helloWorld}, {"t4", &helloWorld}, {"t50", &helloWorld}};
 
-  symmetri::Application net({pnml_path_start, pnml_path_passive}, store);
+  symmetri::Application net({pnml_path_start, pnml_path_passive}, store, 2);
 
   auto t = std::async(std::launch::async, [f = net.push<float>("t50")] {
     float a;

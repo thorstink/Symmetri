@@ -20,5 +20,5 @@ add_subdirectory(Symmetri)
 # some examples using the lib
 # add_subdirectory(examples/ros_application)
 add_subdirectory(examples/flight)
-# add_subdirectory(examples/hello_world)
+add_subdirectory(examples/hello_world)
 # add_subdirectory(examples/hello_world_alt)
