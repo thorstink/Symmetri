@@ -27,6 +27,7 @@ struct StoppablePool {
           break;
         }
         run(transition);
+        transition = object_t();
       }
     };
   }
