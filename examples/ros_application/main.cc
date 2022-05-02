@@ -1,7 +1,6 @@
 #include "Symmetri/symmetri.h"
 #include "namespace_share_data.h"
 #include "some_ros.hpp"
-// #include <readerwriterqueue.h>
 
 inline static symmetri::TransitionActionMap getStore() {
   return {{"t0", &T1::action0}, {"t1", &T1::action1}, {"t2", &action2},
