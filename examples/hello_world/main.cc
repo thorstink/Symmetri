@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
 
   auto [el, result] = net();  // infinite loop
 
-  for (const auto &[caseid, t, s, c] : el) {
+  for (const auto &[caseid, t, s, c, tid] : el) {
     spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),
                  c.time_since_epoch().count());
   }

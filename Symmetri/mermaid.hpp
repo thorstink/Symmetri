@@ -87,23 +87,24 @@ auto genNet(const clock_t::time_point &now, const StateNet &net,
   return mermaid.str();
 }
 
-auto logToCsv(
-    const std::multimap<symmetri::Transition, symmetri::TaskInstance> &log) {
+std::string stringLogEventlog(const Eventlog &new_events) {
   std::stringstream log_data;
-
-  for (auto &&[task_id, task_instance] : log) {
-    auto &&[start, end, thread_id] = task_instance;
-    log_data << thread_id << ','
-             << std::chrono::duration_cast<std::chrono::milliseconds>(
-                    start.time_since_epoch())
-                    .count()
-             << ','
-             << std::chrono::duration_cast<std::chrono::milliseconds>(
-                    end.time_since_epoch())
-                    .count()
-             << ',' << task_id << '\n';
+  for (size_t i = 0; i + 1 < new_events.size(); i++) {
+    auto start = new_events[i].stamp;
+    auto end = new_events[i + 1].stamp;
+    if (new_events[i].transition == new_events[i + 1].transition) {
+      log_data << new_events[i].thread_id << ','
+               << std::chrono::duration_cast<std::chrono::milliseconds>(
+                      start.time_since_epoch())
+                      .count()
+               << ','
+               << std::chrono::duration_cast<std::chrono::milliseconds>(
+                      end.time_since_epoch())
+                      .count()
+               << ',' << new_events[i].transition << '\n';
+    }
   }
   return log_data.str();
-};
+}
 
 }  // namespace symmetri

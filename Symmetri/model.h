@@ -20,16 +20,13 @@ Reducer createReducerForTransitionCompletion(const std::string &T_i,
                                              const PolyAction &task,
                                              const std::string &case_id);
 
-using TaskInstance =
-    std::tuple<clock_t::time_point, clock_t::time_point, size_t>;
-
 struct Model {
-  Model(const clock_t::time_point &t, const StateNet &net,
+  Model(const StateNet &net,
         const std::unordered_map<std::string, symmetri::PolyAction> &store,
         const NetMarking &M0)
-      : net(net), store(store), timestamp(t), M(M0) {
+      : net(net), store(store), timestamp(clock_t::now()), M(M0) {
     for (const auto &[transition, mut] : net) {
-      transition_end_times[transition] = t;
+      transition_end_times[transition] = timestamp;
     }
   }
 
@@ -47,7 +44,6 @@ struct Model {
   clock_t::time_point timestamp;
   NetMarking M;
   std::set<Transition> pending_transitions;
-  std::multimap<Transition, TaskInstance> log;
   std::vector<Event> event_log;
   std::map<Transition, clock_t::time_point> transition_end_times;
 };

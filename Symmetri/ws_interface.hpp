@@ -58,10 +58,8 @@ class WsServer {
           now, net, M, pending_transitions, transition_end_times));
     });
   }
-  void sendLog(
-      std::multimap<symmetri::Transition, symmetri::TaskInstance> log) {
-    server->execute(
-        [log, this]() { time_data->send(symmetri::logToCsv(log)); });
+  void sendLog(const std::string &log) {
+    server->execute([log, this]() { time_data->send(log); });
   }
   void stop() {
     server->terminate();

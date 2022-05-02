@@ -10,22 +10,25 @@ auto getThreadId() {
 Reducer createReducerForTransitionCompletion(const std::string &T_i,
                                              const std::string &case_id,
                                              TransitionState result,
+                                             size_t thread_id,
                                              clock_t::time_point start_time,
                                              clock_t::time_point end_time) {
-  return [=, thread_id = getThreadId()](Model &&model) -> Model & {
+  return [=](Model &&model) -> Model & {
     if (result == TransitionState::Completed) {
       for (const auto &m_p : model.net.at(T_i).second) {
         model.M[m_p] += 1;
       }
     }
     model.event_log.push_back(
-        {case_id, T_i, TransitionState::Started, start_time});
-    model.event_log.push_back(
-        {case_id, T_i, TransitionState::Completed, end_time});
+        {case_id, T_i, TransitionState::Started, start_time, thread_id});
+    model.event_log.push_back({case_id, T_i,
+                               result == TransitionState::Completed
+                                   ? TransitionState::Completed
+                                   : TransitionState::Error,
+                               end_time, thread_id});
 
     model.pending_transitions.erase(T_i);
     model.transition_end_times[T_i] = end_time;
-    model.log.emplace(T_i, TaskInstance{start_time, end_time, thread_id});
     return model;
   };
 }
@@ -33,18 +36,19 @@ Reducer createReducerForTransitionCompletion(const std::string &T_i,
 Reducer createReducerForTransitionCompletion(const std::string &T_i,
                                              const Eventlog &el,
                                              TransitionState result,
+                                             size_t thread_id,
                                              clock_t::time_point start_time,
                                              clock_t::time_point end_time) {
-  return [=, thread_id = getThreadId()](Model &&model) -> Model & {
+  return [=](Model &&model) -> Model & {
     if (result == TransitionState::Completed) {
       for (const auto &m_p : model.net.at(T_i).second) {
         model.M[m_p] += 1;
       }
     }
+
     std::move(el.begin(), el.end(), std::back_inserter(model.event_log));
     model.pending_transitions.erase(T_i);
     model.transition_end_times[T_i] = end_time;
-    model.log.emplace(T_i, TaskInstance{start_time, end_time, thread_id});
     return model;
   };
 }
@@ -55,10 +59,11 @@ Reducer createReducerForTransitionCompletion(const std::string &T_i,
   const auto start_time = clock_t::now();
   const auto &[ev, res] = run(task);
   const auto end_time = clock_t::now();
-  return ev.empty() ? createReducerForTransitionCompletion(T_i, case_id, res,
-                                                           start_time, end_time)
+  const auto thread_id = getThreadId();
+  return ev.empty() ? createReducerForTransitionCompletion(
+                          T_i, case_id, res, thread_id, start_time, end_time)
                     : createReducerForTransitionCompletion(
-                          T_i, ev, res, start_time, end_time);
+                          T_i, ev, res, thread_id, start_time, end_time);
 }
 
 Model &run_all(

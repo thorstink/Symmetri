@@ -19,6 +19,7 @@ struct Event {
   std::string case_id, transition;
   TransitionState state;
   clock_t::time_point stamp;
+  size_t thread_id;
 };
 
 using Eventlog = std::vector<Event>;

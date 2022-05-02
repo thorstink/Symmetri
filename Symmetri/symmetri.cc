@@ -11,6 +11,7 @@
 #include <memory>
 #include <numeric>
 #include <optional>
+#include <ranges>
 #include <tuple>
 
 #include "actions.h"
@@ -22,8 +23,7 @@
 namespace symmetri {
 // Define the function to be called when ctrl-c (SIGINT) is sent to process
 bool EARLY_EXIT = false;
-std::function<void(int)> sighandler = [](int signal) { EARLY_EXIT = true; };
-inline void signal_handler(int signal) { sighandler(signal); }
+inline void signal_handler(int signal) { EARLY_EXIT = true; }
 
 using namespace moodycamel;
 
@@ -44,6 +44,13 @@ std::string printState(symmetri::TransitionState s) {
   return s == symmetri::TransitionState::Started     ? "Started"
          : s == symmetri::TransitionState::Completed ? "Completed"
                                                      : "Error";
+}
+
+Eventlog getNewEvents(const Eventlog &el, clock_t::time_point t) {
+  Eventlog new_events;
+  std::copy_if(el.begin(), el.end(), std::back_inserter(new_events),
+               [&](const auto &l) { return l.stamp > t; });
+  return new_events;
 }
 
 constexpr auto noop = [](Model &&m) -> Model & { return m; };
@@ -95,14 +102,11 @@ Application::Application(const std::set<std::string> &files,
                 });
               };
 
-              // register the signal handler.
-              sighandler = [&](int signal) { EARLY_EXIT = true; };
-
               // returns a simple stoppable threadpool.
               StoppablePool stp(thread_count, polymorphic_actions);
 
               // the initial state
-              auto m = Model(clock_t::now(), net, store, m0);
+              auto m = Model(net, store, m0);
 
               // enqueue a noop to start, not doing this would require external
               // input to 'start' (even if the petri net is alive)
@@ -110,6 +114,7 @@ Application::Application(const std::set<std::string> &files,
 
               Reducer f;
               do {
+                auto old_stamp = m.timestamp;
                 // get a reducer.
                 while ((m.pending_transitions.empty() && m.M != m0)
                            ? reducers.try_dequeue(f)
@@ -131,9 +136,9 @@ Application::Application(const std::set<std::string> &files,
                   server.value()->sendNet(m.timestamp, m.net, m.M,
                                           m.pending_transitions,
                                           m.transition_end_times);
-                  server.value()->sendLog(m.log);
+                  server.value()->sendLog(
+                      stringLogEventlog(getNewEvents(m.event_log, old_stamp)));
                 };
-                m.log.clear();
 
                 // end critiria. If there are no active transitions anymore.
                 if (m.pending_transitions.empty() && m.M != m0) {
