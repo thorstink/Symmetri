@@ -23,9 +23,13 @@ include_directories(${EIGEN3_INCLUDE_DIRS} ../includes ..)
 include(CTest)
 include(Catch)
 
-add_executable(${PROJECT_NAME}_test test_actions.cc)
-target_link_libraries(${PROJECT_NAME}_test PRIVATE Catch2::Catch2WithMain concurrentqueue)
-add_test(${PROJECT_NAME}Test ${PROJECT_NAME}_test)
+add_executable(${PROJECT_NAME}_actions_test test_actions.cc)
+target_link_libraries(${PROJECT_NAME}_actions_test PRIVATE Catch2::Catch2WithMain concurrentqueue)
+add_test(${PROJECT_NAME}_actions_test ${PROJECT_NAME}_actions_test)
+
+add_executable(${PROJECT_NAME}_parser_test test_parser.cc)
+target_link_libraries(${PROJECT_NAME}_parser_test PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME})
+add_test(${PROJECT_NAME}_parser_test ${PROJECT_NAME}_parser_test)
 
 add_executable(${PROJECT_NAME}_maxplus_test maxplus.cc)
 target_link_libraries(${PROJECT_NAME}_maxplus_test PRIVATE Catch2::Catch2WithMain)
