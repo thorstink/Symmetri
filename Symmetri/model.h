@@ -9,6 +9,7 @@
 #include <set>
 #include <tuple>
 
+#include "Symmetri/symmetri.h"
 #include "types.h"
 
 namespace symmetri {
@@ -16,15 +17,14 @@ namespace symmetri {
 struct Model;
 using Reducer = std::function<Model &(Model &&)>;
 
-Reducer createReducerForTransitionCompletion(const std::string &T_i,
-                                             const PolyAction &task,
-                                             const std::string &case_id);
+Reducer runTransition(const std::string &T_i, const PolyAction &task,
+                      const std::string &case_id);
 
 struct Model {
   Model(const StateNet &net,
         const std::unordered_map<std::string, symmetri::PolyAction> &store,
         const NetMarking &M0)
-      : net(net), store(store), timestamp(clock_t::now()), M(M0) {
+      : net(net), store(store), timestamp(clock_t::now()), M(M0), cache({}) {
     for (const auto &[transition, mut] : net) {
       transition_end_times[transition] = timestamp;
     }
@@ -46,9 +46,12 @@ struct Model {
   std::set<Transition> pending_transitions;
   std::vector<Event> event_log;
   std::map<Transition, clock_t::time_point> transition_end_times;
+  std::unordered_map<size_t, std::tuple<NetMarking, std::vector<PolyAction>,
+                                        std::set<std::string>>>
+      cache;
 };
 
-Model &run_all(
+Model &runAll(
     Model &model, moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
     moodycamel::BlockingConcurrentQueue<PolyAction> &polymorphic_actions,
     const std::string &case_id);

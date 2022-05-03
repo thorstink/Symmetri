@@ -44,7 +44,6 @@ constexpr TransitionResult run(const T &x) {
 
 class PolyAction {
  public:
-  PolyAction() {}
   template <typename T>
   PolyAction(T x) : self_(std::make_shared<model<T>>(std::move(x))) {}
 

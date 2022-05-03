@@ -17,7 +17,6 @@
 #include "actions.h"
 #include "model.h"
 #include "pnml_parser.h"
-#include "types.h"
 #include "ws_interface.hpp"
 
 namespace symmetri {
@@ -52,8 +51,6 @@ Eventlog getNewEvents(const Eventlog &el, clock_t::time_point t) {
                [&](const auto &l) { return l.stamp > t; });
   return new_events;
 }
-
-constexpr auto noop = [](Model &&m) -> Model & { return m; };
 
 bool check(const TransitionActionMap &store, const symmetri::StateNet &net) {
   return std::all_of(net.cbegin(), net.cend(), [&store](const auto &p) {
@@ -97,8 +94,7 @@ Application::Application(const std::set<std::string> &files,
               // register a function that "forces" transitions into the queue.
               p = [&](const std::string &t) {
                 polymorphic_actions.enqueue([&, &task = store.at(t)] {
-                  reducers.enqueue(
-                      createReducerForTransitionCompletion(t, task, case_id));
+                  reducers.enqueue(runTransition(t, task, case_id));
                 });
               };
 
@@ -110,7 +106,7 @@ Application::Application(const std::set<std::string> &files,
 
               // enqueue a noop to start, not doing this would require external
               // input to 'start' (even if the petri net is alive)
-              reducers.enqueue(noop);
+              reducers.enqueue([](Model &&m) -> Model & { return m; });
 
               Reducer f;
               do {
@@ -124,8 +120,8 @@ Application::Application(const std::set<std::string> &files,
                     break;
                   }
                   try {
-                    m = run_all(f(std::move(m)), reducers, polymorphic_actions,
-                                case_id);
+                    m = runAll(f(std::move(m)), reducers, polymorphic_actions,
+                               case_id);
                   } catch (const std::exception &e) {
                     spdlog::get(case_id)->error(e.what());
                   }

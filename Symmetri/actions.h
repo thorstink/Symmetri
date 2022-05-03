@@ -7,6 +7,7 @@
 #include "Symmetri/symmetri.h"
 
 namespace symmetri {
+const PolyAction noop([] {});
 struct StoppablePool {
  private:
   void join() {
@@ -19,7 +20,7 @@ struct StoppablePool {
   moodycamel::BlockingConcurrentQueue<PolyAction> &actions;
 
   void loop() const {
-    PolyAction transition;
+    PolyAction transition(noop);
     while (stop_flag.load() == false) {
       if (actions.wait_dequeue_timed(transition,
                                      std::chrono::milliseconds(250))) {
@@ -27,7 +28,7 @@ struct StoppablePool {
           break;
         }
         run(transition);
-        transition = PolyAction();
+        transition = noop;
       }
     };
   }

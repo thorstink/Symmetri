@@ -2,10 +2,6 @@
 #include <map>
 #include <set>
 #include <string>
-#include <tuple>
-#include <vector>
-
-#include "Symmetri/symmetri.h"
 
 namespace symmetri {
 using Place = std::string;
