@@ -21,7 +21,7 @@ struct StoppablePool {
 
   void loop() const {
     PolyAction transition(noop);
-    while (stop_flag.load() == false) {
+    do {
       if (actions.wait_dequeue_timed(transition,
                                      std::chrono::milliseconds(250))) {
         if (stop_flag.load() == true) {
@@ -30,7 +30,7 @@ struct StoppablePool {
         run(transition);
         transition = noop;
       }
-    };
+    } while (true);
   }
 
  public:
