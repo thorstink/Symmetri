@@ -68,7 +68,7 @@ Application::Application(const std::set<std::string> &files,
                          const TransitionActionMap &store,
                          unsigned int thread_count, const std::string &case_id,
                          bool interface) {
-  const auto &[net, m0] = constructTransitionMutationMatrices(files);
+  const auto &[net, m0] = readPetriNets(files);
 
   signal(SIGINT, signal_handler);
   std::stringstream s;

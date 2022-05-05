@@ -10,7 +10,7 @@
 using namespace tinyxml2;
 using namespace symmetri;
 
-std::tuple<StateNet, NetMarking> constructTransitionMutationMatrices(
+std::tuple<StateNet, NetMarking> readPetriNets(
     const std::set<std::string> &files) {
   std::set<std::string> places, transitions;
   NetMarking place_initialMarking;
@@ -18,8 +18,8 @@ std::tuple<StateNet, NetMarking> constructTransitionMutationMatrices(
 
   for (auto file : files) {
     XMLDocument net;
+    spdlog::debug("PNML file-path: {0}", file);
     net.LoadFile(file.c_str());
-    spdlog::info("PNML file-path: {0}", file);
 
     tinyxml2::XMLElement *levelElement = net.FirstChildElement("pnml")
                                              ->FirstChildElement("net")
@@ -108,7 +108,7 @@ std::tuple<StateNet, NetMarking> constructTransitionMutationMatrices(
   }
   netstring << "========\n";
 
-  spdlog::info(netstring.str());
+  spdlog::debug(netstring.str());
 
   return {state_net, place_initialMarking};
 }

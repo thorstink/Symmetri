@@ -5,4 +5,4 @@
 #include "types.h"
 
 std::tuple<symmetri::StateNet, symmetri::NetMarking>
-constructTransitionMutationMatrices(const std::set<std::string> &files);
+readPetriNets(const std::set<std::string> &files);
