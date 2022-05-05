@@ -48,7 +48,7 @@ class WsServer {
   std::shared_ptr<Output> time_data;
   std::shared_ptr<Wsio> marking_transition;
   static std::shared_ptr<WsServer> Instance();
-  void sendNet(symmetri::clock_t::time_point now, const symmetri::StateNet &net,
+  void sendNet(symmetri::clock_s::time_point now, const symmetri::StateNet &net,
                symmetri::NetMarking M,
                std::set<symmetri::Transition> pending_transitions) {
     server->execute([=, this]() {

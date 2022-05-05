@@ -9,8 +9,8 @@ auto getThreadId() {
 
 Reducer runTransition(const std::string &T_i, const std::string &case_id,
                       TransitionState result, size_t thread_id,
-                      clock_t::time_point start_time,
-                      clock_t::time_point end_time) {
+                      clock_s::time_point start_time,
+                      clock_s::time_point end_time) {
   return [=](Model &&model) -> Model & {
     if (result == TransitionState::Completed) {
       for (const auto &m_p : model.net.at(T_i).second) {
@@ -32,7 +32,7 @@ Reducer runTransition(const std::string &T_i, const std::string &case_id,
 
 Reducer runTransition(const std::string &T_i, const Eventlog &el,
                       TransitionState result, size_t thread_id,
-                      clock_t::time_point end_time) {
+                      clock_s::time_point end_time) {
   return [=](Model &&model) -> Model & {
     if (result == TransitionState::Completed) {
       for (const auto &m_p : model.net.at(T_i).second) {
@@ -48,9 +48,9 @@ Reducer runTransition(const std::string &T_i, const Eventlog &el,
 
 Reducer runTransition(const std::string &T_i, const PolyAction &task,
                       const std::string &case_id) {
-  const auto start_time = clock_t::now();
+  const auto start_time = clock_s::now();
   const auto &[ev, res] = run(task);
-  const auto end_time = clock_t::now();
+  const auto end_time = clock_s::now();
   const auto thread_id = getThreadId();
   return ev.empty()
              ? runTransition(T_i, case_id, res, thread_id, start_time, end_time)
@@ -70,7 +70,7 @@ Model &runAll(
     Model &model, moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
     moodycamel::BlockingConcurrentQueue<PolyAction> &polymorphic_actions,
     const std::string &case_id) {
-  model.timestamp = clock_t::now();
+  model.timestamp = clock_s::now();
   std::vector<PolyAction> T;
   std::set<std::string> new_pending_transitions;
   const auto marking_hash = hashNM(model.M);
@@ -86,7 +86,7 @@ Model &runAll(
         for (auto &m_p : pre) {
           model.M[m_p] -= 1;
         }
-        T.push_back([&, T_i, &task = model.store.at(T_i)] {
+        T.push_back([&, T_i, case_id, &task = model.store.at(T_i)] {
           reducers.enqueue(runTransition(T_i, task, case_id));
         });
         new_pending_transitions.insert(T_i);

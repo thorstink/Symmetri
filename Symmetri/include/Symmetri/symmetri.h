@@ -11,14 +11,14 @@
 #include <vector>
 namespace symmetri {
 
-using clock_t = std::chrono::system_clock;
+using clock_s = std::chrono::system_clock;
 
 enum class TransitionState { Started, Completed, Error };
 
 struct Event {
   std::string case_id, transition;
   TransitionState state;
-  clock_t::time_point stamp;
+  clock_s::time_point stamp;
   size_t thread_id;
 };
 
@@ -64,7 +64,7 @@ class PolyAction {
   std::shared_ptr<const concept_t> self_;
 };
 
-using TransitionActionMap = std::unordered_map<std::string, PolyAction>;
+using Store = std::unordered_map<std::string, PolyAction>;
 
 struct Application {
  private:
@@ -72,9 +72,9 @@ struct Application {
   std::function<TransitionResult()> runApp;
 
  public:
-  Application(const std::set<std::string> &path_to_petri,
-              const TransitionActionMap &store, unsigned int thread_count,
-              const std::string &case_id = "NOCASE", bool use_webserver = true);
+  Application(const std::set<std::string> &path_to_petri, const Store &store,
+              unsigned int thread_count, const std::string &case_id = "NOCASE",
+              bool use_webserver = true);
 
   template <typename T>
   inline std::function<void(T)> push(const std::string &transition) const {

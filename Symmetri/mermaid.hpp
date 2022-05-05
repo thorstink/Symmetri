@@ -38,7 +38,7 @@ std::string placeFormatter(const std::string &id, int marking = 0) {
 const std::string conn = "---";
 const std::string header = "graph RL\n";
 
-auto genNet(const clock_t::time_point &now, const StateNet &net,
+auto genNet(const clock_s::time_point &now, const StateNet &net,
             const NetMarking &M, std::set<Transition> pending_transitions) {
   std::stringstream mermaid;
   mermaid << header;

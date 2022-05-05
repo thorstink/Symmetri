@@ -2,7 +2,7 @@
 #include "namespace_share_data.h"
 #include "some_ros.hpp"
 
-inline static symmetri::TransitionActionMap getStore() {
+inline static symmetri::Store getStore() {
   return {{"t0", &T1::action0}, {"t1", &T1::action1}, {"t2", &action2},
           {"t3", &action3},     {"t6", &action4},     {"t5", &action5}};
 };

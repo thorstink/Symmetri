@@ -16,9 +16,9 @@ symmetri::TransitionState helloResult() {
 int main(int argc, char *argv[]) {
   auto pnml_path_start = std::string(argv[1]);
   auto pnml_path_passive = std::string(argv[2]);
-  auto store = symmetri::TransitionActionMap{
-      {"t0", &helloResult}, {"t1", &helloWorld}, {"t2", &helloWorld},
-      {"t3", &helloWorld},  {"t4", &helloWorld}, {"t50", &helloWorld}};
+  auto store = symmetri::Store{{"t0", &helloResult}, {"t1", &helloWorld},
+                               {"t2", &helloWorld},  {"t3", &helloWorld},
+                               {"t4", &helloWorld},  {"t50", &helloWorld}};
 
   symmetri::Application net({pnml_path_start, pnml_path_passive}, store, 2);
 

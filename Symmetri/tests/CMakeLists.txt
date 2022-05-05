@@ -37,6 +37,10 @@ add_executable(${PROJECT_NAME}_parser_test test_parser.cc)
 target_link_libraries(${PROJECT_NAME}_parser_test PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME})
 add_test(${PROJECT_NAME}_parser_test ${PROJECT_NAME}_parser_test)
 
+add_executable(${PROJECT_NAME}_model_test test_model.cc)
+target_link_libraries(${PROJECT_NAME}_model_test PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue)
+add_test(${PROJECT_NAME}_model_test ${PROJECT_NAME}_model_test)
+
 add_executable(${PROJECT_NAME}_maxplus_test maxplus.cc)
 target_link_libraries(${PROJECT_NAME}_maxplus_test PRIVATE Catch2::Catch2WithMain)
 add_test(${PROJECT_NAME}_maxplus_test ${PROJECT_NAME}_maxplus_test)

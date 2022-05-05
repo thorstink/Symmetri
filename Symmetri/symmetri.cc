@@ -45,14 +45,14 @@ std::string printState(symmetri::TransitionState s) {
                                                      : "Error";
 }
 
-Eventlog getNewEvents(const Eventlog &el, clock_t::time_point t) {
+Eventlog getNewEvents(const Eventlog &el, clock_s::time_point t) {
   Eventlog new_events;
   std::copy_if(el.begin(), el.end(), std::back_inserter(new_events),
                [&](const auto &l) { return l.stamp > t; });
   return new_events;
 }
 
-bool check(const TransitionActionMap &store, const symmetri::StateNet &net) {
+bool check(const Store &store, const symmetri::StateNet &net) {
   return std::all_of(net.cbegin(), net.cend(), [&store](const auto &p) {
     const auto &t = std::get<0>(p);
     bool store_has_transition = store.contains(t);
@@ -64,8 +64,7 @@ bool check(const TransitionActionMap &store, const symmetri::StateNet &net) {
   });
 }
 
-Application::Application(const std::set<std::string> &files,
-                         const TransitionActionMap &store,
+Application::Application(const std::set<std::string> &files, const Store &store,
                          unsigned int thread_count, const std::string &case_id,
                          bool interface) {
   const auto &[net, m0] = readPetriNets(files);

@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
   symmetri::Application subnet({pnml1}, {{"T0", helloT("SUB_T0")}}, 1, "charon",
                                false);
 
-  symmetri::TransitionActionMap store = {
+  symmetri::Store store = {
       {"T0", subnet}, {"T1", helloT("T1")}, {"T2", helloT("T2")}};
 
   symmetri::Application bignet({pnml1, pnml2, pnml3}, store, 3, "pluto", true);
