@@ -130,8 +130,8 @@ Application::Application(const std::set<std::string> &files,
                 // server stuffies
                 if (server.has_value()) {
                   server.value()->sendNet(m.timestamp, m.net, m.M,
-                                          m.pending_transitions,
-                                          m.transition_end_times);
+                                          m.pending_transitions);
+
                   server.value()->sendLog(
                       stringLogEventlog(getNewEvents(m.event_log, old_stamp)));
                 };

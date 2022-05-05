@@ -24,28 +24,18 @@ struct Model {
   Model(const StateNet &net,
         const std::unordered_map<std::string, symmetri::PolyAction> &store,
         const NetMarking &M0)
-      : net(net), store(store), timestamp(clock_t::now()), M(M0), cache({}) {
-    for (const auto &[transition, mut] : net) {
-      transition_end_times[transition] = timestamp;
-    }
-  }
+      : net(net), store(store), timestamp(clock_t::now()), M(M0), cache({}) {}
 
   Model &operator=(const Model &x) { return *this; }
-
   Model(const Model &) = delete;
 
   const StateNet net;
   const std::unordered_map<std::string, symmetri::PolyAction> store;
 
-  // this is a random padding struct.. it seems to improve latency between
-  // transitions. Need to do it prettier/research it.
-  std::array<int, 10> pad;
-
   clock_t::time_point timestamp;
   NetMarking M;
   std::set<Transition> pending_transitions;
   std::vector<Event> event_log;
-  std::map<Transition, clock_t::time_point> transition_end_times;
   std::unordered_map<size_t, std::tuple<NetMarking, std::vector<PolyAction>,
                                         std::set<std::string>>>
       cache;

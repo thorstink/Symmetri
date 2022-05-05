@@ -26,7 +26,6 @@ Reducer runTransition(const std::string &T_i, const std::string &case_id,
                                end_time, thread_id});
 
     model.pending_transitions.erase(T_i);
-    model.transition_end_times[T_i] = end_time;
     return model;
   };
 }
@@ -43,7 +42,6 @@ Reducer runTransition(const std::string &T_i, const Eventlog &el,
 
     std::move(el.begin(), el.end(), std::back_inserter(model.event_log));
     model.pending_transitions.erase(T_i);
-    model.transition_end_times[T_i] = end_time;
     return model;
   };
 }

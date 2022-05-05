@@ -50,12 +50,10 @@ class WsServer {
   static std::shared_ptr<WsServer> Instance();
   void sendNet(symmetri::clock_t::time_point now, const symmetri::StateNet &net,
                symmetri::NetMarking M,
-               std::set<symmetri::Transition> pending_transitions,
-               std::map<symmetri::Transition, symmetri::clock_t::time_point>
-                   transition_end_times) {
+               std::set<symmetri::Transition> pending_transitions) {
     server->execute([=, this]() {
-      marking_transition->send(symmetri::genNet(
-          now, net, M, pending_transitions, transition_end_times));
+      marking_transition->send(
+          symmetri::genNet(now, net, M, pending_transitions));
     });
   }
   void sendLog(const std::string &log) {

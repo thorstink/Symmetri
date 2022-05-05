@@ -35,24 +35,11 @@ std::string placeFormatter(const std::string &id, int marking = 0) {
   return id + "((" + id + " : " + std::to_string(marking) + "))";
 }
 
-float getRatio(
-    const clock_t::time_point &now, const Transition &t,
-    const std::map<Transition, clock_t::time_point> &transition_end_times) {
-  float window = 2.5f;
-
-  return std::min<float>(
-             std::chrono::duration<float>(now - transition_end_times.at(t))
-                 .count(),
-             window) /
-         window;
-}
 const std::string conn = "---";
 const std::string header = "graph RL\n";
 
 auto genNet(const clock_t::time_point &now, const StateNet &net,
-            const NetMarking &M, std::set<Transition> pending_transitions,
-            std::map<symmetri::Transition, symmetri::clock_t::time_point>
-                transition_end_times) {
+            const NetMarking &M, std::set<Transition> pending_transitions) {
   std::stringstream mermaid;
   mermaid << header;
 
@@ -62,7 +49,7 @@ auto genNet(const clock_t::time_point &now, const StateNet &net,
       uint16_t marking = M.at(*p);
       size_t count = pre.count(*p);
 
-      float ratio = getRatio(now, t, transition_end_times);
+      float ratio = 1.0;
 
       mermaid << t
               << (pending_transitions.contains(t) ? active_transition_tag
@@ -74,7 +61,7 @@ auto genNet(const clock_t::time_point &now, const StateNet &net,
     for (auto p = post.begin(); p != post.end(); p = post.upper_bound(*p)) {
       uint16_t marking = M.at(*p);
       size_t count = post.count(*p);
-      float ratio = getRatio(now, t, transition_end_times);
+      float ratio = 1.0;
 
       mermaid << placeFormatter(*p, marking) << place_tag << conn
               << (count > 1 ? multi(count) : "") << t
