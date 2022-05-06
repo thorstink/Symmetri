@@ -19,7 +19,7 @@ using Reducer = std::function<Model &(Model &&)>;
 
 Reducer runTransition(const std::string &T_i, const PolyAction &task,
                       const std::string &case_id);
-
+size_t hashNM(const NetMarking &M);
 struct Model {
   Model(const StateNet &net, const Store &store, const NetMarking &M0)
       : net(net), store(store), timestamp(clock_s::now()), M(M0), cache({}) {}

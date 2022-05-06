@@ -57,7 +57,7 @@ Reducer runTransition(const std::string &T_i, const PolyAction &task,
              : runTransition(T_i, ev, res, thread_id, end_time);
 }
 
-inline size_t hashNM(const NetMarking &M) {
+size_t hashNM(const NetMarking &M) {
   size_t seed = 0;
   for (const auto &place : M) {
     seed ^= std::hash<uint16_t>{}(place.second) + 0x9e3779b9 + (seed << 6) +
