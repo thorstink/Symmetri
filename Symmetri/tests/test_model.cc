@@ -6,6 +6,12 @@ using namespace symmetri;
 
 // global counters to keep track of how often the transitions are called.
 unsigned int T0_COUNTER, T1_COUNTER;
+// two transition functions
+void t0() { T0_COUNTER++; }
+auto t1() {
+  T1_COUNTER++;
+  return symmetri::TransitionState::Completed;
+}
 
 // this net has a buffer at Pa of 3 tokens,
 std::tuple<StateNet, Store, NetMarking> testNet() {
@@ -15,11 +21,7 @@ std::tuple<StateNet, Store, NetMarking> testNet() {
   StateNet net = {{"t0", {{"Pa", "Pb"}, {"Pc"}}},
                   {"t1", {{"Pc", "Pc"}, {"Pb", "Pb", "Pd"}}}};
 
-  Store store = {{"t0", [] { T0_COUNTER++; }},
-                 {"t1", [] {
-                    T1_COUNTER++;
-                    return symmetri::TransitionState::Completed;
-                  }}};
+  Store store = {{"t0", &t0}, {"t1", &t1}};
 
   NetMarking m0 = {{"Pa", 4}, {"Pb", 2}, {"Pc", 0}, {"Pd", 0}};
   return {net, store, m0};
