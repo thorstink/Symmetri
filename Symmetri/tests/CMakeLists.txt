@@ -30,7 +30,7 @@ set(test_files
 install(DIRECTORY ${test_files} DESTINATION ${PROJECT_SOURCE_DIR}/build/Symmetri/tests)
 
 add_executable(${PROJECT_NAME}_actions_test test_actions.cc)
-target_link_libraries(${PROJECT_NAME}_actions_test PRIVATE Catch2::Catch2WithMain concurrentqueue)
+target_link_libraries(${PROJECT_NAME}_actions_test PRIVATE Catch2::Catch2WithMain pthread concurrentqueue)
 add_test(${PROJECT_NAME}_actions_test ${PROJECT_NAME}_actions_test)
 
 add_executable(${PROJECT_NAME}_parser_test test_parser.cc)
