@@ -3,21 +3,25 @@
 #include "model.h"
 
 using namespace symmetri;
-using namespace moodycamel;
+
+// global counters to keep track of how often the transitions are called.
+unsigned int T0_COUNTER, T1_COUNTER;
+
+// this net has a buffer at Pa of 3 tokens,
 std::tuple<StateNet, Store, NetMarking> testNet() {
-  StateNet net;
-  net["t0"] = {{"Pa", "Pb"}, {"Pc"}};
-  net["t1"] = {{"Pc"}, {"Pb", "Pd"}};
+  T0_COUNTER = 0;
+  T1_COUNTER = 0;
 
-  Store store = {{"t0", [] { return symmetri::TransitionState::Completed; }},
-                 {"t1", [] { return symmetri::TransitionState::Completed; }}};
+  StateNet net = {{"t0", {{"Pa", "Pb"}, {"Pc"}}},
+                  {"t1", {{"Pc", "Pc"}, {"Pb", "Pb", "Pd"}}}};
 
-  NetMarking m0;
-  m0["Pa"] = 3;
-  m0["Pb"] = 1;
-  m0["Pc"] = 0;
-  m0["Pd"] = 0;
+  Store store = {{"t0", [] { T0_COUNTER++; }},
+                 {"t1", [] {
+                    T1_COUNTER++;
+                    return symmetri::TransitionState::Completed;
+                  }}};
 
+  NetMarking m0 = {{"Pa", 4}, {"Pb", 2}, {"Pc", 0}, {"Pd", 0}};
   return {net, store, m0};
 }
 
@@ -44,20 +48,23 @@ TEST_CASE("Run a transition") {
   // the reducer only processes the post-conditions on the marking, for t0 that
   // means  place Pc gets a +1.
   REQUIRE(m.M["Pc"] == 1);
+  REQUIRE(T0_COUNTER == 1);
 }
 
 TEST_CASE("Run one transition iteration in a petri net") {
+  using namespace moodycamel;
+
   auto [net, store, m0] = testNet();
   auto m = Model(net, store, m0);
-  BlockingConcurrentQueue<Reducer> reducers(256);
-  BlockingConcurrentQueue<PolyAction> polymorphic_actions(256);
+  BlockingConcurrentQueue<Reducer> reducers(4);
+  BlockingConcurrentQueue<PolyAction> polymorphic_actions(4);
 
   // t0 is enabled.
   m = runAll(m, reducers, polymorphic_actions, "a");
   // t0 is dispatched but not yet run, so pre-conditions are processed but post
   // are not:
   REQUIRE(m.pending_transitions == std::set<Transition>({"t0"}));
-  REQUIRE(m.M == NetMarking({{"Pa", 2}, {"Pb", 0}, {"Pc", 0}, {"Pd", 0}}));
+  REQUIRE(m.M == NetMarking({{"Pa", 3}, {"Pb", 1}, {"Pc", 0}, {"Pd", 0}}));
   Reducer r;
   // there is no reducer yet because the task hasn't been executed yet.
   REQUIRE(!reducers.try_dequeue(r));
@@ -67,13 +74,41 @@ TEST_CASE("Run one transition iteration in a petri net") {
   // execture the actual task
   run(a);
   // now there should be a reducer
+  REQUIRE(T0_COUNTER == 1);
   REQUIRE(reducers.try_dequeue(r));
   // the marking should still be the same.
   REQUIRE(m.pending_transitions == std::set<Transition>({"t0"}));
-  REQUIRE(m.M == NetMarking({{"Pa", 2}, {"Pb", 0}, {"Pc", 0}, {"Pd", 0}}));
+  REQUIRE(m.M == NetMarking({{"Pa", 3}, {"Pb", 1}, {"Pc", 0}, {"Pd", 0}}));
   // process the reducer
   m = r(std::move(m));
   // and now the post-conditions are processed:
   REQUIRE(m.pending_transitions.empty());
-  REQUIRE(m.M == NetMarking({{"Pa", 2}, {"Pb", 0}, {"Pc", 1}, {"Pd", 0}}));
+  REQUIRE(m.M == NetMarking({{"Pa", 3}, {"Pb", 1}, {"Pc", 1}, {"Pd", 0}}));
+}
+
+TEST_CASE("Run until net dies") {
+  using namespace moodycamel;
+
+  auto [net, store, m0] = testNet();
+  auto m = Model(net, store, m0);
+  BlockingConcurrentQueue<Reducer> reducers(4);
+  BlockingConcurrentQueue<PolyAction> polymorphic_actions(4);
+
+  Reducer r;
+  PolyAction a([] {});
+  // we need to enqueue one 'no-operation' to start the live net.
+  reducers.enqueue([](Model&& m) -> Model& { return m; });
+  do {
+    if (reducers.try_dequeue(r)) {
+      m = runAll(r(std::move(m)), reducers, polymorphic_actions, "");
+    }
+    if (polymorphic_actions.try_dequeue(a)) {
+      run(a);
+    }
+  } while (!m.pending_transitions.empty());
+
+  // For this specific net we expect:
+  REQUIRE(m.M == NetMarking({{"Pa", 0}, {"Pb", 2}, {"Pc", 0}, {"Pd", 2}}));
+  REQUIRE(T0_COUNTER == 4);
+  REQUIRE(T1_COUNTER == 2);
 }
