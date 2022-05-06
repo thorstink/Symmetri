@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <filesystem>
+#include <iostream>
 
 #include "pnml_parser.h"
 
@@ -8,6 +9,7 @@ using namespace symmetri;
 TEST_CASE("Load p1.pnml net") {
   const std::string pnml_file =
       std::filesystem::current_path().append("assets/n1.pnml");
+  std::cout << pnml_file << std::endl;
   const auto &[net, m0] = readPetriNets({pnml_file});
 
   // for this particular net, the initial marking is:
