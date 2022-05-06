@@ -10,7 +10,6 @@
 #include <tuple>
 
 #include "Symmetri/symmetri.h"
-#include "types.h"
 
 namespace symmetri {
 

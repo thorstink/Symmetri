@@ -73,7 +73,7 @@ TEST_CASE("Run one transition iteration in a petri net") {
   // there is an action to be dequed.
   REQUIRE(polymorphic_actions.try_dequeue(a));
   // execture the actual task
-  run(a);
+  runTransition(a);
   // now there should be a reducer
   REQUIRE(T0_COUNTER == 1);
   REQUIRE(reducers.try_dequeue(r));
@@ -104,7 +104,7 @@ TEST_CASE("Run until net dies") {
       m = runAll(r(std::move(m)), reducers, polymorphic_actions);
     }
     if (polymorphic_actions.try_dequeue(a)) {
-      run(a);
+      runTransition(a);
     }
   } while (!m.pending_transitions.empty());
 
@@ -146,8 +146,8 @@ TEST_CASE("Marking memoization") {
   // note that we can not easily check equality PolyActions afaik. But to be
   // sure, we will see that both the actual and expected memoized PolyAction
   // increment t0-counter.
-  run(std::get<std::vector<PolyAction>>(actual_memoization)[0]);
+  runTransition(std::get<std::vector<PolyAction>>(actual_memoization)[0]);
   REQUIRE(T0_COUNTER == 1);
-  run(std::get<std::vector<PolyAction>>(expect_memoization)[0]);
+  runTransition(std::get<std::vector<PolyAction>>(expect_memoization)[0]);
   REQUIRE(T0_COUNTER == 2);
 }

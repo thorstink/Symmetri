@@ -18,7 +18,7 @@ if(NOT concurrentqueue_POPULATED)
 endif()
 
 
-include_directories(${EIGEN3_INCLUDE_DIRS} ../includes ..)
+include_directories(${EIGEN3_INCLUDE_DIRS} ../include ..)
 
 include(CTest)
 include(Catch)
@@ -40,6 +40,10 @@ add_test(${PROJECT_NAME}_parser_test ${PROJECT_NAME}_parser_test)
 add_executable(${PROJECT_NAME}_model_test test_model.cc)
 target_link_libraries(${PROJECT_NAME}_model_test PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue)
 add_test(${PROJECT_NAME}_model_test ${PROJECT_NAME}_model_test)
+
+add_executable(${PROJECT_NAME}_symmetri_test test_symmetri.cc)
+target_link_libraries(${PROJECT_NAME}_symmetri_test PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue)
+add_test(${PROJECT_NAME}_symmetri_test ${PROJECT_NAME}_symmetri_test)
 
 add_executable(${PROJECT_NAME}_maxplus_test maxplus.cc)
 target_link_libraries(${PROJECT_NAME}_maxplus_test PRIVATE Catch2::Catch2WithMain)

@@ -27,7 +27,7 @@ struct StoppablePool {
         if (stop_flag.load() == true) {
           break;
         }
-        run(transition);
+        runTransition(transition);
         transition = noop;
       }
     } while (true);

@@ -49,7 +49,7 @@ Reducer runTransition(const std::string &T_i, const Eventlog &el,
 Reducer runTransition(const std::string &T_i, const PolyAction &task,
                       const std::string &case_id) {
   const auto start_time = clock_s::now();
-  const auto &[ev, res] = run(task);
+  const auto &[ev, res] = runTransition(task);
   const auto end_time = clock_s::now();
   const auto thread_id = getThreadId();
   return ev.empty()

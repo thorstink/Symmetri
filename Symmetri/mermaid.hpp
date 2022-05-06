@@ -3,7 +3,7 @@
 #include <sstream>
 #include <string>
 
-#include "types.h"
+#include "Symmetri/types.h"
 
 namespace symmetri {
 

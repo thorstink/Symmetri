@@ -1,14 +1,15 @@
 #pragma once
 
 #include <chrono>
-#include <cstdlib>
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "Symmetri/types.h"
+
 namespace symmetri {
 
 using clock_s = std::chrono::system_clock;
@@ -29,7 +30,7 @@ size_t calculateTrace(std::vector<Event> event_log);
 std::string printState(symmetri::TransitionState s);
 
 template <typename T>
-constexpr TransitionResult run(const T &x) {
+constexpr TransitionResult runTransition(const T &x) {
   if constexpr (std::is_same_v<void, decltype(x())>) {
     x();
     return {{}, TransitionState::Completed};
@@ -47,7 +48,9 @@ class PolyAction {
   template <typename T>
   PolyAction(T x) : self_(std::make_shared<model<T>>(std::move(x))) {}
 
-  friend TransitionResult run(const PolyAction &x) { return x.self_->run_(); }
+  friend TransitionResult runTransition(const PolyAction &x) {
+    return x.self_->run_();
+  }
 
  private:
   struct concept_t {
@@ -56,9 +59,11 @@ class PolyAction {
   };
   template <typename T>
   struct model final : concept_t {
-    model(T x) : data_(std::move(x)) {}
-    TransitionResult run_() const override { return run(data_); }
-    T data_;
+    model(T x) : transition_function_(std::move(x)) {}
+    TransitionResult run_() const override {
+      return runTransition(transition_function_);
+    }
+    T transition_function_;
   };
 
   std::shared_ptr<const concept_t> self_;
@@ -70,11 +75,18 @@ struct Application {
  private:
   std::function<void(const std::string &t)> p;
   std::function<TransitionResult()> runApp;
+  std::function<TransitionResult()> createApplication(
+      const symmetri::StateNet &net, const symmetri::NetMarking &m0,
+      const Store &store, unsigned int thread_count, const std::string &case_id,
+      bool interface);
 
  public:
   Application(const std::set<std::string> &path_to_petri, const Store &store,
               unsigned int thread_count, const std::string &case_id = "NOCASE",
               bool use_webserver = true);
+  Application(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
+              const Store &store, unsigned int thread_count,
+              const std::string &case_id, bool interface);
 
   template <typename T>
   inline std::function<void(T)> push(const std::string &transition) const {
