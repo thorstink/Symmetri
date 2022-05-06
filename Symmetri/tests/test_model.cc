@@ -6,14 +6,13 @@ using namespace symmetri;
 
 // global counters to keep track of how often the transitions are called.
 unsigned int T0_COUNTER, T1_COUNTER;
-// two transition
+// two transitions
 void t0() { T0_COUNTER++; }
 auto t1() {
   T1_COUNTER++;
   return symmetri::TransitionState::Completed;
 }
 
-// this net has a buffer at Pa of 3 tokens,
 std::tuple<StateNet, Store, NetMarking> testNet() {
   T0_COUNTER = 0;
   T1_COUNTER = 0;
@@ -62,7 +61,7 @@ TEST_CASE("Run one transition iteration in a petri net") {
   BlockingConcurrentQueue<PolyAction> polymorphic_actions(4);
 
   // t0 is enabled.
-  m = runAll(m, reducers, polymorphic_actions, "a");
+  m = runAll(m, reducers, polymorphic_actions);
   // t0 is dispatched but not yet run, so pre-conditions are processed but post
   // are not:
   REQUIRE(m.pending_transitions == std::set<Transition>({"t0"}));
@@ -102,7 +101,7 @@ TEST_CASE("Run until net dies") {
   reducers.enqueue([](Model&& m) -> Model& { return m; });
   do {
     if (reducers.try_dequeue(r)) {
-      m = runAll(r(std::move(m)), reducers, polymorphic_actions, "");
+      m = runAll(r(std::move(m)), reducers, polymorphic_actions);
     }
     if (polymorphic_actions.try_dequeue(a)) {
       run(a);
@@ -125,7 +124,7 @@ TEST_CASE("Marking memoization") {
   // take two copies.
   auto m_one = Model(net, store, m0);
   REQUIRE(m_one.cache.size() == 0);
-  m_one = runAll(m_one, reducers, polymorphic_actions, "");
+  m_one = runAll(m_one, reducers, polymorphic_actions);
   REQUIRE(m_one.cache.size() == 1);
   // for this test, we leave this specific PolyAction queued and not execute it.
   // The counter hence stays 0.
@@ -146,7 +145,7 @@ TEST_CASE("Marking memoization") {
 
   // note that we can not easily check equality PolyActions afaik. But to be
   // sure, we will see that both the actual and expected memoized PolyAction
-  // increments t0-counter.
+  // increment t0-counter.
   run(std::get<std::vector<PolyAction>>(actual_memoization)[0]);
   REQUIRE(T0_COUNTER == 1);
   run(std::get<std::vector<PolyAction>>(expect_memoization)[0]);

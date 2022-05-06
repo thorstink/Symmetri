@@ -42,6 +42,6 @@ struct Model {
 Model &runAll(
     Model &model, moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
     moodycamel::BlockingConcurrentQueue<PolyAction> &polymorphic_actions,
-    const std::string &case_id);
+    const std::string &case_id = "undefined_case_id");
 
 }  // namespace symmetri
