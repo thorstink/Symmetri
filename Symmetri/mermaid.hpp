@@ -35,8 +35,8 @@ std::string placeFormatter(const std::string &id, int marking = 0) {
   return id + "((" + id + " : " + std::to_string(marking) + "))";
 }
 
-const std::string conn = "---";
-const std::string header = "graph RL\n";
+const std::string conn = "-->";
+const std::string header = "graph LR\n";
 
 auto genNet(const clock_s::time_point &now, const StateNet &net,
             const NetMarking &M, std::set<Transition> pending_transitions) {
@@ -51,23 +51,22 @@ auto genNet(const clock_s::time_point &now, const StateNet &net,
 
       float ratio = 1.0;
 
-      mermaid << t
+      mermaid << placeFormatter(*p, marking) << place_tag << conn
+              << (count > 1 ? multi(count) : "") << t
               << (pending_transitions.contains(t) ? active_transition_tag
                                                   : opacity(ratio))
-              << conn << (count > 1 ? multi(count) : "")
-              << placeFormatter(*p, marking) << place_tag << "\n";
+              << "\n";
     }
 
     for (auto p = post.begin(); p != post.end(); p = post.upper_bound(*p)) {
       uint16_t marking = M.at(*p);
       size_t count = post.count(*p);
       float ratio = 1.0;
-
-      mermaid << placeFormatter(*p, marking) << place_tag << conn
-              << (count > 1 ? multi(count) : "") << t
+      mermaid << t
               << (pending_transitions.contains(t) ? active_transition_tag
                                                   : opacity(ratio))
-              << "\n";
+              << conn << (count > 1 ? multi(count) : "")
+              << placeFormatter(*p, marking) << place_tag << "\n";
     }
   }
   mermaid << place_class << active_transition_class << footer;
