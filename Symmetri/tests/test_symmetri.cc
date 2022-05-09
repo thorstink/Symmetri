@@ -28,8 +28,8 @@ TEST_CASE("Create a using the net constructor.") {
 }
 
 TEST_CASE("Create a using pnml constructor.") {
-  const std::string pnml_file =
-      std::filesystem::current_path().append("assets/PT1.pnml");
+  const std::string pnml_file = std::filesystem::current_path().append(
+      "../../../Symmetri/tests/assets/PT1.pnml");
 
   {
     // This store is not appropriate for this net,
