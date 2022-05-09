@@ -10,7 +10,7 @@
 using namespace tinyxml2;
 using namespace symmetri;
 
-std::tuple<StateNet, NetMarking> constructTransitionMutationMatrices(
+std::tuple<StateNet, NetMarking> readPetriNets(
     const std::set<std::string> &files) {
   std::set<std::string> places, transitions;
   NetMarking place_initialMarking;
@@ -18,8 +18,8 @@ std::tuple<StateNet, NetMarking> constructTransitionMutationMatrices(
 
   for (auto file : files) {
     XMLDocument net;
+    spdlog::debug("PNML file-path: {0}", file);
     net.LoadFile(file.c_str());
-    spdlog::info("PNML file-path: {0}", file);
 
     tinyxml2::XMLElement *levelElement = net.FirstChildElement("pnml")
                                              ->FirstChildElement("net")
@@ -66,14 +66,14 @@ std::tuple<StateNet, NetMarking> constructTransitionMutationMatrices(
         if (places.contains(source_id)) {
           // if the source is a place, tokens are consumed.
           if (state_net.contains(target_id)) {
-            state_net.find(target_id)->second.first.insert(source_id);
+            state_net.find(target_id)->second.first.push_back(source_id);
           } else {
             state_net.insert({target_id, {{source_id}, {}}});
           }
         } else if (transitions.contains(source_id)) {
           // if the destination is a place, tokens are produced.
           if (state_net.contains(source_id)) {
-            state_net.find(source_id)->second.second.insert(target_id);
+            state_net.find(source_id)->second.second.push_back(target_id);
           } else {
             state_net.insert({source_id, {{}, {target_id}}});
           }
@@ -108,7 +108,7 @@ std::tuple<StateNet, NetMarking> constructTransitionMutationMatrices(
   }
   netstring << "========\n";
 
-  spdlog::info(netstring.str());
+  spdlog::debug(netstring.str());
 
   return {state_net, place_initialMarking};
 }

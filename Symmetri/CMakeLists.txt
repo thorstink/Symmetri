@@ -17,20 +17,6 @@ if(NOT concurrentqueue_POPULATED)
   add_subdirectory(${concurrentqueue_SOURCE_DIR} ${concurrentqueue_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
-FetchContent_Declare(
-  readerwriterqueue
-  GIT_REPOSITORY    https://github.com/cameron314/readerwriterqueue
-  GIT_TAG           master
-)
-
-# FetchContent_MakeAvailable(readerwriterqueue)
-# https://stackoverflow.com/questions/65527126/disable-install-for-fetchcontent
-FetchContent_GetProperties(readerwriterqueue)
-if(NOT readerwriterqueue)
-  FetchContent_Populate(readerwriterqueue)
-  add_subdirectory(${readerwriterqueue_SOURCE_DIR} ${readerwriterqueue_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif()
-
 # build shared and static versions of the library
 message(STATUS "Building Symmetri - shared: ${BUILD_SHARED_LIBS}")
 
@@ -39,7 +25,7 @@ include_directories(include includes submodules ${SEASOCKS_INCLUDE_DIRS} )
 
 #lib
 add_library(${PROJECT_NAME} symmetri.cc model.cc pnml_parser.cc submodules/tinyxml2/tinyxml2.cpp)
-target_link_libraries(${PROJECT_NAME} PRIVATE pthread Seasocks::seasocks readerwriterqueue spdlog::spdlog concurrentqueue)
+target_link_libraries(${PROJECT_NAME} PRIVATE pthread Seasocks::seasocks spdlog::spdlog concurrentqueue)
 target_include_directories(${PROJECT_NAME} INTERFACE include)
 
 set(ui_files

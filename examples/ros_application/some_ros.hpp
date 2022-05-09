@@ -5,7 +5,7 @@
 #include <chrono>
 #include <thread>
 
-#include "types.h"
+#include "Symmetri/types.h"
 
 namespace ros_example {
 

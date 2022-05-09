@@ -3,7 +3,7 @@
 #include <sstream>
 #include <string>
 
-#include "types.h"
+#include "Symmetri/types.h"
 
 namespace symmetri {
 
@@ -35,75 +35,68 @@ std::string placeFormatter(const std::string &id, int marking = 0) {
   return id + "((" + id + " : " + std::to_string(marking) + "))";
 }
 
-float getRatio(
-    const clock_t::time_point &now, const Transition &t,
-    const std::map<Transition, clock_t::time_point> &transition_end_times) {
-  float window = 2.5f;
+const std::string conn = "-->";
+const std::string header = "graph LR\n";
 
-  return std::min<float>(
-             std::chrono::duration<float>(now - transition_end_times.at(t))
-                 .count(),
-             window) /
-         window;
-}
-const std::string conn = "---";
-const std::string header = "graph RL\n";
-
-auto genNet(const clock_t::time_point &now, const StateNet &net,
-            const NetMarking &M, std::set<Transition> pending_transitions,
-            std::map<symmetri::Transition, symmetri::clock_t::time_point>
-                transition_end_times) {
+auto genNet(const clock_s::time_point &now, const StateNet &net,
+            const NetMarking &M, std::set<Transition> pending_transitions) {
   std::stringstream mermaid;
   mermaid << header;
 
   for (const auto &[t, mut] : net) {
-    const auto &[pre, post] = mut;
-    for (auto p = pre.begin(); p != pre.end(); p = pre.upper_bound(*p)) {
-      uint16_t marking = M.at(*p);
-      size_t count = pre.count(*p);
+    auto [pre, post] = mut;
+    auto last_pre = std::unique(pre.begin(), pre.end());
+    auto last_post = std::unique(post.begin(), post.end());
+    pre.erase(last_pre, pre.end());
+    post.erase(last_post, post.end());
+    for (const auto &p : pre) {
+      uint16_t marking = M.at(p);
+      size_t count = std::count(std::begin(mut.first), std::end(mut.first), p);
 
-      float ratio = getRatio(now, t, transition_end_times);
+      float ratio = 1.0;
 
-      mermaid << t
-              << (pending_transitions.contains(t) ? active_transition_tag
-                                                  : opacity(ratio))
-              << conn << (count > 1 ? multi(count) : "")
-              << placeFormatter(*p, marking) << place_tag << "\n";
-    }
-
-    for (auto p = post.begin(); p != post.end(); p = post.upper_bound(*p)) {
-      uint16_t marking = M.at(*p);
-      size_t count = post.count(*p);
-      float ratio = getRatio(now, t, transition_end_times);
-
-      mermaid << placeFormatter(*p, marking) << place_tag << conn
+      mermaid << placeFormatter(p, marking) << place_tag << conn
               << (count > 1 ? multi(count) : "") << t
               << (pending_transitions.contains(t) ? active_transition_tag
                                                   : opacity(ratio))
               << "\n";
+    }
+
+    for (const auto &p : post) {
+      uint16_t marking = M.at(p);
+      size_t count =
+          std::count(std::begin(mut.second), std::end(mut.second), p);
+
+      float ratio = 1.0;
+      mermaid << t
+              << (pending_transitions.contains(t) ? active_transition_tag
+                                                  : opacity(ratio))
+              << conn << (count > 1 ? multi(count) : "")
+              << placeFormatter(p, marking) << place_tag << "\n";
     }
   }
   mermaid << place_class << active_transition_class << footer;
   return mermaid.str();
 }
 
-auto logToCsv(
-    const std::multimap<symmetri::Transition, symmetri::TaskInstance> &log) {
+std::string stringLogEventlog(const Eventlog &new_events) {
   std::stringstream log_data;
-
-  for (auto &&[task_id, task_instance] : log) {
-    auto &&[start, end, thread_id] = task_instance;
-    log_data << thread_id << ','
-             << std::chrono::duration_cast<std::chrono::milliseconds>(
-                    start.time_since_epoch())
-                    .count()
-             << ','
-             << std::chrono::duration_cast<std::chrono::milliseconds>(
-                    end.time_since_epoch())
-                    .count()
-             << ',' << task_id << '\n';
+  for (size_t i = 0; i + 1 < new_events.size(); i++) {
+    auto start = new_events[i].stamp;
+    auto end = new_events[i + 1].stamp;
+    if (new_events[i].transition == new_events[i + 1].transition) {
+      log_data << new_events[i].thread_id << ','
+               << std::chrono::duration_cast<std::chrono::milliseconds>(
+                      start.time_since_epoch())
+                      .count()
+               << ','
+               << std::chrono::duration_cast<std::chrono::milliseconds>(
+                      end.time_since_epoch())
+                      .count()
+               << ',' << new_events[i].transition << '\n';
+    }
   }
   return log_data.str();
-};
+}
 
 }  // namespace symmetri

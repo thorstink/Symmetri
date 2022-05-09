@@ -32,7 +32,7 @@ and look at `http://localhost:2222/` for a live view of the activity.
 - Put in different eventloop?
 - simplify model, base logging/vis on event_log.
 - simplify visualization/graph
-- refactor to (Testable) functions
+- Add printing functions
 - investige state = marking + active transitions?
 - Write some tests
 - Create piano
