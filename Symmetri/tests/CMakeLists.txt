@@ -28,9 +28,6 @@ set(test_files
   assets
 )
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0 --coverage -fprofile-arcs -ftest-coverage")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 --coverage -fprofile-arcs -ftest-coverage")
-
 install(DIRECTORY ${test_files} DESTINATION ${PROJECT_SOURCE_DIR}/build/Symmetri/tests)
 
 add_executable(${PROJECT_NAME}_actions_test test_actions.cc)
