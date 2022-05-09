@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
                                {"t3", &helloWorld},
                                {"t4", &helloWorld}};
 
-  symmetri::Application net({pnml_path_start}, store, 2);
+  symmetri::Application net({pnml_path_start}, store, 2, "l", true);
 
   auto [el, result] = net();  // infinite loop
 

@@ -31,7 +31,8 @@ TEST_CASE("Load p1.pnml net") {
   net_test["t2"] = {{"P2", "P5"}, {"P6"}};
   net_test["t3"] = {{"P6", "P8"}, {"P0", "P1", "P2", "P3"}};
   net_test["t4"] = {{"P7"}, {"P8"}};
-  REQUIRE(net_test == net);
+  REQUIRE(StateNetEquality(net_test, net));
+  // REQUIRE(net_test == net);
 }
 
 TEST_CASE("Load p1_multi.pnml net") {
@@ -61,7 +62,8 @@ TEST_CASE("Load p1_multi.pnml net") {
   // in this variant of this net, the transition from P6 to t3 has weight 2.
   net_test["t3"] = {{"P6", "P6", "P8"}, {"P0", "P1", "P2", "P3"}};
   net_test["t4"] = {{"P7"}, {"P8"}};
-  REQUIRE(net_test == net);
+  // REQUIRE(net_test == net);
+  REQUIRE(StateNetEquality(net_test, net));
 }
 
 TEST_CASE("Compose PT1.pnml and PT2.pnml nets") {
@@ -85,5 +87,7 @@ TEST_CASE("Compose PT1.pnml and PT2.pnml nets") {
   StateNet net_test;
   net_test["T0"] = {{"P0"}, {"P1"}};
   net_test["T1"] = {{"P1"}, {"P2"}};
-  REQUIRE(net_test == net);
+  REQUIRE(StateNetEquality(net_test, net));
+
+  // REQUIRE(net_test == net);
 }

@@ -66,14 +66,14 @@ std::tuple<StateNet, NetMarking> readPetriNets(
         if (places.contains(source_id)) {
           // if the source is a place, tokens are consumed.
           if (state_net.contains(target_id)) {
-            state_net.find(target_id)->second.first.insert(source_id);
+            state_net.find(target_id)->second.first.push_back(source_id);
           } else {
             state_net.insert({target_id, {{source_id}, {}}});
           }
         } else if (transitions.contains(source_id)) {
           // if the destination is a place, tokens are produced.
           if (state_net.contains(source_id)) {
-            state_net.find(source_id)->second.second.insert(target_id);
+            state_net.find(source_id)->second.second.push_back(target_id);
           } else {
             state_net.insert({source_id, {{}, {target_id}}});
           }

@@ -44,29 +44,35 @@ auto genNet(const clock_s::time_point &now, const StateNet &net,
   mermaid << header;
 
   for (const auto &[t, mut] : net) {
-    const auto &[pre, post] = mut;
-    for (auto p = pre.begin(); p != pre.end(); p = pre.upper_bound(*p)) {
-      uint16_t marking = M.at(*p);
-      size_t count = pre.count(*p);
+    auto [pre, post] = mut;
+    auto last_pre = std::unique(pre.begin(), pre.end());
+    auto last_post = std::unique(post.begin(), post.end());
+    pre.erase(last_pre, pre.end());
+    post.erase(last_post, post.end());
+    for (const auto &p : pre) {
+      uint16_t marking = M.at(p);
+      size_t count = std::count(std::begin(mut.first), std::end(mut.first), p);
 
       float ratio = 1.0;
 
-      mermaid << placeFormatter(*p, marking) << place_tag << conn
+      mermaid << placeFormatter(p, marking) << place_tag << conn
               << (count > 1 ? multi(count) : "") << t
               << (pending_transitions.contains(t) ? active_transition_tag
                                                   : opacity(ratio))
               << "\n";
     }
 
-    for (auto p = post.begin(); p != post.end(); p = post.upper_bound(*p)) {
-      uint16_t marking = M.at(*p);
-      size_t count = post.count(*p);
+    for (const auto &p : post) {
+      uint16_t marking = M.at(p);
+      size_t count =
+          std::count(std::begin(mut.second), std::end(mut.second), p);
+
       float ratio = 1.0;
       mermaid << t
               << (pending_transitions.contains(t) ? active_transition_tag
                                                   : opacity(ratio))
               << conn << (count > 1 ? multi(count) : "")
-              << placeFormatter(*p, marking) << place_tag << "\n";
+              << placeFormatter(p, marking) << place_tag << "\n";
     }
   }
   mermaid << place_class << active_transition_class << footer;

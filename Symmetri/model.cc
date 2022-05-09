@@ -81,7 +81,8 @@ Model &runAll(
       const auto &pre = mut.first;
       if (!pre.empty() &&
           std::all_of(std::begin(pre), std::end(pre), [&](const auto &m_p) {
-            return model.M[m_p] >= pre.count(m_p);
+            auto count = std::count(std::begin(pre), std::end(pre), m_p);
+            return model.M[m_p] >= count;
           })) {
         for (auto &m_p : pre) {
           model.M[m_p] -= 1;

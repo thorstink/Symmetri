@@ -26,6 +26,15 @@ std::tuple<StateNet, Store, NetMarking> testNet() {
   return {net, store, m0};
 }
 
+TEST_CASE("Test equaliy of nets") {
+  auto [net, store, m0] = testNet();
+  auto net2 = net;
+  REQUIRE(StateNetEquality(net, net2));
+  // change net
+  net2.insert({"tx", {{}, {}}});
+  REQUIRE(!StateNetEquality(net, net2));
+}
+
 TEST_CASE("Create a model") {
   auto [net, store, m0] = testNet();
   auto before_model_creation = clock_s::now();
