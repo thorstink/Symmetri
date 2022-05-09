@@ -18,6 +18,9 @@ inline bool StateNetEquality(const StateNet& net1, const StateNet& net2) {
   for (const auto& [t1, mut1] : net1) {
     if (net2.contains(t1)) {
       for (const auto& pre : mut1.first) {
+        if (mut1.first.size() != net2.at(t1).first.size()) {
+          return false;
+        }
         if (std::count(std::begin(mut1.first), std::end(mut1.first), pre) !=
             std::count(std::begin(net2.at(t1).first),
                        std::end(net2.at(t1).first), pre)) {
@@ -25,6 +28,9 @@ inline bool StateNetEquality(const StateNet& net1, const StateNet& net2) {
         }
       }
       for (const auto& post : mut1.second) {
+        if (mut1.second.size() != net2.at(t1).second.size()) {
+          return false;
+        }
         if (std::count(std::begin(mut1.second), std::end(mut1.second), post) !=
             std::count(std::begin(net2.at(t1).second),
                        std::end(net2.at(t1).second), post)) {
