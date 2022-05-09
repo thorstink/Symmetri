@@ -17,6 +17,7 @@ if(NOT concurrentqueue_POPULATED)
   add_subdirectory(${concurrentqueue_SOURCE_DIR} ${concurrentqueue_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
+enable_testing()
 
 include_directories(${EIGEN3_INCLUDE_DIRS} ../include ..)
 
@@ -26,6 +27,9 @@ include(Catch)
 set(test_files
   assets
 )
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0 --coverage -fprofile-arcs -ftest-coverage")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 --coverage -fprofile-arcs -ftest-coverage")
 
 install(DIRECTORY ${test_files} DESTINATION ${PROJECT_SOURCE_DIR}/build/Symmetri/tests)
 
