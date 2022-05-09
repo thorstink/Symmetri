@@ -15,7 +15,7 @@ $(function begin() {
             .remove(function (t) {
                 return t.end < (vega.peek(view.data('table')).end - window*1000)
             });
-            view.change('table', changeSet).runTransition();
+            view.change('table', changeSet).run();
         }
         }).catch(console.warn);
 });
