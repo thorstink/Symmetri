@@ -42,5 +42,5 @@ jobs:
         ctest -VV
         gcovr -r ../ .
         lcov --capture --directory . --output-file coverage.info
-        lcov --remove coverage.info -o filtered.info     '/usr/include/*' '/usr/local/include/*' '/usr/lib/*'
-        genhtml filtered.info --output-directory coverage
+        # lcov --remove coverage.info -o filtered.info     '/usr/include/*' '/usr/local/include/*' '/usr/lib/*'
+        # genhtml filtered.info --output-directory coverage
