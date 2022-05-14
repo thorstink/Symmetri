@@ -71,6 +71,11 @@ class PolyAction {
   std::shared_ptr<const concept_t> self_;
 };
 
+std::function<TransitionResult()> retryFunc(const symmetri::PolyAction &f,
+                                            const symmetri::Transition &t,
+                                            std::string &case_id,
+                                            unsigned int retry_count = 3);
+
 using Store = std::unordered_map<std::string, PolyAction>;
 
 struct Application {

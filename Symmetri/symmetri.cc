@@ -64,6 +64,36 @@ bool check(const Store &store, const symmetri::StateNet &net) {
   });
 }
 
+std::function<TransitionResult()> retryFunc(const symmetri::PolyAction &f,
+                                            const symmetri::Transition &t,
+                                            std::string &case_id,
+                                            unsigned int retry_count) {
+  return [=]() -> std::pair<symmetri::Eventlog, symmetri::TransitionState> {
+    symmetri::Eventlog log;
+    symmetri::TransitionState res;
+    unsigned int attempts = 0;
+    do {
+      attempts++;
+      const auto thread_id = static_cast<size_t>(
+          std::hash<std::thread::id>()(std::this_thread::get_id()));
+      symmetri::Eventlog incremental_log(2);
+      const auto start_time = symmetri::clock_s::now();
+      std::tie(incremental_log, res) = runTransition(f);
+      const auto end_time = symmetri::clock_s::now();
+      if (incremental_log.empty()) {
+        incremental_log.push_back({case_id, t,
+                                   symmetri::TransitionState::Started,
+                                   start_time, thread_id});
+        incremental_log.push_back({case_id, t, res, end_time, thread_id});
+      }
+      std::move(incremental_log.begin(), incremental_log.end(),
+                std::back_inserter(log));
+
+    } while (symmetri::TransitionState::Error == res && attempts < retry_count);
+    return {log, res};
+  };
+}
+
 Application::Application(const std::set<std::string> &files, const Store &store,
                          unsigned int thread_count, const std::string &case_id,
                          bool interface) {
