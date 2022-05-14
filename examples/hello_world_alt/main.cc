@@ -1,5 +1,7 @@
 #include <spdlog/spdlog.h>
 
+#include <optional>
+
 #include "Symmetri/symmetri.h"
 void helloWorld() { std::this_thread::sleep_for(std::chrono::seconds(1)); }
 
@@ -8,7 +10,7 @@ int main(int argc, char *argv[]) {
   auto store = symmetri::Store{{"t0", &helloWorld},
                                {"t1", &helloWorld},
                                {"t2", &helloWorld},
-                               {"t3", &helloWorld},
+                               {"t3", std::nullopt},
                                {"t4", &helloWorld}};
 
   symmetri::Application net({pnml_path_start}, store, 2, "l", true);

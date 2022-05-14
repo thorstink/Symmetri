@@ -1,10 +1,25 @@
 #include "model.h"
 
+#include <optional>
 namespace symmetri {
 
 auto getThreadId() {
   return static_cast<size_t>(
       std::hash<std::thread::id>()(std::this_thread::get_id()));
+}
+
+inline void processPreConditions(const std::vector<Place> &pre_places,
+                                 NetMarking &m) {
+  for (const auto &m_p : pre_places) {
+    m[m_p] -= 1;
+  }
+}
+
+inline void processPostConditions(const std::vector<Place> &post_places,
+                                  NetMarking &m) {
+  for (const auto &m_p : post_places) {
+    m[m_p] += 1;
+  }
 }
 
 Reducer runTransition(const std::string &T_i, const std::string &case_id,
@@ -13,9 +28,7 @@ Reducer runTransition(const std::string &T_i, const std::string &case_id,
                       clock_s::time_point end_time) {
   return [=](Model &&model) -> Model & {
     if (result == TransitionState::Completed) {
-      for (const auto &m_p : model.net.at(T_i).second) {
-        model.M[m_p] += 1;
-      }
+      processPostConditions(model.net.at(T_i).second, model.M);
     }
     model.event_log.push_back(
         {case_id, T_i, TransitionState::Started, start_time, thread_id});
@@ -35,9 +48,7 @@ Reducer runTransition(const std::string &T_i, const Eventlog &el,
                       clock_s::time_point end_time) {
   return [=](Model &&model) -> Model & {
     if (result == TransitionState::Completed) {
-      for (const auto &m_p : model.net.at(T_i).second) {
-        model.M[m_p] += 1;
-      }
+      processPostConditions(model.net.at(T_i).second, model.M);
     }
 
     std::move(el.begin(), el.end(), std::back_inserter(model.event_log));
@@ -84,12 +95,17 @@ Model &runAll(
             auto count = std::count(std::begin(pre), std::end(pre), m_p);
             return model.M[m_p] >= count;
           })) {
-        for (auto &m_p : pre) {
-          model.M[m_p] -= 1;
+        processPreConditions(pre, model.M);
+        // is the function is not invocable, we short-circuit the marking
+        // mutation and do it immediately.
+        if constexpr (std::is_same_v<std::nullopt_t,
+                                     decltype(model.store.at(T_i))>) {
+          processPostConditions(model.net.at(T_i).second, model.M);
+        } else {
+          T.push_back([&, T_i, case_id, &task = model.store.at(T_i)] {
+            reducers.enqueue(runTransition(T_i, task, case_id));
+          });
         }
-        T.push_back([&, T_i, case_id, &task = model.store.at(T_i)] {
-          reducers.enqueue(runTransition(T_i, task, case_id));
-        });
         new_pending_transitions.insert(T_i);
       }
     }
