@@ -2,9 +2,12 @@
 
 #include <chrono>
 #include <functional>
+#include <iostream>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
 
@@ -14,7 +17,7 @@ namespace symmetri {
 
 using clock_s = std::chrono::system_clock;
 
-enum class TransitionState { Started, Completed, Error };
+enum class TransitionState { Started, Completed, Deadlock, UserExit, Error };
 
 struct Event {
   std::string case_id, transition;
@@ -28,7 +31,7 @@ using TransitionResult = std::pair<Eventlog, TransitionState>;
 
 size_t calculateTrace(std::vector<Event> event_log);
 std::string printState(symmetri::TransitionState s);
-
+class PolyAction;
 template <typename T>
 constexpr TransitionResult runTransition(const T &x) {
   if constexpr (std::is_invocable_v<T>) {
@@ -41,6 +44,7 @@ constexpr TransitionResult runTransition(const T &x) {
       return {{}, TransitionState::Completed};
     }
   } else {
+    std::cout << "not invokable" << std::endl;
     return {{}, TransitionState::Completed};
   }
 }
@@ -71,10 +75,10 @@ class PolyAction {
   std::shared_ptr<const concept_t> self_;
 };
 
-std::function<TransitionResult()> retryFunc(const symmetri::PolyAction &f,
-                                            const symmetri::Transition &t,
-                                            std::string &case_id,
-                                            unsigned int retry_count = 3);
+symmetri::PolyAction retryFunc(const symmetri::PolyAction &f,
+                               const symmetri::Transition &t,
+                               const std::string &case_id,
+                               unsigned int retry_count = 3);
 
 using Store = std::unordered_map<std::string, PolyAction>;
 

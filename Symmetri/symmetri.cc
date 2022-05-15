@@ -40,9 +40,26 @@ size_t calculateTrace(std::vector<Event> event_log) {
 }
 
 std::string printState(symmetri::TransitionState s) {
-  return s == symmetri::TransitionState::Started     ? "Started"
-         : s == symmetri::TransitionState::Completed ? "Completed"
-                                                     : "Error";
+  std::string ret;
+  switch (s) {
+    case TransitionState::Started:
+      ret = "Started";
+      break;
+    case TransitionState::Completed:
+      ret = "Completed";
+      break;
+    case TransitionState::Deadlock:
+      ret = "Deadlock";
+      break;
+    case TransitionState::UserExit:
+      ret = "UserExit";
+      break;
+    case TransitionState::Error:
+      ret = "Error";
+      break;
+  }
+
+  return ret;
 }
 
 Eventlog getNewEvents(const Eventlog &el, clock_s::time_point t) {
@@ -64,10 +81,10 @@ bool check(const Store &store, const symmetri::StateNet &net) {
   });
 }
 
-std::function<TransitionResult()> retryFunc(const symmetri::PolyAction &f,
-                                            const symmetri::Transition &t,
-                                            std::string &case_id,
-                                            unsigned int retry_count) {
+symmetri::PolyAction retryFunc(const symmetri::PolyAction &f,
+                               const symmetri::Transition &t,
+                               const std::string &case_id,
+                               unsigned int retry_count) {
   return [=]() -> std::pair<symmetri::Eventlog, symmetri::TransitionState> {
     symmetri::Eventlog log;
     symmetri::TransitionState res;
@@ -89,7 +106,15 @@ std::function<TransitionResult()> retryFunc(const symmetri::PolyAction &f,
       std::move(incremental_log.begin(), incremental_log.end(),
                 std::back_inserter(log));
 
-    } while (symmetri::TransitionState::Error == res && attempts < retry_count);
+    } while (symmetri::TransitionState::Completed != res &&
+             attempts < retry_count);
+
+    // publish a
+    if (attempts > 1) {
+      spdlog::get(case_id)->info(
+          printState(res) + " after {0} retries of {2}. Trace-hash is {1}",
+          attempts, calculateTrace(log), t);
+    }
     return {log, res};
   };
 }
@@ -187,10 +212,20 @@ std::function<TransitionResult()> Application::createApplication(
                  // This point is only reached if the petri net deadlocked or we
                  // exited the application early.
 
+                 TransitionState result;
+                 if (EARLY_EXIT) {
+                   result = TransitionState::UserExit;
+                 } else if (m.pending_transitions.empty()) {
+                   result = TransitionState::Deadlock;
+                 } else if (m.pending_transitions
+                                .empty() /* && goal marking reached */) {
+                   result = TransitionState::Completed;
+                 } else {
+                   result = TransitionState::Error;
+                 }
                  // publish a log
                  spdlog::get(case_id)->info(
-                     std::string(EARLY_EXIT ? "Forced shutdown" : "Deadlock") +
-                         " of {0}-net. Trace-hash is {1}",
+                     printState(result) + " of {0}-net. Trace-hash is {1}",
                      case_id, calculateTrace(m.event_log));
 
                  // stop the thread pool, blocks.
@@ -203,8 +238,7 @@ std::function<TransitionResult()> Application::createApplication(
 
                  // this could have nuance, if maybe an expected state was
                  // reached?
-                 return {m.event_log, EARLY_EXIT ? TransitionState::Error
-                                                 : TransitionState::Completed};
+                 return {m.event_log, result};
                });
 }
 
