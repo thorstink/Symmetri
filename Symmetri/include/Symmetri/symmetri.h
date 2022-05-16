@@ -2,12 +2,10 @@
 
 #include <chrono>
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <optional>
 #include <set>
 #include <string>
-#include <type_traits>
 #include <unordered_map>
 #include <vector>
 
@@ -31,7 +29,7 @@ using TransitionResult = std::pair<Eventlog, TransitionState>;
 
 size_t calculateTrace(std::vector<Event> event_log);
 std::string printState(symmetri::TransitionState s);
-class PolyAction;
+
 template <typename T>
 constexpr TransitionResult runTransition(const T &x) {
   if constexpr (std::is_invocable_v<T>) {

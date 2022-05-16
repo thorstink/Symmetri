@@ -1,6 +1,5 @@
 #include "model.h"
 
-#include <optional>
 namespace symmetri {
 
 auto getThreadId() {
@@ -85,9 +84,11 @@ Model &runAll(
   std::vector<PolyAction> T;
   std::set<std::string> new_pending_transitions;
   const auto marking_hash = hashNM(model.M);
+  // first check the cache.
   if (model.cache.contains(marking_hash)) {
     std::tie(model.M, T, new_pending_transitions) = model.cache[marking_hash];
   } else {
+    // otherwise calculate the possible transitions.
     for (const auto &[T_i, mut] : model.net) {
       const auto &pre = mut.first;
       if (!pre.empty() &&
@@ -95,8 +96,9 @@ Model &runAll(
             auto count = std::count(std::begin(pre), std::end(pre), m_p);
             return model.M[m_p] >= count;
           })) {
+        // deduct the marking
         processPreConditions(pre, model.M);
-        // is the function is not invocable, we short-circuit the marking
+        // if the function is nullopt_t, we short-circuit the marking
         // mutation and do it immediately.
         if constexpr (std::is_same_v<std::nullopt_t,
                                      decltype(model.store.at(T_i))>) {
