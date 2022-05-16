@@ -44,7 +44,6 @@ constexpr TransitionResult runTransition(const T &x) {
       return {{}, TransitionState::Completed};
     }
   } else {
-    std::cout << "not invokable" << std::endl;
     return {{}, TransitionState::Completed};
   }
 }

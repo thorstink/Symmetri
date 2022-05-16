@@ -182,10 +182,10 @@ std::function<TransitionResult()> Application::createApplication(
 
                  auto stop_condition =
                      final_marking.has_value()?[&] {
-                           return EARLY_EXIT ||
+                           return EARLY_EXIT || (m.pending_transitions.empty() && m.M != m0) ||
                                   MarkingReached(m.M, final_marking.value());
                          }
-                         : std::function{[&] { return EARLY_EXIT; }};
+                         : std::function{[&] { return EARLY_EXIT || (m.pending_transitions.empty() && m.M != m0); }};
                  Reducer f;
                  do {
                    auto old_stamp = m.timestamp;
@@ -214,15 +214,9 @@ std::function<TransitionResult()> Application::createApplication(
                          getNewEvents(m.event_log, old_stamp)));
                    };
 
-                   // end critiria. If there are no active transitions anymore.
-                   if (m.pending_transitions.empty() && m.M != m0) {
-                     break;
-                   }
                  } while (!stop_condition());
 
-                 // This point is only reached if the petri net deadlocked or we
-                 // exited the application early.
-
+                 // determine what was the reason we terminated.
                  TransitionState result;
                  if (final_marking.has_value()
                          ? MarkingReached(m.M, final_marking.value())
@@ -235,6 +229,7 @@ std::function<TransitionResult()> Application::createApplication(
                  } else {
                    result = TransitionState::Error;
                  }
+
                  // publish a log
                  spdlog::get(case_id)->info(
                      printState(result) + " of {0}-net. Trace-hash is {1}",
