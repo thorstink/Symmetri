@@ -88,14 +88,17 @@ struct Application {
   std::function<TransitionResult()> runApp;
   std::function<TransitionResult()> createApplication(
       const symmetri::StateNet &net, const symmetri::NetMarking &m0,
+      const std::optional<symmetri::NetMarking> &final_marking,
       const Store &store, unsigned int thread_count, const std::string &case_id,
       bool interface);
 
  public:
-  Application(const std::set<std::string> &path_to_petri, const Store &store,
-              unsigned int thread_count, const std::string &case_id = "NOCASE",
-              bool use_webserver = true);
+  Application(const std::set<std::string> &path_to_petri,
+              const std::optional<symmetri::NetMarking> &final_marking,
+              const Store &store, unsigned int thread_count,
+              const std::string &case_id = "NOCASE", bool use_webserver = true);
   Application(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
+              const std::optional<symmetri::NetMarking> &final_marking,
               const Store &store, unsigned int thread_count,
               const std::string &case_id, bool interface);
 

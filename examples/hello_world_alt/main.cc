@@ -28,7 +28,8 @@ int main(int argc, char *argv[]) {
                       {"t3", std::nullopt},
                       {"t4", &helloWorld}};
 
-  symmetri::Application net({pnml_path_start}, store, 2, case_id, true);
+  symmetri::Application net({pnml_path_start}, std::nullopt, store, 2, case_id,
+                            true);
 
   auto [el, result] = net();  // infinite loop
 

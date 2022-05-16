@@ -20,7 +20,8 @@ int main(int argc, char *argv[]) {
                                {"t2", &helloWorld},  {"t3", &helloWorld},
                                {"t4", &helloWorld},  {"t50", &helloWorld}};
 
-  symmetri::Application net({pnml_path_start, pnml_path_passive}, store, 2);
+  symmetri::Application net({pnml_path_start, pnml_path_passive}, std::nullopt,
+                            store, 2);
 
   auto t = std::async(std::launch::async, [f = net.push<float>("t50")] {
     float a;

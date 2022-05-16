@@ -20,7 +20,7 @@ std::tuple<StateNet, Store, NetMarking> testNet() {
 
 TEST_CASE("Create a using the net constructor.") {
   auto [net, store, m0] = testNet();
-  symmetri::Application app(net, m0, store, 3, "test_net", false);
+  symmetri::Application app(net, m0, std::nullopt, store, 3, "test_net", false);
   // we can run the net
   auto [ev, res] = app();
   REQUIRE(res == TransitionState::Completed);
@@ -34,7 +34,8 @@ TEST_CASE("Create a using pnml constructor.") {
   {
     // This store is not appropriate for this net,
     Store store = {{"wrong_id", &t0}};
-    symmetri::Application app({pnml_file}, store, 3, "fail", false);
+    symmetri::Application app({pnml_file}, std::nullopt, store, 3, "fail",
+                              false);
     // however, we can try running it,
     auto [ev, res] = app();
     // but the result is an error.
@@ -45,7 +46,8 @@ TEST_CASE("Create a using pnml constructor.") {
   {
     // This store is appropriate for this net,
     Store store = symmetri::Store{{"T0", &t0}};
-    symmetri::Application app({pnml_file}, store, 3, "success", false);
+    symmetri::Application app({pnml_file}, std::nullopt, store, 3, "success",
+                              false);
     // so we can run it,
     auto [ev, res] = app();
     // and the result is properly completed.

@@ -119,22 +119,27 @@ symmetri::PolyAction retryFunc(const symmetri::PolyAction &f,
   };
 }
 
-Application::Application(const std::set<std::string> &files, const Store &store,
-                         unsigned int thread_count, const std::string &case_id,
-                         bool interface) {
+Application::Application(
+    const std::set<std::string> &files,
+    const std::optional<symmetri::NetMarking> &final_marking,
+    const Store &store, unsigned int thread_count, const std::string &case_id,
+    bool interface) {
   const auto &[net, m0] = readPetriNets(files);
-  runApp = createApplication(net, m0, store, thread_count, case_id, interface);
+  runApp = createApplication(net, m0, final_marking, store, thread_count,
+                             case_id, interface);
 }
 
-Application::Application(const symmetri::StateNet &net,
-                         const symmetri::NetMarking &m0, const Store &store,
-                         unsigned int thread_count, const std::string &case_id,
-                         bool interface)
-    : runApp(createApplication(net, m0, store, thread_count, case_id,
-                               interface)) {}
+Application::Application(
+    const symmetri::StateNet &net, const symmetri::NetMarking &m0,
+    const std::optional<symmetri::NetMarking> &final_marking,
+    const Store &store, unsigned int thread_count, const std::string &case_id,
+    bool interface)
+    : runApp(createApplication(net, m0, final_marking, store, thread_count,
+                               case_id, interface)) {}
 
 std::function<TransitionResult()> Application::createApplication(
     const symmetri::StateNet &net, const symmetri::NetMarking &m0,
+    const std::optional<symmetri::NetMarking> &final_marking,
     const Store &store, unsigned int thread_count, const std::string &case_id,
     bool interface) {
   signal(SIGINT, signal_handler);
@@ -168,13 +173,19 @@ std::function<TransitionResult()> Application::createApplication(
                  // returns a simple stoppable threadpool.
                  StoppablePool stp(thread_count, polymorphic_actions);
 
-                 // the initial state
-                 auto m = Model(net, store, m0);
+                 // the model at initial state
+                 Model m(net, store, m0);
 
                  // enqueue a noop to start, not doing this would require
                  // external input to 'start' (even if the petri net is alive)
                  reducers.enqueue([](Model &&m) -> Model & { return m; });
 
+                 auto stop_condition =
+                     final_marking.has_value()?[&] {
+                           return EARLY_EXIT ||
+                                  MarkingReached(m.M, final_marking.value());
+                         }
+                         : std::function{[&] { return EARLY_EXIT; }};
                  Reducer f;
                  do {
                    auto old_stamp = m.timestamp;
@@ -207,19 +218,20 @@ std::function<TransitionResult()> Application::createApplication(
                    if (m.pending_transitions.empty() && m.M != m0) {
                      break;
                    }
-                 } while (!EARLY_EXIT);
+                 } while (!stop_condition());
 
                  // This point is only reached if the petri net deadlocked or we
                  // exited the application early.
 
                  TransitionState result;
-                 if (EARLY_EXIT) {
+                 if (final_marking.has_value()
+                         ? MarkingReached(m.M, final_marking.value())
+                         : false) {
+                   result = TransitionState::Completed;
+                 } else if (EARLY_EXIT) {
                    result = TransitionState::UserExit;
                  } else if (m.pending_transitions.empty()) {
                    result = TransitionState::Deadlock;
-                 } else if (m.pending_transitions
-                                .empty() /* && goal marking reached */) {
-                   result = TransitionState::Completed;
                  } else {
                    result = TransitionState::Error;
                  }

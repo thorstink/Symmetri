@@ -32,14 +32,15 @@ int main(int argc, char *argv[]) {
   auto pnml2 = std::string(argv[2]);
   auto pnml3 = std::string(argv[3]);
 
-  symmetri::Application subnet({pnml1}, {{"T0", &failFunc}}, 1, "charon",
-                               false);
+  symmetri::Application subnet({pnml1}, symmetri::NetMarking{{"P1", 1}},
+                               {{"T0", &failFunc}}, 1, "charon", false);
 
   symmetri::Store store = {{"T0", symmetri::retryFunc(subnet, "T0", "pluto")},
                            {"T1", helloT("T1")},
                            {"T2", helloT("T2")}};
-
-  symmetri::Application bignet({pnml1, pnml2, pnml3}, store, 3, "pluto", true);
+  symmetri::NetMarking final_marking = {{"P3", 30}};
+  symmetri::Application bignet({pnml1, pnml2, pnml3}, final_marking, store, 3,
+                               "pluto", true);
 
   auto [el, result] = bignet();  // infinite loop
 
@@ -47,6 +48,8 @@ int main(int argc, char *argv[]) {
     spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),
                  c.time_since_epoch().count());
   }
+
+  spdlog::info("Result of this net: {0}", printState(result));
 
   return result == symmetri::TransitionState::Completed ? 0 : -1;
 }
