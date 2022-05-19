@@ -123,7 +123,7 @@ Application::Application(
     const std::set<std::string> &files,
     const std::optional<symmetri::NetMarking> &final_marking,
     const Store &store, unsigned int thread_count, const std::string &case_id,
-    bool interface) {
+    bool interface) : iteration_callback_(std::nullptr_t()) {
   const auto &[net, m0] = readPetriNets(files);
   runApp = createApplication(net, m0, final_marking, store, thread_count,
                              case_id, interface);
@@ -135,7 +135,7 @@ Application::Application(
     const Store &store, unsigned int thread_count, const std::string &case_id,
     bool interface)
     : runApp(createApplication(net, m0, final_marking, store, thread_count,
-                               case_id, interface)) {}
+                               case_id, interface)), iteration_callback_(std::nullptr_t()) {}
 
 std::function<TransitionResult()> Application::createApplication(
     const symmetri::StateNet &net, const symmetri::NetMarking &m0,
@@ -148,6 +148,7 @@ std::function<TransitionResult()> Application::createApplication(
   auto console = spdlog::stdout_color_mt(case_id);
 
   console->set_pattern(s.str());
+  // iteration_callback_ = ref;
 
   return !check(store, net)
              ? std::function([=, this]() -> TransitionResult {
@@ -206,6 +207,13 @@ std::function<TransitionResult()> Application::createApplication(
                    }
 
                    // server stuffies
+                   if (iteration_callback_) {
+                     iteration_callback_(m.timestamp, old_stamp, m.event_log,
+                                            m.net, m.M, m.pending_transitions);
+
+                   } else {
+                     spdlog::info("ISISISI");
+                   }
                    if (server.has_value()) {
                      server.value()->sendNet(m.timestamp, m.net, m.M,
                                              m.pending_transitions);

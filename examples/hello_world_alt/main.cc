@@ -17,6 +17,12 @@ symmetri::TransitionState failFunc() {
                   : symmetri::TransitionState::Completed;
 }
 
+void someCb(symmetri::clock_s::time_point, symmetri::clock_s::time_point,
+         const symmetri::Eventlog &, const symmetri::StateNet &,
+         const symmetri::NetMarking &, const std::set<std::string> &) {
+  spdlog::info("Hi there.");
+}
+
 int main(int argc, char *argv[]) {
   auto pnml_path_start = std::string(argv[1]);
   std::string case_id = "alt";
@@ -30,6 +36,8 @@ int main(int argc, char *argv[]) {
 
   symmetri::Application net({pnml_path_start}, std::nullopt, store, 2, case_id,
                             true);
+
+  net.registerIterationCallback(someCb);
 
   auto [el, result] = net();  // infinite loop
 

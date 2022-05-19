@@ -104,6 +104,12 @@ struct Application {
     return [transition, this](T) { p(transition); };
   }
 
+  typedef void (*IterationCallback)(clock_s::time_point, clock_s::time_point,
+                     const symmetri::Eventlog &, const symmetri::StateNet &,
+                     const symmetri::NetMarking &, const std::set<std::string>&);
+  void registerIterationCallback(const IterationCallback &f) { iteration_callback_ = f; };
+  IterationCallback iteration_callback_;
+
   TransitionResult operator()() const;
 };
 
