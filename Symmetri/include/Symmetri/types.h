@@ -11,6 +11,13 @@ using StateNet =
     std::map<Transition, std::pair<std::vector<Place>, std::vector<Place>>>;
 using NetMarking = std::map<Place, uint16_t>;
 
+inline bool MarkingReached(const NetMarking& marking,
+                           const NetMarking& final_marking) {
+  return std::all_of(
+      std::begin(final_marking), std::end(final_marking),
+      [&](const auto& p_m) { return marking.at(p_m.first) >= p_m.second; });
+}
+
 inline bool StateNetEquality(const StateNet& net1, const StateNet& net2) {
   if (net1.size() != net2.size()) {
     return false;

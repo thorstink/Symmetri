@@ -3,6 +3,7 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -14,7 +15,7 @@ namespace symmetri {
 
 using clock_s = std::chrono::system_clock;
 
-enum class TransitionState { Started, Completed, Error };
+enum class TransitionState { Started, Completed, Deadlock, UserExit, Error };
 
 struct Event {
   std::string case_id, transition;
@@ -31,15 +32,17 @@ std::string printState(symmetri::TransitionState s);
 
 template <typename T>
 constexpr TransitionResult runTransition(const T &x) {
-  if constexpr (std::is_same_v<void, decltype(x())>) {
-    x();
+  if constexpr (std::is_invocable_v<T>) {
+    if constexpr (std::is_same_v<TransitionState, decltype(x())>) {
+      return {{}, x()};
+    } else if constexpr (std::is_same_v<TransitionResult, decltype(x())>) {
+      return x();
+    } else {
+      x();
+      return {{}, TransitionState::Completed};
+    }
+  } else {
     return {{}, TransitionState::Completed};
-  }
-  if constexpr (std::is_same_v<TransitionState, decltype(x())>) {
-    return {{}, x()};
-  }
-  if constexpr (std::is_same_v<TransitionResult, decltype(x())>) {
-    return x();
   }
 }
 
@@ -69,6 +72,11 @@ class PolyAction {
   std::shared_ptr<const concept_t> self_;
 };
 
+symmetri::PolyAction retryFunc(const symmetri::PolyAction &f,
+                               const symmetri::Transition &t,
+                               const std::string &case_id,
+                               unsigned int retry_count = 3);
+
 using Store = std::unordered_map<std::string, PolyAction>;
 
 struct Application {
@@ -77,14 +85,17 @@ struct Application {
   std::function<TransitionResult()> runApp;
   std::function<TransitionResult()> createApplication(
       const symmetri::StateNet &net, const symmetri::NetMarking &m0,
+      const std::optional<symmetri::NetMarking> &final_marking,
       const Store &store, unsigned int thread_count, const std::string &case_id,
       bool interface);
 
  public:
-  Application(const std::set<std::string> &path_to_petri, const Store &store,
-              unsigned int thread_count, const std::string &case_id = "NOCASE",
-              bool use_webserver = true);
+  Application(const std::set<std::string> &path_to_petri,
+              const std::optional<symmetri::NetMarking> &final_marking,
+              const Store &store, unsigned int thread_count,
+              const std::string &case_id = "NOCASE", bool use_webserver = true);
   Application(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
+              const std::optional<symmetri::NetMarking> &final_marking,
               const Store &store, unsigned int thread_count,
               const std::string &case_id, bool interface);
 

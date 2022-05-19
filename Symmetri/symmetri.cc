@@ -40,9 +40,26 @@ size_t calculateTrace(std::vector<Event> event_log) {
 }
 
 std::string printState(symmetri::TransitionState s) {
-  return s == symmetri::TransitionState::Started     ? "Started"
-         : s == symmetri::TransitionState::Completed ? "Completed"
-                                                     : "Error";
+  std::string ret;
+  switch (s) {
+    case TransitionState::Started:
+      ret = "Started";
+      break;
+    case TransitionState::Completed:
+      ret = "Completed";
+      break;
+    case TransitionState::Deadlock:
+      ret = "Deadlock";
+      break;
+    case TransitionState::UserExit:
+      ret = "UserExit";
+      break;
+    case TransitionState::Error:
+      ret = "Error";
+      break;
+  }
+
+  return ret;
 }
 
 Eventlog getNewEvents(const Eventlog &el, clock_s::time_point t) {
@@ -64,22 +81,65 @@ bool check(const Store &store, const symmetri::StateNet &net) {
   });
 }
 
-Application::Application(const std::set<std::string> &files, const Store &store,
-                         unsigned int thread_count, const std::string &case_id,
-                         bool interface) {
-  const auto &[net, m0] = readPetriNets(files);
-  runApp = createApplication(net, m0, store, thread_count, case_id, interface);
+symmetri::PolyAction retryFunc(const symmetri::PolyAction &f,
+                               const symmetri::Transition &t,
+                               const std::string &case_id,
+                               unsigned int retry_count) {
+  return [=]() -> std::pair<symmetri::Eventlog, symmetri::TransitionState> {
+    symmetri::Eventlog log;
+    symmetri::TransitionState res;
+    unsigned int attempts = 0;
+    do {
+      attempts++;
+      const auto thread_id = static_cast<size_t>(
+          std::hash<std::thread::id>()(std::this_thread::get_id()));
+      symmetri::Eventlog incremental_log(2);
+      const auto start_time = symmetri::clock_s::now();
+      std::tie(incremental_log, res) = runTransition(f);
+      const auto end_time = symmetri::clock_s::now();
+      if (incremental_log.empty()) {
+        incremental_log.push_back({case_id, t,
+                                   symmetri::TransitionState::Started,
+                                   start_time, thread_id});
+        incremental_log.push_back({case_id, t, res, end_time, thread_id});
+      }
+      std::move(incremental_log.begin(), incremental_log.end(),
+                std::back_inserter(log));
+
+    } while (symmetri::TransitionState::Completed != res &&
+             attempts < retry_count);
+
+    // publish a
+    if (attempts > 1) {
+      spdlog::get(case_id)->info(
+          printState(res) + " after {0} retries of {2}. Trace-hash is {1}",
+          attempts, calculateTrace(log), t);
+    }
+    return {log, res};
+  };
 }
 
-Application::Application(const symmetri::StateNet &net,
-                         const symmetri::NetMarking &m0, const Store &store,
-                         unsigned int thread_count, const std::string &case_id,
-                         bool interface)
-    : runApp(createApplication(net, m0, store, thread_count, case_id,
-                               interface)) {}
+Application::Application(
+    const std::set<std::string> &files,
+    const std::optional<symmetri::NetMarking> &final_marking,
+    const Store &store, unsigned int thread_count, const std::string &case_id,
+    bool interface) {
+  const auto &[net, m0] = readPetriNets(files);
+  runApp = createApplication(net, m0, final_marking, store, thread_count,
+                             case_id, interface);
+}
+
+Application::Application(
+    const symmetri::StateNet &net, const symmetri::NetMarking &m0,
+    const std::optional<symmetri::NetMarking> &final_marking,
+    const Store &store, unsigned int thread_count, const std::string &case_id,
+    bool interface)
+    : runApp(createApplication(net, m0, final_marking, store, thread_count,
+                               case_id, interface)) {}
 
 std::function<TransitionResult()> Application::createApplication(
     const symmetri::StateNet &net, const symmetri::NetMarking &m0,
+    const std::optional<symmetri::NetMarking> &final_marking,
     const Store &store, unsigned int thread_count, const std::string &case_id,
     bool interface) {
   signal(SIGINT, signal_handler);
@@ -113,13 +173,19 @@ std::function<TransitionResult()> Application::createApplication(
                  // returns a simple stoppable threadpool.
                  StoppablePool stp(thread_count, polymorphic_actions);
 
-                 // the initial state
-                 auto m = Model(net, store, m0);
+                 // the model at initial state
+                 Model m(net, store, m0);
 
                  // enqueue a noop to start, not doing this would require
                  // external input to 'start' (even if the petri net is alive)
                  reducers.enqueue([](Model &&m) -> Model & { return m; });
 
+                 auto stop_condition =
+                     final_marking.has_value()?[&] {
+                           return EARLY_EXIT || (m.pending_transitions.empty() && m.M != m0) ||
+                                  MarkingReached(m.M, final_marking.value());
+                         }
+                         : std::function{[&] { return EARLY_EXIT || (m.pending_transitions.empty() && m.M != m0); }};
                  Reducer f;
                  do {
                    auto old_stamp = m.timestamp;
@@ -148,19 +214,25 @@ std::function<TransitionResult()> Application::createApplication(
                          getNewEvents(m.event_log, old_stamp)));
                    };
 
-                   // end critiria. If there are no active transitions anymore.
-                   if (m.pending_transitions.empty() && m.M != m0) {
-                     break;
-                   }
-                 } while (!EARLY_EXIT);
+                 } while (!stop_condition());
 
-                 // This point is only reached if the petri net deadlocked or we
-                 // exited the application early.
+                 // determine what was the reason we terminated.
+                 TransitionState result;
+                 if (final_marking.has_value()
+                         ? MarkingReached(m.M, final_marking.value())
+                         : false) {
+                   result = TransitionState::Completed;
+                 } else if (EARLY_EXIT) {
+                   result = TransitionState::UserExit;
+                 } else if (m.pending_transitions.empty()) {
+                   result = TransitionState::Deadlock;
+                 } else {
+                   result = TransitionState::Error;
+                 }
 
                  // publish a log
                  spdlog::get(case_id)->info(
-                     std::string(EARLY_EXIT ? "Forced shutdown" : "Deadlock") +
-                         " of {0}-net. Trace-hash is {1}",
+                     printState(result) + " of {0}-net. Trace-hash is {1}",
                      case_id, calculateTrace(m.event_log));
 
                  // stop the thread pool, blocks.
@@ -173,8 +245,7 @@ std::function<TransitionResult()> Application::createApplication(
 
                  // this could have nuance, if maybe an expected state was
                  // reached?
-                 return {m.event_log, EARLY_EXIT ? TransitionState::Error
-                                                 : TransitionState::Completed};
+                 return {m.event_log, result};
                });
 }
 
