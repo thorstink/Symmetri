@@ -12,13 +12,12 @@
 #include <numeric>
 #include <optional>
 #include <ranges>
+#include <sstream>
 #include <tuple>
 
 #include "actions.h"
 #include "model.h"
 #include "pnml_parser.h"
-#include "ws_interface.hpp"
-
 namespace symmetri {
 // Define the function to be called when ctrl-c (SIGINT) is sent to process
 bool EARLY_EXIT = false;
@@ -26,17 +25,24 @@ inline void signal_handler(int signal) { EARLY_EXIT = true; }
 
 using namespace moodycamel;
 
-size_t calculateTrace(std::vector<Event> event_log) {
-  // calculate a trace-id, in a simple way.
-  std::sort(
-      event_log.begin(), event_log.end(),
-      [](const auto &lhs, const auto &rhs) { return lhs.stamp < rhs.stamp; });
+// size_t calculateTrace(Eventlog event_log) {
+//   // calculate a trace-id, in a simple way.
+//   std::sort(
+//       event_log.begin(), event_log.end(),
+//       [](const auto &lhs, const auto &rhs) { return lhs.stamp < rhs.stamp;
+//       });
 
-  return std::hash<std::string>{}(std::accumulate(
-      event_log.begin(), event_log.end(), std::string(""),
-      [](const auto &acc, const Event &n) {
-        return n.state == TransitionState::Completed ? acc + n.transition : acc;
-      }));
+//   return std::hash<std::string>{}(std::accumulate(
+//       event_log.begin(), event_log.end(), std::string(""),
+//       [](const auto &acc, const Event &n) {
+//         return n.state == TransitionState::Completed ? acc + n.transition :
+//         acc;
+//       }));
+// }
+
+size_t calculateTrace(Eventlog event_log) {
+  // calculate a trace-id, in a simple way.
+  return 0;
 }
 
 std::string printState(symmetri::TransitionState s) {
@@ -60,13 +66,6 @@ std::string printState(symmetri::TransitionState s) {
   }
 
   return ret;
-}
-
-Eventlog getNewEvents(const Eventlog &el, clock_s::time_point t) {
-  Eventlog new_events;
-  std::copy_if(el.begin(), el.end(), std::back_inserter(new_events),
-               [&](const auto &l) { return l.stamp > t; });
-  return new_events;
 }
 
 bool check(const Store &store, const symmetri::StateNet &net) {
@@ -98,10 +97,11 @@ symmetri::PolyAction retryFunc(const symmetri::PolyAction &f,
       std::tie(incremental_log, res) = runTransition(f);
       const auto end_time = symmetri::clock_s::now();
       if (incremental_log.empty()) {
-        incremental_log.push_back({case_id, t,
-                                   symmetri::TransitionState::Started,
-                                   start_time, thread_id});
-        incremental_log.push_back({case_id, t, res, end_time, thread_id});
+        incremental_log = incremental_log.push_back(
+            {case_id, t, symmetri::TransitionState::Started, start_time,
+             thread_id});
+        incremental_log =
+            incremental_log.push_back({case_id, t, res, end_time, thread_id});
       }
       std::move(incremental_log.begin(), incremental_log.end(),
                 std::back_inserter(log));
@@ -122,33 +122,29 @@ symmetri::PolyAction retryFunc(const symmetri::PolyAction &f,
 Application::Application(
     const std::set<std::string> &files,
     const std::optional<symmetri::NetMarking> &final_marking,
-    const Store &store, unsigned int thread_count, const std::string &case_id,
-    bool interface) : iteration_callback_(std::nullptr_t()) {
+    const Store &store, unsigned int thread_count, const std::string &case_id) {
   const auto &[net, m0] = readPetriNets(files);
-  runApp = createApplication(net, m0, final_marking, store, thread_count,
-                             case_id, interface);
+  runApp =
+      createApplication(net, m0, final_marking, store, thread_count, case_id);
 }
 
 Application::Application(
     const symmetri::StateNet &net, const symmetri::NetMarking &m0,
     const std::optional<symmetri::NetMarking> &final_marking,
-    const Store &store, unsigned int thread_count, const std::string &case_id,
-    bool interface)
+    const Store &store, unsigned int thread_count, const std::string &case_id)
     : runApp(createApplication(net, m0, final_marking, store, thread_count,
-                               case_id, interface)), iteration_callback_(std::nullptr_t()) {}
+                               case_id)) {}
 
 std::function<TransitionResult()> Application::createApplication(
     const symmetri::StateNet &net, const symmetri::NetMarking &m0,
     const std::optional<symmetri::NetMarking> &final_marking,
-    const Store &store, unsigned int thread_count, const std::string &case_id,
-    bool interface) {
+    const Store &store, unsigned int thread_count, const std::string &case_id) {
   signal(SIGINT, signal_handler);
   std::stringstream s;
   s << "[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] [" << case_id << "] %v";
   auto console = spdlog::stdout_color_mt(case_id);
 
   console->set_pattern(s.str());
-  // iteration_callback_ = ref;
 
   return !check(store, net)
              ? std::function([=, this]() -> TransitionResult {
@@ -157,9 +153,6 @@ std::function<TransitionResult()> Application::createApplication(
                  return {{}, TransitionState::Error};
                })
              : std::function([=, this]() -> TransitionResult {
-                 auto server = interface ? std::optional(WsServer::Instance())
-                                         : std::nullopt;
-
                  BlockingConcurrentQueue<Reducer> reducers(256);
                  BlockingConcurrentQueue<PolyAction> polymorphic_actions(256);
 
@@ -176,6 +169,10 @@ std::function<TransitionResult()> Application::createApplication(
 
                  // the model at initial state
                  Model m(net, store, m0);
+                 get = [&](clock_s::time_point) {
+                   return std::make_tuple(m.timestamp, m.event_log, m.net, m.M,
+                                          m.pending_transitions);
+                 };
 
                  // enqueue a noop to start, not doing this would require
                  // external input to 'start' (even if the petri net is alive)
@@ -189,7 +186,6 @@ std::function<TransitionResult()> Application::createApplication(
                          : std::function{[&] { return EARLY_EXIT || (m.pending_transitions.empty() && m.M != m0); }};
                  Reducer f;
                  do {
-                   auto old_stamp = m.timestamp;
                    // get a reducer.
                    while ((m.pending_transitions.empty() && m.M != m0)
                               ? reducers.try_dequeue(f)
@@ -205,23 +201,6 @@ std::function<TransitionResult()> Application::createApplication(
                        spdlog::get(case_id)->error(e.what());
                      }
                    }
-
-                   // server stuffies
-                   if (iteration_callback_) {
-                     iteration_callback_(m.timestamp, old_stamp, m.event_log,
-                                            m.net, m.M, m.pending_transitions);
-
-                   } else {
-                     spdlog::info("ISISISI");
-                   }
-                   if (server.has_value()) {
-                     server.value()->sendNet(m.timestamp, m.net, m.M,
-                                             m.pending_transitions);
-
-                     server.value()->sendLog(stringLogEventlog(
-                         getNewEvents(m.event_log, old_stamp)));
-                   };
-
                  } while (!stop_condition());
 
                  // determine what was the reason we terminated.
@@ -238,21 +217,14 @@ std::function<TransitionResult()> Application::createApplication(
                    result = TransitionState::Error;
                  }
 
+                 // stop the thread pool, blocks.
+                 stp.stop();
+
                  // publish a log
                  spdlog::get(case_id)->info(
                      printState(result) + " of {0}-net. Trace-hash is {1}",
                      case_id, calculateTrace(m.event_log));
 
-                 // stop the thread pool, blocks.
-                 stp.stop();
-                 // if we have a viz server, kill it. blocks.
-                 if (server.has_value()) {
-                   server.value()->stop();
-                   spdlog::get(case_id)->info("Server stopped.");
-                 }
-
-                 // this could have nuance, if maybe an expected state was
-                 // reached?
                  return {m.event_log, result};
                });
 }

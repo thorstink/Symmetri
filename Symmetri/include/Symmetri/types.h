@@ -1,4 +1,5 @@
 #pragma once
+#include <immer/vector.hpp>
 #include <map>
 #include <string>
 #include <vector>
@@ -6,6 +7,19 @@
 namespace symmetri {
 using Place = std::string;
 using Transition = std::string;
+using clock_s = std::chrono::system_clock;
+
+enum class TransitionState { Started, Completed, Deadlock, UserExit, Error };
+
+struct Event {
+  std::string case_id, transition;
+  TransitionState state;
+  clock_s::time_point stamp;
+  size_t thread_id;
+};
+
+using Eventlog = immer::vector<Event>;
+using TransitionResult = std::pair<Eventlog, TransitionState>;
 
 using StateNet =
     std::map<Transition, std::pair<std::vector<Place>, std::vector<Place>>>;

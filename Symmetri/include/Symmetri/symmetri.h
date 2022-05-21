@@ -13,20 +13,6 @@
 
 namespace symmetri {
 
-using clock_s = std::chrono::system_clock;
-
-enum class TransitionState { Started, Completed, Deadlock, UserExit, Error };
-
-struct Event {
-  std::string case_id, transition;
-  TransitionState state;
-  clock_s::time_point stamp;
-  size_t thread_id;
-};
-
-using Eventlog = std::vector<Event>;
-using TransitionResult = std::pair<Eventlog, TransitionState>;
-
 size_t calculateTrace(std::vector<Event> event_log);
 std::string printState(symmetri::TransitionState s);
 
@@ -86,29 +72,28 @@ struct Application {
   std::function<TransitionResult()> createApplication(
       const symmetri::StateNet &net, const symmetri::NetMarking &m0,
       const std::optional<symmetri::NetMarking> &final_marking,
-      const Store &store, unsigned int thread_count, const std::string &case_id,
-      bool interface);
+      const Store &store, unsigned int thread_count,
+      const std::string &case_id);
 
  public:
   Application(const std::set<std::string> &path_to_petri,
               const std::optional<symmetri::NetMarking> &final_marking,
               const Store &store, unsigned int thread_count,
-              const std::string &case_id = "NOCASE", bool use_webserver = true);
+              const std::string &case_id = "NOCASE");
   Application(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
               const std::optional<symmetri::NetMarking> &final_marking,
               const Store &store, unsigned int thread_count,
-              const std::string &case_id, bool interface);
+              const std::string &case_id);
 
   template <typename T>
   inline std::function<void(T)> push(const std::string &transition) const {
     return [transition, this](T) { p(transition); };
   }
 
-  typedef void (*IterationCallback)(clock_s::time_point, clock_s::time_point,
-                     const symmetri::Eventlog &, const symmetri::StateNet &,
-                     const symmetri::NetMarking &, const std::set<std::string>&);
-  void registerIterationCallback(const IterationCallback &f) { iteration_callback_ = f; };
-  IterationCallback iteration_callback_;
+  std::function<std::tuple<clock_s::time_point, symmetri::Eventlog,
+                           symmetri::StateNet, symmetri::NetMarking,
+                           std::set<std::string>>(clock_s::time_point)>
+      get;
 
   TransitionResult operator()() const;
 };

@@ -29,13 +29,15 @@ Reducer runTransition(const std::string &T_i, const std::string &case_id,
     if (result == TransitionState::Completed) {
       processPostConditions(model.net.at(T_i).second, model.M);
     }
-    model.event_log.push_back(
-        {case_id, T_i, TransitionState::Started, start_time, thread_id});
-    model.event_log.push_back({case_id, T_i,
-                               result == TransitionState::Completed
-                                   ? TransitionState::Completed
-                                   : TransitionState::Error,
-                               end_time, thread_id});
+    model.event_log = std::move(model.event_log)
+                          .push_back({case_id, T_i, TransitionState::Started,
+                                      start_time, thread_id});
+    model.event_log = std::move(model.event_log)
+                          .push_back({case_id, T_i,
+                                      result == TransitionState::Completed
+                                          ? TransitionState::Completed
+                                          : TransitionState::Error,
+                                      end_time, thread_id});
 
     model.pending_transitions.erase(T_i);
     return model;

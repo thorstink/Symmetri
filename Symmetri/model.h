@@ -32,7 +32,7 @@ struct Model {
   clock_s::time_point timestamp;
   NetMarking M;
   std::set<Transition> pending_transitions;
-  std::vector<Event> event_log;
+  Eventlog event_log;
   std::unordered_map<size_t, std::tuple<NetMarking, std::vector<PolyAction>,
                                         std::set<std::string>>>
       cache;

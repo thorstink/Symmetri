@@ -21,12 +21,12 @@ endif()
 message(STATUS "Building Symmetri - shared: ${BUILD_SHARED_LIBS}")
 
 
-include_directories(include includes submodules ${SEASOCKS_INCLUDE_DIRS} )
+include_directories(include includes submodules submodules/immer ${SEASOCKS_INCLUDE_DIRS} )
 
 #lib
 add_library(${PROJECT_NAME} symmetri.cc model.cc pnml_parser.cc submodules/tinyxml2/tinyxml2.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE pthread Seasocks::seasocks spdlog::spdlog concurrentqueue)
-target_include_directories(${PROJECT_NAME} INTERFACE include)
+target_include_directories(${PROJECT_NAME} INTERFACE include submodules/immer)
 
 set(ui_files
   ${CMAKE_CURRENT_SOURCE_DIR}/web
@@ -36,7 +36,7 @@ set(targets
   ${PROJECT_NAME}
 )
 
-install(DIRECTORY ${ui_files} include DESTINATION ${PROJECT_SOURCE_DIR}/install)
+install(DIRECTORY ${ui_files} include submodules/immer DESTINATION ${PROJECT_SOURCE_DIR}/install)
 
 # if(BUILD_TESTING)
 add_subdirectory(tests)
