@@ -103,8 +103,7 @@ symmetri::PolyAction retryFunc(const symmetri::PolyAction &f,
         incremental_log =
             incremental_log.push_back({case_id, t, res, end_time, thread_id});
       }
-      std::move(incremental_log.begin(), incremental_log.end(),
-                std::back_inserter(log));
+      log = log + incremental_log;
 
     } while (symmetri::TransitionState::Completed != res &&
              attempts < retry_count);
@@ -224,6 +223,12 @@ std::function<TransitionResult()> Application::createApplication(
                  spdlog::get(case_id)->info(
                      printState(result) + " of {0}-net. Trace-hash is {1}",
                      case_id, calculateTrace(m.event_log));
+
+                 get = [t = m.timestamp, el = m.event_log, state_net = m.net,
+                        marking = m.M,
+                        ac = m.pending_transitions](clock_s::time_point) {
+                   return std::make_tuple(t, el, state_net, marking, ac);
+                 };
 
                  return {m.event_log, result};
                });

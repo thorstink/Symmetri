@@ -44,7 +44,7 @@ Reducer runTransition(const std::string &T_i, const std::string &case_id,
   };
 }
 
-Reducer runTransition(const std::string &T_i, const Eventlog &el,
+Reducer runTransition(const std::string &T_i, const Eventlog &new_events,
                       TransitionState result, size_t thread_id,
                       clock_s::time_point end_time) {
   return [=](Model &&model) -> Model & {
@@ -52,7 +52,7 @@ Reducer runTransition(const std::string &T_i, const Eventlog &el,
       processPostConditions(model.net.at(T_i).second, model.M);
     }
 
-    std::move(el.begin(), el.end(), std::back_inserter(model.event_log));
+    model.event_log = model.event_log + new_events;
     model.pending_transitions.erase(T_i);
     return model;
   };
