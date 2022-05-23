@@ -16,6 +16,7 @@
 #include <tuple>
 
 #include "actions.h"
+#include "immer/algorithm.hpp"
 #include "model.h"
 #include "pnml_parser.h"
 namespace symmetri {
@@ -25,24 +26,13 @@ inline void signal_handler(int signal) { EARLY_EXIT = true; }
 
 using namespace moodycamel;
 
-// size_t calculateTrace(Eventlog event_log) {
-//   // calculate a trace-id, in a simple way.
-//   std::sort(
-//       event_log.begin(), event_log.end(),
-//       [](const auto &lhs, const auto &rhs) { return lhs.stamp < rhs.stamp;
-//       });
-
-//   return std::hash<std::string>{}(std::accumulate(
-//       event_log.begin(), event_log.end(), std::string(""),
-//       [](const auto &acc, const Event &n) {
-//         return n.state == TransitionState::Completed ? acc + n.transition :
-//         acc;
-//       }));
-// }
-
 size_t calculateTrace(Eventlog event_log) {
   // calculate a trace-id, in a simple way.
-  return 0;
+  return std::hash<std::string>{}(immer::accumulate(
+      event_log.begin(), event_log.end(), std::string(""),
+      [](const auto &acc, const Event &n) {
+        return n.state == TransitionState::Completed ? acc + n.transition : acc;
+      }));
 }
 
 std::string printState(symmetri::TransitionState s) {
