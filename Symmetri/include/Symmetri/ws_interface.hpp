@@ -8,6 +8,7 @@ struct Handler;
 class WsServer {
  public:
   WsServer(int port = 2222);
+  ~WsServer();
   void stop();
   void sendNet(symmetri::clock_s::time_point now, const symmetri::StateNet &net,
                const symmetri::NetMarking &M,

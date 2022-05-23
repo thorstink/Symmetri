@@ -21,7 +21,7 @@ void helloWorld() { std::this_thread::sleep_for(std::chrono::seconds(1)); }
 
 symmetri::TransitionState failFunc() {
   std::this_thread::sleep_for(std::chrono::seconds(1));
-  const double chance = 0.3;  // odds of failing
+  const double chance = 0.5;  // odds of failing
   std::random_device rd;
   std::mt19937 mt(rd());
   std::bernoulli_distribution dist(chance);
@@ -46,11 +46,11 @@ int main(int argc, char *argv[]) {
   // a server to send stuff (runs a background thread)
   WsServer server(2222);
   // some thread to poll the net and send it away through a server
-  auto t = std::thread([&net, &running, &server] {
+  auto t = std::jthread([&net, &running, &server] {
     auto previous_stamp = symmetri::clock_s::now();
     std::this_thread::sleep_for(std::chrono::seconds(2));
     do {
-      auto [t, el, state_net, marking, at] = net.get(previous_stamp);
+      auto [t, el, state_net, marking, at] = net.get();
       server.sendNet(t, state_net, marking, at);
       server.sendLog(getNewEvents(el, previous_stamp));
       previous_stamp = t;
@@ -60,14 +60,14 @@ int main(int argc, char *argv[]) {
   });
 
   auto [el, result] = net();  // infinite loop
+
   running = false;
-  // server.stop();
+  server.stop();
 
   for (const auto &[caseid, t, s, c, tid] : el) {
     spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),
                  c.time_since_epoch().count());
   }
-  t.join();
 
   return result == symmetri::TransitionState::Completed ? 0 : -1;
 }

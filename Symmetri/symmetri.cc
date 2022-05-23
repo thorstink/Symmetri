@@ -108,23 +108,98 @@ symmetri::PolyAction retryFunc(const symmetri::PolyAction &f,
   };
 }
 
+struct Impl {
+  Model m;
+  BlockingConcurrentQueue<Reducer> reducers;
+  BlockingConcurrentQueue<PolyAction> polymorphic_actions;
+  StoppablePool stp;
+  const std::string case_id;
+  std::optional<symmetri::NetMarking> final_marking;
+  ~Impl() {
+    EARLY_EXIT = true;
+    stp.stop();
+  }
+  Impl(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
+       const std::optional<symmetri::NetMarking> &final_marking,
+       const Store &store, unsigned int thread_count,
+       const std::string &case_id)
+      : m(net, store, m0),
+        reducers(256),
+        polymorphic_actions(256),
+        stp(thread_count, polymorphic_actions),
+        case_id(case_id),
+        final_marking(final_marking) {}
+  const Model &getModel() const { return m; }
+  TransitionResult run() {
+    const auto m0 = m.M;
+    // enqueue a noop to start, not
+    // doing this would require
+    // external input to 'start' (even if the petri net is alive)
+    reducers.enqueue([](Model &&m) -> Model & { return m; });
+
+    auto stop_condition =
+                     final_marking.has_value()?[&] {
+                           return EARLY_EXIT || (m.pending_transitions.empty() && m.M != m0) ||
+                                  MarkingReached(m.M, final_marking.value());
+                         }
+                         : std::function{[&] { return EARLY_EXIT || (m.pending_transitions.empty() && m.M != m0); }};
+    Reducer f;
+    do {
+      // get a reducer.
+      while ((m.pending_transitions.empty() && m.M != m0)
+                 ? reducers.try_dequeue(f)
+                 : reducers.wait_dequeue_timed(f, std::chrono::seconds(1))) {
+        if (EARLY_EXIT) {
+          break;
+        }
+        try {
+          m = runAll(f(std::move(m)), reducers, polymorphic_actions, case_id);
+        } catch (const std::exception &e) {
+          spdlog::get(case_id)->error(e.what());
+        }
+      }
+    } while (!stop_condition());
+
+    // determine what was the reason we terminated.
+    TransitionState result;
+    if (final_marking.has_value() ? MarkingReached(m.M, final_marking.value())
+                                  : false) {
+      result = TransitionState::Completed;
+    } else if (EARLY_EXIT) {
+      result = TransitionState::UserExit;
+    } else if (m.pending_transitions.empty()) {
+      result = TransitionState::Deadlock;
+    } else {
+      result = TransitionState::Error;
+    }
+
+    // stop the thread pool, blocks.
+    stp.stop();
+
+    // publish a log
+    spdlog::get(case_id)->info(
+        printState(result) + " of {0}-net. Trace-hash is {1}", case_id,
+        calculateTrace(m.event_log));
+    return {m.event_log, result};
+  }
+};
+
 Application::Application(
     const std::set<std::string> &files,
     const std::optional<symmetri::NetMarking> &final_marking,
     const Store &store, unsigned int thread_count, const std::string &case_id) {
   const auto &[net, m0] = readPetriNets(files);
-  runApp =
-      createApplication(net, m0, final_marking, store, thread_count, case_id);
+  createApplication(net, m0, final_marking, store, thread_count, case_id);
 }
 
 Application::Application(
     const symmetri::StateNet &net, const symmetri::NetMarking &m0,
     const std::optional<symmetri::NetMarking> &final_marking,
-    const Store &store, unsigned int thread_count, const std::string &case_id)
-    : runApp(createApplication(net, m0, final_marking, store, thread_count,
-                               case_id)) {}
+    const Store &store, unsigned int thread_count, const std::string &case_id) {
+  createApplication(net, m0, final_marking, store, thread_count, case_id);
+}
 
-std::function<TransitionResult()> Application::createApplication(
+void Application::createApplication(
     const symmetri::StateNet &net, const symmetri::NetMarking &m0,
     const std::optional<symmetri::NetMarking> &final_marking,
     const Store &store, unsigned int thread_count, const std::string &case_id) {
@@ -134,96 +209,34 @@ std::function<TransitionResult()> Application::createApplication(
   auto console = spdlog::stdout_color_mt(case_id);
 
   console->set_pattern(s.str());
-
-  return !check(store, net)
-             ? std::function([=, this]() -> TransitionResult {
-                 spdlog::get(case_id)->error(
-                     "Error not all transitions are in the store");
-                 return {{}, TransitionState::Error};
-               })
-             : std::function([=, this]() -> TransitionResult {
-                 BlockingConcurrentQueue<Reducer> reducers(256);
-                 BlockingConcurrentQueue<PolyAction> polymorphic_actions(256);
-
-                 // register a function that "forces" transitions into the
-                 // queue.
-                 p = [&](const std::string &t) {
-                   polymorphic_actions.enqueue([&, &task = store.at(t)] {
-                     reducers.enqueue(runTransition(t, task, case_id));
-                   });
-                 };
-
-                 // returns a simple stoppable threadpool.
-                 StoppablePool stp(thread_count, polymorphic_actions);
-
-                 // the model at initial state
-                 Model m(net, store, m0);
-                 get = [&](clock_s::time_point) {
-                   return std::make_tuple(m.timestamp, m.event_log, m.net, m.M,
-                                          m.pending_transitions);
-                 };
-
-                 // enqueue a noop to start, not doing this would require
-                 // external input to 'start' (even if the petri net is alive)
-                 reducers.enqueue([](Model &&m) -> Model & { return m; });
-
-                 auto stop_condition =
-                     final_marking.has_value()?[&] {
-                           return EARLY_EXIT || (m.pending_transitions.empty() && m.M != m0) ||
-                                  MarkingReached(m.M, final_marking.value());
-                         }
-                         : std::function{[&] { return EARLY_EXIT || (m.pending_transitions.empty() && m.M != m0); }};
-                 Reducer f;
-                 do {
-                   // get a reducer.
-                   while ((m.pending_transitions.empty() && m.M != m0)
-                              ? reducers.try_dequeue(f)
-                              : reducers.wait_dequeue_timed(
-                                    f, std::chrono::seconds(1))) {
-                     if (EARLY_EXIT) {
-                       break;
-                     }
-                     try {
-                       m = runAll(f(std::move(m)), reducers,
-                                  polymorphic_actions, case_id);
-                     } catch (const std::exception &e) {
-                       spdlog::get(case_id)->error(e.what());
-                     }
-                   }
-                 } while (!stop_condition());
-
-                 // determine what was the reason we terminated.
-                 TransitionState result;
-                 if (final_marking.has_value()
-                         ? MarkingReached(m.M, final_marking.value())
-                         : false) {
-                   result = TransitionState::Completed;
-                 } else if (EARLY_EXIT) {
-                   result = TransitionState::UserExit;
-                 } else if (m.pending_transitions.empty()) {
-                   result = TransitionState::Deadlock;
-                 } else {
-                   result = TransitionState::Error;
-                 }
-
-                 // stop the thread pool, blocks.
-                 stp.stop();
-
-                 // publish a log
-                 spdlog::get(case_id)->info(
-                     printState(result) + " of {0}-net. Trace-hash is {1}",
-                     case_id, calculateTrace(m.event_log));
-
-                 get = [t = m.timestamp, el = m.event_log, state_net = m.net,
-                        marking = m.M,
-                        ac = m.pending_transitions](clock_s::time_point) {
-                   return std::make_tuple(t, el, state_net, marking, ac);
-                 };
-
-                 return {m.event_log, result};
-               });
+  if (check(store, net)) {
+    // init
+    impl = std::make_shared<Impl>(net, m0, final_marking, store, thread_count,
+                                  case_id);
+    // register a function that "forces" transitions into the queue.
+    p = [this](const std::string &t) {
+      impl->polymorphic_actions.enqueue([t, this, &task = impl->m.store.at(t)] {
+        impl->reducers.enqueue(runTransition(t, task, impl->case_id));
+      });
+    };
+  }
 }
 
-TransitionResult Application::operator()() const { return runApp(); };
+TransitionResult Application::operator()() const {
+  if (impl == nullptr) {
+    spdlog::error("Error not all transitions are in the store");
+    return {{}, TransitionState::Error};
+  } else {
+    return impl->run();
+  }
+}
+
+std::tuple<clock_s::time_point, symmetri::Eventlog, symmetri::StateNet,
+           symmetri::NetMarking, std::set<std::string>>
+Application::get() const {
+  const auto &m = impl->getModel();
+  return std::make_tuple(m.timestamp, m.event_log, m.net, m.M,
+                         m.pending_transitions);
+}
 
 }  // namespace symmetri

@@ -65,11 +65,13 @@ symmetri::PolyAction retryFunc(const symmetri::PolyAction &f,
 
 using Store = std::unordered_map<std::string, PolyAction>;
 
+struct Impl;
+
 struct Application {
  private:
+  std::shared_ptr<Impl> impl;
   std::function<void(const std::string &t)> p;
-  std::function<TransitionResult()> runApp;
-  std::function<TransitionResult()> createApplication(
+  void createApplication(
       const symmetri::StateNet &net, const symmetri::NetMarking &m0,
       const std::optional<symmetri::NetMarking> &final_marking,
       const Store &store, unsigned int thread_count,
@@ -79,22 +81,21 @@ struct Application {
   Application(const std::set<std::string> &path_to_petri,
               const std::optional<symmetri::NetMarking> &final_marking,
               const Store &store, unsigned int thread_count,
-              const std::string &case_id = "NOCASE");
+              const std::string &case_id);
   Application(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
               const std::optional<symmetri::NetMarking> &final_marking,
               const Store &store, unsigned int thread_count,
               const std::string &case_id);
 
   template <typename T>
-  inline std::function<void(T)> push(const std::string &transition) const {
+  inline std::function<void(T)> registerTransitionCallback(
+      const std::string &transition) const {
     return [transition, this](T) { p(transition); };
   }
 
-  std::function<std::tuple<clock_s::time_point, symmetri::Eventlog,
-                           symmetri::StateNet, symmetri::NetMarking,
-                           std::set<std::string>>(clock_s::time_point)>
-      get;
-
+  std::tuple<clock_s::time_point, symmetri::Eventlog, symmetri::StateNet,
+             symmetri::NetMarking, std::set<std::string>>
+  get() const;
   TransitionResult operator()() const;
 };
 
