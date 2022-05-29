@@ -24,7 +24,7 @@ message(STATUS "Building Symmetri - shared: ${BUILD_SHARED_LIBS}")
 include_directories(include includes submodules submodules/immer ${SEASOCKS_INCLUDE_DIRS} )
 
 #lib
-add_library(${PROJECT_NAME} symmetri.cc model.cc pnml_parser.cc ws_interface.cpp submodules/tinyxml2/tinyxml2.cpp)
+add_library(${PROJECT_NAME} symmetri.cc model.cc pnml_parser.cc retry.cpp ws_interface.cpp submodules/tinyxml2/tinyxml2.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE pthread Seasocks::seasocks spdlog::spdlog concurrentqueue)
 target_include_directories(${PROJECT_NAME} INTERFACE include submodules/immer)
 

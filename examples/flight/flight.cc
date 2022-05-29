@@ -2,9 +2,9 @@
 
 #include <random>
 
+#include "Symmetri/retry.h"
 #include "Symmetri/symmetri.h"
 #include "namespace_share_data.h"
-
 std::function<void()> helloT(std::string s) {
   return [s] {
     std::this_thread::sleep_for(std::chrono::seconds(1));

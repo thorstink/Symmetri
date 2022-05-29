@@ -20,10 +20,25 @@ struct Event {
 
 using Eventlog = immer::flex_vector<Event>;
 using TransitionResult = std::pair<Eventlog, TransitionState>;
-
 using StateNet =
     std::map<Transition, std::pair<std::vector<Place>, std::vector<Place>>>;
 using NetMarking = std::map<Place, uint16_t>;
+
+template <typename T>
+constexpr TransitionResult runTransition(const T& x) {
+  if constexpr (std::is_invocable_v<T>) {
+    if constexpr (std::is_same_v<TransitionState, decltype(x())>) {
+      return {{}, x()};
+    } else if constexpr (std::is_same_v<TransitionResult, decltype(x())>) {
+      return x();
+    } else {
+      x();
+      return {{}, TransitionState::Completed};
+    }
+  } else {
+    return {{}, TransitionState::Completed};
+  }
+}
 
 inline bool MarkingReached(const NetMarking& marking,
                            const NetMarking& final_marking) {

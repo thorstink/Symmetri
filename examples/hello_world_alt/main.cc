@@ -5,6 +5,7 @@
 #include <optional>
 #include <random>
 
+#include "Symmetri/retry.h"
 #include "Symmetri/symmetri.h"
 #include "Symmetri/ws_interface.hpp"
 
@@ -68,6 +69,7 @@ int main(int argc, char *argv[]) {
     spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),
                  c.time_since_epoch().count());
   }
+  spdlog::info("Result of this net: {0}", printState(result));
 
   return result == symmetri::TransitionState::Completed ? 0 : -1;
 }
