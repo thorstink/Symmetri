@@ -77,10 +77,7 @@ struct Impl {
   StoppablePool stp;
   const std::string case_id;
   std::optional<symmetri::NetMarking> final_marking;
-  ~Impl() {
-    EARLY_EXIT = true;
-    stp.stop();
-  }
+  ~Impl() { stp.stop(); }
   Impl(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
        const std::optional<symmetri::NetMarking> &final_marking,
        const Store &store, unsigned int thread_count,
