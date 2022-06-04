@@ -29,20 +29,22 @@ Reducer runTransition(const std::string &T_i, const std::string &case_id,
     if (result == TransitionState::Completed) {
       processPostConditions(model.net.at(T_i).second, model.M);
     }
-    model.event_log.push_back(
-        {case_id, T_i, TransitionState::Started, start_time, thread_id});
-    model.event_log.push_back({case_id, T_i,
-                               result == TransitionState::Completed
-                                   ? TransitionState::Completed
-                                   : TransitionState::Error,
-                               end_time, thread_id});
+    model.event_log = std::move(model.event_log)
+                          .push_back({case_id, T_i, TransitionState::Started,
+                                      start_time, thread_id});
+    model.event_log = std::move(model.event_log)
+                          .push_back({case_id, T_i,
+                                      result == TransitionState::Completed
+                                          ? TransitionState::Completed
+                                          : TransitionState::Error,
+                                      end_time, thread_id});
 
     model.pending_transitions.erase(T_i);
     return model;
   };
 }
 
-Reducer runTransition(const std::string &T_i, const Eventlog &el,
+Reducer runTransition(const std::string &T_i, const Eventlog &new_events,
                       TransitionState result, size_t thread_id,
                       clock_s::time_point end_time) {
   return [=](Model &&model) -> Model & {
@@ -50,7 +52,7 @@ Reducer runTransition(const std::string &T_i, const Eventlog &el,
       processPostConditions(model.net.at(T_i).second, model.M);
     }
 
-    std::move(el.begin(), el.end(), std::back_inserter(model.event_log));
+    model.event_log = model.event_log + new_events;
     model.pending_transitions.erase(T_i);
     return model;
   };

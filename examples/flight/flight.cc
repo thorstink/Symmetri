@@ -2,9 +2,9 @@
 
 #include <random>
 
+#include "Symmetri/retry.h"
 #include "Symmetri/symmetri.h"
 #include "namespace_share_data.h"
-
 std::function<void()> helloT(std::string s) {
   return [s] {
     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -33,14 +33,14 @@ int main(int argc, char *argv[]) {
   auto pnml3 = std::string(argv[3]);
 
   symmetri::Application subnet({pnml1}, symmetri::NetMarking{{"P1", 1}},
-                               {{"T0", &failFunc}}, 1, "charon", false);
+                               {{"T0", &failFunc}}, 1, "charon");
 
   symmetri::Store store = {{"T0", symmetri::retryFunc(subnet, "T0", "pluto")},
                            {"T1", helloT("T1")},
                            {"T2", helloT("T2")}};
   symmetri::NetMarking final_marking = {{"P3", 30}};
   symmetri::Application bignet({pnml1, pnml2, pnml3}, final_marking, store, 3,
-                               "pluto", true);
+                               "pluto");
 
   auto [el, result] = bignet();  // infinite loop
 

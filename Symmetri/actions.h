@@ -12,7 +12,9 @@ struct StoppablePool {
  private:
   void join() {
     for (auto &&t : pool) {
-      t.join();
+      if (t.joinable()) {
+        t.join();
+      }
     }
   }
   std::vector<std::thread> pool;
