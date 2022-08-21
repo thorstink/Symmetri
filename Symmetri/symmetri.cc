@@ -6,12 +6,12 @@
 #include <spdlog/spdlog.h>
 #include <unistd.h>
 
+#include <condition_variable>
 #include <fstream>
 #include <functional>
 #include <memory>
 #include <numeric>
 #include <optional>
-#include <ranges>
 #include <sstream>
 #include <tuple>
 
@@ -20,6 +20,22 @@
 #include "model.h"
 #include "pnml_parser.h"
 namespace symmetri {
+
+std::condition_variable cv;
+std::mutex cv_m;  // This mutex is used for two purposes:
+                  // 1) to synchronize accesses to PAUSE
+                  // 2) for the condition variable cv
+bool PAUSE = false;
+
+void blockIfPaused(const std::string &case_id) {
+  std::unique_lock<std::mutex> lk(cv_m);
+  if (PAUSE) {
+    spdlog::get(case_id)->info("Execution is paused");
+    cv.wait(lk, [] { return !PAUSE; });
+    spdlog::get(case_id)->info("Execution is resumed");
+  }
+}
+
 // Define the function to be called when ctrl-c (SIGINT) is sent to process
 bool EARLY_EXIT = false;
 inline void signal_handler(int signal) { EARLY_EXIT = true; }
@@ -72,6 +88,7 @@ bool check(const Store &store, const symmetri::StateNet &net) {
 
 struct Impl {
   Model m;
+  const symmetri::NetMarking m0_;
   BlockingConcurrentQueue<Reducer> reducers;
   BlockingConcurrentQueue<PolyAction> polymorphic_actions;
   StoppablePool stp;
@@ -83,6 +100,7 @@ struct Impl {
        const Store &store, unsigned int thread_count,
        const std::string &case_id)
       : m(net, store, m0),
+        m0_(m0),
         reducers(256),
         polymorphic_actions(256),
         stp(thread_count, polymorphic_actions),
@@ -90,7 +108,10 @@ struct Impl {
         final_marking(final_marking) {}
   const Model &getModel() const { return m; }
   TransitionResult run() {
-    const auto m0 = m.M;
+    // todo.. not have to assign it manually to reset.
+    m.M = m0_;
+    m.event_log = {};
+
     // enqueue a noop to start, not
     // doing this would require
     // external input to 'start' (even if the petri net is alive)
@@ -98,17 +119,19 @@ struct Impl {
 
     auto stop_condition =
                      final_marking.has_value()?[&] {
-                           return EARLY_EXIT || (m.pending_transitions.empty() && m.M != m0) ||
-                                  MarkingReached(m.M, final_marking.value());
+                           return EARLY_EXIT || (m.pending_transitions.empty() && m.M != m0_) || ( m.pending_transitions.empty() &&
+                                  MarkingReached(m.M, final_marking.value()));
                          }
-                         : std::function{[&] { return EARLY_EXIT || (m.pending_transitions.empty() && m.M != m0); }};
+                         : std::function{[&] {
+                          
+                           return EARLY_EXIT || (m.pending_transitions.empty() && m.M != m0_); }};
     Reducer f;
     do {
-      // get a reducer.
-      while ((m.pending_transitions.empty() && m.M != m0)
-                 ? reducers.try_dequeue(f)
-                 : reducers.wait_dequeue_timed(f, std::chrono::seconds(1))) {
-        if (EARLY_EXIT) {
+      blockIfPaused(case_id);
+      // get a reducer. Immediately, or wait a bit
+      while (reducers.try_dequeue(f) || stop_condition() ||
+             reducers.wait_dequeue_timed(f, std::chrono::seconds(1))) {
+        if (stop_condition()) {
           break;
         }
         try {
@@ -121,24 +144,24 @@ struct Impl {
 
     // determine what was the reason we terminated.
     TransitionState result;
-    if (final_marking.has_value() ? MarkingReached(m.M, final_marking.value())
-                                  : false) {
-      result = TransitionState::Completed;
-    } else if (EARLY_EXIT) {
+    if (EARLY_EXIT) {
       result = TransitionState::UserExit;
+    } else if (MarkingReached(m.M, final_marking.value_or(symmetri::NetMarking()))) {
+      result = TransitionState::Completed;
     } else if (m.pending_transitions.empty()) {
       result = TransitionState::Deadlock;
     } else {
       result = TransitionState::Error;
     }
 
-    // stop the thread pool, blocks.
-    stp.stop();
-
     // publish a log
     spdlog::get(case_id)->info(
         printState(result) + " of {0}-net. Trace-hash is {1}", case_id,
         calculateTrace(m.event_log));
+    spdlog::get(case_id)->info(
+        printState(result) + " of {0}-net. Final markin-hash is {1}", case_id,
+        hashNM(m.M));
+
     return {m.event_log, result};
   }
 };
@@ -186,7 +209,8 @@ TransitionResult Application::operator()() const {
     spdlog::error("Error not all transitions are in the store");
     return {{}, TransitionState::Error};
   } else {
-    return impl->run();
+    auto res = impl->run();
+    return res;
   }
 }
 
@@ -196,6 +220,12 @@ Application::get() const {
   const auto &m = impl->getModel();
   return std::make_tuple(m.timestamp, m.event_log, m.net, m.M,
                          m.pending_transitions);
+}
+
+void Application::togglePause() {
+  std::lock_guard<std::mutex> lk(cv_m);
+  PAUSE = !PAUSE;
+  cv.notify_all();
 }
 
 }  // namespace symmetri

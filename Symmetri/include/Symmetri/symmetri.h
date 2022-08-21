@@ -22,7 +22,7 @@ using Store = std::unordered_map<std::string, PolyAction>;
 struct Impl;
 struct Application {
  private:
-  std::shared_ptr<Impl> impl;
+  mutable std::shared_ptr<Impl> impl;
   std::function<void(const std::string &t)> p;
   void createApplication(
       const symmetri::StateNet &net, const symmetri::NetMarking &m0,
@@ -50,6 +50,7 @@ struct Application {
              symmetri::NetMarking, std::set<std::string>>
   get() const;
   TransitionResult operator()() const;
+  void togglePause();
 };
 
 }  // namespace symmetri

@@ -9,8 +9,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -Os -Wno-error=deprecated-enum-enum-conversion")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -g -fsanitize=address -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -O0 -Wno-error=deprecated-enum-enum-conversion")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -g -fsanitize=address -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -O0 -Wno-error=deprecated-enum-enum-conversion")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -g -fsanitize=address -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Wall -Wextra -O0 -Wno-error=deprecated-enum-enum-conversion")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -g -fsanitize=address -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Wall -Wextra -O0 -Wno-error=deprecated-enum-enum-conversion")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -g -fsanitize=address -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Wall -Wextra -O0")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -g -fsanitize=address -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Wall -Wextra -O0")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -g -fsanitize=address -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Wall -Wextra -O0 -Wno-error=deprecated-enum-enum-conversion")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -g -fsanitize=address -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Wall -Wextra -O0 -Wno-error=deprecated-enum-enum-conversion")
 
 enable_testing()
 

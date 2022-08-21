@@ -1,10 +1,24 @@
 #include <spdlog/spdlog.h>
 
+#include <immer/flex_vector_transient.hpp>
+#include <iostream>
 #include <random>
+#include <thread>
 
 #include "Symmetri/retry.h"
 #include "Symmetri/symmetri.h"
+#include "Symmetri/ws_interface.hpp"
 #include "namespace_share_data.h"
+
+symmetri::Eventlog getNewEvents(const symmetri::Eventlog &el,
+                                symmetri::clock_s::time_point t) {
+  symmetri::Eventlog new_events;
+  auto ne = new_events.transient();
+  std::copy_if(el.begin(), el.end(), std::back_inserter(ne),
+               [t](const auto &l) { return l.stamp > t; });
+  return ne.persistent();
+}
+
 std::function<void()> helloT(std::string s) {
   return [s] {
     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -32,17 +46,66 @@ int main(int argc, char *argv[]) {
   auto pnml2 = std::string(argv[2]);
   auto pnml3 = std::string(argv[3]);
 
-  symmetri::Application subnet({pnml1}, symmetri::NetMarking{{"P1", 1}},
-                               {{"T0", &failFunc}}, 1, "charon");
+  symmetri::NetMarking final_marking2 = {{"P2", 1}};
+  symmetri::Store s2 = {{"T0", helloT("T01")}, {"T1", helloT("T02")}};
+  symmetri::Application subnet({pnml1, pnml2}, final_marking2, s2, 1, "charon");
 
-  symmetri::Store store = {{"T0", symmetri::retryFunc(subnet, "T0", "pluto")},
+  // symmetri::Store store = {{"T0", helloT("T0")},
+  symmetri::Store store = {{"T0", subnet},
+  // symmetri::Store store = {{"T0", symmetri::retryFunc(subnet, "T0", "pluto")},
                            {"T1", helloT("T1")},
                            {"T2", helloT("T2")}};
   symmetri::NetMarking final_marking = {{"P3", 30}};
   symmetri::Application bignet({pnml1, pnml2, pnml3}, final_marking, store, 3,
                                "pluto");
+  auto t = std::thread([&bignet] {
+    float a;
+    while (true) {
+      std::cin >> a;
+      spdlog::info("togglepause");
+      bignet.togglePause();
+    }
+  });
+
+  bool running = true;
+  // a server to send stuff (runs a background thread)
+  WsServer server(2222);
+  // some thread to poll the net and send it away through a server
+  auto wt = std::thread([&bignet, &running, &server] {
+    auto previous_stamp = symmetri::clock_s::now();
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    do {
+      auto [t, el, state_net, marking, at] = bignet.get();
+      server.sendNet(t, state_net, marking, at);
+      server.sendLog(getNewEvents(el, previous_stamp));
+      previous_stamp = t;
+      spdlog::info("log entries: {0}", el.size());
+      std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    } while (running);
+  });
+
+  WsServer server2(3333);
+  // some thread to poll the net and send it away through a server
+  auto wt2 = std::thread([&subnet, &running, &server2] {
+    auto previous_stamp = symmetri::clock_s::now();
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    do {
+      auto [t, el, state_net, marking, at] = subnet.get();
+      server2.sendNet(t, state_net, marking, at);
+      server2.sendLog(getNewEvents(el, previous_stamp));
+      previous_stamp = t;
+      spdlog::info("log entries: {0}", el.size());
+      std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    } while (running);
+  });
 
   auto [el, result] = bignet();  // infinite loop
+
+  running = false;
+  server.stop();
+  server2.stop();
+  wt.join();
+  wt2.join();
 
   for (const auto &[caseid, t, s, c, tid] : el) {
     spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),
@@ -50,6 +113,7 @@ int main(int argc, char *argv[]) {
   }
 
   spdlog::info("Result of this net: {0}", printState(result));
+  t.detach();
 
   return result == symmetri::TransitionState::Completed ? 0 : -1;
 }

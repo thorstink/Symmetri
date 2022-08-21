@@ -1,5 +1,7 @@
 #include "model.h"
 
+#include <iostream>
+
 namespace symmetri {
 
 auto getThreadId() {

@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
   // a server to send stuff (runs a background thread)
   WsServer server(2222);
   // some thread to poll the net and send it away through a server
-  auto t = std::jthread([&net, &running, &server] {
+  auto t = std::thread([&net, &running, &server] {
     auto previous_stamp = symmetri::clock_s::now();
     std::this_thread::sleep_for(std::chrono::seconds(2));
     do {
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
 
   running = false;
   server.stop();
-
+  t.join();
   for (const auto &[caseid, t, s, c, tid] : el) {
     spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),
                  c.time_since_epoch().count());

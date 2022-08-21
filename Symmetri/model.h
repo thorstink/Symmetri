@@ -27,7 +27,7 @@ struct Model {
   Model(const Model &) = delete;
 
   const StateNet net;
-  const Store store;
+  const Store& store;
 
   clock_s::time_point timestamp;
   NetMarking M;
