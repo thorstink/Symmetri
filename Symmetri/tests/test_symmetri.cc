@@ -24,7 +24,7 @@ TEST_CASE("Create a using the net constructor without end condition.") {
                             "test_net_without_end");
   // we can run the net
   auto [ev, res] = app();
-  // because there's not final marking, but the net is finite, it deadlocks.
+  // because there's no final marking, but the net is finite, it deadlocks.
   REQUIRE(res == TransitionState::Deadlock);
   REQUIRE(!ev.empty());
 }
@@ -60,7 +60,7 @@ TEST_CASE("Create a using pnml constructor.") {
     // This store is appropriate for this net,
     Store store = symmetri::Store{{"T0", &t0}};
 
-    NetMarking final_marking({{"P1", 0}});
+    NetMarking final_marking({{"P1", 1}});
     symmetri::Application app({pnml_file}, final_marking, store, 3, "success");
     // so we can run it,
     auto [ev, res] = app();

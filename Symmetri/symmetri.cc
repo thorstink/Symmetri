@@ -117,14 +117,15 @@ struct Impl {
     // external input to 'start' (even if the petri net is alive)
     reducers.enqueue([](Model &&m) -> Model & { return m; });
 
+    // this is the check whether we should break the loop. It's either early exit, otherwise there must be event_logs. 
     auto stop_condition =
                      final_marking.has_value()?[&] {
-                           return EARLY_EXIT || (m.pending_transitions.empty() && m.M != m0_) || ( m.pending_transitions.empty() &&
+                           return EARLY_EXIT || (m.pending_transitions.empty() && !m.event_log.empty()) || ( m.pending_transitions.empty() &&
                                   MarkingReached(m.M, final_marking.value()));
                          }
                          : std::function{[&] {
                           
-                           return EARLY_EXIT || (m.pending_transitions.empty() && m.M != m0_); }};
+                           return EARLY_EXIT || (m.pending_transitions.empty() && !m.event_log.empty()); }};
     Reducer f;
     do {
       blockIfPaused(case_id);
@@ -146,7 +147,7 @@ struct Impl {
     TransitionState result;
     if (EARLY_EXIT) {
       result = TransitionState::UserExit;
-    } else if (MarkingReached(m.M, final_marking.value_or(symmetri::NetMarking()))) {
+    } else if (final_marking.has_value() ? MarkingReached(m.M, final_marking.value()) : false) {
       result = TransitionState::Completed;
     } else if (m.pending_transitions.empty()) {
       result = TransitionState::Deadlock;

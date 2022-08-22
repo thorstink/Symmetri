@@ -52,17 +52,17 @@ int main(int argc, char *argv[]) {
 
   // symmetri::Store store = {{"T0", helloT("T0")},
   symmetri::Store store = {{"T0", subnet},
-  // symmetri::Store store = {{"T0", symmetri::retryFunc(subnet, "T0", "pluto")},
+                           // symmetri::Store store = {{"T0",
+                           // symmetri::retryFunc(subnet, "T0", "pluto")},
                            {"T1", helloT("T1")},
                            {"T2", helloT("T2")}};
   symmetri::NetMarking final_marking = {{"P3", 30}};
   symmetri::Application bignet({pnml1, pnml2, pnml3}, final_marking, store, 3,
                                "pluto");
   auto t = std::thread([&bignet] {
-    float a;
+    char a;
     while (true) {
       std::cin >> a;
-      spdlog::info("togglepause");
       bignet.togglePause();
     }
   });
@@ -77,9 +77,12 @@ int main(int argc, char *argv[]) {
     do {
       auto [t, el, state_net, marking, at] = bignet.get();
       server.sendNet(t, state_net, marking, at);
-      server.sendLog(getNewEvents(el, previous_stamp));
+      auto new_events = getNewEvents(el, previous_stamp);
+      if (!new_events.empty()) {
+        server.sendLog(new_events);
+        spdlog::info("new entries: {0}", new_events.size());
+      }
       previous_stamp = t;
-      spdlog::info("log entries: {0}", el.size());
       std::this_thread::sleep_for(std::chrono::milliseconds(500));
     } while (running);
   });
@@ -92,9 +95,12 @@ int main(int argc, char *argv[]) {
     do {
       auto [t, el, state_net, marking, at] = subnet.get();
       server2.sendNet(t, state_net, marking, at);
-      server2.sendLog(getNewEvents(el, previous_stamp));
+      auto new_events = getNewEvents(el, previous_stamp);
+      if (!new_events.empty()) {
+        server2.sendLog(new_events);
+        spdlog::info("new entries: {0}", new_events.size());
+      }
       previous_stamp = t;
-      spdlog::info("log entries: {0}", el.size());
       std::this_thread::sleep_for(std::chrono::milliseconds(500));
     } while (running);
   });
