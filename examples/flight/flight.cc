@@ -48,17 +48,18 @@ int main(int argc, char *argv[]) {
 
   symmetri::NetMarking final_marking2 = {{"P2", 1}};
   symmetri::Store s2 = {{"T0", helloT("T01")}, {"T1", helloT("T02")}};
-  symmetri::Application subnet({pnml1, pnml2}, final_marking2, s2, 1, "charon");
+  auto snet = {pnml1, pnml2};
+
+  symmetri::Application subnet(snet, final_marking2, s2, 1, "charon");
 
   // symmetri::Store store = {{"T0", helloT("T0")},
   symmetri::Store store = {{"T0", subnet},
-                           // symmetri::Store store = {{"T0",
                            // symmetri::retryFunc(subnet, "T0", "pluto")},
                            {"T1", helloT("T1")},
                            {"T2", helloT("T2")}};
   symmetri::NetMarking final_marking = {{"P3", 30}};
-  symmetri::Application bignet({pnml1, pnml2, pnml3}, final_marking, store, 3,
-                               "pluto");
+  auto net = {pnml1, pnml2, pnml3};
+  symmetri::Application bignet(net, final_marking, store, 3, "pluto");
   auto t = std::thread([&bignet] {
     char a;
     while (true) {
@@ -73,16 +74,14 @@ int main(int argc, char *argv[]) {
   // some thread to poll the net and send it away through a server
   auto wt = std::thread([&bignet, &running, &server] {
     auto previous_stamp = symmetri::clock_s::now();
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
     do {
       auto [t, el, state_net, marking, at] = bignet.get();
       server.sendNet(t, state_net, marking, at);
       auto new_events = getNewEvents(el, previous_stamp);
       if (!new_events.empty()) {
         server.sendLog(new_events);
-        spdlog::info("new entries: {0}", new_events.size());
+        previous_stamp = t;
       }
-      previous_stamp = t;
       std::this_thread::sleep_for(std::chrono::milliseconds(500));
     } while (running);
   });
@@ -91,16 +90,14 @@ int main(int argc, char *argv[]) {
   // some thread to poll the net and send it away through a server
   auto wt2 = std::thread([&subnet, &running, &server2] {
     auto previous_stamp = symmetri::clock_s::now();
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
     do {
       auto [t, el, state_net, marking, at] = subnet.get();
       server2.sendNet(t, state_net, marking, at);
       auto new_events = getNewEvents(el, previous_stamp);
       if (!new_events.empty()) {
         server2.sendLog(new_events);
-        spdlog::info("new entries: {0}", new_events.size());
+        previous_stamp = t;
       }
-      previous_stamp = t;
       std::this_thread::sleep_for(std::chrono::milliseconds(500));
     } while (running);
   });

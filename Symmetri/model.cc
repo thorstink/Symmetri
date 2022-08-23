@@ -1,7 +1,8 @@
 #include "model.h"
 
-#include <iostream>
-
+#include <immer/algorithm.hpp>
+#include <immer/set.hpp>
+#include <immer/set_transient.hpp>
 namespace symmetri {
 
 auto getThreadId() {
@@ -41,7 +42,7 @@ Reducer runTransition(const std::string &T_i, const std::string &case_id,
                                           : TransitionState::Error,
                                       end_time, thread_id});
 
-    model.pending_transitions.erase(T_i);
+    model.pending_transitions = model.pending_transitions.erase(T_i);
     return model;
   };
 }
@@ -55,7 +56,7 @@ Reducer runTransition(const std::string &T_i, const Eventlog &new_events,
     }
 
     model.event_log = model.event_log + new_events;
-    model.pending_transitions.erase(T_i);
+    model.pending_transitions = model.pending_transitions.erase(T_i);
     return model;
   };
 }
@@ -86,7 +87,7 @@ Model &runAll(
     const std::string &case_id) {
   model.timestamp = clock_s::now();
   std::vector<PolyAction> T;
-  std::set<std::string> new_pending_transitions;
+  immer::set<std::string> new_pending_transitions;
   const auto marking_hash = hashNM(model.M);
   // first check the cache.
   if (model.cache.contains(marking_hash)) {
@@ -112,15 +113,15 @@ Model &runAll(
             reducers.enqueue(runTransition(T_i, task, case_id));
           });
         }
-        new_pending_transitions.insert(T_i);
+        new_pending_transitions = new_pending_transitions.insert(T_i);
       }
     }
     model.cache[marking_hash] = {model.M, T, new_pending_transitions};
   }
 
-  std::move(new_pending_transitions.begin(), new_pending_transitions.end(),
-            std::inserter(model.pending_transitions,
-                          model.pending_transitions.end()));
+  immer::for_each(new_pending_transitions, [&](auto p) {
+    model.pending_transitions = model.pending_transitions.insert(p);
+  });
 
   polymorphic_actions.enqueue_bulk(T.begin(), T.size());
 

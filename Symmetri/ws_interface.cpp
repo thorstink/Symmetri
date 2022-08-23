@@ -47,7 +47,7 @@ void WsServer::stop() {
 void WsServer::sendNet(
     symmetri::clock_s::time_point now, const symmetri::StateNet &net,
     const symmetri::NetMarking &M,
-    const std::set<symmetri::Transition> &pending_transitions) {
+    const immer::set<symmetri::Transition> &pending_transitions) {
   server.execute([=, this]() {
     marking_transition->send(
         symmetri::genNet(now, net, M, pending_transitions));

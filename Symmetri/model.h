@@ -4,6 +4,7 @@
 
 #include <chrono>
 #include <functional>
+#include <immer/set.hpp>
 #include <map>
 #include <memory>
 #include <set>
@@ -27,14 +28,14 @@ struct Model {
   Model(const Model &) = delete;
 
   const StateNet net;
-  const Store& store;
+  const Store &store;
 
   clock_s::time_point timestamp;
   NetMarking M;
-  std::set<Transition> pending_transitions;
+  immer::set<Transition> pending_transitions;
   Eventlog event_log;
   std::unordered_map<size_t, std::tuple<NetMarking, std::vector<PolyAction>,
-                                        std::set<std::string>>>
+                                        immer::set<std::string>>>
       cache;
 };
 

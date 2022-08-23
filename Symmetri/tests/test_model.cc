@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
+#include <immer/set.hpp>
 
 #include "model.h"
-
 using namespace symmetri;
 
 // global counters to keep track of how often the transitions are called.
@@ -78,7 +78,7 @@ TEST_CASE("Run one transition iteration in a petri net") {
   m = runAll(m, reducers, polymorphic_actions);
   // t0 is dispatched but not yet run, so pre-conditions are processed but post
   // are not:
-  REQUIRE(m.pending_transitions == std::set<Transition>({"t0"}));
+  REQUIRE(m.pending_transitions == immer::set<Transition>{}.insert("t0"));
   REQUIRE(m.M == NetMarking({{"Pa", 3}, {"Pb", 1}, {"Pc", 0}, {"Pd", 0}}));
   Reducer r;
   // there is no reducer yet because the task hasn't been executed yet.
@@ -92,7 +92,7 @@ TEST_CASE("Run one transition iteration in a petri net") {
   REQUIRE(T0_COUNTER == 1);
   REQUIRE(reducers.try_dequeue(r));
   // the marking should still be the same.
-  REQUIRE(m.pending_transitions == std::set<Transition>({"t0"}));
+  REQUIRE(m.pending_transitions == immer::set<Transition>{}.insert("t0"));
   REQUIRE(m.M == NetMarking({{"Pa", 3}, {"Pb", 1}, {"Pc", 0}, {"Pd", 0}}));
   // process the reducer
   m = r(std::move(m));
@@ -146,16 +146,17 @@ TEST_CASE("Marking memoization") {
 
   // the next time we have m0, we expect to be able to retrieve the following
   // from the cache:
-  std::tuple<NetMarking, std::vector<PolyAction>, std::set<std::string>>
-      expect_memoization = {m_one.M, {PolyAction(&t0)}, {"t0"}};
+  std::tuple<NetMarking, std::vector<PolyAction>, immer::set<std::string>>
+      expect_memoization = {
+          m_one.M, {PolyAction(&t0)}, immer::set<Transition>{}.insert("t0")};
 
   const auto actual_memoization = m_one.cache[hashNM(m0)];
 
   REQUIRE(std::get<NetMarking>(actual_memoization) ==
           std::get<NetMarking>(expect_memoization));
 
-  REQUIRE(std::get<std::set<std::string>>(actual_memoization) ==
-          std::get<std::set<std::string>>(expect_memoization));
+  REQUIRE(std::get<immer::set<std::string>>(actual_memoization) ==
+          std::get<immer::set<std::string>>(expect_memoization));
 
   // note that we can not easily check equality PolyActions afaik. But to be
   // sure, we will see that both the actual and expected memoized PolyAction

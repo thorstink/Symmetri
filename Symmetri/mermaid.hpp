@@ -1,4 +1,5 @@
 #pragma once
+#include <immer/set.hpp>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -39,7 +40,7 @@ const std::string conn = "-->";
 const std::string header = "graph LR\n";
 
 auto genNet(const clock_s::time_point &now, const StateNet &net,
-            const NetMarking &M, std::set<Transition> pending_transitions) {
+            const NetMarking &M, immer::set<Transition> pending_transitions) {
   std::stringstream mermaid;
   mermaid << header;
 
@@ -57,8 +58,8 @@ auto genNet(const clock_s::time_point &now, const StateNet &net,
 
       mermaid << placeFormatter(p, marking) << place_tag << conn
               << (count > 1 ? multi(count) : "") << t
-              << (pending_transitions.contains(t) ? active_transition_tag
-                                                  : opacity(ratio))
+              << (pending_transitions.count(t) > 0 ? active_transition_tag
+                                                   : opacity(ratio))
               << "\n";
     }
 
@@ -69,12 +70,13 @@ auto genNet(const clock_s::time_point &now, const StateNet &net,
 
       float ratio = 1.0;
       mermaid << t
-              << (pending_transitions.contains(t) ? active_transition_tag
-                                                  : opacity(ratio))
+              << (pending_transitions.count(t) > 0 ? active_transition_tag
+                                                   : opacity(ratio))
               << conn << (count > 1 ? multi(count) : "")
               << placeFormatter(p, marking) << place_tag << "\n";
     }
   }
+
   mermaid << place_class << active_transition_class << footer;
   return mermaid.str();
 }

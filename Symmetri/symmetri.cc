@@ -38,11 +38,11 @@ void blockIfPaused(const std::string &case_id) {
 
 // Define the function to be called when ctrl-c (SIGINT) is sent to process
 bool EARLY_EXIT = false;
-inline void signal_handler(int signal) { EARLY_EXIT = true; }
+inline void signal_handler(int signal) noexcept { EARLY_EXIT = true; }
 
 using namespace moodycamel;
 
-size_t calculateTrace(Eventlog event_log) {
+size_t calculateTrace(Eventlog event_log) noexcept {
   // calculate a trace-id, in a simple way.
   return std::hash<std::string>{}(immer::accumulate(
       event_log.begin(), event_log.end(), std::string(""),
@@ -51,7 +51,7 @@ size_t calculateTrace(Eventlog event_log) {
       }));
 }
 
-std::string printState(symmetri::TransitionState s) {
+std::string printState(symmetri::TransitionState s) noexcept {
   std::string ret;
   switch (s) {
     case TransitionState::Started:
@@ -74,7 +74,7 @@ std::string printState(symmetri::TransitionState s) {
   return ret;
 }
 
-bool check(const Store &store, const symmetri::StateNet &net) {
+bool check(const Store &store, const symmetri::StateNet &net) noexcept {
   return std::all_of(net.cbegin(), net.cend(), [&store](const auto &p) {
     const auto &t = std::get<0>(p);
     bool store_has_transition = store.contains(t);
@@ -107,24 +107,26 @@ struct Impl {
         case_id(case_id),
         final_marking(final_marking) {}
   const Model &getModel() const { return m; }
+  symmetri::Eventlog getEventLog() const { return m.event_log; }
   TransitionResult run() {
     // todo.. not have to assign it manually to reset.
     m.M = m0_;
-    m.event_log = {};
+    m.event_log = symmetri::Eventlog({});
 
     // enqueue a noop to start, not
     // doing this would require
     // external input to 'start' (even if the petri net is alive)
     reducers.enqueue([](Model &&m) -> Model & { return m; });
 
-    // this is the check whether we should break the loop. It's either early exit, otherwise there must be event_logs. 
+    // this is the check whether we should break the loop. It's either early
+    // exit, otherwise there must be event_logs.
     auto stop_condition =
                      final_marking.has_value()?[&] {
                            return EARLY_EXIT || (m.pending_transitions.empty() && !m.event_log.empty()) || ( m.pending_transitions.empty() &&
                                   MarkingReached(m.M, final_marking.value()));
                          }
                          : std::function{[&] {
-                          
+
                            return EARLY_EXIT || (m.pending_transitions.empty() && !m.event_log.empty()); }};
     Reducer f;
     do {
@@ -147,7 +149,9 @@ struct Impl {
     TransitionState result;
     if (EARLY_EXIT) {
       result = TransitionState::UserExit;
-    } else if (final_marking.has_value() ? MarkingReached(m.M, final_marking.value()) : false) {
+    } else if (final_marking.has_value()
+                   ? MarkingReached(m.M, final_marking.value())
+                   : false) {
       result = TransitionState::Completed;
     } else if (m.pending_transitions.empty()) {
       result = TransitionState::Deadlock;
@@ -205,7 +209,7 @@ void Application::createApplication(
   }
 }
 
-TransitionResult Application::operator()() const {
+TransitionResult Application::operator()() const noexcept {
   if (impl == nullptr) {
     spdlog::error("Error not all transitions are in the store");
     return {{}, TransitionState::Error};
@@ -216,10 +220,12 @@ TransitionResult Application::operator()() const {
 }
 
 std::tuple<clock_s::time_point, symmetri::Eventlog, symmetri::StateNet,
-           symmetri::NetMarking, std::set<std::string>>
-Application::get() const {
-  const auto &m = impl->getModel();
-  return std::make_tuple(m.timestamp, m.event_log, m.net, m.M,
+           symmetri::NetMarking, immer::set<std::string>>
+Application::get() const noexcept {
+  auto &m = impl->getModel();
+  // return std::make_tuple(m.timestamp, impl->getEventLog(), m.net, m.M,
+  //                        immer::set<Transition>({}));
+  return std::make_tuple(m.timestamp, impl->getEventLog(), m.net, m.M,
                          m.pending_transitions);
 }
 
