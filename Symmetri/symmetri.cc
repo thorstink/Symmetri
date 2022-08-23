@@ -223,8 +223,7 @@ std::tuple<clock_s::time_point, symmetri::Eventlog, symmetri::StateNet,
            symmetri::NetMarking, immer::set<std::string>>
 Application::get() const noexcept {
   auto &m = impl->getModel();
-  // return std::make_tuple(m.timestamp, impl->getEventLog(), m.net, m.M,
-  //                        immer::set<Transition>({}));
+
   return std::make_tuple(m.timestamp, impl->getEventLog(), m.net, m.M,
                          m.pending_transitions);
 }
