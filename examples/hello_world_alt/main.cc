@@ -7,7 +7,7 @@
 
 #include "Symmetri/retry.h"
 #include "Symmetri/symmetri.h"
-#include "Symmetri/ws_interface.hpp"
+#include "Symmetri/ws_interface.h"
 
 symmetri::Eventlog getNewEvents(const symmetri::Eventlog &el,
                                 symmetri::clock_s::time_point t) {

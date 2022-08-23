@@ -1,4 +1,4 @@
-#include "Symmetri/ws_interface.hpp"
+#include "Symmetri/ws_interface.h"
 
 #include <seasocks/PrintfLogger.h>
 #include <spdlog/spdlog.h>
