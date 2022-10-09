@@ -2,13 +2,15 @@
 
 #include <seasocks/Server.h>
 
-#include "Symmetri/types.h"
 #include <immer/set.hpp>
+
+#include "Symmetri/types.h"
 
 struct Handler;
 class WsServer {
  public:
-  WsServer(int port = 2222);
+  WsServer(
+      int port = 2222, std::function<void()> pause = []() {});
   ~WsServer();
   void stop();
   void sendNet(symmetri::clock_s::time_point now, const symmetri::StateNet &net,

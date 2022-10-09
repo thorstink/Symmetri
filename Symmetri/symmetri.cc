@@ -160,12 +160,12 @@ struct Impl {
     }
 
     // publish a log
-    spdlog::get(case_id)->info(
-        printState(result) + " of {0}-net. Trace-hash is {1}", case_id,
-        calculateTrace(m.event_log));
-    spdlog::get(case_id)->info(
-        printState(result) + " of {0}-net. Final markin-hash is {1}", case_id,
-        hashNM(m.M));
+    // spdlog::get(case_id)->info(
+    //     printState(result) + " of {0}-net. Trace-hash is {1}", case_id,
+    //     calculateTrace(m.event_log));
+    // spdlog::get(case_id)->info(
+    //     printState(result) + " of {0}-net. Final markin-hash is {1}",
+    //     case_id, hashNM(m.M));
 
     return {m.event_log, result};
   }

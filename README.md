@@ -31,7 +31,6 @@ and look at `http://localhost:2222/` for a live view of the activity.
 
 - Create piano
 - research transition guards/coloured nets
-- pause button in webiface
 - nested webiface
 - single webiface server
 # Cloc

@@ -52,25 +52,16 @@ int main(int argc, char *argv[]) {
 
   symmetri::Application subnet(snet, final_marking2, s2, 1, "charon");
 
-  // symmetri::Store store = {{"T0", helloT("T0")},
-  symmetri::Store store = {{"T0", subnet},
-                           // symmetri::retryFunc(subnet, "T0", "pluto")},
-                           {"T1", helloT("T1")},
-                           {"T2", helloT("T2")}};
+  symmetri::Store store = {
+      {"T0", subnet}, {"T1", helloT("T1")}, {"T2", helloT("T2")}};
+
   symmetri::NetMarking final_marking = {{"P3", 30}};
   auto net = {pnml1, pnml2, pnml3};
   symmetri::Application bignet(net, final_marking, store, 3, "pluto");
-  auto t = std::thread([&bignet] {
-    char a;
-    while (true) {
-      std::cin >> a;
-      bignet.togglePause();
-    }
-  });
 
   bool running = true;
   // a server to send stuff (runs a background thread)
-  WsServer server(2222);
+  WsServer server(2222, [&]() { bignet.togglePause(); });
   // some thread to poll the net and send it away through a server
   auto wt = std::thread([&bignet, &running, &server] {
     auto previous_stamp = symmetri::clock_s::now();
@@ -116,7 +107,6 @@ int main(int argc, char *argv[]) {
   }
 
   spdlog::info("Result of this net: {0}", printState(result));
-  t.detach();
 
   return result == symmetri::TransitionState::Completed ? 0 : -1;
 }

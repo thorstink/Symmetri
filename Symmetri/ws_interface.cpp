@@ -21,12 +21,22 @@ struct Handler : seasocks::WebSocket::Handler {
   bool hasConnections() { return connections.size() > 0; }
 };
 
-WsServer::WsServer(int port)
+struct pauseHandler : seasocks::WebSocket::Handler {
+  std::function<void()> p_;
+  pauseHandler(std::function<void()> p) : p_(p) {}
+  void onData(seasocks::WebSocket *con, const char *data) override { p_(); }
+  void onConnect(seasocks::WebSocket *socket) override {}
+  void onDisconnect(seasocks::WebSocket *socket) override {}
+};
+
+WsServer::WsServer(int port, std::function<void()> pause)
     : time_data(std::make_shared<Handler>()),
       marking_transition(std::make_shared<Handler>()),
       server(std::make_shared<seasocks::PrintfLogger>(
           seasocks::Logger::Level::Error)),
-      web_t_([this, port] {
+      web_t_([this, port, pause] {
+        server.addWebSocketHandler("/pause",
+                                   std::make_shared<pauseHandler>(pause));
         server.addWebSocketHandler("/transition_data", time_data);
         server.addWebSocketHandler("/marking_transition_data",
                                    marking_transition);
