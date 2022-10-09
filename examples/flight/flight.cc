@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
   symmetri::Store store = {
       {"T0", subnet}, {"T1", helloT("T1")}, {"T2", helloT("T2")}};
 
-  symmetri::NetMarking final_marking = {{"P3", 30}};
+  symmetri::NetMarking final_marking = {{"P3", 5}};
   auto net = {pnml1, pnml2, pnml3};
   symmetri::Application bignet(net, final_marking, store, 3, "pluto");
 
