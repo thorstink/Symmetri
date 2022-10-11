@@ -2,6 +2,9 @@
 
 #include <spdlog/spdlog.h>
 
+#include <memory>
+#include <thread>
+
 symmetri::PolyAction symmetri::retryFunc(const symmetri::PolyAction &f,
                                          const symmetri::Transition &t,
                                          const std::string &case_id,
@@ -19,13 +22,12 @@ symmetri::PolyAction symmetri::retryFunc(const symmetri::PolyAction &f,
       std::tie(incremental_log, res) = runTransition(f);
       const auto end_time = symmetri::clock_s::now();
       if (incremental_log.empty()) {
-        incremental_log = incremental_log.push_back(
-            {case_id, t, symmetri::TransitionState::Started, start_time,
-             thread_id});
-        incremental_log =
-            incremental_log.push_back({case_id, t, res, end_time, thread_id});
+        log.push_back({case_id, t, symmetri::TransitionState::Started,
+                       start_time, thread_id});
+        log.push_back({case_id, t, res, end_time, thread_id});
+      } else {
+        for (const auto &l : incremental_log) log.push_back(l);
       }
-      log = log + incremental_log;
 
     } while (symmetri::TransitionState::Completed != res &&
              attempts < retry_count);

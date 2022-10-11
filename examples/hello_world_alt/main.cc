@@ -1,6 +1,5 @@
 #include <spdlog/spdlog.h>
 
-#include <immer/flex_vector_transient.hpp>
 #include <iostream>
 #include <optional>
 #include <random>
@@ -12,10 +11,9 @@
 symmetri::Eventlog getNewEvents(const symmetri::Eventlog &el,
                                 symmetri::clock_s::time_point t) {
   symmetri::Eventlog new_events;
-  auto ne = new_events.transient();
-  std::copy_if(el.begin(), el.end(), std::back_inserter(ne),
+  std::copy_if(el.begin(), el.end(), std::back_inserter(new_events),
                [t](const auto &l) { return l.stamp > t; });
-  return ne.persistent();
+  return new_events;
 }
 
 void helloWorld() { std::this_thread::sleep_for(std::chrono::seconds(1)); }

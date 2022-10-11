@@ -1,8 +1,5 @@
 #include "model.h"
 
-#include <immer/algorithm.hpp>
-#include <immer/set.hpp>
-#include <immer/set_transient.hpp>
 namespace symmetri {
 
 auto getThreadId() {
@@ -32,17 +29,15 @@ Reducer runTransition(const std::string &T_i, const std::string &case_id,
     if (result == TransitionState::Completed) {
       processPostConditions(model.net.at(T_i).second, model.M);
     }
-    model.event_log = std::move(model.event_log)
-                          .push_back({case_id, T_i, TransitionState::Started,
-                                      start_time, thread_id});
-    model.event_log = std::move(model.event_log)
-                          .push_back({case_id, T_i,
-                                      result == TransitionState::Completed
-                                          ? TransitionState::Completed
-                                          : TransitionState::Error,
-                                      end_time, thread_id});
+    model.event_log.push_back(
+        {case_id, T_i, TransitionState::Started, start_time, thread_id});
+    model.event_log.push_back({case_id, T_i,
+                               result == TransitionState::Completed
+                                   ? TransitionState::Completed
+                                   : TransitionState::Error,
+                               end_time, thread_id});
 
-    model.pending_transitions = model.pending_transitions.erase(T_i);
+    model.pending_transitions.erase(T_i);
     return model;
   };
 }
@@ -55,8 +50,10 @@ Reducer runTransition(const std::string &T_i, const Eventlog &new_events,
       processPostConditions(model.net.at(T_i).second, model.M);
     }
 
-    model.event_log = model.event_log + new_events;
-    model.pending_transitions = model.pending_transitions.erase(T_i);
+    for (const auto &e : new_events) {
+      model.event_log.push_back(e);
+    }
+    model.pending_transitions.erase(T_i);
     return model;
   };
 }
@@ -87,7 +84,7 @@ Model &runAll(
     const std::string &case_id) {
   model.timestamp = clock_s::now();
   std::vector<PolyAction> T;
-  immer::set<std::string> new_pending_transitions;
+  std::set<std::string> new_pending_transitions;
   const auto marking_hash = hashNM(model.M);
   // first check the cache.
   if (model.cache.contains(marking_hash)) {
@@ -113,15 +110,15 @@ Model &runAll(
             reducers.enqueue(runTransition(T_i, task, case_id));
           });
         }
-        new_pending_transitions = new_pending_transitions.insert(T_i);
+        new_pending_transitions.insert(T_i);
       }
     }
     model.cache[marking_hash] = {model.M, T, new_pending_transitions};
   }
 
-  immer::for_each(new_pending_transitions, [&](auto p) {
-    model.pending_transitions = model.pending_transitions.insert(p);
-  });
+  for (const auto &p : new_pending_transitions) {
+    model.pending_transitions.insert(p);
+  }
 
   polymorphic_actions.enqueue_bulk(T.begin(), T.size());
 

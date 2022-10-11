@@ -16,7 +16,6 @@
 #include <tuple>
 
 #include "actions.h"
-#include "immer/algorithm.hpp"
 #include "model.h"
 #include "pnml_parser.h"
 namespace symmetri {
@@ -44,7 +43,7 @@ using namespace moodycamel;
 
 size_t calculateTrace(Eventlog event_log) noexcept {
   // calculate a trace-id, in a simple way.
-  return std::hash<std::string>{}(immer::accumulate(
+  return std::hash<std::string>{}(std::accumulate(
       event_log.begin(), event_log.end(), std::string(""),
       [](const auto &acc, const Event &n) {
         return n.state == TransitionState::Completed ? acc + n.transition : acc;
@@ -219,7 +218,7 @@ TransitionResult Application::operator()() const noexcept {
 }
 
 std::tuple<clock_s::time_point, symmetri::Eventlog, symmetri::StateNet,
-           symmetri::NetMarking, immer::set<std::string>>
+           symmetri::NetMarking, std::set<std::string>>
 Application::get() const noexcept {
   auto &m = impl->getModel();
 

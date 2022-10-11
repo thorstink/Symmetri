@@ -1,5 +1,4 @@
 #pragma once
-#include <immer/set.hpp>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -40,7 +39,7 @@ const std::string conn = "-->";
 const std::string header = "graph LR\n";
 
 auto genNet(const clock_s::time_point &now, const StateNet &net,
-            const NetMarking &M, immer::set<Transition> pending_transitions) {
+            const NetMarking &M, std::set<Transition> pending_transitions) {
   std::stringstream mermaid;
   mermaid << header;
 

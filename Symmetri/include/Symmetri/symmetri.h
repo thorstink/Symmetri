@@ -11,7 +11,6 @@
 
 #include "Symmetri/polyaction.h"
 #include "Symmetri/types.h"
-#include <immer/set.hpp>
 
 namespace symmetri {
 
@@ -48,7 +47,7 @@ struct Application {
   }
 
   std::tuple<clock_s::time_point, symmetri::Eventlog, symmetri::StateNet,
-             symmetri::NetMarking, immer::set<std::string>>
+             symmetri::NetMarking, std::set<std::string>>
   get() const noexcept;
   TransitionResult operator()() const noexcept;
   void togglePause();

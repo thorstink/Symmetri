@@ -1,5 +1,5 @@
 #pragma once
-#include <immer/flex_vector.hpp>
+#include <chrono>
 #include <map>
 #include <string>
 #include <vector>
@@ -18,7 +18,7 @@ struct Event {
   size_t thread_id;
 };
 
-using Eventlog = immer::flex_vector<Event>;
+using Eventlog = std::vector<Event>;
 using TransitionResult = std::pair<Eventlog, TransitionState>;
 using StateNet =
     std::map<Transition, std::pair<std::vector<Place>, std::vector<Place>>>;

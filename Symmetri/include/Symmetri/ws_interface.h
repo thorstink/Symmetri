@@ -2,10 +2,9 @@
 
 #include <seasocks/Server.h>
 
-#include <immer/set.hpp>
+#include <thread>
 
 #include "Symmetri/types.h"
-
 struct Handler;
 class WsServer {
  public:
@@ -15,7 +14,7 @@ class WsServer {
   void stop();
   void sendNet(symmetri::clock_s::time_point now, const symmetri::StateNet &net,
                const symmetri::NetMarking &M,
-               const immer::set<symmetri::Transition> &pending_transitions);
+               const std::set<symmetri::Transition> &pending_transitions);
   void sendLog(const symmetri::Eventlog &el);
 
  private:

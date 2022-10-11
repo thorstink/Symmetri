@@ -18,7 +18,7 @@ if(NOT concurrentqueue_POPULATED)
 endif()
 
 
-include_directories(${EIGEN3_INCLUDE_DIRS} ../submodules/immer ../include ..)
+include_directories(${EIGEN3_INCLUDE_DIRS} ../include ..)
 
 include(CTest)
 include(Catch)
