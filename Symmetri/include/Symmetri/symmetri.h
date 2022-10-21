@@ -24,6 +24,7 @@ struct Application {
  private:
   mutable std::shared_ptr<Impl> impl;
   std::function<void(const std::string &t)> p;
+  std::function<void(const clock_s::time_point &t)> publish;
   void createApplication(
       const symmetri::StateNet &net, const symmetri::NetMarking &m0,
       const std::optional<symmetri::NetMarking> &final_marking,
@@ -46,9 +47,17 @@ struct Application {
     return [transition, this](T) { p(transition); };
   }
 
+  void doMeData(std::function<void()> f) const;
+
   std::tuple<clock_s::time_point, symmetri::Eventlog, symmetri::StateNet,
              symmetri::NetMarking, std::set<std::string>>
   get() const noexcept;
+
+  const symmetri::StateNet &getNet();
+  // symmetri::NetMarking getMarking();
+  // const symmetri::Eventlog &getLog();
+  // std::set<std::string> getActiveTransitions();
+
   TransitionResult operator()() const noexcept;
   void togglePause();
 };

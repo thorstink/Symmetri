@@ -1,5 +1,7 @@
 #pragma once
+
 #include <iostream>
+#include <span>
 #include <sstream>
 #include <string>
 
@@ -82,19 +84,22 @@ auto genNet(const clock_s::time_point &now, const StateNet &net,
 
 std::string stringLogEventlog(const Eventlog &new_events) {
   std::stringstream log_data;
-  for (size_t i = 0; i + 1 < new_events.size(); i++) {
-    auto start = new_events[i].stamp;
-    auto end = new_events[i + 1].stamp;
-    if (new_events[i].transition == new_events[i + 1].transition) {
-      log_data << new_events[i].thread_id << ','
+  int i = 0;
+  for (auto it = new_events.begin(); std::next(it) != new_events.end();
+       it = std::next(it)) {
+    const auto &start = *it;
+    const auto &end = *std::next(it);
+
+    if (start.transition == end.transition) {
+      log_data << start.thread_id << ','
                << std::chrono::duration_cast<std::chrono::milliseconds>(
-                      start.time_since_epoch())
+                      start.stamp.time_since_epoch())
                       .count()
                << ','
                << std::chrono::duration_cast<std::chrono::milliseconds>(
-                      end.time_since_epoch())
+                      end.stamp.time_since_epoch())
                       .count()
-               << ',' << new_events[i].transition << '\n';
+               << ',' << start.transition << '\n';
     }
   }
   return log_data.str();

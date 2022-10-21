@@ -1,5 +1,6 @@
 #pragma once
 #include <chrono>
+#include <list>
 #include <map>
 #include <string>
 #include <vector>
@@ -18,7 +19,7 @@ struct Event {
   size_t thread_id;
 };
 
-using Eventlog = std::vector<Event>;
+using Eventlog = std::list<Event>;
 using TransitionResult = std::pair<Eventlog, TransitionState>;
 using StateNet =
     std::map<Transition, std::pair<std::vector<Place>, std::vector<Place>>>;

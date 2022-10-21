@@ -53,49 +53,54 @@ int main(int argc, char *argv[]) {
   symmetri::Store store = {
       {"T0", subnet}, {"T1", helloT("T1")}, {"T2", helloT("T2")}};
 
-  symmetri::NetMarking final_marking = {{"P3", 500}};
+  symmetri::NetMarking final_marking = {{"P3", 5}};
   auto net = {pnml1, pnml2, pnml3};
   symmetri::Application bignet(net, final_marking, store, 3, "pluto");
 
-  bool running = true;
-  // a server to send stuff (runs a background thread)
-  WsServer server(2222, [&]() { bignet.togglePause(); });
+  std::atomic<bool> running(true);
+
   // some thread to poll the net and send it away through a server
-  auto wt = std::thread([&bignet, &running, &server] {
+  auto wt = std::thread([&bignet, &running] {
+    auto server = WsServer(2222, [&]() { bignet.togglePause(); });
     auto previous_stamp = symmetri::clock_s::now();
     do {
-      auto [t, el, state_net, marking, at] = bignet.get();
-      server.sendNet(t, state_net, marking, at);
-      auto new_events = getNewEvents(el, previous_stamp);
-      if (!new_events.empty()) {
-        server.sendLog(new_events);
-        previous_stamp = t;
-      }
+      bignet.doMeData([&] {
+        auto [t, el, state_net, marking, at] =
+            bignet.get();  // not _thread safe_
+        auto new_events = getNewEvents(el, previous_stamp);
+        if (!new_events.empty()) {
+          server.sendNet(t, state_net, marking, at);
+          server.sendLog(new_events);
+          previous_stamp = t;
+        }
+      });
       std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    } while (running);
+    } while (running.load());
+    server.stop();
   });
 
-  WsServer server2(3333);
   // some thread to poll the net and send it away through a server
-  auto wt2 = std::thread([&subnet, &running, &server2] {
+  auto wt2 = std::thread([&subnet, &running] {
+    auto server = WsServer(3333, [&]() { subnet.togglePause(); });
     auto previous_stamp = symmetri::clock_s::now();
     do {
-      auto [t, el, state_net, marking, at] = subnet.get();
-      server2.sendNet(t, state_net, marking, at);
-      auto new_events = getNewEvents(el, previous_stamp);
-      if (!new_events.empty()) {
-        server2.sendLog(new_events);
-        previous_stamp = t;
-      }
-      std::this_thread::sleep_for(std::chrono::milliseconds(500));
+      subnet.doMeData([&] {
+        auto [t, el, state_net, marking, at] = subnet.get();
+        auto new_events = getNewEvents(el, previous_stamp);
+        if (!new_events.empty()) {
+          server.sendNet(t, state_net, marking, at);
+          server.sendLog(new_events);
+          previous_stamp = t;
+        }
+      });
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
     } while (running);
+    server.stop();
   });
 
   auto [el, result] = bignet();  // infinite loop
 
-  running = false;
-  server.stop();
-  server2.stop();
+  running.store(false);
   wt.join();
   wt2.join();
 

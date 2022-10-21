@@ -24,20 +24,20 @@ std::condition_variable cv;
 std::mutex cv_m;  // This mutex is used for two purposes:
                   // 1) to synchronize accesses to PAUSE
                   // 2) for the condition variable cv
-bool PAUSE = false;
+std::atomic<bool> PAUSE(false);
 
 void blockIfPaused(const std::string &case_id) {
   std::unique_lock<std::mutex> lk(cv_m);
-  if (PAUSE) {
+  if (PAUSE.load()) {
     spdlog::get(case_id)->info("Execution is paused");
-    cv.wait(lk, [] { return !PAUSE; });
+    cv.wait(lk, [] { return !PAUSE.load(); });
     spdlog::get(case_id)->info("Execution is resumed");
   }
 }
 
 // Define the function to be called when ctrl-c (SIGINT) is sent to process
-bool EARLY_EXIT = false;
-inline void signal_handler(int signal) noexcept { EARLY_EXIT = true; }
+std::atomic<bool> EARLY_EXIT(false);
+inline void signal_handler(int signal) noexcept { EARLY_EXIT.store(true); }
 
 using namespace moodycamel;
 
@@ -110,7 +110,7 @@ struct Impl {
   TransitionResult run() {
     // todo.. not have to assign it manually to reset.
     m.M = m0_;
-    m.event_log = symmetri::Eventlog({});
+    m.event_log = {};
 
     // enqueue a noop to start, not
     // doing this would require
@@ -121,18 +121,19 @@ struct Impl {
     // exit, otherwise there must be event_logs.
     auto stop_condition =
                      final_marking.has_value()?[&] {
-                           return EARLY_EXIT || (m.pending_transitions.empty() && !m.event_log.empty()) || (
+                           return EARLY_EXIT.load() || (m.pending_transitions.empty() && !m.event_log.empty()) || (
                                   MarkingReached(m.M, final_marking.value()));
                          }
                          : std::function{[&] {
-                           return EARLY_EXIT || (m.pending_transitions.empty() && !m.event_log.empty()); }};
+                           return EARLY_EXIT.load() || (m.pending_transitions.empty() && !m.event_log.empty()); }};
     Reducer f;
     do {
-      blockIfPaused(case_id);
       // get a reducer. Immediately, or wait a bit
       while (reducers.try_dequeue(f) || stop_condition() ||
              reducers.wait_dequeue_timed(f, std::chrono::seconds(1))) {
+        blockIfPaused(case_id);
         if (stop_condition()) {
+          m = f(std::move(m));
           break;
         }
         try {
@@ -145,7 +146,7 @@ struct Impl {
 
     // determine what was the reason we terminated.
     TransitionState result;
-    if (EARLY_EXIT) {
+    if (EARLY_EXIT.load()) {
       result = TransitionState::UserExit;
     } else if (final_marking.has_value()
                    ? MarkingReached(m.M, final_marking.value())
@@ -226,9 +227,31 @@ Application::get() const noexcept {
                          m.pending_transitions);
 }
 
+const symmetri::StateNet &Application::getNet() {
+  const auto &m = impl->getModel();
+  return m.net;
+}
+
+void Application::doMeData(std::function<void()> f) const {
+  impl->reducers.enqueue([=](Model &&m) -> Model & {
+    f();
+    return m;
+  });
+}
+
+// symmetri::NetMarking Application::getMarking() {
+//   const auto m = impl->getModel().M;
+//   return m;
+// }
+
+// inline std::function<symmetri::NetMarking()>
+// Application::registerTransitionCallback() const {
+//   return [this]() { return impl->getModel().M; };
+// }
+
 void Application::togglePause() {
   std::lock_guard<std::mutex> lk(cv_m);
-  PAUSE = !PAUSE;
+  PAUSE.store(!PAUSE.load());
   cv.notify_all();
 }
 

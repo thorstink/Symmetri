@@ -84,40 +84,28 @@ Model &runAll(
     const std::string &case_id) {
   model.timestamp = clock_s::now();
   std::vector<PolyAction> T;
-  std::set<std::string> new_pending_transitions;
-  const auto marking_hash = hashNM(model.M);
-  // first check the cache.
-  if (model.cache.contains(marking_hash)) {
-    std::tie(model.M, T, new_pending_transitions) = model.cache[marking_hash];
-  } else {
-    // otherwise calculate the possible transitions.
-    for (const auto &[T_i, mut] : model.net) {
-      const auto &pre = mut.first;
-      if (!pre.empty() &&
-          std::all_of(std::begin(pre), std::end(pre), [&](const auto &m_p) {
-            auto count = std::count(std::begin(pre), std::end(pre), m_p);
-            return model.M[m_p] >= count;
-          })) {
-        // deduct the marking
-        processPreConditions(pre, model.M);
-        // if the function is nullopt_t, we short-circuit the marking
-        // mutation and do it immediately.
-        if constexpr (std::is_same_v<std::nullopt_t,
-                                     decltype(model.store.at(T_i))>) {
-          processPostConditions(model.net.at(T_i).second, model.M);
-        } else {
-          T.push_back([&, T_i, case_id, &task = model.store.at(T_i)] {
-            reducers.enqueue(runTransition(T_i, task, case_id));
-          });
-        }
-        new_pending_transitions.insert(T_i);
+  // otherwise calculate the possible transitions.
+  for (const auto &[T_i, mut] : model.net) {
+    const auto &pre = mut.first;
+    if (!pre.empty() &&
+        std::all_of(std::begin(pre), std::end(pre), [&](const auto &m_p) {
+          auto count = std::count(std::begin(pre), std::end(pre), m_p);
+          return model.M[m_p] >= count;
+        })) {
+      // deduct the marking
+      processPreConditions(pre, model.M);
+      // if the function is nullopt_t, we short-circuit the marking
+      // mutation and do it immediately.
+      if constexpr (std::is_same_v<std::nullopt_t,
+                                   decltype(model.store.at(T_i))>) {
+        processPostConditions(model.net.at(T_i).second, model.M);
+      } else {
+        T.push_back([&, T_i, case_id, &task = model.store.at(T_i)] {
+          reducers.enqueue(runTransition(T_i, task, case_id));
+        });
       }
+      model.pending_transitions.insert(T_i);
     }
-    model.cache[marking_hash] = {model.M, T, new_pending_transitions};
-  }
-
-  for (const auto &p : new_pending_transitions) {
-    model.pending_transitions.insert(p);
   }
 
   polymorphic_actions.enqueue_bulk(T.begin(), T.size());
