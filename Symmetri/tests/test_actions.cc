@@ -11,7 +11,7 @@ TEST_CASE("Run the executor") {
   StoppablePool stp(1, polymorphic_actions);
 
   // launch a task
-  bool ran = false;
+  std::atomic<bool> ran = false;
   polymorphic_actions.enqueue([&]() { ran = true; });
   // wait a little before shutting the thread pool down.
   std::this_thread::sleep_for(std::chrono::milliseconds(5));
@@ -26,8 +26,8 @@ TEST_CASE("Run the executor parallel tasks") {
   StoppablePool stp(2, polymorphic_actions);
 
   // launch a task
-  bool ran1 = false;
-  bool ran2 = false;
+  std::atomic<bool> ran1 = false;
+  std::atomic<bool> ran2 = false;
   std::vector<PolyAction> tasks = {
       [&]() {
         std::this_thread::sleep_for(std::chrono::milliseconds(3));
@@ -39,11 +39,15 @@ TEST_CASE("Run the executor parallel tasks") {
       }};
 
   polymorphic_actions.enqueue_bulk(tasks.begin(), tasks.size());
-
+  const auto now = std::chrono::steady_clock::now();
   // 4 ms is not enough to run two 3 ms tasks.. unless of course it does it in
   // parallel!
-  std::this_thread::sleep_for(std::chrono::milliseconds(4));
+  while (std::chrono::steady_clock::now() - now <
+         std::chrono::milliseconds(4)) {  // loop
+  }
   REQUIRE((ran1 && ran2));
+  REQUIRE(
+      (std::chrono::steady_clock::now() < now + std::chrono::milliseconds(6)));
   // stop the pool.
   stp.stop();
 }

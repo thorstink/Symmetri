@@ -121,11 +121,11 @@ struct Impl {
     // exit, otherwise there must be event_logs.
     auto stop_condition =
                      final_marking.has_value()?[&] {
-                           return EARLY_EXIT.load() || (m.pending_transitions.empty() && !m.event_log.empty()) || (
+                           return EARLY_EXIT.load(std::memory_order_relaxed) || (m.pending_transitions.empty() && !m.event_log.empty()) || (
                                   MarkingReached(m.M, final_marking.value()));
                          }
                          : std::function{[&] {
-                           return EARLY_EXIT.load() || (m.pending_transitions.empty() && !m.event_log.empty()); }};
+                           return EARLY_EXIT.load(std::memory_order_relaxed) || (m.pending_transitions.empty() && !m.event_log.empty()); }};
     Reducer f;
     do {
       // get a reducer. Immediately, or wait a bit

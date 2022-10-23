@@ -84,7 +84,6 @@ auto genNet(const clock_s::time_point &now, const StateNet &net,
 
 std::string stringLogEventlog(const Eventlog &new_events) {
   std::stringstream log_data;
-  int i = 0;
   for (auto it = new_events.begin(); std::next(it) != new_events.end();
        it = std::next(it)) {
     const auto &start = *it;
