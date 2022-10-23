@@ -21,10 +21,10 @@ std::tuple<StateNet, Store, NetMarking> testNet() {
 TEST_CASE("Create a using the net constructor without end condition.") {
   auto [net, store, m0] = testNet();
   symmetri::Application app(net, m0, std::nullopt, store, 3,
-                            "test_net_without_end", false);
+                            "test_net_without_end");
   // we can run the net
   auto [ev, res] = app();
-  // because there's not final marking, but the net is finite, it deadlocks.
+  // because there's no final marking, but the net is finite, it deadlocks.
   REQUIRE(res == TransitionState::Deadlock);
   REQUIRE(!ev.empty());
 }
@@ -33,7 +33,7 @@ TEST_CASE("Create a using the net constructor with end condition.") {
   NetMarking final_marking({{"Pa", 0}, {"Pb", 2}, {"Pc", 0}, {"Pd", 2}});
   auto [net, store, m0] = testNet();
   symmetri::Application app(net, m0, final_marking, store, 3,
-                            "test_net_with_end", false);
+                            "test_net_with_end");
   // we can run the net
   auto [ev, res] = app();
   // now there is an end conition.
@@ -48,8 +48,7 @@ TEST_CASE("Create a using pnml constructor.") {
   {
     // This store is not appropriate for this net,
     Store store = {{"wrong_id", &t0}};
-    symmetri::Application app({pnml_file}, std::nullopt, store, 3, "fail",
-                              false);
+    symmetri::Application app({pnml_file}, std::nullopt, store, 3, "fail");
     // however, we can try running it,
     auto [ev, res] = app();
     // but the result is an error.
@@ -61,9 +60,8 @@ TEST_CASE("Create a using pnml constructor.") {
     // This store is appropriate for this net,
     Store store = symmetri::Store{{"T0", &t0}};
 
-    NetMarking final_marking({{"P1", 0}});
-    symmetri::Application app({pnml_file}, final_marking, store, 3, "success",
-                              false);
+    NetMarking final_marking({{"P1", 1}});
+    symmetri::Application app({pnml_file}, final_marking, store, 3, "success");
     // so we can run it,
     auto [ev, res] = app();
     // and the result is properly completed.

@@ -21,21 +21,18 @@ Reducer runTransition(const std::string &T_i, const PolyAction &task,
 size_t hashNM(const NetMarking &M);
 struct Model {
   Model(const StateNet &net, const Store &store, const NetMarking &M0)
-      : net(net), store(store), timestamp(clock_s::now()), M(M0), cache({}) {}
+      : net(net), store(store), timestamp(clock_s::now()), M(M0) {}
 
   Model &operator=(const Model &x) { return *this; }
   Model(const Model &) = delete;
 
   const StateNet net;
-  const Store store;
+  const Store &store;
 
   clock_s::time_point timestamp;
   NetMarking M;
   std::set<Transition> pending_transitions;
-  std::vector<Event> event_log;
-  std::unordered_map<size_t, std::tuple<NetMarking, std::vector<PolyAction>,
-                                        std::set<std::string>>>
-      cache;
+  Eventlog event_log;
 };
 
 Model &runAll(

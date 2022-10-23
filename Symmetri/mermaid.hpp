@@ -1,5 +1,7 @@
 #pragma once
+
 #include <iostream>
+#include <span>
 #include <sstream>
 #include <string>
 
@@ -57,8 +59,8 @@ auto genNet(const clock_s::time_point &now, const StateNet &net,
 
       mermaid << placeFormatter(p, marking) << place_tag << conn
               << (count > 1 ? multi(count) : "") << t
-              << (pending_transitions.contains(t) ? active_transition_tag
-                                                  : opacity(ratio))
+              << (pending_transitions.count(t) > 0 ? active_transition_tag
+                                                   : opacity(ratio))
               << "\n";
     }
 
@@ -69,31 +71,34 @@ auto genNet(const clock_s::time_point &now, const StateNet &net,
 
       float ratio = 1.0;
       mermaid << t
-              << (pending_transitions.contains(t) ? active_transition_tag
-                                                  : opacity(ratio))
+              << (pending_transitions.count(t) > 0 ? active_transition_tag
+                                                   : opacity(ratio))
               << conn << (count > 1 ? multi(count) : "")
               << placeFormatter(p, marking) << place_tag << "\n";
     }
   }
+
   mermaid << place_class << active_transition_class << footer;
   return mermaid.str();
 }
 
 std::string stringLogEventlog(const Eventlog &new_events) {
   std::stringstream log_data;
-  for (size_t i = 0; i + 1 < new_events.size(); i++) {
-    auto start = new_events[i].stamp;
-    auto end = new_events[i + 1].stamp;
-    if (new_events[i].transition == new_events[i + 1].transition) {
-      log_data << new_events[i].thread_id << ','
+  for (auto it = new_events.begin(); std::next(it) != new_events.end();
+       it = std::next(it)) {
+    const auto &start = *it;
+    const auto &end = *std::next(it);
+
+    if (start.transition == end.transition) {
+      log_data << start.thread_id << ','
                << std::chrono::duration_cast<std::chrono::milliseconds>(
-                      start.time_since_epoch())
+                      start.stamp.time_since_epoch())
                       .count()
                << ','
                << std::chrono::duration_cast<std::chrono::milliseconds>(
-                      end.time_since_epoch())
+                      end.stamp.time_since_epoch())
                       .count()
-               << ',' << new_events[i].transition << '\n';
+               << ',' << start.transition << '\n';
     }
   }
   return log_data.str();

@@ -21,13 +21,14 @@ int main(int argc, char *argv[]) {
                                {"t4", &helloWorld},  {"t50", &helloWorld}};
 
   symmetri::Application net({pnml_path_start, pnml_path_passive}, std::nullopt,
-                            store, 2);
+                            store, 2, "CASE_X");
 
-  auto t = std::async(std::launch::async, [f = net.push<float>("t50")] {
-    float a;
-    std::cin >> a;
-    f(a);
-  });
+  auto t = std::async(std::launch::async,
+                      [f = net.registerTransitionCallback<float>("t50")] {
+                        float a;
+                        std::cin >> a;
+                        f(a);
+                      });
 
   auto [el, result] = net();  // infinite loop
 

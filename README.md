@@ -29,14 +29,9 @@ and look at `http://localhost:2222/` for a live view of the activity.
 
 # WIP / TODO
 
-- Put in different eventloop?
-- simplify model, base logging/vis on event_log.
-- simplify visualization/graph
-- Add printing functions
-- investige state = marking + active transitions?
-- Write some tests
 - Create piano
 - research transition guards/coloured nets
+- single webiface server
 # Cloc
 
 ```
