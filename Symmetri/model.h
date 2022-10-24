@@ -15,6 +15,7 @@ namespace symmetri {
 
 struct Model;
 using Reducer = std::function<Model &(Model &&)>;
+PolyAction getTransition(const Store &s, const std::string_view t);
 
 Reducer runTransition(const std::string &T_i, const PolyAction &task,
                       const std::string &case_id);

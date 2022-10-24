@@ -54,7 +54,7 @@ TEST_CASE("Run a transition") {
 
   // by "manually calling" a transition like this, we don't deduct the
   // pre-conditions from the marking.
-  auto reducer = runTransition("t0", store.at("t0"), "nocase");
+  auto reducer = runTransition("t0", getTransition(m.store, "t0"), "nocase");
 
   // run the reducer
   m = reducer(std::move(m));

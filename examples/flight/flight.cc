@@ -7,7 +7,6 @@
 #include "Symmetri/retry.h"
 #include "Symmetri/symmetri.h"
 #include "Symmetri/ws_interface.h"
-#include "namespace_share_data.h"
 
 symmetri::Eventlog getNewEvents(const symmetri::Eventlog &el,
                                 symmetri::clock_s::time_point t) {
@@ -24,18 +23,6 @@ std::function<void()> helloT(std::string s) {
     return;
   };
 };
-
-symmetri::TransitionState failFunc() {
-  std::this_thread::sleep_for(std::chrono::seconds(1));
-  const double chance = 0.3;  // odds of failing
-  std::random_device rd;
-  std::mt19937 mt(rd());
-  std::bernoulli_distribution dist(chance);
-  bool fail = dist(mt);
-  fail ? spdlog::info("hi fail") : spdlog::info("hi success");
-  return fail ? symmetri::TransitionState::Error
-              : symmetri::TransitionState::Completed;
-}
 
 int main(int argc, char *argv[]) {
   spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] %v");
@@ -79,30 +66,10 @@ int main(int argc, char *argv[]) {
     server.stop();
   });
 
-  // some thread to poll the net and send it away through a server
-  auto wt2 = std::thread([&subnet, &running] {
-    auto server = WsServer(3333, [&]() { subnet.togglePause(); });
-    auto previous_stamp = symmetri::clock_s::now();
-    do {
-      subnet.doMeData([&] {
-        auto [t, el, state_net, marking, at] = subnet.get();
-        auto new_events = getNewEvents(el, previous_stamp);
-        if (!new_events.empty()) {
-          server.sendNet(t, state_net, marking, at);
-          server.sendLog(new_events);
-          previous_stamp = t;
-        }
-      });
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    } while (running);
-    server.stop();
-  });
-
   auto [el, result] = bignet();  // infinite loop
 
   running.store(false);
   wt.join();
-  wt2.join();
 
   for (const auto &[caseid, t, s, c, tid] : el) {
     spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),

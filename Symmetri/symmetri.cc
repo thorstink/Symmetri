@@ -76,7 +76,11 @@ std::string printState(symmetri::TransitionState s) noexcept {
 bool check(const Store &store, const symmetri::StateNet &net) noexcept {
   return std::all_of(net.cbegin(), net.cend(), [&store](const auto &p) {
     const auto &t = std::get<0>(p);
-    bool store_has_transition = store.contains(t);
+    bool store_has_transition =
+        std::find_if(store.begin(), store.end(), [&](const auto &e) {
+          return e.first == t;
+        }) != store.end();
+    // bool store_has_transition = store.contains(t);
     if (!store_has_transition) {
       spdlog::error("Transition {0} is not in store", t);
     }
@@ -201,9 +205,10 @@ void Application::createApplication(
                                   case_id);
     // register a function that "forces" transitions into the queue.
     p = [this](const std::string &t) {
-      impl->polymorphic_actions.enqueue([t, this, &task = impl->m.store.at(t)] {
-        impl->reducers.enqueue(runTransition(t, task, impl->case_id));
-      });
+      impl->polymorphic_actions.enqueue(
+          [t, this, task = getTransition(impl->m.store, t)] {
+            impl->reducers.enqueue(runTransition(t, task, impl->case_id));
+          });
     };
   }
 }

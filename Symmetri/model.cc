@@ -7,15 +7,20 @@ auto getThreadId() {
       std::hash<std::thread::id>()(std::this_thread::get_id()));
 }
 
-inline void processPreConditions(const std::vector<Place> &pre_places,
-                                 NetMarking &m) {
+PolyAction getTransition(const Store &s, const std::string_view t) {
+  return std::find_if(s.begin(), s.end(),
+                      [&](const auto &t_i) { return t == t_i.first; })
+      ->second;
+}
+
+void processPreConditions(const std::vector<Place> &pre_places, NetMarking &m) {
   for (const auto &m_p : pre_places) {
     m[m_p] -= 1;
   }
 }
 
-inline void processPostConditions(const std::vector<Place> &post_places,
-                                  NetMarking &m) {
+void processPostConditions(const std::vector<Place> &post_places,
+                           NetMarking &m) {
   for (const auto &m_p : post_places) {
     m[m_p] += 1;
   }
@@ -96,11 +101,11 @@ Model &runAll(
       processPreConditions(pre, model.M);
       // if the function is nullopt_t, we short-circuit the marking
       // mutation and do it immediately.
-      if constexpr (std::is_same_v<std::nullopt_t,
-                                   decltype(model.store.at(T_i))>) {
+      const auto task = getTransition(model.store, T_i);
+      if constexpr (std::is_same_v<std::nullopt_t, decltype(task)>) {
         processPostConditions(model.net.at(T_i).second, model.M);
       } else {
-        T.push_back([&, T_i, case_id, &task = model.store.at(T_i)] {
+        T.push_back([&, T_i, case_id, task] {
           reducers.enqueue(runTransition(T_i, task, case_id));
         });
       }
