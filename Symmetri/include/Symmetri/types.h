@@ -3,6 +3,7 @@
 #include <list>
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace symmetri {
@@ -22,8 +23,9 @@ struct Event {
 using Eventlog = std::list<Event>;
 using TransitionResult = std::pair<Eventlog, TransitionState>;
 using StateNet =
-    std::map<Transition, std::pair<std::vector<Place>, std::vector<Place>>>;
-using NetMarking = std::map<Place, uint16_t>;
+    std::unordered_map<Transition,
+                       std::pair<std::vector<Place>, std::vector<Place>>>;
+using NetMarking = std::unordered_map<Place, uint16_t>;
 
 template <typename T>
 constexpr TransitionResult runTransition(const T& x) {

@@ -34,6 +34,8 @@ and look at `http://localhost:2222/` for a live view of the activity.
 - single webiface server
 # Cloc
 
+https://www.youtube.com/watch?v=2KGkcGtGVM4
+https://stlab.cc/tip/2017/12/23/small-object-optimizations.html
 ```
 cloc --exclude-list-file=.clocignore .
 ```

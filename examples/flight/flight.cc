@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
   std::atomic<bool> running(true);
 
   // some thread to poll the net and send it away through a server
-  auto wt = std::thread([&bignet, &running] {
+  auto wt = std::jthread([&bignet, &running] {
     auto server = WsServer(2222, [&]() { bignet.togglePause(); });
     auto previous_stamp = symmetri::clock_s::now();
     do {
@@ -69,7 +69,6 @@ int main(int argc, char *argv[]) {
   auto [el, result] = bignet();  // infinite loop
 
   running.store(false);
-  wt.join();
 
   for (const auto &[caseid, t, s, c, tid] : el) {
     spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),

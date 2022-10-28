@@ -17,7 +17,7 @@ namespace symmetri {
 size_t calculateTrace(std::vector<Event> event_log) noexcept;
 std::string printState(symmetri::TransitionState s) noexcept;
 
-using Store = std::vector<std::pair<std::string_view, PolyAction>>;
+using Store = std::vector<std::pair<std::string, PolyAction>>;
 
 struct Impl;
 struct Application {
