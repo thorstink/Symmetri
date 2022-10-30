@@ -37,7 +37,10 @@ void blockIfPaused(const std::string &case_id) {
 
 // Define the function to be called when ctrl-c (SIGINT) is sent to process
 std::atomic<bool> EARLY_EXIT(false);
-inline void signal_handler(int signal) noexcept { EARLY_EXIT.store(true); }
+inline void signal_handler(int signal) noexcept {
+  spdlog::info("User requests exit");
+  EARLY_EXIT.store(true);
+}
 
 using namespace moodycamel;
 
@@ -127,25 +130,23 @@ struct Impl {
              (m.pending_transitions.empty() && !m.event_log.empty());
     };
     Reducer f;
-    do {
-      // get a reducer. Immediately, or wait a bit
-      while (reducers.try_dequeue(f) ||
-             reducers.wait_dequeue_timed(f, std::chrono::seconds(1))) {
-        do {
-          m = f(std::move(m));
-        } while (reducers.try_dequeue(f));
-        blockIfPaused(case_id);
-        if (final_marking.has_value() &&
-            MarkingReached(m.M, final_marking.value())) {
-          break;
-        }
-        try {
-          m = runAll(m, reducers, polymorphic_actions, case_id);
-        } catch (const std::exception &e) {
-          spdlog::get(case_id)->error(e.what());
-        }
+    // get a reducer. Immediately, or wait a bit
+    while (!stop_condition() &&
+           reducers.wait_dequeue_timed(f, std::chrono::seconds(9000))) {
+      do {
+        m = f(std::move(m));
+      } while (reducers.try_dequeue(f));
+      blockIfPaused(case_id);
+      if (final_marking.has_value() &&
+          MarkingReached(m.M, final_marking.value())) {
+        break;
       }
-    } while (!stop_condition());
+      try {
+        m = runAll(m, reducers, polymorphic_actions, case_id);
+      } catch (const std::exception &e) {
+        spdlog::get(case_id)->error(e.what());
+      }
+    }
 
     // determine what was the reason we terminated.
     TransitionState result;
@@ -160,14 +161,6 @@ struct Impl {
     } else {
       result = TransitionState::Error;
     }
-
-    // publish a log
-    // spdlog::get(case_id)->info(
-    //     printState(result) + " of {0}-net. Trace-hash is {1}", case_id,
-    //     calculateTrace(m.event_log));
-    // spdlog::get(case_id)->info(
-    //     printState(result) + " of {0}-net. Final markin-hash is {1}",
-    //     case_id, hashNM(m.M));
 
     return {m.event_log, result};
   }
@@ -242,16 +235,6 @@ void Application::doMeData(std::function<void()> f) const {
     return m;
   });
 }
-
-// symmetri::NetMarking Application::getMarking() {
-//   const auto m = impl->getModel().M;
-//   return m;
-// }
-
-// inline std::function<symmetri::NetMarking()>
-// Application::registerTransitionCallback() const {
-//   return [this]() { return impl->getModel().M; };
-// }
 
 void Application::togglePause() {
   std::lock_guard<std::mutex> lk(cv_m);
