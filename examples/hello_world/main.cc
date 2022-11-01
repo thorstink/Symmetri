@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
                               {"t4", &helloWorld},  {"t50", &helloWorld}};
 
   // This is a very simple thread pool. It can be shared among nets.
-  symmetri::StoppablePool pool(4);
+  symmetri::StoppablePool pool(1);
 
   // This is the construction of the class that executes the functions in the
   // store based on the petri net. You can specifiy a final marking, the amount
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
   std::atomic<bool> running(true);
   // We create a little thread that listens to events that allow us to manually
   // trigger transitions. E.g. collision avoidance or manual take-over
-  std::jthread input_thread(
+  std::thread input_thread(
       [&running, t50 = net.registerTransitionCallback<float>("t50")] {
         char input_char;
         do {
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
       });
 
   // and we launch a thread in which we run a webserver. This is optional.
-  std::jthread web_thread([&net, &running] {
+  std::thread web_thread([&net, &running] {
     auto server = WsServer(2222, [&]() { net.togglePause(); });
     do {
       net.doMeData([&] {
@@ -103,15 +103,19 @@ int main(int argc, char *argv[]) {
   auto [el, result] =
       net();  // This function blocks until either the net completes, deadlocks
   // or user requests exit (ctrl-c)
-  pool.stop();  // exit the pool
   running.store(
       false);  // We set this to false so the two threads that we launched (for
                // the web-server and keyboard input get interrupted.)
+  web_thread.join();
+  input_thread.join();
 
   // this simply prints the event log
+  uint64_t oldt = 0;
   for (const auto &[caseid, t, s, c, tid] : el) {
     spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),
                  c.time_since_epoch().count());
+    spdlog::info("{0}", c.time_since_epoch().count() - oldt);
+    oldt = c.time_since_epoch().count();
   }
 
   // return the result! in linux is enverything went well, you typically return

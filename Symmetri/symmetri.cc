@@ -27,7 +27,7 @@ std::atomic<bool> PAUSE(false);
 
 void blockIfPaused(const std::string &case_id) {
   std::unique_lock<std::mutex> lk(cv_m);
-  if (PAUSE.load()) {
+  if (PAUSE.load(std::memory_order_relaxed)) {
     spdlog::get(case_id)->info("Execution is paused");
     cv.wait(lk, [] { return !PAUSE.load(); });
     spdlog::get(case_id)->info("Execution is resumed");
@@ -94,12 +94,12 @@ struct Impl {
   Model m;
   const symmetri::NetMarking m0_;
   BlockingConcurrentQueue<Reducer> reducers;
-  symmetri::StoppablePool &stp;
+  const symmetri::StoppablePool &stp;
   const std::string case_id;
   std::atomic<bool> active;
   std::optional<symmetri::NetMarking> final_marking;
   Impl(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
-       symmetri::StoppablePool &stp,
+       const symmetri::StoppablePool &stp,
        const std::optional<symmetri::NetMarking> &final_marking,
        const Store &store, const std::string &case_id)
       : m(net, store, m0),
@@ -170,7 +170,7 @@ Application::Application(
     const std::set<std::string> &files,
     const std::optional<symmetri::NetMarking> &final_marking,
     const Store &store, const std::string &case_id,
-    symmetri::StoppablePool &stp) {
+    const symmetri::StoppablePool &stp) {
   const auto &[net, m0] = readPetriNets(files);
   createApplication(net, m0, final_marking, store, case_id, stp);
 }
@@ -179,7 +179,7 @@ Application::Application(
     const symmetri::StateNet &net, const symmetri::NetMarking &m0,
     const std::optional<symmetri::NetMarking> &final_marking,
     const Store &store, const std::string &case_id,
-    symmetri::StoppablePool &stp) {
+    const symmetri::StoppablePool &stp) {
   createApplication(net, m0, final_marking, store, case_id, stp);
 }
 
@@ -187,7 +187,7 @@ void Application::createApplication(
     const symmetri::StateNet &net, const symmetri::NetMarking &m0,
     const std::optional<symmetri::NetMarking> &final_marking,
     const Store &store, const std::string &case_id,
-    symmetri::StoppablePool &stp) {
+    const symmetri::StoppablePool &stp) {
   signal(SIGINT, signal_handler);
   std::stringstream s;
   s << "[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] [" << case_id << "] %v";

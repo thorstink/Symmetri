@@ -24,18 +24,15 @@ TEST_CASE("Run the executor parallel tasks") {
   // launch a task
   std::atomic<bool> ran1 = false;
   std::atomic<bool> ran2 = false;
-  std::vector<PolyAction> tasks = {
-      [&]() {
-        std::this_thread::sleep_for(std::chrono::milliseconds(3));
-        ran1 = true;
-      },
-      [&]() {
-        std::this_thread::sleep_for(std::chrono::milliseconds(3));
-        ran2 = true;
-      }};
 
-  stp.enqueue(tasks[0]);
-  stp.enqueue(tasks[1]);
+  stp.enqueue([&]() {
+    std::this_thread::sleep_for(std::chrono::milliseconds(3));
+    ran1 = true;
+  });
+  stp.enqueue([&]() {
+    std::this_thread::sleep_for(std::chrono::milliseconds(3));
+    ran2 = true;
+  });
 
   const auto now = std::chrono::steady_clock::now();
   // 4 ms is not enough to run two 3 ms tasks.. unless of course it does it in
