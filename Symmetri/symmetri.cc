@@ -98,6 +98,7 @@ struct Impl {
   BlockingConcurrentQueue<PolyAction> polymorphic_actions;
   StoppablePool stp;
   const std::string case_id;
+  std::atomic<bool> active;
   std::optional<symmetri::NetMarking> final_marking;
   ~Impl() { stp.stop(); }
   Impl(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
@@ -110,6 +111,7 @@ struct Impl {
         polymorphic_actions(256),
         stp(thread_count, polymorphic_actions),
         case_id(case_id),
+        active(false),
         final_marking(final_marking) {}
   const Model &getModel() const { return m; }
   symmetri::Eventlog getEventLog() const { return m.event_log; }
@@ -129,6 +131,7 @@ struct Impl {
       return EARLY_EXIT.load(std::memory_order_relaxed) ||
              (m.pending_transitions.empty() && !m.event_log.empty());
     };
+    active.store(true);
     Reducer f;
     // get a reducer. Immediately, or wait a bit
     while (!stop_condition() &&
@@ -147,6 +150,7 @@ struct Impl {
         spdlog::get(case_id)->error(e.what());
       }
     }
+    active.store(false);
 
     // determine what was the reason we terminated.
     TransitionState result;
@@ -197,10 +201,12 @@ void Application::createApplication(
                                   case_id);
     // register a function that "forces" transitions into the queue.
     p = [this](const std::string &t) {
-      impl->polymorphic_actions.enqueue(
-          [t, this, task = getTransition(impl->m.store, t)] {
-            impl->reducers.enqueue(runTransition(t, task, impl->case_id));
-          });
+      if (impl->active.load()) {
+        impl->polymorphic_actions.enqueue(
+            [t, this, task = getTransition(impl->m.store, t)] {
+              impl->reducers.enqueue(runTransition(t, task, impl->case_id));
+            });
+      }
     };
   }
 }
