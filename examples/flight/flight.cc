@@ -31,18 +31,20 @@ int main(int argc, char *argv[]) {
   auto pnml2 = std::string(argv[2]);
   auto pnml3 = std::string(argv[3]);
 
+  symmetri::StoppablePool pool(4);
+
   symmetri::NetMarking final_marking2 = {{"P2", 1}};
   symmetri::Store s2 = {{"T0", helloT("T01")}, {"T1", helloT("T02")}};
   auto snet = {pnml1, pnml2};
 
-  symmetri::Application subnet(snet, final_marking2, s2, 1, "charon");
+  symmetri::Application subnet(snet, final_marking2, s2, "charon", pool);
 
   symmetri::Store store = {
       {"T0", subnet}, {"T1", helloT("T1")}, {"T2", helloT("T2")}};
 
   symmetri::NetMarking final_marking = {{"P3", 5}};
   auto net = {pnml1, pnml2, pnml3};
-  symmetri::Application bignet(net, final_marking, store, 3, "pluto");
+  symmetri::Application bignet(net, final_marking, store, "pluto", pool);
 
   std::atomic<bool> running(true);
 
@@ -67,7 +69,7 @@ int main(int argc, char *argv[]) {
   });
 
   auto [el, result] = bignet();  // infinite loop
-
+  pool.stop();
   running.store(false);
 
   for (const auto &[caseid, t, s, c, tid] : el) {

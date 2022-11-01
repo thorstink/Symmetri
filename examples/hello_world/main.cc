@@ -50,12 +50,15 @@ int main(int argc, char *argv[]) {
                               {"t2", &helloWorld},  {"t3", &helloWorld},
                               {"t4", &helloWorld},  {"t50", &helloWorld}};
 
+  // This is a very simple thread pool. It can be shared among nets.
+  symmetri::StoppablePool pool(4);
+
   // This is the construction of the class that executes the functions in the
   // store based on the petri net. You can specifiy a final marking, the amount
   // of threads it can use (maximum amount of stuff it can do in parallel) and a
   // name so the net is easy to identifiy in a log.
   symmetri::Application net({pnml_path_start, pnml_path_passive}, std::nullopt,
-                            store, 2, "CASE_X");
+                            store, "CASE_X", pool);
 
   // We use a simple boolean flag to terminate the threads once the net
   // finishes. Without it, these threads would prevent the program from cleanly
@@ -99,7 +102,8 @@ int main(int argc, char *argv[]) {
 
   auto [el, result] =
       net();  // This function blocks until either the net completes, deadlocks
-              // or user requests exit (ctrl-c)
+  // or user requests exit (ctrl-c)
+  pool.stop();  // exit the pool
   running.store(
       false);  // We set this to false so the two threads that we launched (for
                // the web-server and keyboard input get interrupted.)
