@@ -16,14 +16,14 @@ jobs:
       run: |
         git clone https://github.com/mattgodbolt/seasocks.git
         cd seasocks && mkdir build && cd build
-        cmake -DCMAKE_BUILD_TYPE=Debug -DUNITTESTS=OFF ..
+        cmake -DCMAKE_BUILD_TYPE=Debug -DUNITTESTS=OFF -DSEASOCKS_SHARED=ON ..
         sudo make install
 
     - name: catch2
       run: |
         git clone https://github.com/catchorg/Catch2.git
         cd Catch2 && mkdir build && cd build
-        cmake -Bbuild -H. -DBUILD_TESTING=OFF -DSEASOCKS_SHARED=ON ..
+        cmake -Bbuild -H. -DBUILD_TESTING=OFF ..
         sudo cmake --build build/ --target install
 
     - name: "build project"
@@ -31,7 +31,7 @@ jobs:
         git submodule update --init --recursive
         mkdir build
         cd build
-        bash -c 'cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DCODE_COVERAGE=ON ..'
+        bash -c 'cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON -DCODE_COVERAGE=ON ..'
         ninja
 
     - name: "test and coverage"

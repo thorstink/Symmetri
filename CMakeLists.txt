@@ -17,10 +17,10 @@ endif()
 add_subdirectory(symmetri)
 
 # some examples using the lib
-# if(BUILD_EXAMPLES)
+if(BUILD_EXAMPLES)
     add_subdirectory(examples/flight)
     add_subdirectory(examples/hello_world)
-# endif()
+endif()
 
 set(CMAKE_EXPORT_PACKAGE_REGISTRY ON)
 export(TARGETS ${PROJECT_NAME} concurrentqueue NAMESPACE ${PROJECT_NAME}:: FILE "${PROJECT_NAME}Config.cmake" EXPORT_LINK_INTERFACE_LIBRARIES)
