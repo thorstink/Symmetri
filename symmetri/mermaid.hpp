@@ -1,11 +1,10 @@
 #pragma once
 
 #include <iostream>
-#include <span>
 #include <sstream>
 #include <string>
 
-#include "Symmetri/types.h"
+#include "symmetri/types.h"
 
 namespace symmetri {
 

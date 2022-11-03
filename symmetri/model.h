@@ -9,7 +9,7 @@
 #include <set>
 #include <tuple>
 
-#include "Symmetri/symmetri.h"
+#include "symmetri/symmetri.h"
 
 namespace symmetri {
 
@@ -37,9 +37,9 @@ struct Model {
   Eventlog event_log;
 };
 
-Model &runAll(
-    Model &model, moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
-    moodycamel::BlockingConcurrentQueue<PolyAction> &polymorphic_actions,
-    const std::string &case_id = "undefined_case_id");
+Model &runAll(Model &model,
+              moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
+              const StoppablePool &polymorphic_actions,
+              const std::string &case_id = "undefined_case_id");
 
 }  // namespace symmetri

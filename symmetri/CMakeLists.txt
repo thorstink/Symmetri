@@ -17,16 +17,23 @@ if(NOT concurrentqueue_POPULATED)
   add_subdirectory(${concurrentqueue_SOURCE_DIR} ${concurrentqueue_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
-# build shared and static versions of the library
-message(STATUS "Building Symmetri - shared: ${BUILD_SHARED_LIBS}")
-
-
-include_directories(include includes submodules ${SEASOCKS_INCLUDE_DIRS} )
+include_directories(include submodules ${SEASOCKS_INCLUDE_DIRS})
 
 #lib
-add_library(${PROJECT_NAME} symmetri.cc model.cc pnml_parser.cc retry.cpp ws_interface.cpp types.cpp submodules/tinyxml2/tinyxml2.cpp)
+add_library(${PROJECT_NAME} 
+  actions.cpp 
+  symmetri.cc 
+  model.cc 
+  pnml_parser.cc 
+  retry.cpp 
+  ws_interface.cpp 
+  types.cpp 
+  submodules/tinyxml2/tinyxml2.cpp
+  )
+
 target_link_libraries(${PROJECT_NAME} PRIVATE pthread Seasocks::seasocks spdlog::spdlog concurrentqueue)
-target_include_directories(${PROJECT_NAME} INTERFACE include)
+target_include_directories(${PROJECT_NAME} INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
 set(ui_files
   ${CMAKE_CURRENT_SOURCE_DIR}/web
@@ -36,8 +43,18 @@ set(targets
   ${PROJECT_NAME}
 )
 
-install(DIRECTORY ${ui_files} include DESTINATION ${PROJECT_SOURCE_DIR}/install)
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
 
-# if(BUILD_TESTING)
-add_subdirectory(tests)
-# endif()
+install(DIRECTORY include
+  DESTINATION include
+)
+
+install(DIRECTORY ${ui_files} DESTINATION share)
+
+if(BUILD_TESTING)
+  add_subdirectory(tests)
+endif()

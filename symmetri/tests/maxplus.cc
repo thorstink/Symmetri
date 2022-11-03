@@ -1,4 +1,4 @@
-#include "Symmetri/maxplus.hpp"
+#include "symmetri/maxplus.hpp"
 
 #include <catch2/catch_all.hpp>
 #include <iostream>

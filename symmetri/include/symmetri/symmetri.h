@@ -9,8 +9,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Symmetri/polyaction.h"
-#include "Symmetri/types.h"
+#include "symmetri/actions.h"
+#include "symmetri/polyaction.h"
+#include "symmetri/types.h"
 
 namespace symmetri {
 
@@ -28,18 +29,19 @@ struct Application {
   void createApplication(
       const symmetri::StateNet &net, const symmetri::NetMarking &m0,
       const std::optional<symmetri::NetMarking> &final_marking,
-      const Store &store, unsigned int thread_count,
-      const std::string &case_id);
+      const Store &store, const std::string &case_id,
+      const symmetri::StoppablePool &stp);
 
  public:
   Application(const std::set<std::string> &path_to_petri,
               const std::optional<symmetri::NetMarking> &final_marking,
-              const Store &store, unsigned int thread_count,
-              const std::string &case_id);
+              const Store &store, const std::string &case_id,
+              const symmetri::StoppablePool &stp);
+
   Application(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
               const std::optional<symmetri::NetMarking> &final_marking,
-              const Store &store, unsigned int thread_count,
-              const std::string &case_id);
+              const Store &store, const std::string &case_id,
+              const symmetri::StoppablePool &stp);
 
   template <typename T>
   inline std::function<void(T)> registerTransitionCallback(
@@ -54,9 +56,6 @@ struct Application {
   get() const noexcept;
 
   const symmetri::StateNet &getNet();
-  // symmetri::NetMarking getMarking();
-  // const symmetri::Eventlog &getLog();
-  // std::set<std::string> getActiveTransitions();
 
   TransitionResult operator()() const noexcept;
   void togglePause();

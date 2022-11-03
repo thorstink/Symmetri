@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <filesystem>
 
-#include "Symmetri/symmetri.h"
+#include "symmetri/symmetri.h"
 
 using namespace symmetri;
 
@@ -20,37 +20,48 @@ std::tuple<StateNet, Store, NetMarking> testNet() {
 
 TEST_CASE("Create a using the net constructor without end condition.") {
   auto [net, store, m0] = testNet();
-  symmetri::Application app(net, m0, std::nullopt, store, 3,
-                            "test_net_without_end");
+  StoppablePool stp(1);
+
+  symmetri::Application app(net, m0, std::nullopt, store,
+                            "test_net_without_end", stp);
   // we can run the net
   auto [ev, res] = app();
+  stp.stop();
+
   // because there's no final marking, but the net is finite, it deadlocks.
   REQUIRE(res == TransitionState::Deadlock);
   REQUIRE(!ev.empty());
 }
 
 TEST_CASE("Create a using the net constructor with end condition.") {
+  StoppablePool stp(1);
+
   NetMarking final_marking({{"Pa", 0}, {"Pb", 2}, {"Pc", 0}, {"Pd", 2}});
   auto [net, store, m0] = testNet();
-  symmetri::Application app(net, m0, final_marking, store, 3,
-                            "test_net_with_end");
+  symmetri::Application app(net, m0, final_marking, store, "test_net_with_end",
+                            stp);
   // we can run the net
   auto [ev, res] = app();
+  stp.stop();
+
   // now there is an end conition.
   REQUIRE(res == TransitionState::Completed);
   REQUIRE(!ev.empty());
 }
 
 TEST_CASE("Create a using pnml constructor.") {
+  StoppablePool stp(1);
+
   const std::string pnml_file = std::filesystem::current_path().append(
-      "../../../Symmetri/tests/assets/PT1.pnml");
+      "../../../symmetri/tests/assets/PT1.pnml");
 
   {
     // This store is not appropriate for this net,
     Store store = {{"wrong_id", &t0}};
-    symmetri::Application app({pnml_file}, std::nullopt, store, 3, "fail");
+    symmetri::Application app({pnml_file}, std::nullopt, store, "fail", stp);
     // however, we can try running it,
     auto [ev, res] = app();
+
     // but the result is an error.
     REQUIRE(res == TransitionState::Error);
     REQUIRE(ev.empty());
@@ -61,11 +72,13 @@ TEST_CASE("Create a using pnml constructor.") {
     Store store = symmetri::Store{{"T0", &t0}};
 
     NetMarking final_marking({{"P1", 1}});
-    symmetri::Application app({pnml_file}, final_marking, store, 3, "success");
+    symmetri::Application app({pnml_file}, final_marking, store, "success",
+                              stp);
     // so we can run it,
     auto [ev, res] = app();
     // and the result is properly completed.
     REQUIRE(res == TransitionState::Completed);
     REQUIRE(!ev.empty());
   }
+  stp.stop();
 }

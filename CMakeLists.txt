@@ -1,28 +1,23 @@
 cmake_minimum_required(VERSION 3.10)
-project(Symmetri VERSION 1.0.0)
+project(symmetri VERSION 1.0.0)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O3 -Wno-error=deprecated-enum-enum-conversion")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O2")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer -Wno-maybe-uninitialized -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O0")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=thread -fno-omit-frame-pointer -Wno-maybe-uninitialized -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O0")
 
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -Os -Wno-error=deprecated-enum-enum-conversion")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -Os -Wno-error=deprecated-enum-enum-conversion")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -g -fsanitize=address -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -O0 -Wno-error=deprecated-enum-enum-conversion")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -g -fsanitize=address -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -O0 -Wno-error=deprecated-enum-enum-conversion")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -g -fsanitize=address -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Wall -Wextra -O0")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -g -fsanitize=thread -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Wall -Wextra -O0")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -g -fsanitize=address -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Wall -Wextra -O0 -Wno-error=deprecated-enum-enum-conversion")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -g -fsanitize=address -fno-omit-frame-pointer -Wno-psabi -Wno-unused-parameter -Wall -Wextra -O0 -Wno-error=deprecated-enum-enum-conversion")
-
-enable_testing()
+if(BUILD_TESTING)
+  enable_testing()
+endif()
 
 # the lib
-add_subdirectory(Symmetri)
+add_subdirectory(symmetri)
 
 # some examples using the lib
-# add_subdirectory(examples/ros_application)
-add_subdirectory(examples/flight)
-add_subdirectory(examples/hello_world)
-add_subdirectory(examples/hello_world_alt)
+if(BUILD_EXAMPLES)
+    add_subdirectory(examples/flight)
+    add_subdirectory(examples/hello_world)
+endif()

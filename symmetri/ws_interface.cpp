@@ -1,4 +1,4 @@
-#include "Symmetri/ws_interface.h"
+#include "symmetri/ws_interface.h"
 
 #include <seasocks/PrintfLogger.h>
 #include <spdlog/spdlog.h>
@@ -29,20 +29,23 @@ struct pauseHandler : seasocks::WebSocket::Handler {
   void onDisconnect(seasocks::WebSocket *socket) override {}
 };
 
-WsServer::WsServer(int port, std::function<void()> pause)
+WsServer::WsServer(int port, std::function<void()> pause,
+                   const std::string &static_path)
     : time_data(std::make_shared<Handler>()),
       marking_transition(std::make_shared<Handler>()),
       server(std::make_shared<seasocks::PrintfLogger>(
           seasocks::Logger::Level::Error)),
-      web_t_([this, port, pause] {
+      web_t_([this, static_path, port, pause] {
         server.addWebSocketHandler("/pause",
                                    std::make_shared<pauseHandler>(pause));
         server.addWebSocketHandler("/transition_data", time_data);
         server.addWebSocketHandler("/marking_transition_data",
                                    marking_transition);
         server.startListening(port);
-        server.setStaticPath("web");
-        spdlog::info("interface online at http://localhost:{0}/", port);
+        server.setStaticPath(static_path.c_str());
+        spdlog::info(
+            "interface online at http://localhost:{0}/, server files from {1}",
+            port, static_path);
         server.loop();
       }) {}
 

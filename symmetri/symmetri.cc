@@ -1,4 +1,4 @@
-#include "Symmetri/symmetri.h"
+#include "symmetri/symmetri.h"
 
 #include <blockingconcurrentqueue.h>
 #include <signal.h>
@@ -15,7 +15,6 @@
 #include <sstream>
 #include <tuple>
 
-#include "actions.h"
 #include "model.h"
 #include "pnml_parser.h"
 namespace symmetri {
@@ -28,7 +27,7 @@ std::atomic<bool> PAUSE(false);
 
 void blockIfPaused(const std::string &case_id) {
   std::unique_lock<std::mutex> lk(cv_m);
-  if (PAUSE.load()) {
+  if (PAUSE.load(std::memory_order_relaxed)) {
     spdlog::get(case_id)->info("Execution is paused");
     cv.wait(lk, [] { return !PAUSE.load(); });
     spdlog::get(case_id)->info("Execution is resumed");
@@ -95,21 +94,20 @@ struct Impl {
   Model m;
   const symmetri::NetMarking m0_;
   BlockingConcurrentQueue<Reducer> reducers;
-  BlockingConcurrentQueue<PolyAction> polymorphic_actions;
-  StoppablePool stp;
+  const symmetri::StoppablePool &stp;
   const std::string case_id;
+  std::atomic<bool> active;
   std::optional<symmetri::NetMarking> final_marking;
-  ~Impl() { stp.stop(); }
   Impl(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
+       const symmetri::StoppablePool &stp,
        const std::optional<symmetri::NetMarking> &final_marking,
-       const Store &store, unsigned int thread_count,
-       const std::string &case_id)
+       const Store &store, const std::string &case_id)
       : m(net, store, m0),
         m0_(m0),
         reducers(256),
-        polymorphic_actions(256),
-        stp(thread_count, polymorphic_actions),
+        stp(stp),
         case_id(case_id),
+        active(false),
         final_marking(final_marking) {}
   const Model &getModel() const { return m; }
   symmetri::Eventlog getEventLog() const { return m.event_log; }
@@ -129,6 +127,7 @@ struct Impl {
       return EARLY_EXIT.load(std::memory_order_relaxed) ||
              (m.pending_transitions.empty() && !m.event_log.empty());
     };
+    active.store(true);
     Reducer f;
     // get a reducer. Immediately, or wait a bit
     while (!stop_condition() &&
@@ -142,11 +141,12 @@ struct Impl {
         break;
       }
       try {
-        m = runAll(m, reducers, polymorphic_actions, case_id);
+        m = runAll(m, reducers, stp, case_id);
       } catch (const std::exception &e) {
         spdlog::get(case_id)->error(e.what());
       }
     }
+    active.store(false);
 
     // determine what was the reason we terminated.
     TransitionState result;
@@ -169,22 +169,25 @@ struct Impl {
 Application::Application(
     const std::set<std::string> &files,
     const std::optional<symmetri::NetMarking> &final_marking,
-    const Store &store, unsigned int thread_count, const std::string &case_id) {
+    const Store &store, const std::string &case_id,
+    const symmetri::StoppablePool &stp) {
   const auto &[net, m0] = readPetriNets(files);
-  createApplication(net, m0, final_marking, store, thread_count, case_id);
+  createApplication(net, m0, final_marking, store, case_id, stp);
 }
 
 Application::Application(
     const symmetri::StateNet &net, const symmetri::NetMarking &m0,
     const std::optional<symmetri::NetMarking> &final_marking,
-    const Store &store, unsigned int thread_count, const std::string &case_id) {
-  createApplication(net, m0, final_marking, store, thread_count, case_id);
+    const Store &store, const std::string &case_id,
+    const symmetri::StoppablePool &stp) {
+  createApplication(net, m0, final_marking, store, case_id, stp);
 }
 
 void Application::createApplication(
     const symmetri::StateNet &net, const symmetri::NetMarking &m0,
     const std::optional<symmetri::NetMarking> &final_marking,
-    const Store &store, unsigned int thread_count, const std::string &case_id) {
+    const Store &store, const std::string &case_id,
+    const symmetri::StoppablePool &stp) {
   signal(SIGINT, signal_handler);
   std::stringstream s;
   s << "[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] [" << case_id << "] %v";
@@ -193,14 +196,14 @@ void Application::createApplication(
   console->set_pattern(s.str());
   if (check(store, net)) {
     // init
-    impl = std::make_shared<Impl>(net, m0, final_marking, store, thread_count,
-                                  case_id);
+    impl = std::make_shared<Impl>(net, m0, stp, final_marking, store, case_id);
     // register a function that "forces" transitions into the queue.
     p = [this](const std::string &t) {
-      impl->polymorphic_actions.enqueue(
-          [t, this, task = getTransition(impl->m.store, t)] {
-            impl->reducers.enqueue(runTransition(t, task, impl->case_id));
-          });
+      if (impl->active.load()) {
+        impl->stp.enqueue([t, this, task = getTransition(impl->m.store, t)] {
+          impl->reducers.enqueue(runTransition(t, task, impl->case_id));
+        });
+      }
     };
   }
 }

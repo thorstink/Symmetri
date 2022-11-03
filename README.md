@@ -6,9 +6,13 @@ Parses a Petri net and runs it
 
 Clone the repository and make sure you also initialize the submodules.
 
-```
+```bash
 mkdir build
-cd && build && cmake .. && make install
+cd build 
+cmake .. -DBUILD_TESTING=0 -DBUILD_EXAMPLES=0 -DCMAKE_INSTALL_PREFIX:PATH=../install
+cmake .. -DBUILD_TESTING=1 -DBUILD_EXAMPLES=0 -DCMAKE_INSTALL_PREFIX:PATH=../install
+cmake .. -DBUILD_TESTING=1 -DBUILD_EXAMPLES=1 -DCMAKE_INSTALL_PREFIX:PATH=../install
+make install
 ```
 
 ## Run

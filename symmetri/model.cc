@@ -76,10 +76,10 @@ Reducer runTransition(const std::string &T_i, const PolyAction &task,
                     : processTransition(T_i, ev, res, thread_id, end_time);
 }
 
-Model &runAll(
-    Model &model, moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
-    moodycamel::BlockingConcurrentQueue<PolyAction> &polymorphic_actions,
-    const std::string &case_id) {
+Model &runAll(Model &model,
+              moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
+              const StoppablePool &polymorphic_actions,
+              const std::string &case_id) {
   model.timestamp = clock_s::now();
   // otherwise calculate the possible transitions.
   bool last_element = false;

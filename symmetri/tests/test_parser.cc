@@ -8,7 +8,7 @@ using namespace symmetri;
 
 TEST_CASE("Load p1.pnml net") {
   const std::string pnml_file = std::filesystem::current_path().append(
-      "../../../Symmetri/tests/assets/n1.pnml");
+      "../../../symmetri/tests/assets/n1.pnml");
   const auto &[net, m0] = readPetriNets({pnml_file});
 
   // for this particular net, the initial marking is:
@@ -37,7 +37,7 @@ TEST_CASE("Load p1.pnml net") {
 
 TEST_CASE("Load p1_multi.pnml net") {
   const std::string pnml_file = std::filesystem::current_path().append(
-      "../../../Symmetri/tests/assets/n1_multi.pnml");
+      "../../../symmetri/tests/assets/n1_multi.pnml");
 
   const auto &[net, m0] = readPetriNets({pnml_file});
 
@@ -68,10 +68,10 @@ TEST_CASE("Load p1_multi.pnml net") {
 
 TEST_CASE("Compose PT1.pnml and PT2.pnml nets") {
   const std::string p1 = std::filesystem::current_path().append(
-      "../../../Symmetri/tests/assets/PT1.pnml");
+      "../../../symmetri/tests/assets/PT1.pnml");
 
   const std::string p2 = std::filesystem::current_path().append(
-      "../../../Symmetri/tests/assets/PT2.pnml");
+      "../../../symmetri/tests/assets/PT2.pnml");
 
   const auto &[net, m0] = readPetriNets({p1, p2});
 
