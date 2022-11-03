@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
-project(symmetri VERSION 1.0.0)
+# Read version from the package.xml file.
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/package.xml package_xml_str)
+if(NOT package_xml_str MATCHES "<version>([0-9]+.[0-9]+.[0-9]+)</version>")
+  message(FATAL_ERROR "Could not parse project version from package.xml. Aborting.")
+endif()
+
+project(symmetri VERSION ${CMAKE_MATCH_1})
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -17,11 +23,8 @@ endif()
 add_subdirectory(symmetri)
 
 # some examples using the lib
-# if(BUILD_EXAMPLES)
-    add_subdirectory(examples/flight)
-    add_subdirectory(examples/hello_world)
-# endif()
-
-set(CMAKE_EXPORT_PACKAGE_REGISTRY ON)
-export(TARGETS ${PROJECT_NAME} concurrentqueue NAMESPACE ${PROJECT_NAME}:: FILE "${PROJECT_NAME}Config.cmake" EXPORT_LINK_INTERFACE_LIBRARIES)
-export(PACKAGE ${PROJECT_NAME})
+if(BUILD_EXAMPLES)
+    # add_subdirectory(examples/flight)
+    # add_subdirectory(examples/hello_world)
+  endif()
+    
