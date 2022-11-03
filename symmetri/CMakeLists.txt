@@ -20,7 +20,7 @@ endif()
 include_directories(include submodules ${SEASOCKS_INCLUDE_DIRS})
 
 #lib
-add_library(${PROJECT_NAME} 
+add_library(${PROJECT_NAME} SHARED
   actions.cpp 
   symmetri.cc 
   model.cc 
@@ -29,10 +29,11 @@ add_library(${PROJECT_NAME}
   ws_interface.cpp 
   types.cpp 
   submodules/tinyxml2/tinyxml2.cpp
-  )
+)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE pthread Seasocks::seasocks spdlog::spdlog concurrentqueue)
-target_include_directories(${PROJECT_NAME} INTERFACE
+  target_link_libraries(${PROJECT_NAME} PUBLIC pthread PRIVATE Seasocks::seasocks spdlog::spdlog concurrentqueue)
+  
+  target_include_directories(${PROJECT_NAME} INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
 set(ui_files
@@ -50,7 +51,7 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 install(DIRECTORY include
-  DESTINATION include
+  DESTINATION .
 )
 
 install(DIRECTORY ${ui_files} DESTINATION share)
