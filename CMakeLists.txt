@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(Symmetri VERSION 1.0.0)
+project(symmetri VERSION 1.0.0)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -15,5 +15,5 @@ enable_testing()
 add_subdirectory(Symmetri)
 
 # some examples using the lib
-add_subdirectory(examples/flight)
-add_subdirectory(examples/hello_world)
+# add_subdirectory(examples/flight)
+# add_subdirectory(examples/hello_world)

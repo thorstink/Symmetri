@@ -24,7 +24,7 @@ message(STATUS "Building Symmetri - shared: ${BUILD_SHARED_LIBS}")
 include_directories(include includes submodules ${SEASOCKS_INCLUDE_DIRS} )
 
 #lib
-add_library(${PROJECT_NAME}  actions.cpp symmetri.cc model.cc pnml_parser.cc retry.cpp ws_interface.cpp types.cpp submodules/tinyxml2/tinyxml2.cpp)
+add_library(${PROJECT_NAME} actions.cpp symmetri.cc model.cc pnml_parser.cc retry.cpp ws_interface.cpp types.cpp submodules/tinyxml2/tinyxml2.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE pthread Seasocks::seasocks spdlog::spdlog concurrentqueue)
 target_include_directories(${PROJECT_NAME} INTERFACE include)
 
@@ -36,7 +36,20 @@ set(targets
   ${PROJECT_NAME}
 )
 
-install(DIRECTORY ${ui_files} include DESTINATION ${PROJECT_SOURCE_DIR}/install)
+
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+install(DIRECTORY include/
+  DESTINATION include/
+)
+
+install(DIRECTORY ${ui_files} DESTINATION share/)
+
+# install(DIRECTORY ${ui_files} include DESTINATION ${PROJECT_SOURCE_DIR}/install)
 
 # if(BUILD_TESTING)
 add_subdirectory(tests)
