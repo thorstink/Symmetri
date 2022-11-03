@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "Symmetri/actions.h"
-#include "Symmetri/symmetri.h"
+#include "symmetri/actions.h"
+#include "symmetri/symmetri.h"
 
 using namespace symmetri;
 TEST_CASE("Run the executor") {

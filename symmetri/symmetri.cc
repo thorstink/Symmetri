@@ -1,4 +1,4 @@
-#include "Symmetri/symmetri.h"
+#include "symmetri/symmetri.h"
 
 #include <blockingconcurrentqueue.h>
 #include <signal.h>

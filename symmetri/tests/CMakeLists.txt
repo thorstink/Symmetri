@@ -27,7 +27,7 @@ set(test_files
   assets
 )
 
-install(DIRECTORY ${test_files} DESTINATION ${PROJECT_SOURCE_DIR}/build/Symmetri/tests)
+install(DIRECTORY ${test_files} DESTINATION ${PROJECT_SOURCE_DIR}/build/symmetri/tests)
 
 add_executable(${PROJECT_NAME}_actions_test test_actions.cc)
 target_link_libraries(${PROJECT_NAME}_actions_test PRIVATE Catch2::Catch2WithMain pthread ${PROJECT_NAME} concurrentqueue)

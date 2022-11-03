@@ -4,9 +4,9 @@
 #include <random>
 #include <thread>
 
-#include "Symmetri/retry.h"
-#include "Symmetri/symmetri.h"
-#include "Symmetri/ws_interface.h"
+#include "symmetri/retry.h"
+#include "symmetri/symmetri.h"
+#include "symmetri/ws_interface.h"
 
 symmetri::Eventlog getNewEvents(const symmetri::Eventlog &el,
                                 symmetri::clock_s::time_point t) {

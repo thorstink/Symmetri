@@ -4,12 +4,13 @@
 
 #include <thread>
 
-#include "Symmetri/types.h"
+#include "symmetri/types.h"
 struct Handler;
 class WsServer {
  public:
   WsServer(
-      int port = 2222, std::function<void()> pause = []() {});
+      int port = 2222, std::function<void()> pause = []() {},
+      const std::string &state_path = "share/web");
   ~WsServer();
   void stop();
   void sendNet(symmetri::clock_s::time_point now, const symmetri::StateNet &net,

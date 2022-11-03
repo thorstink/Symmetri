@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 
-#include "Symmetri/types.h"
+#include "symmetri/types.h"
 namespace symmetri {
 
 class PolyAction {

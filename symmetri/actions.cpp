@@ -1,4 +1,4 @@
-#include "Symmetri/actions.h"
+#include "symmetri/actions.h"
 
 #include <blockingconcurrentqueue.h>
 #include <spdlog/spdlog.h>

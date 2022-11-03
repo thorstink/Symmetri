@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <filesystem>
 
-#include "Symmetri/symmetri.h"
+#include "symmetri/symmetri.h"
 
 using namespace symmetri;
 
@@ -53,7 +53,7 @@ TEST_CASE("Create a using pnml constructor.") {
   StoppablePool stp(1);
 
   const std::string pnml_file = std::filesystem::current_path().append(
-      "../../../Symmetri/tests/assets/PT1.pnml");
+      "../../../symmetri/tests/assets/PT1.pnml");
 
   {
     // This store is not appropriate for this net,

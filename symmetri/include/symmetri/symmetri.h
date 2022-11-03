@@ -9,9 +9,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Symmetri/actions.h"
-#include "Symmetri/polyaction.h"
-#include "Symmetri/types.h"
+#include "symmetri/actions.h"
+#include "symmetri/polyaction.h"
+#include "symmetri/types.h"
 
 namespace symmetri {
 

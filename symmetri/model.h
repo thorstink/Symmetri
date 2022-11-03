@@ -9,7 +9,7 @@
 #include <set>
 #include <tuple>
 
-#include "Symmetri/symmetri.h"
+#include "symmetri/symmetri.h"
 
 namespace symmetri {
 

@@ -9,11 +9,15 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -Wno-psabi -Wno
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer -Wno-maybe-uninitialized -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O0")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=thread -fno-omit-frame-pointer -Wno-maybe-uninitialized -Wno-psabi -Wno-unused-parameter -Werror -Wall -Wextra -march=native -O0")
 
-enable_testing()
+if(BUILD_TESTING)
+  enable_testing()
+endif()
 
 # the lib
-add_subdirectory(Symmetri)
+add_subdirectory(symmetri)
 
 # some examples using the lib
-# add_subdirectory(examples/flight)
-# add_subdirectory(examples/hello_world)
+if(BUILD_EXAMPLES)
+    add_subdirectory(examples/flight)
+    add_subdirectory(examples/hello_world)
+endif()

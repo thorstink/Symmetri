@@ -1,4 +1,4 @@
-#include "Symmetri/types.h"
+#include "symmetri/types.h"
 
 namespace symmetri {
 

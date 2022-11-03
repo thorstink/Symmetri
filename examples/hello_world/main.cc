@@ -9,8 +9,8 @@
 #include <iostream>
 #include <thread>
 
-#include "Symmetri/symmetri.h"
-#include "Symmetri/ws_interface.h"
+#include "symmetri/symmetri.h"
+#include "symmetri/ws_interface.h"
 
 // Before main, we define a bunch of functions that can be bound to
 // transitions in the petri net.

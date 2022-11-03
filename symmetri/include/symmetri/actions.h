@@ -3,7 +3,7 @@
 #include <thread>
 #include <vector>
 #include <atomic>
-#include "Symmetri/polyaction.h"
+#include "symmetri/polyaction.h"
 
 namespace symmetri {
 

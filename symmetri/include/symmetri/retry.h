@@ -1,6 +1,6 @@
 #pragma once
-#include "Symmetri/polyaction.h"
-#include "Symmetri/types.h"
+#include "symmetri/polyaction.h"
+#include "symmetri/types.h"
 
 namespace symmetri {
 
