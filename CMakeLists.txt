@@ -24,7 +24,7 @@ add_subdirectory(symmetri)
 
 # some examples using the lib
 if(BUILD_EXAMPLES)
-    # add_subdirectory(examples/flight)
-    # add_subdirectory(examples/hello_world)
+    add_subdirectory(examples/flight)
+    add_subdirectory(examples/hello_world)
   endif()
     

@@ -43,7 +43,7 @@ inline void signal_handler(int signal) noexcept {
 
 using namespace moodycamel;
 
-size_t calculateTrace(Eventlog event_log) noexcept {
+size_t calculateTrace(const Eventlog& event_log) noexcept {
   // calculate a trace-id, in a simple way.
   return std::hash<std::string>{}(std::accumulate(
       event_log.begin(), event_log.end(), std::string(""),
