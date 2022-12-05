@@ -1,4 +1,4 @@
-#include "pnml_parser.h"
+#include "symmetri/pnml_parser.h"
 
 #include <spdlog/fmt/ostr.h>  // must be included
 #include <spdlog/spdlog.h>
