@@ -16,7 +16,7 @@
 #include <tuple>
 
 #include "model.h"
-#include "pnml_parser.h"
+#include "symmetri/pnml_parser.h"
 namespace symmetri {
 
 std::condition_variable cv;
