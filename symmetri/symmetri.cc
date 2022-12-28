@@ -36,7 +36,7 @@ void blockIfPaused(const std::string &case_id) {
 
 // Define the function to be called when ctrl-c (SIGINT) is sent to process
 std::atomic<bool> EARLY_EXIT(false);
-inline void signal_handler(int signal) noexcept {
+inline void signal_handler(int ) noexcept {
   spdlog::info("User requests exit");
   EARLY_EXIT.store(true);
 }

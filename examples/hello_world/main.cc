@@ -1,8 +1,7 @@
 // This is an example of how to use the petri-net library: In this example we
 // have a net where transition t50 can be triggered by inputing the character
 // '1' through std::cin (the keyboard). When t50 is triggered, the net becomes
-// live. It's progress can be visualized through the webserver which is also
-// launched. This example has no ' final marking ' (goal marking), so it' ll run
+// live. This example has no ' final marking ' (goal marking), so it' ll run
 // forever until the user hits ctrl-c.
 #include <spdlog/spdlog.h>
 
@@ -10,7 +9,6 @@
 #include <thread>
 
 #include "symmetri/symmetri.h"
-#include "symmetri/ws_interface.h"
 
 // Before main, we define a bunch of functions that can be bound to
 // transitions in the petri net.
@@ -32,7 +30,7 @@ symmetri::TransitionState helloResult() {
 
 // The main is simply the body of a cpp program. It has to start somewhere, so
 // that's here.
-int main(int argc, char *argv[]) {
+int main(int, char *argv[]) {
   // Through argc and argv you can gather input arguments. E.g. when you launch
   // this petri net application you execute something like
   // "./Symmetri_hello_world ../nets/passive_n1.pnml ../nets/T50startP0.pnml"
@@ -86,27 +84,11 @@ int main(int argc, char *argv[]) {
                                    // becomes false.
       });
 
-  // and we launch a thread in which we run a webserver. This is optional.
-  std::thread web_thread([&net, &running] {
-    auto server = WsServer(2222, [&]() { net.togglePause(); });
-    do {
-      net.doMeData([&] {
-        auto [t, el, state_net, marking, at] = net.get();
-        server.sendNet(t, state_net, marking, at);
-      });
-      std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    } while (running.load());  // this exits the loop once the running-flag
-                               // becomes false.
-    server.stop();  // and we have to sign the webserver it should terminate.
-  });
-
   auto [el, result] =
       net();  // This function blocks until either the net completes, deadlocks
   // or user requests exit (ctrl-c)
-  running.store(
-      false);  // We set this to false so the two threads that we launched (for
-               // the web-server and keyboard input get interrupted.)
-  web_thread.join();
+  running.store(false);  // We set this to false so the thread that we launched
+                         // gets interrupted.
   input_thread.join();
 
   // this simply prints the event log

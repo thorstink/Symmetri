@@ -48,8 +48,7 @@ Reducer processTransition(const std::string &T_i, const std::string &case_id,
 }
 
 Reducer processTransition(const std::string &T_i, const Eventlog &new_events,
-                          TransitionState result, size_t thread_id,
-                          clock_s::time_point end_time) {
+                          TransitionState result) {
   return [=](Model &&model) -> Model & {
     if (result == TransitionState::Completed) {
       processPostConditions(model.net.at(T_i).second, model.M);
@@ -64,16 +63,14 @@ Reducer processTransition(const std::string &T_i, const Eventlog &new_events,
 }
 
 Reducer runTransition(const std::string &T_i, const PolyAction &task,
-                      const std::string &case_id,
-                      const clock_s::time_point &queue_time) {
+                      const std::string &case_id) {
   const auto start_time = clock_s::now();
-  // std::cout << "dt: " << (start_time - queue_time).count() << std::endl;
   const auto &[ev, res] = runTransition(task);
   const auto end_time = clock_s::now();
   const auto thread_id = getThreadId();
   return ev.empty() ? processTransition(T_i, case_id, res, thread_id,
                                         start_time, end_time)
-                    : processTransition(T_i, ev, res, thread_id, end_time);
+                    : processTransition(T_i, ev, res);
 }
 
 Model &runAll(Model &model,
@@ -102,8 +99,8 @@ Model &runAll(Model &model,
           processPostConditions(model.net.at(T_i).second, model.M);
         } else {
           polymorphic_actions.enqueue(
-              [&reducers, T_i, task, case_id, queue_time = clock_s::now()] {
-                reducers.enqueue(runTransition(T_i, task, case_id, queue_time));
+              [=, T_i=T_i, task=task, &reducers] {
+                reducers.enqueue(runTransition(T_i, task, case_id));
               });
           model.pending_transitions.insert(T_i);
         }

@@ -44,7 +44,7 @@ TEST_CASE("Create a model") {
   auto before_model_creation = clock_s::now();
   auto m = Model(net, store, m0);
   auto after_model_creation = clock_s::now();
-  REQUIRE(before_model_creation < m.timestamp);
+  REQUIRE(before_model_creation <= m.timestamp);
   REQUIRE(after_model_creation > m.timestamp);
 }
 

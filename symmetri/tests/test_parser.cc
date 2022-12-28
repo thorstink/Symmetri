@@ -2,7 +2,7 @@
 #include <filesystem>
 #include <iostream>
 
-#include "pnml_parser.h"
+#include "symmetri/pnml_parser.h"
 
 using namespace symmetri;
 

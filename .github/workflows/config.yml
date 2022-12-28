@@ -12,12 +12,6 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y build-essential lcov gcovr ninja-build libeigen3-dev git libtool pkg-config libspdlog-dev
-    - name: seasocks
-      run: |
-        git clone https://github.com/mattgodbolt/seasocks.git
-        cd seasocks && mkdir build && cd build
-        cmake -DCMAKE_BUILD_TYPE=Debug -DUNITTESTS=OFF -DSEASOCKS_SHARED=ON ..
-        sudo make install
 
     - name: catch2
       run: |
