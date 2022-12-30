@@ -50,7 +50,9 @@ int main(int argc, char *argv[]) {
 
   // some thread to poll the net and send it away through a server
   auto wt = std::thread([&bignet, &running] {
-    auto server = WsServer(2222, [&]() { bignet.togglePause(); });
+    auto server = WsServer(
+        2222, [&]() { bignet.togglePause(); },
+        "/home/thomas/Projects/petri-net-program/Systemetri/symmetri/web");
     auto previous_stamp = symmetri::clock_s::now();
     do {
       bignet.doMeData([&] {

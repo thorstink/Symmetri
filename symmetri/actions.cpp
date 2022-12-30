@@ -19,16 +19,13 @@ StoppablePool::~StoppablePool() { stop(); }
 
 void StoppablePool::loop() {
   PolyAction transition(noop);
-  do {
+
+  while (stop_flag.load(std::memory_order_relaxed) == false) {
     if (actions.wait_dequeue_timed(transition,
                                    std::chrono::milliseconds(250))) {
-      if (stop_flag.load(std::memory_order_relaxed) == true) {
-        break;
-      }
       runTransition(transition);
-      transition = noop;
     }
-  } while (stop_flag.load(std::memory_order_relaxed) == false);
+  }
 }
 
 void StoppablePool::enqueue(PolyAction &&p) const {
@@ -44,6 +41,7 @@ void StoppablePool::stop() {
     if (t.joinable()) {
       t.join();
     }
-  }}
+  }
+}
 
 }  // namespace symmetri

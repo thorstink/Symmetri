@@ -23,12 +23,32 @@ Reducer runTransition(const std::string &T_i, const PolyAction &task,
 
 struct Model {
   Model(const StateNet &net, const Store &store, const NetMarking &M0)
-      : net(net), store(store), timestamp(clock_s::now()), M(M0) {}
+      : net(net), store(store), timestamp(clock_s::now()), M(M0) {
+    for (auto [p, c] : M0) {
+      for (int i = 0; i < c; i++) {
+        tokens.emplace(p);
+      }
+
+      std::vector<Transition> ts;
+      for (const auto &[t, pp] : net) {
+        for (const auto &ppp : pp.first) {
+          if (p == ppp) {
+            ts.push_back(t);
+          }
+        }
+      }
+      if (!ts.empty()) {
+        reverse_loopup.push_back({p, ts});
+      }
+    }
+  }
 
   Model &operator=(const Model &x) { return *this; }
   Model(const Model &) = delete;
 
   const StateNet net;
+  std::multiset<Place> tokens;
+  std::vector<std::pair<Place, std::vector<Transition>>> reverse_loopup;
   const Store &store;
 
   clock_s::time_point timestamp;

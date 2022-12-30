@@ -88,7 +88,9 @@ int main(int argc, char *argv[]) {
 
   // and we launch a thread in which we run a webserver. This is optional.
   std::thread web_thread([&net, &running] {
-    auto server = WsServer(2222, [&]() { net.togglePause(); });
+    auto server = WsServer(
+        2222, [&]() { net.togglePause(); },
+        "/home/thomas/Projects/petri-net-program/Systemetri/symmetri/web");
     do {
       net.doMeData([&] {
         auto [t, el, state_net, marking, at] = net.get();
