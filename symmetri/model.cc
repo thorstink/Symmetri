@@ -32,6 +32,8 @@ Reducer processTransition(const std::string &T_i, const std::string &case_id,
                           clock_s::time_point end_time) {
   return [=](Model &&model) -> Model & {
     if (result == TransitionState::Completed) {
+      const auto &post = model.net.at(T_i).second;
+      model.tokens.insert(post.begin(), post.end());
       processPostConditions(model.net.at(T_i).second, model.M);
     }
     model.event_log.push_back(
@@ -47,7 +49,6 @@ Reducer processTransition(const std::string &T_i, const std::string &case_id,
     if (el != model.pending_transitions.end()) {
       model.pending_transitions.erase(el);
     }
-    // model.pending_transitions.erase(T_i);
     --model.active_transition_count;
     return model;
   };
@@ -57,6 +58,8 @@ Reducer processTransition(const std::string &T_i, const Eventlog &new_events,
                           TransitionState result) {
   return [=](Model &&model) -> Model & {
     if (result == TransitionState::Completed) {
+      const auto &post = model.net.at(T_i).second;
+      model.tokens.insert(post.begin(), post.end());
       processPostConditions(model.net.at(T_i).second, model.M);
     }
 
@@ -68,7 +71,6 @@ Reducer processTransition(const std::string &T_i, const Eventlog &new_events,
     if (el != model.pending_transitions.end()) {
       model.pending_transitions.erase(el);
     }
-    // model.pending_transitions.erase(T_i);
     --model.active_transition_count;
     return model;
   };
@@ -90,35 +92,58 @@ Model &runAll(Model &model,
               const StoppablePool &polymorphic_actions,
               const std::string &case_id) {
   model.timestamp = clock_s::now();
-  // otherwise calculate the possible transitions.
-  bool last_element = false;
-  do {
-    for (const auto &[T_i, task] : model.store) {
-      last_element = T_i == model.store.back().first;
-      const auto &pre = model.net.at(T_i).first;
-      if (pre.empty()) {
+  // calculate possible transitions
+  size_t n = 0;
+  while (n != model.tokens.size()) {
+    n = model.tokens.size();
+    for (const auto &place : model.tokens) {
+            const auto ptr = std::find_if(
+          std::begin(model.reverse_loopup), std::end(model.reverse_loopup),
+          [&place](const auto &u) { return u.first == place; });
+      if (ptr == model.reverse_loopup.end() || ptr->second.empty()) {
         continue;
       }
-      if (std::all_of(std::begin(pre), std::end(pre), [&](const auto &m_p) {
-            return model.M[m_p] >=
-                   std::count(std::begin(pre), std::end(pre), m_p);
-          })) {
-        // deduct the marking
-        processPreConditions(pre, model.M);
-        // if the function is nullopt_t, we short-circuit the marking
-        // mutation and do it immediately.
-        if constexpr (std::is_same_v<std::nullopt_t, decltype(task)>) {
-          processPostConditions(model.net.at(T_i).second, model.M);
-        } else {
-          polymorphic_actions.enqueue([=, T_i = T_i, task = task, &reducers] {
-            reducers.enqueue(runTransition(T_i, task, case_id));
-          });
-          model.pending_transitions.push_back(T_i);
-          ++model.active_transition_count;
+      const auto &ts = ptr->second;
+      for (const auto &T_i : ts) {
+        const auto &pre = model.net.at(T_i).first;
+        if (std::all_of(std::begin(pre), std::end(pre), [&](const auto &m_p) {
+              return std::count(std::begin(model.tokens),
+                                std::end(model.tokens), m_p) >=
+                     std::count(std::begin(pre), std::end(pre), m_p);
+            })) {
+          // deduct the marking
+          for (const auto &p_ : pre) {
+            model.tokens.extract(p_);
+          }
+          processPreConditions(pre, model.M);
+
+          // if the function is nullopt_t, we short-circuit the marking
+          // mutation and do it immediately.
+          const auto &task =
+              std::find_if(model.store.begin(), model.store.end(),
+                           [&](const auto &u) { return u.first == T_i; })
+                  ->second;
+          if constexpr (std::is_same_v<std::nullopt_t, decltype(task)>) {
+            const auto &post = model.net.at(T_i).second;
+            for (const auto &p_ : post) {
+              model.tokens.emplace(p_);
+            }
+            processPostConditions(post, model.M);
+          } else {
+            polymorphic_actions.enqueue([=, T_i = T_i, task = task, &reducers] {
+              reducers.enqueue(runTransition(T_i, task, case_id));
+            });
+            model.pending_transitions.push_back(T_i);
+            ++model.active_transition_count;
+          }
+          break;  // break because we changed the marking.
         }
       }
+      if (model.tokens.size() != n) {
+        break;  // break because we changed the marking.
+      }
     }
-  } while (!last_element);
+  }
 
   return model;
 }

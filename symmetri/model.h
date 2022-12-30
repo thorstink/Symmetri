@@ -27,13 +27,34 @@ struct Model {
         timestamp(clock_s::now()),
         M(M0),
         active_transition_count(0) {
-          pending_transitions.reserve(15);
+    // reserve some heap memory for pending transtitions.
+    pending_transitions.reserve(15);
+    // create reverse lookup tables
+    for (auto [place, c] : M0) {
+      for (int i = 0; i < c; i++) {
+        tokens.emplace(place);
+      }
+
+      std::vector<Transition> transitions;
+      for (const auto &[transition, io_places] : net) {
+        for (const auto &input_place : io_places.first) {
+          if (place == input_place) {
+            transitions.push_back(transition);
+          }
         }
+      }
+      if (!transitions.empty()) {
+        reverse_loopup.push_back({place, transitions});
+      }
+    }
+  }
 
   Model &operator=(const Model &) { return *this; }
   Model(const Model &) = delete;
 
   const StateNet net;
+  std::multiset<Place> tokens;
+  std::vector<std::pair<Place, std::vector<Transition>>> reverse_loopup;
   const Store &store;
 
   clock_s::time_point timestamp;

@@ -115,6 +115,12 @@ struct Impl {
     // todo.. not have to assign it manually to reset.
     m.M = m0_;
     m.event_log = {};
+    m.tokens = {};
+    for (auto [p, c] : m0_) {
+      for (int i = 0; i < c; i++) {
+        m.tokens.emplace(p);
+      }
+    }
 
     // enqueue a noop to start, not
     // doing this would require
@@ -136,14 +142,10 @@ struct Impl {
         m = f(std::move(m));
       } while (reducers.try_dequeue(f));
       blockIfPaused(case_id);
+      m = runAll(m, reducers, stp, case_id);
       if (final_marking.has_value() &&
           MarkingReached(m.M, final_marking.value())) {
         break;
-      }
-      try {
-        m = runAll(m, reducers, stp, case_id);
-      } catch (const std::exception &e) {
-        spdlog::get(case_id)->error(e.what());
       }
     }
     active.store(false);

@@ -77,8 +77,9 @@ TEST_CASE("Run one transition iteration in a petri net") {
   m = runAll(m, reducers, stp);
   // t0 is dispatched but not yet run, so pre-conditions are processed but post
   // are not:
-  REQUIRE(m.pending_transitions == std::vector<symmetri::Transition>{"t0"});
-  REQUIRE(m.M == NetMarking({{"Pa", 3}, {"Pb", 1}, {"Pc", 0}, {"Pd", 0}}));
+  REQUIRE(m.pending_transitions ==
+          std::vector<symmetri::Transition>{"t0", "t0"});
+  REQUIRE(m.M == NetMarking({{"Pa", 2}, {"Pb", 0}, {"Pc", 0}, {"Pd", 0}}));
   Reducer r;
   // there is no reducer yet because the task hasn't been executed yet.
   REQUIRE(!reducers.try_dequeue(r));
@@ -86,17 +87,21 @@ TEST_CASE("Run one transition iteration in a petri net") {
   // there is an action to be dequed.
   // execture the actual task
 
-  // now there should be a reducer
-  REQUIRE(reducers.wait_dequeue_timed(r, std::chrono::seconds(1)));
-  REQUIRE(T0_COUNTER == 1);
+  // now there should be two reducers;
+  Reducer r1, r2;
+  REQUIRE(reducers.wait_dequeue_timed(r1, std::chrono::seconds(1)));
+  REQUIRE(reducers.wait_dequeue_timed(r2, std::chrono::seconds(1)));
+  REQUIRE(T0_COUNTER == 2);
   // the marking should still be the same.
-  REQUIRE(m.pending_transitions == std::vector<symmetri::Transition>{"t0"});
-  REQUIRE(m.M == NetMarking({{"Pa", 3}, {"Pb", 1}, {"Pc", 0}, {"Pd", 0}}));
-  // process the reducer
-  m = r(std::move(m));
+  REQUIRE(m.pending_transitions ==
+          std::vector<symmetri::Transition>{"t0", "t0"});
+  REQUIRE(m.M == NetMarking({{"Pa", 2}, {"Pb", 0}, {"Pc", 0}, {"Pd", 0}}));
+  // process the reducers
+  m = r1(std::move(m));
+  m = r2(std::move(m));
   // and now the post-conditions are processed:
   REQUIRE(m.pending_transitions.empty());
-  REQUIRE(m.M == NetMarking({{"Pa", 3}, {"Pb", 1}, {"Pc", 1}, {"Pd", 0}}));
+  REQUIRE(m.M == NetMarking({{"Pa", 2}, {"Pb", 0}, {"Pc", 2}, {"Pd", 0}}));
   stp.stop();
 }
 

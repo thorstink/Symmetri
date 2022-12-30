@@ -41,7 +41,6 @@ TEST_CASE("Firing the same transition before it can complete should work") {
   StoppablePool stp(2);
   REQUIRE(m.pending_transitions.empty());
   m = runAll(m, reducers, stp);
-  m = runAll(m, reducers, stp);  // note this is weird.
   REQUIRE(m.M["Pa"] == 0);
   REQUIRE(m.pending_transitions == std::vector<symmetri::Transition>{"t", "t"});
   REQUIRE(m.active_transition_count == 2);
@@ -57,7 +56,7 @@ TEST_CASE("Firing the same transition before it can complete should work") {
   m = r(std::move(m));
   REQUIRE(m.M["Pb"] == 1);
   // offending test, but fixed :-)
-  REQUIRE(m.pending_transitions == {"t"});
+  REQUIRE(m.pending_transitions == std::vector<symmetri::Transition>{"t"});
   REQUIRE(m.active_transition_count == 1);
   {
     std::lock_guard<std::mutex> lk(cv_m);
