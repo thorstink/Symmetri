@@ -77,7 +77,7 @@ TEST_CASE("Run one transition iteration in a petri net") {
   m = runAll(m, reducers, stp);
   // t0 is dispatched but not yet run, so pre-conditions are processed but post
   // are not:
-  REQUIRE(m.pending_transitions == std::set<symmetri::Transition>{"t0"});
+  REQUIRE(m.pending_transitions == std::vector<symmetri::Transition>{"t0"});
   REQUIRE(m.M == NetMarking({{"Pa", 3}, {"Pb", 1}, {"Pc", 0}, {"Pd", 0}}));
   Reducer r;
   // there is no reducer yet because the task hasn't been executed yet.
@@ -90,7 +90,7 @@ TEST_CASE("Run one transition iteration in a petri net") {
   REQUIRE(reducers.wait_dequeue_timed(r, std::chrono::seconds(1)));
   REQUIRE(T0_COUNTER == 1);
   // the marking should still be the same.
-  REQUIRE(m.pending_transitions == std::set<symmetri::Transition>{"t0"});
+  REQUIRE(m.pending_transitions == std::vector<symmetri::Transition>{"t0"});
   REQUIRE(m.M == NetMarking({{"Pa", 3}, {"Pb", 1}, {"Pc", 0}, {"Pd", 0}}));
   // process the reducer
   m = r(std::move(m));

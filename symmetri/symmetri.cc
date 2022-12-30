@@ -36,14 +36,14 @@ void blockIfPaused(const std::string &case_id) {
 
 // Define the function to be called when ctrl-c (SIGINT) is sent to process
 std::atomic<bool> EARLY_EXIT(false);
-inline void signal_handler(int ) noexcept {
+inline void signal_handler(int) noexcept {
   spdlog::info("User requests exit");
   EARLY_EXIT.store(true);
 }
 
 using namespace moodycamel;
 
-size_t calculateTrace(const Eventlog& event_log) noexcept {
+size_t calculateTrace(const Eventlog &event_log) noexcept {
   // calculate a trace-id, in a simple way.
   return std::hash<std::string>{}(std::accumulate(
       event_log.begin(), event_log.end(), std::string(""),
@@ -125,7 +125,7 @@ struct Impl {
     // exit, otherwise there must be event_logs.
     auto stop_condition = [&] {
       return EARLY_EXIT.load(std::memory_order_relaxed) ||
-             (m.pending_transitions.empty() && !m.event_log.empty());
+             (m.active_transition_count == 0 && !m.event_log.empty());
     };
     active.store(true);
     Reducer f;
@@ -219,7 +219,7 @@ TransitionResult Application::operator()() const noexcept {
 }
 
 std::tuple<clock_s::time_point, symmetri::Eventlog, symmetri::StateNet,
-           symmetri::NetMarking, std::set<std::string>>
+           symmetri::NetMarking, std::vector<std::string>>
 Application::get() const noexcept {
   auto &m = impl->getModel();
 

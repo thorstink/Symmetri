@@ -40,7 +40,7 @@ const std::string conn = "-->";
 const std::string header = "graph LR\n";
 
 auto genNet(const clock_s::time_point &now, const StateNet &net,
-            const NetMarking &M, std::set<Transition> pending_transitions) {
+            const NetMarking &M, std::vector<Transition> pending_transitions) {
   std::stringstream mermaid;
   mermaid << header;
 
@@ -55,12 +55,11 @@ auto genNet(const clock_s::time_point &now, const StateNet &net,
       size_t count = std::count(std::begin(mut.first), std::end(mut.first), p);
 
       float ratio = 1.0;
-
+      const auto t_count =
+          std::count(pending_transitions.begin(), pending_transitions.end(), t);
       mermaid << placeFormatter(p, marking) << place_tag << conn
               << (count > 1 ? multi(count) : "") << t
-              << (pending_transitions.count(t) > 0 ? active_transition_tag
-                                                   : opacity(ratio))
-              << "\n";
+              << (t_count > 0 ? active_transition_tag : opacity(ratio)) << "\n";
     }
 
     for (const auto &p : post) {
@@ -69,9 +68,9 @@ auto genNet(const clock_s::time_point &now, const StateNet &net,
           std::count(std::begin(mut.second), std::end(mut.second), p);
 
       float ratio = 1.0;
-      mermaid << t
-              << (pending_transitions.count(t) > 0 ? active_transition_tag
-                                                   : opacity(ratio))
+      const auto t_count =
+          std::count(pending_transitions.begin(), pending_transitions.end(), t);
+      mermaid << t << (t_count > 0 ? active_transition_tag : opacity(ratio))
               << conn << (count > 1 ? multi(count) : "")
               << placeFormatter(p, marking) << place_tag << "\n";
     }

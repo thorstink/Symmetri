@@ -41,8 +41,14 @@ Reducer processTransition(const std::string &T_i, const std::string &case_id,
                                    ? TransitionState::Completed
                                    : TransitionState::Error,
                                end_time, thread_id});
+    auto el = std::find(model.pending_transitions.begin(),
+                        model.pending_transitions.end(), T_i);
 
-    model.pending_transitions.erase(T_i);
+    if (el != model.pending_transitions.end()) {
+      model.pending_transitions.erase(el);
+    }
+    // model.pending_transitions.erase(T_i);
+    --model.active_transition_count;
     return model;
   };
 }
@@ -57,7 +63,13 @@ Reducer processTransition(const std::string &T_i, const Eventlog &new_events,
     for (const auto &e : new_events) {
       model.event_log.push_back(e);
     }
-    model.pending_transitions.erase(T_i);
+    auto el = std::find(model.pending_transitions.begin(),
+                        model.pending_transitions.end(), T_i);
+    if (el != model.pending_transitions.end()) {
+      model.pending_transitions.erase(el);
+    }
+    // model.pending_transitions.erase(T_i);
+    --model.active_transition_count;
     return model;
   };
 }
@@ -98,11 +110,11 @@ Model &runAll(Model &model,
         if constexpr (std::is_same_v<std::nullopt_t, decltype(task)>) {
           processPostConditions(model.net.at(T_i).second, model.M);
         } else {
-          polymorphic_actions.enqueue(
-              [=, T_i=T_i, task=task, &reducers] {
-                reducers.enqueue(runTransition(T_i, task, case_id));
-              });
-          model.pending_transitions.insert(T_i);
+          polymorphic_actions.enqueue([=, T_i = T_i, task = task, &reducers] {
+            reducers.enqueue(runTransition(T_i, task, case_id));
+          });
+          model.pending_transitions.push_back(T_i);
+          ++model.active_transition_count;
         }
       }
     }
