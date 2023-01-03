@@ -49,6 +49,10 @@ add_executable(${PROJECT_NAME}_maxplus_test maxplus.cc)
 target_link_libraries(${PROJECT_NAME}_maxplus_test PRIVATE Catch2::Catch2WithMain)
 add_test(${PROJECT_NAME}_maxplus_test ${PROJECT_NAME}_maxplus_test)
 
+add_executable(${PROJECT_NAME}_priorities_test test_priorities.cc)
+target_link_libraries(${PROJECT_NAME}_priorities_test PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue spdlog::spdlog)
+add_test(${PROJECT_NAME}_priorities_test ${PROJECT_NAME}_priorities_test)
+
 add_executable(${PROJECT_NAME}_symmetri_bugs test_bugs.cc)
 target_link_libraries(${PROJECT_NAME}_symmetri_bugs PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue spdlog::spdlog)
 add_test(${PROJECT_NAME}_symmetri_bugs ${PROJECT_NAME}_symmetri_bugs)

@@ -27,16 +27,19 @@ void t() {
   });
 }
 
-std::tuple<StateNet, Store, NetMarking> testNet() {
+std::tuple<StateNet, Store,
+           std::vector<std::pair<symmetri::Transition, uint8_t>>, NetMarking>
+testNet() {
   StateNet net = {{"t", {{"Pa"}, {"Pb"}}}};
   Store store = {{"t", &t}};
+  std::vector<std::pair<symmetri::Transition, uint8_t>> priority;
   NetMarking m0 = {{"Pa", 2}};
-  return {net, store, m0};
+  return {net, store, priority, m0};
 }
 
 TEST_CASE("Firing the same transition before it can complete should work") {
-  auto [net, store, m0] = testNet();
-  auto m = Model(net, store, m0);
+  auto [net, store, priority, m0] = testNet();
+  auto m = Model(net, store, priority, m0);
   moodycamel::BlockingConcurrentQueue<Reducer> reducers(4);
   StoppablePool stp(2);
   REQUIRE(m.pending_transitions.empty());

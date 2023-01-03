@@ -36,14 +36,16 @@ int main(int, char *argv[]) {
   symmetri::Store s2 = {{"T0", helloT("T01")}, {"T1", helloT("T02")}};
   auto snet = {pnml1, pnml2};
 
-  symmetri::Application subnet(snet, final_marking2, s2, "charon", pool);
+  symmetri::Application subnet(snet, final_marking2, s2, {}, "charon", pool);
 
   symmetri::Store store = {
       {"T0", subnet}, {"T1", helloT("T1")}, {"T2", helloT("T2")}};
 
   symmetri::NetMarking final_marking = {{"P3", 5}};
   auto net = {pnml1, pnml2, pnml3};
-  symmetri::Application bignet(net, final_marking, store, "pluto", pool);
+  std::vector<std::pair<symmetri::Transition, uint8_t>> priority;
+  symmetri::Application bignet(net, final_marking, store, priority, "pluto",
+                               pool);
 
   std::atomic<bool> running(true);
 

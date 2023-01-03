@@ -12,7 +12,9 @@ auto t1() {
   return symmetri::TransitionState::Completed;
 }
 
-std::tuple<StateNet, Store, NetMarking> testNet() {
+std::tuple<StateNet, Store,
+           std::vector<std::pair<symmetri::Transition, uint8_t>>, NetMarking>
+testNet() {
   T0_COUNTER = 0;
   T1_COUNTER = 0;
 
@@ -20,13 +22,14 @@ std::tuple<StateNet, Store, NetMarking> testNet() {
                   {"t1", {{"Pc", "Pc"}, {"Pb", "Pb", "Pd"}}}};
 
   Store store = {{"t0", &t0}, {"t1", &t1}};
+  std::vector<std::pair<symmetri::Transition, uint8_t>> priority;
 
   NetMarking m0 = {{"Pa", 4}, {"Pb", 2}, {"Pc", 0}, {"Pd", 0}};
-  return {net, store, m0};
+  return {net, store, priority, m0};
 }
 
 TEST_CASE("Test equaliy of nets") {
-  auto [net, store, m0] = testNet();
+  auto [net, store, priority, m0] = testNet();
   auto net2 = net;
   auto net3 = net;
   REQUIRE(StateNetEquality(net, net2));
@@ -40,17 +43,17 @@ TEST_CASE("Test equaliy of nets") {
 }
 
 TEST_CASE("Create a model") {
-  auto [net, store, m0] = testNet();
+  auto [net, store, priority, m0] = testNet();
   auto before_model_creation = clock_s::now();
-  auto m = Model(net, store, m0);
+  auto m = Model(net, store, priority, m0);
   auto after_model_creation = clock_s::now();
   REQUIRE(before_model_creation <= m.timestamp);
   REQUIRE(after_model_creation > m.timestamp);
 }
 
 TEST_CASE("Run a transition") {
-  auto [net, store, m0] = testNet();
-  auto m = Model(net, store, m0);
+  auto [net, store, priority, m0] = testNet();
+  auto m = Model(net, store, priority, m0);
 
   // by "manually calling" a transition like this, we don't deduct the
   // pre-conditions from the marking.
@@ -68,8 +71,9 @@ TEST_CASE("Run a transition") {
 TEST_CASE("Run one transition iteration in a petri net") {
   using namespace moodycamel;
 
-  auto [net, store, m0] = testNet();
-  auto m = Model(net, store, m0);
+  auto [net, store, priority, m0] = testNet();
+
+  auto m = Model(net, store, priority, m0);
   BlockingConcurrentQueue<Reducer> reducers(4);
   StoppablePool stp(1);
 
@@ -108,8 +112,8 @@ TEST_CASE("Run one transition iteration in a petri net") {
 TEST_CASE("Run until net dies") {
   using namespace moodycamel;
 
-  auto [net, store, m0] = testNet();
-  auto m = Model(net, store, m0);
+  auto [net, store, priority, m0] = testNet();
+  auto m = Model(net, store, priority, m0);
   BlockingConcurrentQueue<Reducer> reducers(4);
   StoppablePool stp(1);
   Reducer r;

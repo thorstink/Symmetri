@@ -56,7 +56,7 @@ int main(int, char *argv[]) {
   // of threads it can use (maximum amount of stuff it can do in parallel) and a
   // name so the net is easy to identifiy in a log.
   symmetri::Application net({pnml_path_start, pnml_path_passive}, std::nullopt,
-                            store, "CASE_X", pool);
+                            store, {}, "CASE_X", pool);
 
   // We use a simple boolean flag to terminate the threads once the net
   // finishes. Without it, these threads would prevent the program from cleanly

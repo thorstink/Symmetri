@@ -8,21 +8,24 @@ using namespace symmetri;
 void t0() {}
 auto t1() {}
 
-std::tuple<StateNet, Store, NetMarking> testNet() {
+std::tuple<StateNet, Store,
+           std::vector<std::pair<symmetri::Transition, uint8_t>>, NetMarking>
+testNet() {
   StateNet net = {{"t0", {{"Pa", "Pb"}, {"Pc"}}},
                   {"t1", {{"Pc", "Pc"}, {"Pb", "Pb", "Pd"}}}};
 
   Store store = {{"t0", &t0}, {"t1", &t1}};
+  std::vector<std::pair<symmetri::Transition, uint8_t>> priority;
 
   NetMarking m0 = {{"Pa", 4}, {"Pb", 2}, {"Pc", 0}, {"Pd", 0}};
-  return {net, store, m0};
+  return {net, store, priority, m0};
 }
 
 TEST_CASE("Create a using the net constructor without end condition.") {
-  auto [net, store, m0] = testNet();
+  auto [net, store, priority, m0] = testNet();
   StoppablePool stp(1);
 
-  symmetri::Application app(net, m0, std::nullopt, store,
+  symmetri::Application app(net, m0, std::nullopt, store, priority,
                             "test_net_without_end", stp);
   // we can run the net
   auto [ev, res] = app();
@@ -37,9 +40,9 @@ TEST_CASE("Create a using the net constructor with end condition.") {
   StoppablePool stp(1);
 
   NetMarking final_marking({{"Pa", 0}, {"Pb", 2}, {"Pc", 0}, {"Pd", 2}});
-  auto [net, store, m0] = testNet();
-  symmetri::Application app(net, m0, final_marking, store, "test_net_with_end",
-                            stp);
+  auto [net, store, priority, m0] = testNet();
+  symmetri::Application app(net, m0, final_marking, store, priority,
+                            "test_net_with_end", stp);
   // we can run the net
   auto [ev, res] = app();
   stp.stop();
@@ -58,7 +61,9 @@ TEST_CASE("Create a using pnml constructor.") {
   {
     // This store is not appropriate for this net,
     Store store = {{"wrong_id", &t0}};
-    symmetri::Application app({pnml_file}, std::nullopt, store, "fail", stp);
+    std::vector<std::pair<symmetri::Transition, uint8_t>> priority;
+    symmetri::Application app({pnml_file}, std::nullopt, store, priority,
+                              "fail", stp);
     // however, we can try running it,
     auto [ev, res] = app();
 
@@ -70,10 +75,10 @@ TEST_CASE("Create a using pnml constructor.") {
   {
     // This store is appropriate for this net,
     Store store = symmetri::Store{{"T0", &t0}};
-
+    std::vector<std::pair<symmetri::Transition, uint8_t>> priority;
     NetMarking final_marking({{"P1", 1}});
-    symmetri::Application app({pnml_file}, final_marking, store, "success",
-                              stp);
+    symmetri::Application app({pnml_file}, final_marking, store, priority,
+                              "success", stp);
     // so we can run it,
     auto [ev, res] = app();
     // and the result is properly completed.
