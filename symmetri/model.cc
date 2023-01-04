@@ -92,55 +92,69 @@ Model &runAll(Model &model,
               const StoppablePool &polymorphic_actions,
               const std::string &case_id) {
   model.timestamp = clock_s::now();
-  // calculate possible transitions
-  size_t n = 0;
-  while (n != model.tokens.size()) {
-    n = model.tokens.size();
-    for (const auto &place : model.tokens) {
-            const auto ptr = std::find_if(
-          std::begin(model.reverse_loopup), std::end(model.reverse_loopup),
-          [&place](const auto &u) { return u.first == place; });
-      if (ptr == model.reverse_loopup.end() || ptr->second.empty()) {
-        continue;
-      }
-      const auto &ts = ptr->second;
-      for (const auto &T_i : ts) {
-        const auto &pre = model.net.at(T_i).first;
-        if (std::all_of(std::begin(pre), std::end(pre), [&](const auto &m_p) {
-              return std::count(std::begin(model.tokens),
-                                std::end(model.tokens), m_p) >=
-                     std::count(std::begin(pre), std::end(pre), m_p);
-            })) {
-          // deduct the marking
-          for (const auto &p_ : pre) {
-            model.tokens.extract(p_);
-          }
-          processPreConditions(pre, model.M);
+  // todo; rangify this.s
 
-          // if the function is nullopt_t, we short-circuit the marking
-          // mutation and do it immediately.
-          const auto &task =
-              std::find_if(model.store.begin(), model.store.end(),
-                           [&](const auto &u) { return u.first == T_i; })
-                  ->second;
-          if constexpr (std::is_same_v<std::nullopt_t, decltype(task)>) {
-            const auto &post = model.net.at(T_i).second;
-            for (const auto &p_ : post) {
-              model.tokens.emplace(p_);
-            }
-            processPostConditions(post, model.M);
-          } else {
-            polymorphic_actions.enqueue([=, T_i = T_i, task = task, &reducers] {
-              reducers.enqueue(runTransition(T_i, task, case_id));
-            });
-            model.pending_transitions.push_back(T_i);
-            ++model.active_transition_count;
-          }
-          break;  // break because we changed the marking.
-        }
+  // find possible transitions
+  std::vector<Transition> possible_transition_list;
+  for (const auto &place : model.tokens) {
+    // for all the places that have a token, find the transitions for which it
+    // is an input place.
+    const auto ptr = std::find_if(
+        std::begin(model.reverse_loopup), std::end(model.reverse_loopup),
+        [&place](const auto &u) { return u.first == place; });
+    if (ptr != model.reverse_loopup.end() || ptr->second.empty()) {
+      for (const auto &t : ptr->second) {
+        possible_transition_list.push_back(t);
       }
-      if (model.tokens.size() != n) {
-        break;  // break because we changed the marking.
+    } else {
+      continue;
+    }
+  }
+
+  // sort transition list
+  std::sort(possible_transition_list.begin(), possible_transition_list.end(),
+            [&](const Transition &a, const Transition &b) {
+              auto getPrio = [&](const Transition &t) {
+                auto prio =
+                    std::find_if(model.priority.begin(), model.priority.end(),
+                                 [&](const auto &e) { return e.first == t; });
+                return prio != model.priority.end() ? prio->second : 0;
+              };
+              return getPrio(a) > getPrio(b);
+            });
+
+  // loop over transitions
+  for (const auto &T_i : possible_transition_list) {
+    const auto &pre = model.net.at(T_i).first;
+    if (std::all_of(std::begin(pre), std::end(pre), [&](const auto &m_p) {
+          return std::count(std::begin(model.tokens), std::end(model.tokens),
+                            m_p) >=
+                 std::count(std::begin(pre), std::end(pre), m_p);
+        })) {
+      // deduct the marking
+      for (const auto &p_ : pre) {
+        model.tokens.extract(p_);
+      }
+      processPreConditions(pre, model.M);
+
+      // if the function is nullopt_t, we short-circuit the marking
+      // mutation and do it immediately.
+      const auto &task =
+          std::find_if(model.store.begin(), model.store.end(),
+                       [&](const auto &u) { return u.first == T_i; })
+              ->second;
+      if constexpr (std::is_same_v<std::nullopt_t, decltype(task)>) {
+        const auto &post = model.net.at(T_i).second;
+        for (const auto &p_ : post) {
+          model.tokens.emplace(p_);
+        }
+        processPostConditions(post, model.M);
+      } else {
+        polymorphic_actions.enqueue([=, T_i = T_i, task = task, &reducers] {
+          reducers.enqueue(runTransition(T_i, task, case_id));
+        });
+        model.pending_transitions.push_back(T_i);
+        ++model.active_transition_count;
       }
     }
   }

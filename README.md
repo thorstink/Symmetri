@@ -8,7 +8,7 @@ Clone the repository and make sure you also initialize the submodules.
 
 ```bash
 mkdir build
-cd build 
+cd build
 cmake .. -DBUILD_TESTING=0 -DBUILD_EXAMPLES=0 -DCMAKE_INSTALL_PREFIX:PATH=../install
 cmake .. -DBUILD_TESTING=1 -DBUILD_EXAMPLES=0 -DCMAKE_INSTALL_PREFIX:PATH=../install
 cmake .. -DBUILD_TESTING=1 -DBUILD_EXAMPLES=1 -DCMAKE_INSTALL_PREFIX:PATH=../install
@@ -32,6 +32,18 @@ and look at `http://localhost:2222/` for a live view of the activity.
 - research transition guards/coloured nets
 - single webiface server
 - replace maps with vectors (?)
+
+rangify firing once apple clang is ready...
+
+```cpp
+  auto possible_transition_list2 =
+      model.tokens | std::ranges::views::filter([&](const auto &place) {
+        const auto ptr = std::find_if(
+            std::begin(model.reverse_loopup), std::end(model.reverse_loopup),
+            [&place](const auto &u) { return u.first == place; });
+        return ptr != model.reverse_loopup.end() || ptr->second.empty();
+      });
+```
 
 https://www.youtube.com/watch?v=2KGkcGtGVM4
 https://stlab.cc/tip/2017/12/23/small-object-optimizations.html
