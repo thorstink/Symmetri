@@ -156,9 +156,7 @@ Model &runAll(Model &model,
 
       if constexpr (std::is_same_v<std::nullopt_t, decltype(task)>) {
         const auto &post = model.net.at(T_i).second;
-        for (const auto &p_ : post) {
-          model.tokens.push_back(p_);
-        }
+        model.tokens.insert(model.tokens.begin(), post.begin(), post.end());
         processPostConditions(post, model.M);
       } else {
         polymorphic_actions.enqueue([=, T_i = T_i, task = task, &reducers] {

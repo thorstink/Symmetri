@@ -131,3 +131,25 @@ TEST_CASE("Run until net dies") {
   REQUIRE(T1_COUNTER == 2);
   stp.stop();
 }
+
+TEST_CASE("Run until net dies with std::nullopt") {
+  using namespace moodycamel;
+
+  auto [net, store, priority, m0] = testNet();
+  store = {{"t0", std::nullopt}, {"t1", std::nullopt}};
+  auto m = Model(net, store, priority, m0);
+  BlockingConcurrentQueue<Reducer> reducers(4);
+  StoppablePool stp(1);
+  Reducer r;
+  PolyAction a([] {});
+  // we need to enqueue one 'no-operation' to start the live net.
+  reducers.enqueue([](Model&& m) -> Model& { return m; });
+  do {
+    if (reducers.try_dequeue(r)) {
+      m = runAll(r(std::move(m)), reducers, stp);
+    }
+  } while (!m.pending_transitions.empty());
+  // For this specific net we expect:
+  REQUIRE(m.M == NetMarking({{"Pa", 0}, {"Pb", 2}, {"Pc", 0}, {"Pd", 2}}));
+  stp.stop();
+}
