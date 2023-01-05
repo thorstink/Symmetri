@@ -48,10 +48,9 @@ struct Application {
       const std::vector<std::pair<symmetri::Transition, uint8_t>> &priority,
       const std::string &case_id, const symmetri::StoppablePool &stp);
 
-  template <typename T>
-  inline std::function<void(T)> registerTransitionCallback(
+  inline std::function<void()> registerTransitionCallback(
       const std::string &transition) const {
-    return [transition, this](T) { p(transition); };
+    return [transition, this]() { p(transition); };
   }
 
   void doMeData(std::function<void()> f) const;

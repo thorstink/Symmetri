@@ -65,7 +65,7 @@ int main(int, char *argv[]) {
   // We create a little thread that listens to events that allow us to manually
   // trigger transitions. E.g. collision avoidance or manual take-over
   std::thread input_thread(
-      [&running, t50 = net.registerTransitionCallback<float>("t50")] {
+      [&running, t50 = net.registerTransitionCallback("t50")] {
         char input_char;
         do {
           // cin is a way to listen to the keyboard in c++. It hangs until the
@@ -74,7 +74,7 @@ int main(int, char *argv[]) {
           std::cin >> input_char;
           switch (input_char) {
             case '1': {
-              t50(input_char);
+              t50();
               break;
             }
             default:

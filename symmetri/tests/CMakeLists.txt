@@ -49,6 +49,10 @@ add_executable(${PROJECT_NAME}_maxplus_test maxplus.cc)
 target_link_libraries(${PROJECT_NAME}_maxplus_test PRIVATE Catch2::Catch2WithMain)
 add_test(${PROJECT_NAME}_maxplus_test ${PROJECT_NAME}_maxplus_test)
 
+add_executable(${PROJECT_NAME}_external_input_test test_external_input.cc)
+target_link_libraries(${PROJECT_NAME}_external_input_test PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue spdlog::spdlog)
+add_test(${PROJECT_NAME}_external_input_test ${PROJECT_NAME}_external_input_test)
+
 add_executable(${PROJECT_NAME}_priorities_test test_priorities.cc)
 target_link_libraries(${PROJECT_NAME}_priorities_test PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue spdlog::spdlog)
 add_test(${PROJECT_NAME}_priorities_test ${PROJECT_NAME}_priorities_test)
