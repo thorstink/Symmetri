@@ -20,7 +20,6 @@ TEST_CASE(
     StateNet net = {{"t0", {{"Pa"}, {"Pb"}}}, {"t1", {{"Pa"}, {"Pc"}}}};
     Store store = {{"t0", std::nullopt}, {"t1", std::nullopt}};
 
-    //   std::vector<std::pair<symmetri::Transition, uint8_t>> priority;
     NetMarking m0 = {{"Pa", 1}, {"Pb", 0}, {"Pc", 0}};
     StoppablePool stp(1);
 

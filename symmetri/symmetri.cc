@@ -120,7 +120,7 @@ struct Impl {
     m.tokens = {};
     for (auto [p, c] : m0_) {
       for (int i = 0; i < c; i++) {
-        m.tokens.emplace(p);
+        m.tokens.push_back(p);
       }
     }
 

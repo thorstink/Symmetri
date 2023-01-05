@@ -33,7 +33,7 @@ Reducer processTransition(const std::string &T_i, const std::string &case_id,
   return [=](Model &&model) -> Model & {
     if (result == TransitionState::Completed) {
       const auto &post = model.net.at(T_i).second;
-      model.tokens.insert(post.begin(), post.end());
+      model.tokens.insert(model.tokens.begin(), post.begin(), post.end());
       processPostConditions(model.net.at(T_i).second, model.M);
     }
     model.event_log.push_back(
@@ -59,7 +59,7 @@ Reducer processTransition(const std::string &T_i, const Eventlog &new_events,
   return [=](Model &&model) -> Model & {
     if (result == TransitionState::Completed) {
       const auto &post = model.net.at(T_i).second;
-      model.tokens.insert(post.begin(), post.end());
+      model.tokens.insert(model.tokens.begin(), post.begin(), post.end());
       processPostConditions(model.net.at(T_i).second, model.M);
     }
 
@@ -87,66 +87,77 @@ Reducer runTransition(const std::string &T_i, const PolyAction &task,
                     : processTransition(T_i, ev, res);
 }
 
+int getPriority(
+    const std::vector<std::pair<symmetri::Transition, uint8_t>> &priorities,
+    const symmetri::Transition &t) {
+  auto prio = std::lower_bound(
+      priorities.begin(), priorities.end(), t,
+      [](const auto &e, const auto &t) { return e.first < t; });
+  return prio != priorities.end() && !(t < prio->first) ? prio->second : 0;
+};
+
+bool canFire(const std::vector<Transition> &pre,
+             const std::vector<Place> &tokens) {
+  return std::all_of(pre.begin(), pre.end(), [&](const auto &m_p) {
+    return std::count(tokens.begin(), tokens.end(), m_p) >=
+           std::count(pre.begin(), pre.end(), m_p);
+  });
+};
+
 Model &runAll(Model &model,
               moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
               const StoppablePool &polymorphic_actions,
               const std::string &case_id) {
   model.timestamp = clock_s::now();
-  // todo; rangify this.s
+  // todo; rangify this.
 
   // find possible transitions
   std::vector<Transition> possible_transition_list;
   for (const auto &place : model.tokens) {
     // for all the places that have a token, find the transitions for which it
     // is an input place.
-    const auto ptr = std::find_if(
-        std::begin(model.reverse_loopup), std::end(model.reverse_loopup),
-        [&place](const auto &u) { return u.first == place; });
-    if (ptr != model.reverse_loopup.end() || ptr->second.empty()) {
-      for (const auto &t : ptr->second) {
-        possible_transition_list.push_back(t);
-      }
-    } else {
-      continue;
+    const auto ptr = std::lower_bound(
+        model.reverse_loopup.begin(), model.reverse_loopup.end(), place,
+        [](const auto &u, const auto &place) { return u.first < place; });
+
+    if (ptr != model.reverse_loopup.end() && !(place < ptr->first)) {
+      possible_transition_list.insert(possible_transition_list.begin(),
+                                      ptr->second.begin(), ptr->second.end());
     }
   }
 
   // sort transition list
   std::sort(possible_transition_list.begin(), possible_transition_list.end(),
             [&](const Transition &a, const Transition &b) {
-              auto getPrio = [&](const Transition &t) {
-                auto prio =
-                    std::find_if(model.priority.begin(), model.priority.end(),
-                                 [&](const auto &e) { return e.first == t; });
-                return prio != model.priority.end() ? prio->second : 0;
-              };
-              return getPrio(a) > getPrio(b);
+              return getPriority(model.priority, a) >
+                     getPriority(model.priority, b);
             });
 
   // loop over transitions
   for (const auto &T_i : possible_transition_list) {
     const auto &pre = model.net.at(T_i).first;
-    if (std::all_of(std::begin(pre), std::end(pre), [&](const auto &m_p) {
-          return std::count(std::begin(model.tokens), std::end(model.tokens),
-                            m_p) >=
-                 std::count(std::begin(pre), std::end(pre), m_p);
-        })) {
+    if (canFire(pre, model.tokens)) {
       // deduct the marking
-      for (const auto &p_ : pre) {
-        model.tokens.extract(p_);
+      for (const auto &place : pre) {
+        // erase one by one. using std::remove_if would remove all tokens at a
+        // particular place.
+        model.tokens.erase(
+            std::find(model.tokens.begin(), model.tokens.end(), place));
       }
+
       processPreConditions(pre, model.M);
 
-      // if the function is nullopt_t, we short-circuit the marking
-      // mutation and do it immediately.
+      // if the function is nullopt_t, we short-circuit the
+      // marking mutation and do it immediately.
       const auto &task =
           std::find_if(model.store.begin(), model.store.end(),
                        [&](const auto &u) { return u.first == T_i; })
               ->second;
+
       if constexpr (std::is_same_v<std::nullopt_t, decltype(task)>) {
         const auto &post = model.net.at(T_i).second;
         for (const auto &p_ : post) {
-          model.tokens.emplace(p_);
+          model.tokens.push_back(p_);
         }
         processPostConditions(post, model.M);
       } else {

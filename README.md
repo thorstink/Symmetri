@@ -38,9 +38,9 @@ rangify firing once apple clang is ready...
 ```cpp
   auto possible_transition_list2 =
       model.tokens | std::ranges::views::filter([&](const auto &place) {
-        const auto ptr = std::find_if(
-            std::begin(model.reverse_loopup), std::end(model.reverse_loopup),
-            [&place](const auto &u) { return u.first == place; });
+        const auto ptr = std::lower_bound(
+            std::begin(model.reverse_loopup), std::end(model.reverse_loopup),place
+            [](const auto &u, const auto& place) { return u.first == place; });
         return ptr != model.reverse_loopup.end() || ptr->second.empty();
       });
 ```
