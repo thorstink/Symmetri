@@ -1,5 +1,6 @@
 #include "model.h"
 
+#include <iostream>
 namespace symmetri {
 
 auto getThreadId() {
@@ -34,6 +35,8 @@ Reducer processTransition(const std::string &T_i, const std::string &case_id,
 
     if (el != model.pending_transitions.end()) {
       model.pending_transitions.erase(el);
+    } else {
+      std::cout << "AARG [1]" << std::endl;
     }
     --model.active_transition_count;
     return model;
@@ -51,12 +54,29 @@ Reducer processTransition(const std::string &T_i, const Eventlog &new_events,
     for (const auto &e : new_events) {
       model.event_log.push_back(e);
     }
+
+    std::cout << "t count: " << model.active_transition_count
+              << "\n output transition list: \n";
+    for (auto t : model.pending_transitions) {
+      std::cout << t << "\n";
+    }
+    std::cout << "end output transition list" << std::endl;
+
     auto el = std::find(model.pending_transitions.begin(),
                         model.pending_transitions.end(), T_i);
     if (el != model.pending_transitions.end()) {
       model.pending_transitions.erase(el);
+    } else {
+      std::cout << "AARG [1]" << std::endl;
     }
     --model.active_transition_count;
+
+    std::cout << "t count: " << model.active_transition_count
+              << "\n output transition list: \n";
+    for (auto t : model.pending_transitions) {
+      std::cout << t << "\n";
+    }
+    std::cout << "end output transition list" << std::endl;
     return model;
   };
 }
@@ -146,6 +166,12 @@ Model &runAll(Model &model,
         });
         model.pending_transitions.push_back(T_i);
         ++model.active_transition_count;
+        // std::cout << "t count: " << model.active_transition_count
+        //           << "\n input transition list: \n";
+        // for (auto t : model.pending_transitions) {
+        //   std::cout << t << "\n";
+        // }
+        // std::cout << "end input transition list" << std::endl;
       }
     }
   }
