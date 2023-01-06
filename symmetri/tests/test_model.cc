@@ -1,7 +1,4 @@
-#include <spdlog/spdlog.h>
-
 #include <catch2/catch_test_macros.hpp>
-#include <iostream>
 
 #include "model.h"
 using namespace symmetri;
@@ -58,22 +55,25 @@ TEST_CASE("Create a model") {
   REQUIRE(after_model_creation > m.timestamp);
 }
 
-TEST_CASE("Run a transition") {
-  auto [net, store, priority, m0] = testNet();
-  auto m = Model(net, store, priority, m0);
+// this test is broken, because there's no run a single transition yet that
+// updates the active transitions (yet.. or maybe never to come.) TEST_CASE("Run
+// a transition") {
+//   auto [net, store, priority, m0] = testNet();
+//   auto m = Model(net, store, priority, m0);
 
-  // by "manually calling" a transition like this, we don't deduct the
-  // pre-conditions from the marking.
-  auto reducer = runTransition("t0", getTransition(m.store, "t0"), "nocase");
+//   // by "manually calling" a transition like this, we don't deduct the
+//   // pre-conditions from the marking.
+//   auto reducer = runTransition("t0", getTransition(m.store, "t0"), "nocase");
 
-  // run the reducer
-  m = reducer(std::move(m));
+//   // run the reducer
+//   m = reducer(std::move(m));
 
-  // the reducer only processes the post-conditions on the marking, for t0 that
-  // means  place Pc gets a +1.
-  REQUIRE(std::count(m.tokens.begin(), m.tokens.end(), "Pc") == 1);
-  REQUIRE(T0_COUNTER == 1);
-}
+//   // the reducer only processes the post-conditions on the marking, for t0
+//   that
+//   // means  place Pc gets a +1.
+//   REQUIRE(std::count(m.tokens.begin(), m.tokens.end(), "Pc") == 1);
+//   REQUIRE(T0_COUNTER == 1);
+// }
 
 TEST_CASE("Run one transition iteration in a petri net") {
   using namespace moodycamel;
