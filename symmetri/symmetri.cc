@@ -214,6 +214,9 @@ void Application::createApplication(
     p = [this](const std::string &t) {
       if (impl->active.load()) {
         impl->stp.enqueue([t, this, task = getTransition(impl->m.store, t)] {
+          // this should be cleaned the next iteration
+          impl->m.pending_transitions.push_back(t);
+          ++impl->m.active_transition_count;
           impl->reducers.enqueue(runTransition(t, task, impl->case_id));
         });
       }

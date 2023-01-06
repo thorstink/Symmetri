@@ -29,12 +29,11 @@ Reducer processTransition(const std::string &T_i, const std::string &case_id,
                                    ? TransitionState::Completed
                                    : TransitionState::Error,
                                end_time, thread_id});
-    auto el = std::find(model.pending_transitions.begin(),
-                        model.pending_transitions.end(), T_i);
-
-    if (el != model.pending_transitions.end()) {
-      model.pending_transitions.erase(el);
-    }
+    // we know for sure this transition is active because otherwise it wouldn't
+    // produce a reducer.
+    model.pending_transitions.erase(std::find(model.pending_transitions.begin(),
+                                              model.pending_transitions.end(),
+                                              T_i));
     --model.active_transition_count;
     return model;
   };
@@ -51,12 +50,14 @@ Reducer processTransition(const std::string &T_i, const Eventlog &new_events,
     for (const auto &e : new_events) {
       model.event_log.push_back(e);
     }
-    auto el = std::find(model.pending_transitions.begin(),
-                        model.pending_transitions.end(), T_i);
-    if (el != model.pending_transitions.end()) {
-      model.pending_transitions.erase(el);
-    }
+
+    // we know for sure this transition is active because otherwise it wouldn't
+    // produce a reducer.
+    model.pending_transitions.erase(std::find(model.pending_transitions.begin(),
+                                              model.pending_transitions.end(),
+                                              T_i));
     --model.active_transition_count;
+
     return model;
   };
 }

@@ -33,8 +33,11 @@ TEST_CASE("Test external input.") {
   });
 
   // enqueue a trigger;
-  stp.enqueue(
-      [trigger = app.registerTransitionCallback("t0")]() { trigger(); });
+  stp.enqueue([trigger = app.registerTransitionCallback("t0")]() {
+    // sleep a bit so it gets triggered _after_ the net started.
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    trigger();
+  });
 
   // run the net
   auto [ev, res] = app();
