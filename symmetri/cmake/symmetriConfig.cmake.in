@@ -1,7 +1,6 @@
 include(CMakeFindDependencyMacro)
 
 # Find dependencies
-find_dependency(Seasocks REQUIRED)
 find_dependency(spdlog REQUIRED)
 
 # Our library dependencies (contains definitions for IMPORTED targets)

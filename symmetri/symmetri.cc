@@ -36,14 +36,14 @@ void blockIfPaused(const std::string &case_id) {
 
 // Define the function to be called when ctrl-c (SIGINT) is sent to process
 std::atomic<bool> EARLY_EXIT(false);
-inline void signal_handler(int signal) noexcept {
+inline void signal_handler(int) noexcept {
   spdlog::info("User requests exit");
   EARLY_EXIT.store(true);
 }
 
 using namespace moodycamel;
 
-size_t calculateTrace(const Eventlog& event_log) noexcept {
+size_t calculateTrace(const Eventlog &event_log) noexcept {
   // calculate a trace-id, in a simple way.
   return std::hash<std::string>{}(std::accumulate(
       event_log.begin(), event_log.end(), std::string(""),
@@ -101,8 +101,10 @@ struct Impl {
   Impl(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
        const symmetri::StoppablePool &stp,
        const std::optional<symmetri::NetMarking> &final_marking,
-       const Store &store, const std::string &case_id)
-      : m(net, store, m0),
+       const Store &store,
+       const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
+       const std::string &case_id)
+      : m(net, store, priority, m0),
         m0_(m0),
         reducers(256),
         stp(stp),
@@ -113,8 +115,22 @@ struct Impl {
   symmetri::Eventlog getEventLog() const { return m.event_log; }
   TransitionResult run() {
     // todo.. not have to assign it manually to reset.
-    m.M = m0_;
     m.event_log = {};
+    m.tokens = {};
+    for (auto [p, c] : m0_) {
+      for (int i = 0; i < c; i++) {
+        m.tokens.push_back(p);
+      }
+    }
+    std::vector<Place> final_tokens;
+    if (final_marking.has_value()) {
+      for (const auto &[p, c] : final_marking.value()) {
+        for (int i = 0; i < c; i++) {
+          final_tokens.push_back(p);
+        }
+      }
+    }
+    std::sort(final_tokens.begin(), final_tokens.end());
 
     // enqueue a noop to start, not
     // doing this would require
@@ -125,7 +141,7 @@ struct Impl {
     // exit, otherwise there must be event_logs.
     auto stop_condition = [&] {
       return EARLY_EXIT.load(std::memory_order_relaxed) ||
-             (m.pending_transitions.empty() && !m.event_log.empty());
+             (m.active_transition_count == 0 && !m.event_log.empty());
     };
     active.store(true);
     Reducer f;
@@ -136,14 +152,9 @@ struct Impl {
         m = f(std::move(m));
       } while (reducers.try_dequeue(f));
       blockIfPaused(case_id);
-      if (final_marking.has_value() &&
-          MarkingReached(m.M, final_marking.value())) {
+      m = runAll(m, reducers, stp, case_id);
+      if (MarkingReached(m.tokens, final_tokens)) {
         break;
-      }
-      try {
-        m = runAll(m, reducers, stp, case_id);
-      } catch (const std::exception &e) {
-        spdlog::get(case_id)->error(e.what());
       }
     }
     active.store(false);
@@ -152,9 +163,7 @@ struct Impl {
     TransitionState result;
     if (EARLY_EXIT.load()) {
       result = TransitionState::UserExit;
-    } else if (final_marking.has_value()
-                   ? MarkingReached(m.M, final_marking.value())
-                   : false) {
+    } else if (MarkingReached(m.tokens, final_tokens)) {
       result = TransitionState::Completed;
     } else if (m.pending_transitions.empty()) {
       result = TransitionState::Deadlock;
@@ -169,25 +178,28 @@ struct Impl {
 Application::Application(
     const std::set<std::string> &files,
     const std::optional<symmetri::NetMarking> &final_marking,
-    const Store &store, const std::string &case_id,
-    const symmetri::StoppablePool &stp) {
+    const Store &store,
+    const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
+    const std::string &case_id, const symmetri::StoppablePool &stp) {
   const auto &[net, m0] = readPetriNets(files);
-  createApplication(net, m0, final_marking, store, case_id, stp);
+  createApplication(net, m0, final_marking, store, priority, case_id, stp);
 }
 
 Application::Application(
     const symmetri::StateNet &net, const symmetri::NetMarking &m0,
     const std::optional<symmetri::NetMarking> &final_marking,
-    const Store &store, const std::string &case_id,
-    const symmetri::StoppablePool &stp) {
-  createApplication(net, m0, final_marking, store, case_id, stp);
+    const Store &store,
+    const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
+    const std::string &case_id, const symmetri::StoppablePool &stp) {
+  createApplication(net, m0, final_marking, store, priority, case_id, stp);
 }
 
 void Application::createApplication(
     const symmetri::StateNet &net, const symmetri::NetMarking &m0,
     const std::optional<symmetri::NetMarking> &final_marking,
-    const Store &store, const std::string &case_id,
-    const symmetri::StoppablePool &stp) {
+    const Store &store,
+    const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
+    const std::string &case_id, const symmetri::StoppablePool &stp) {
   signal(SIGINT, signal_handler);
   std::stringstream s;
   s << "[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] [" << case_id << "] %v";
@@ -196,11 +208,15 @@ void Application::createApplication(
   console->set_pattern(s.str());
   if (check(store, net)) {
     // init
-    impl = std::make_shared<Impl>(net, m0, stp, final_marking, store, case_id);
+    impl = std::make_shared<Impl>(net, m0, stp, final_marking, store, priority,
+                                  case_id);
     // register a function that "forces" transitions into the queue.
     p = [this](const std::string &t) {
       if (impl->active.load()) {
         impl->stp.enqueue([t, this, task = getTransition(impl->m.store, t)] {
+          // this should be cleaned the next iteration
+          impl->m.pending_transitions.push_back(t);
+          ++impl->m.active_transition_count;
           impl->reducers.enqueue(runTransition(t, task, impl->case_id));
         });
       }
@@ -219,11 +235,11 @@ TransitionResult Application::operator()() const noexcept {
 }
 
 std::tuple<clock_s::time_point, symmetri::Eventlog, symmetri::StateNet,
-           symmetri::NetMarking, std::set<std::string>>
+           std::vector<symmetri::Place>, std::vector<std::string>>
 Application::get() const noexcept {
   auto &m = impl->getModel();
 
-  return std::make_tuple(m.timestamp, impl->getEventLog(), m.net, m.M,
+  return std::make_tuple(m.timestamp, impl->getEventLog(), m.net, m.tokens,
                          m.pending_transitions);
 }
 

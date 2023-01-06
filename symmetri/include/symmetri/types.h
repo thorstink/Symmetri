@@ -9,7 +9,7 @@
 namespace symmetri {
 using Place = std::string;
 using Transition = std::string;
-using clock_s = std::chrono::system_clock;
+using clock_s = std::chrono::steady_clock;
 
 enum class TransitionState { Started, Completed, Deadlock, UserExit, Error };
 
@@ -28,7 +28,7 @@ using StateNet =
 using NetMarking = std::unordered_map<Place, uint16_t>;
 
 template <typename T>
-constexpr TransitionResult runTransition(const T& x) {
+TransitionResult runTransition(const T& x) {
   if constexpr (std::is_invocable_v<T>) {
     if constexpr (std::is_same_v<TransitionState, decltype(x())>) {
       return {{}, x()};
@@ -43,6 +43,9 @@ constexpr TransitionResult runTransition(const T& x) {
   }
 }
 
-bool MarkingReached(const NetMarking& marking, const NetMarking& final_marking);
+bool MarkingEquality(const std::vector<Place>& m1,
+                     const std::vector<Place>& m2);
+bool MarkingReached(const std::vector<Place>& marking,
+                    const std::vector<Place>& final_marking);
 bool StateNetEquality(const StateNet& net1, const StateNet& net2);
 }  // namespace symmetri

@@ -1,4 +1,3 @@
-find_package(Seasocks REQUIRED)
 find_package(spdlog REQUIRED)
 
 include(FetchContent)
@@ -17,7 +16,7 @@ if(NOT concurrentqueue_POPULATED)
   add_subdirectory(${concurrentqueue_SOURCE_DIR} ${concurrentqueue_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
-include_directories(include submodules ${SEASOCKS_INCLUDE_DIRS})
+include_directories(include submodules)
 
 #lib
 add_library(${PROJECT_NAME} SHARED
@@ -26,12 +25,11 @@ add_library(${PROJECT_NAME} SHARED
   model.cc 
   pnml_parser.cc 
   retry.cpp 
-  ws_interface.cpp 
   types.cpp 
   submodules/tinyxml2/tinyxml2.cpp
 )
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
-target_link_libraries(${PROJECT_NAME} PUBLIC pthread Seasocks::seasocks PRIVATE concurrentqueue spdlog::spdlog)
+target_link_libraries(${PROJECT_NAME} PUBLIC pthread PRIVATE concurrentqueue spdlog::spdlog)
 
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME})
@@ -97,5 +95,5 @@ set(ui_files
 install(DIRECTORY ${ui_files} DESTINATION share)
 
 if(BUILD_TESTING)
-  # add_subdirectory(tests)
+  add_subdirectory(tests)
 endif()

@@ -15,7 +15,7 @@
 
 namespace symmetri {
 
-size_t calculateTrace(const Eventlog& event_log) noexcept;
+size_t calculateTrace(const Eventlog &event_log) noexcept;
 std::string printState(symmetri::TransitionState s) noexcept;
 
 using Store = std::vector<std::pair<std::string, PolyAction>>;
@@ -29,30 +29,34 @@ struct Application {
   void createApplication(
       const symmetri::StateNet &net, const symmetri::NetMarking &m0,
       const std::optional<symmetri::NetMarking> &final_marking,
-      const Store &store, const std::string &case_id,
-      const symmetri::StoppablePool &stp);
+      const Store &store,
+      const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
+      const std::string &case_id, const symmetri::StoppablePool &stp);
 
  public:
-  Application(const std::set<std::string> &path_to_petri,
-              const std::optional<symmetri::NetMarking> &final_marking,
-              const Store &store, const std::string &case_id,
-              const symmetri::StoppablePool &stp);
+  Application(
+      const std::set<std::string> &path_to_petri,
+      const std::optional<symmetri::NetMarking> &final_marking,
+      const Store &store,
+      const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
+      const std::string &case_id, const symmetri::StoppablePool &stp);
 
-  Application(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
-              const std::optional<symmetri::NetMarking> &final_marking,
-              const Store &store, const std::string &case_id,
-              const symmetri::StoppablePool &stp);
+  Application(
+      const symmetri::StateNet &net, const symmetri::NetMarking &m0,
+      const std::optional<symmetri::NetMarking> &final_marking,
+      const Store &store,
+      const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
+      const std::string &case_id, const symmetri::StoppablePool &stp);
 
-  template <typename T>
-  inline std::function<void(T)> registerTransitionCallback(
+  inline std::function<void()> registerTransitionCallback(
       const std::string &transition) const {
-    return [transition, this](T) { p(transition); };
+    return [transition, this]() { p(transition); };
   }
 
   void doMeData(std::function<void()> f) const;
 
   std::tuple<clock_s::time_point, symmetri::Eventlog, symmetri::StateNet,
-             symmetri::NetMarking, std::set<std::string>>
+             std::vector<symmetri::Place>, std::vector<std::string>>
   get() const noexcept;
 
   const symmetri::StateNet &getNet();
