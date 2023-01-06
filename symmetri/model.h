@@ -28,7 +28,6 @@ struct Model {
         priority(_priority),
         store(store),
         timestamp(clock_s::now()),
-        M(M0),
         active_transition_count(0) {
     // sort priority for lookup:
     std::sort(priority.begin(), priority.end(),
@@ -68,7 +67,6 @@ struct Model {
   const Store &store;
 
   clock_s::time_point timestamp;
-  NetMarking M;
   std::vector<Transition> pending_transitions;
   uint16_t active_transition_count;
   Eventlog event_log;

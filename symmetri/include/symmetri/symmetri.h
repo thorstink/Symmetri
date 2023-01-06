@@ -56,7 +56,7 @@ struct Application {
   void doMeData(std::function<void()> f) const;
 
   std::tuple<clock_s::time_point, symmetri::Eventlog, symmetri::StateNet,
-             symmetri::NetMarking, std::vector<std::string>>
+             std::vector<symmetri::Place>, std::vector<std::string>>
   get() const noexcept;
 
   const symmetri::StateNet &getNet();

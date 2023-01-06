@@ -115,7 +115,6 @@ struct Impl {
   symmetri::Eventlog getEventLog() const { return m.event_log; }
   TransitionResult run() {
     // todo.. not have to assign it manually to reset.
-    m.M = m0_;
     m.event_log = {};
     m.tokens = {};
     for (auto [p, c] : m0_) {
@@ -123,6 +122,15 @@ struct Impl {
         m.tokens.push_back(p);
       }
     }
+    std::vector<Place> final_tokens;
+    if (final_marking.has_value()) {
+      for (const auto &[p, c] : final_marking.value()) {
+        for (int i = 0; i < c; i++) {
+          final_tokens.push_back(p);
+        }
+      }
+    }
+    std::sort(final_tokens.begin(), final_tokens.end());
 
     // enqueue a noop to start, not
     // doing this would require
@@ -145,8 +153,7 @@ struct Impl {
       } while (reducers.try_dequeue(f));
       blockIfPaused(case_id);
       m = runAll(m, reducers, stp, case_id);
-      if (final_marking.has_value() &&
-          MarkingReached(m.M, final_marking.value())) {
+      if (MarkingEquality(final_tokens, m.tokens)) {
         break;
       }
     }
@@ -156,9 +163,7 @@ struct Impl {
     TransitionState result;
     if (EARLY_EXIT.load()) {
       result = TransitionState::UserExit;
-    } else if (final_marking.has_value()
-                   ? MarkingReached(m.M, final_marking.value())
-                   : false) {
+    } else if (MarkingEquality(final_tokens, m.tokens)) {
       result = TransitionState::Completed;
     } else if (m.pending_transitions.empty()) {
       result = TransitionState::Deadlock;
@@ -227,11 +232,11 @@ TransitionResult Application::operator()() const noexcept {
 }
 
 std::tuple<clock_s::time_point, symmetri::Eventlog, symmetri::StateNet,
-           symmetri::NetMarking, std::vector<std::string>>
+           std::vector<symmetri::Place>, std::vector<std::string>>
 Application::get() const noexcept {
   auto &m = impl->getModel();
 
-  return std::make_tuple(m.timestamp, impl->getEventLog(), m.net, m.M,
+  return std::make_tuple(m.timestamp, impl->getEventLog(), m.net, m.tokens,
                          m.pending_transitions);
 }
 

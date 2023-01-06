@@ -36,9 +36,10 @@ TEST_CASE(
     auto prio_t1 = std::find_if(priority.begin(), priority.end(), [](auto e) {
                      return e.first == "t1";
                    })->second;
-    int expected_pb = static_cast<int>(prio_t0 > prio_t1 ? 1 : 0);
-    int expected_pc = static_cast<int>(prio_t1 > prio_t0 ? 1 : 0);
-    CHECK(m.M["Pb"] == expected_pb);
-    CHECK(m.M["Pc"] == expected_pc);
+    if (prio_t0 > prio_t1) {
+      CHECK(MarkingEquality(m.tokens, {"Pb"}));
+    } else {
+      CHECK(MarkingEquality(m.tokens, {"Pc"}));
+    }
   }
 }

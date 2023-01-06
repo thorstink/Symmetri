@@ -28,7 +28,7 @@ using StateNet =
 using NetMarking = std::unordered_map<Place, uint16_t>;
 
 template <typename T>
- TransitionResult runTransition(const T& x) {
+TransitionResult runTransition(const T& x) {
   if constexpr (std::is_invocable_v<T>) {
     if constexpr (std::is_same_v<TransitionState, decltype(x())>) {
       return {{}, x()};
@@ -44,5 +44,7 @@ template <typename T>
 }
 
 bool MarkingReached(const NetMarking& marking, const NetMarking& final_marking);
+bool MarkingEquality(const std::vector<Place>& m1,
+                     const std::vector<Place>& m2);
 bool StateNetEquality(const StateNet& net1, const StateNet& net2);
 }  // namespace symmetri

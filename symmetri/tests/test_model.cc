@@ -1,4 +1,7 @@
+#include <spdlog/spdlog.h>
+
 #include <catch2/catch_test_macros.hpp>
+#include <iostream>
 
 #include "model.h"
 using namespace symmetri;
@@ -64,7 +67,7 @@ TEST_CASE("Run a transition") {
 
   // the reducer only processes the post-conditions on the marking, for t0 that
   // means  place Pc gets a +1.
-  REQUIRE(m.M["Pc"] == 1);
+  REQUIRE(std::count(m.tokens.begin(), m.tokens.end(), "Pc") == 1);
   REQUIRE(T0_COUNTER == 1);
 }
 
@@ -83,7 +86,9 @@ TEST_CASE("Run one transition iteration in a petri net") {
   // are not:
   REQUIRE(m.pending_transitions ==
           std::vector<symmetri::Transition>{"t0", "t0"});
-  REQUIRE(m.M == NetMarking({{"Pa", 2}, {"Pb", 0}, {"Pc", 0}, {"Pd", 0}}));
+
+  REQUIRE(MarkingEquality(m.tokens, {"Pa", "Pa"}));
+
   Reducer r;
   // there is no reducer yet because the task hasn't been executed yet.
   REQUIRE(!reducers.try_dequeue(r));
@@ -99,13 +104,14 @@ TEST_CASE("Run one transition iteration in a petri net") {
   // the marking should still be the same.
   REQUIRE(m.pending_transitions ==
           std::vector<symmetri::Transition>{"t0", "t0"});
-  REQUIRE(m.M == NetMarking({{"Pa", 2}, {"Pb", 0}, {"Pc", 0}, {"Pd", 0}}));
+  REQUIRE(MarkingEquality(m.tokens, {"Pa", "Pa"}));
+
   // process the reducers
   m = r1(std::move(m));
   m = r2(std::move(m));
   // and now the post-conditions are processed:
   REQUIRE(m.pending_transitions.empty());
-  REQUIRE(m.M == NetMarking({{"Pa", 2}, {"Pb", 0}, {"Pc", 2}, {"Pd", 0}}));
+  REQUIRE(MarkingEquality(m.tokens, {"Pa", "Pa", "Pc", "Pc"}));
   stp.stop();
 }
 
@@ -126,7 +132,8 @@ TEST_CASE("Run until net dies") {
     }
   } while (!m.pending_transitions.empty());
   // For this specific net we expect:
-  REQUIRE(m.M == NetMarking({{"Pa", 0}, {"Pb", 2}, {"Pc", 0}, {"Pd", 2}}));
+  REQUIRE(MarkingEquality(m.tokens, {"Pb", "Pb", "Pd", "Pd"}));
+
   REQUIRE(T0_COUNTER == 4);
   REQUIRE(T1_COUNTER == 2);
   stp.stop();
@@ -150,6 +157,6 @@ TEST_CASE("Run until net dies with std::nullopt") {
     }
   } while (!m.pending_transitions.empty());
   // For this specific net we expect:
-  REQUIRE(m.M == NetMarking({{"Pa", 0}, {"Pb", 2}, {"Pc", 0}, {"Pd", 2}}));
+  REQUIRE(MarkingEquality(m.tokens, {"Pb", "Pb", "Pd", "Pd"}));
   stp.stop();
 }

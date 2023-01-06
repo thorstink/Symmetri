@@ -13,19 +13,6 @@ PolyAction getTransition(const Store &s, const std::string &t) {
       ->second;
 }
 
-void processPreConditions(const std::vector<Place> &pre_places, NetMarking &m) {
-  for (const auto &m_p : pre_places) {
-    m[m_p] -= 1;
-  }
-}
-
-void processPostConditions(const std::vector<Place> &post_places,
-                           NetMarking &m) {
-  for (const auto &m_p : post_places) {
-    m[m_p] += 1;
-  }
-}
-
 Reducer processTransition(const std::string &T_i, const std::string &case_id,
                           TransitionState result, size_t thread_id,
                           clock_s::time_point start_time,
@@ -34,7 +21,6 @@ Reducer processTransition(const std::string &T_i, const std::string &case_id,
     if (result == TransitionState::Completed) {
       const auto &post = model.net.at(T_i).second;
       model.tokens.insert(model.tokens.begin(), post.begin(), post.end());
-      processPostConditions(model.net.at(T_i).second, model.M);
     }
     model.event_log.push_back(
         {case_id, T_i, TransitionState::Started, start_time, thread_id});
@@ -60,7 +46,6 @@ Reducer processTransition(const std::string &T_i, const Eventlog &new_events,
     if (result == TransitionState::Completed) {
       const auto &post = model.net.at(T_i).second;
       model.tokens.insert(model.tokens.begin(), post.begin(), post.end());
-      processPostConditions(model.net.at(T_i).second, model.M);
     }
 
     for (const auto &e : new_events) {
@@ -145,8 +130,6 @@ Model &runAll(Model &model,
             std::find(model.tokens.begin(), model.tokens.end(), place));
       }
 
-      processPreConditions(pre, model.M);
-
       // if the function is nullopt_t, we short-circuit the
       // marking mutation and do it immediately.
       const auto &task =
@@ -157,7 +140,6 @@ Model &runAll(Model &model,
       if constexpr (std::is_same_v<std::nullopt_t, decltype(task)>) {
         const auto &post = model.net.at(T_i).second;
         model.tokens.insert(model.tokens.begin(), post.begin(), post.end());
-        processPostConditions(post, model.M);
       } else {
         polymorphic_actions.enqueue([=, T_i = T_i, task = task, &reducers] {
           reducers.enqueue(runTransition(T_i, task, case_id));

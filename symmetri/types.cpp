@@ -2,6 +2,15 @@
 
 namespace symmetri {
 
+bool MarkingEquality(const std::vector<Place>& m1,
+                     const std::vector<Place>& m2) {
+  std::vector<Place> m1_sorted = m1;
+  std::vector<Place> m2_sorted = m2;
+  std::sort(m1_sorted.begin(), m1_sorted.end());
+  std::sort(m2_sorted.begin(), m2_sorted.end());
+  return m1_sorted == m2_sorted;
+}
+
 bool MarkingReached(const NetMarking& marking,
                     const NetMarking& final_marking) {
   return std::all_of(
