@@ -102,7 +102,7 @@ struct Impl {
        const symmetri::StoppablePool &stp,
        const std::optional<symmetri::NetMarking> &final_marking,
        const Store &store,
-       const std::vector<std::pair<symmetri::Transition, uint8_t>> &priority,
+       const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
        const std::string &case_id)
       : m(net, store, priority, m0),
         m0_(m0),
@@ -153,7 +153,7 @@ struct Impl {
       } while (reducers.try_dequeue(f));
       blockIfPaused(case_id);
       m = runAll(m, reducers, stp, case_id);
-      if (MarkingEquality(final_tokens, m.tokens)) {
+      if (MarkingReached(m.tokens, final_tokens)) {
         break;
       }
     }
@@ -163,7 +163,7 @@ struct Impl {
     TransitionState result;
     if (EARLY_EXIT.load()) {
       result = TransitionState::UserExit;
-    } else if (MarkingEquality(final_tokens, m.tokens)) {
+    } else if (MarkingReached(m.tokens, final_tokens)) {
       result = TransitionState::Completed;
     } else if (m.pending_transitions.empty()) {
       result = TransitionState::Deadlock;
@@ -179,7 +179,7 @@ Application::Application(
     const std::set<std::string> &files,
     const std::optional<symmetri::NetMarking> &final_marking,
     const Store &store,
-    const std::vector<std::pair<symmetri::Transition, uint8_t>> &priority,
+    const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
     const std::string &case_id, const symmetri::StoppablePool &stp) {
   const auto &[net, m0] = readPetriNets(files);
   createApplication(net, m0, final_marking, store, priority, case_id, stp);
@@ -189,7 +189,7 @@ Application::Application(
     const symmetri::StateNet &net, const symmetri::NetMarking &m0,
     const std::optional<symmetri::NetMarking> &final_marking,
     const Store &store,
-    const std::vector<std::pair<symmetri::Transition, uint8_t>> &priority,
+    const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
     const std::string &case_id, const symmetri::StoppablePool &stp) {
   createApplication(net, m0, final_marking, store, priority, case_id, stp);
 }
@@ -198,7 +198,7 @@ void Application::createApplication(
     const symmetri::StateNet &net, const symmetri::NetMarking &m0,
     const std::optional<symmetri::NetMarking> &final_marking,
     const Store &store,
-    const std::vector<std::pair<symmetri::Transition, uint8_t>> &priority,
+    const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
     const std::string &case_id, const symmetri::StoppablePool &stp) {
   signal(SIGINT, signal_handler);
   std::stringstream s;

@@ -28,11 +28,11 @@ void t() {
 }
 
 std::tuple<StateNet, Store,
-           std::vector<std::pair<symmetri::Transition, uint8_t>>, NetMarking>
+           std::vector<std::pair<symmetri::Transition, int8_t>>, NetMarking>
 testNet() {
   StateNet net = {{"t", {{"Pa"}, {"Pb"}}}};
   Store store = {{"t", &t}};
-  std::vector<std::pair<symmetri::Transition, uint8_t>> priority;
+  std::vector<std::pair<symmetri::Transition, int8_t>> priority;
   NetMarking m0 = {{"Pa", 2}};
   return {net, store, priority, m0};
 }

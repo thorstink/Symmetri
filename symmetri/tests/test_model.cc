@@ -17,7 +17,7 @@ auto t1() {
 }
 
 std::tuple<StateNet, Store,
-           std::vector<std::pair<symmetri::Transition, uint8_t>>, NetMarking>
+           std::vector<std::pair<symmetri::Transition, int8_t>>, NetMarking>
 testNet() {
   T0_COUNTER.store(0);
   T1_COUNTER.store(0);
@@ -26,7 +26,7 @@ testNet() {
                   {"t1", {{"Pc", "Pc"}, {"Pb", "Pb", "Pd"}}}};
 
   Store store = {{"t0", &t0}, {"t1", &t1}};
-  std::vector<std::pair<symmetri::Transition, uint8_t>> priority;
+  std::vector<std::pair<symmetri::Transition, int8_t>> priority;
 
   NetMarking m0 = {{"Pa", 4}, {"Pb", 2}, {"Pc", 0}, {"Pd", 0}};
   return {net, store, priority, m0};

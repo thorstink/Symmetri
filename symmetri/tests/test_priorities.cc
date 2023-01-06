@@ -13,7 +13,7 @@ void t(){};
 
 TEST_CASE(
     "Run a transition with a higher priority over one with a lower priority") {
-  std::list<std::vector<std::pair<symmetri::Transition, uint8_t>>> priorities =
+  std::list<std::vector<std::pair<symmetri::Transition, int8_t>>> priorities =
       {{{"t0", 1}, {"t1", 0}}, {{"t0", 0}, {"t1", 1}}};
   for (auto priority : priorities) {
     BlockingConcurrentQueue<Reducer> reducers(4);

@@ -22,7 +22,7 @@ Reducer runTransition(const std::string &T_i, const PolyAction &task,
 
 struct Model {
   Model(const StateNet &net, const Store &store,
-        std::vector<std::pair<symmetri::Transition, uint8_t>> _priority,
+        std::vector<std::pair<symmetri::Transition, int8_t>> _priority,
         const NetMarking &M0)
       : net(net),
         priority(_priority),
@@ -62,7 +62,7 @@ struct Model {
 
   const StateNet net;
   std::vector<Place> tokens;
-  std::vector<std::pair<symmetri::Transition, uint8_t>> priority;
+  std::vector<std::pair<symmetri::Transition, int8_t>> priority;
   std::vector<std::pair<Place, std::vector<Transition>>> reverse_loopup;
   const Store &store;
 

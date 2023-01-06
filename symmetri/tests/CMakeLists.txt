@@ -60,3 +60,7 @@ add_test(${PROJECT_NAME}_priorities_test ${PROJECT_NAME}_priorities_test)
 add_executable(${PROJECT_NAME}_symmetri_bugs test_bugs.cc)
 target_link_libraries(${PROJECT_NAME}_symmetri_bugs PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue spdlog::spdlog)
 add_test(${PROJECT_NAME}_symmetri_bugs ${PROJECT_NAME}_symmetri_bugs)
+
+add_executable(${PROJECT_NAME}_types test_types.cc)
+target_link_libraries(${PROJECT_NAME}_types PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue spdlog::spdlog)
+add_test(${PROJECT_NAME}_types ${PROJECT_NAME}_types)

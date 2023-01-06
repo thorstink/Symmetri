@@ -74,7 +74,7 @@ Reducer runTransition(const std::string &T_i, const PolyAction &task,
 }
 
 int getPriority(
-    const std::vector<std::pair<symmetri::Transition, uint8_t>> &priorities,
+    const std::vector<std::pair<symmetri::Transition, int8_t>> &priorities,
     const symmetri::Transition &t) {
   auto prio = std::lower_bound(
       priorities.begin(), priorities.end(), t,
