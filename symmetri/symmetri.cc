@@ -234,18 +234,13 @@ TransitionResult Application::operator()() const noexcept {
   }
 }
 
-std::tuple<clock_s::time_point, symmetri::Eventlog, symmetri::StateNet,
+std::tuple<clock_s::time_point, symmetri::Eventlog,
            std::vector<symmetri::Place>, std::vector<std::string>>
 Application::get() const noexcept {
   auto &m = impl->getModel();
 
-  return std::make_tuple(m.timestamp, impl->getEventLog(), m.net, m.tokens,
+  return std::make_tuple(m.timestamp, impl->getEventLog(), m.tokens,
                          m.pending_transitions);
-}
-
-const symmetri::StateNet &Application::getNet() {
-  const auto &m = impl->getModel();
-  return m.net;
 }
 
 void Application::doMeData(std::function<void()> f) const {

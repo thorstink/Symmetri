@@ -20,12 +20,11 @@ include_directories(include submodules)
 
 #lib
 add_library(${PROJECT_NAME} SHARED
-  actions.cpp 
-  symmetri.cc 
-  model.cc 
-  pnml_parser.cc 
-  retry.cpp 
-  types.cpp 
+  actions.cpp
+  symmetri.cc
+  model.cc
+  pnml_parser.cc
+  types.cpp
   submodules/tinyxml2/tinyxml2.cpp
 )
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})

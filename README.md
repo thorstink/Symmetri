@@ -30,20 +30,6 @@ and look at `http://localhost:2222/` for a live view of the activity.
 # WIP / TODO
 
 - research transition guards/coloured nets
-- single webiface server
-- replace maps with vectors (?)
-
-rangify firing once apple clang is ready...
-
-```cpp
-  auto possible_transition_list2 =
-      model.tokens | std::ranges::views::filter([&](const auto &place) {
-        const auto ptr = std::lower_bound(
-            std::begin(model.reverse_loopup), std::end(model.reverse_loopup),place
-            [](const auto &u, const auto& place) { return u.first == place; });
-        return ptr != model.reverse_loopup.end() || ptr->second.empty();
-      });
-```
 
 https://www.youtube.com/watch?v=2KGkcGtGVM4
 https://stlab.cc/tip/2017/12/23/small-object-optimizations.html

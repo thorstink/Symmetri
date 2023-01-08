@@ -1,5 +1,7 @@
 #include "model.h"
 
+#include <iostream>
+
 namespace symmetri {
 
 auto getThreadId() {
@@ -19,8 +21,13 @@ Reducer processTransition(const std::string &T_i, const std::string &case_id,
                           clock_s::time_point end_time) {
   return [=](Model &&model) -> Model & {
     if (result == TransitionState::Completed) {
-      const auto &post = model.net.at(T_i).second;
-      model.tokens.insert(model.tokens.begin(), post.begin(), post.end());
+      const auto &transition_list = model.net.transition;
+      const auto &output_list = model.net.output;
+      auto idx = std::distance(
+          transition_list.begin(),
+          std::find(transition_list.begin(), transition_list.end(), T_i));
+      model.tokens.insert(model.tokens.begin(), output_list[idx].begin(),
+                          output_list[idx].end());
     }
     model.event_log.push_back(
         {case_id, T_i, TransitionState::Started, start_time, thread_id});
@@ -43,8 +50,13 @@ Reducer processTransition(const std::string &T_i, const Eventlog &new_events,
                           TransitionState result) {
   return [=](Model &&model) -> Model & {
     if (result == TransitionState::Completed) {
-      const auto &post = model.net.at(T_i).second;
-      model.tokens.insert(model.tokens.begin(), post.begin(), post.end());
+      const auto &transition_list = model.net.transition;
+      const auto &output_list = model.net.output;
+      auto idx = std::distance(
+          transition_list.begin(),
+          std::find(transition_list.begin(), transition_list.end(), T_i));
+      model.tokens.insert(model.tokens.begin(), output_list[idx].begin(),
+                          output_list[idx].end());
     }
 
     for (const auto &e : new_events) {
@@ -73,13 +85,17 @@ Reducer runTransition(const std::string &T_i, const PolyAction &task,
                     : processTransition(T_i, ev, res);
 }
 
-int getPriority(
-    const std::vector<std::pair<symmetri::Transition, int8_t>> &priorities,
-    const symmetri::Transition &t) {
-  auto prio = std::lower_bound(
-      priorities.begin(), priorities.end(), t,
-      [](const auto &e, const auto &t) { return e.first < t; });
-  return prio != priorities.end() && !(t < prio->first) ? prio->second : 0;
+int getPriority(const std::pair<std::vector<symmetri::Transition>,
+                                std::vector<int8_t>> &priorities,
+                const symmetri::Transition &t) {
+  const auto &transition_list = priorities.first;
+  const auto &priorities_list = priorities.second;
+  auto prio =
+      std::lower_bound(transition_list.begin(), transition_list.end(), t,
+                       [](const auto &e, const auto &t) { return e < t; });
+
+  auto idx = std::distance(transition_list.begin(), prio);
+  return prio != transition_list.end() ? priorities_list[idx] : 0;
 };
 
 bool canFire(const std::vector<Transition> &pre,
@@ -102,13 +118,19 @@ Model &runAll(Model &model,
   for (const auto &place : model.tokens) {
     // for all the places that have a token, find the transitions for which it
     // is an input place.
-    const auto ptr = std::lower_bound(
-        model.reverse_loopup.begin(), model.reverse_loopup.end(), place,
-        [](const auto &u, const auto &place) { return u.first < place; });
+    const auto &place_list = model.reverse_loopup.first;
+    const auto &transition_list = model.reverse_loopup.second;
+    const auto ptr =
+        std::lower_bound(place_list.begin(), place_list.end(), place,
+                         [](const auto &haystack, const auto &place) {
+                           return haystack < place;
+                         });
 
-    if (ptr != model.reverse_loopup.end() && !(place < ptr->first)) {
+    if (ptr != place_list.end()) {
+      auto idx = std::distance(place_list.begin(), ptr);
       possible_transition_list.insert(possible_transition_list.begin(),
-                                      ptr->second.begin(), ptr->second.end());
+                                      transition_list[idx].begin(),
+                                      transition_list[idx].end());
     }
   }
 
@@ -120,8 +142,15 @@ Model &runAll(Model &model,
             });
 
   // loop over transitions
+  const auto &transition_list = model.net.transition;
+  const auto &input_list = model.net.input;
+  const auto &output_list = model.net.output;
+
   for (const auto &T_i : possible_transition_list) {
-    const auto &pre = model.net.at(T_i).first;
+    const auto idx = std::distance(
+        transition_list.begin(),
+        std::find(transition_list.begin(), transition_list.end(), T_i));
+    const auto &pre = input_list[idx];
     if (canFire(pre, model.tokens)) {
       // deduct the marking
       for (const auto &place : pre) {
@@ -139,8 +168,11 @@ Model &runAll(Model &model,
               ->second;
 
       if constexpr (std::is_same_v<std::nullopt_t, decltype(task)>) {
-        const auto &post = model.net.at(T_i).second;
-        model.tokens.insert(model.tokens.begin(), post.begin(), post.end());
+        auto idx = std::distance(
+            transition_list.begin(),
+            std::find(transition_list.begin(), transition_list.end(), T_i));
+        model.tokens.insert(model.tokens.begin(), output_list[idx].begin(),
+                            output_list[idx].end());
       } else {
         polymorphic_actions.enqueue([=, T_i = T_i, task = task, &reducers] {
           reducers.enqueue(runTransition(T_i, task, case_id));
