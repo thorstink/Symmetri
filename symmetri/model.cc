@@ -9,54 +9,40 @@ auto getThreadId() {
       std::hash<std::thread::id>()(std::this_thread::get_id()));
 }
 
-PolyAction getTransition(const Store &s, const std::string &t) {
-  return std::find_if(s.begin(), s.end(),
-                      [&](const auto &t_i) { return t == t_i.first; })
-      ->second;
-}
-
-Reducer processTransition(const std::string &T_i, const std::string &case_id,
+Reducer processTransition(size_t T_i, const std::string &case_id,
                           TransitionState result, size_t thread_id,
                           clock_s::time_point start_time,
                           clock_s::time_point end_time) {
   return [=](Model &&model) -> Model & {
     if (result == TransitionState::Completed) {
-      const auto &transition_list = model.net.transition;
-      const auto &output_list = model.net.output;
-      auto idx = std::distance(
-          transition_list.begin(),
-          std::find(transition_list.begin(), transition_list.end(), T_i));
-      model.tokens.insert(model.tokens.begin(), output_list[idx].begin(),
-                          output_list[idx].end());
+      const auto &place_list = model.net.output_n;
+      model.tokens_n.insert(model.tokens_n.begin(), place_list[T_i].begin(),
+                            place_list[T_i].end());
     }
-    model.event_log.push_back(
-        {case_id, T_i, TransitionState::Started, start_time, thread_id});
-    model.event_log.push_back({case_id, T_i,
+    model.event_log.push_back({case_id, model.net.transition[T_i],
+                               TransitionState::Started, start_time,
+                               thread_id});
+    model.event_log.push_back({case_id, model.net.transition[T_i],
                                result == TransitionState::Completed
                                    ? TransitionState::Completed
                                    : TransitionState::Error,
                                end_time, thread_id});
     // we know for sure this transition is active because otherwise it wouldn't
     // produce a reducer.
-    model.pending_transitions.erase(std::find(model.pending_transitions.begin(),
-                                              model.pending_transitions.end(),
-                                              T_i));
-    --model.active_transition_count;
+    model.active_transitions_n.erase(
+        std::find(model.active_transitions_n.begin(),
+                  model.active_transitions_n.end(), T_i));
     return model;
   };
 }
 
-Reducer processTransition(const std::string &T_i, const Eventlog &new_events,
+Reducer processTransition(size_t T_i, const Eventlog &new_events,
                           TransitionState result) {
   return [=](Model &&model) -> Model & {
     if (result == TransitionState::Completed) {
-      const auto &transition_list = model.net.transition;
-      const auto &output_list = model.net.output;
-      auto idx = std::distance(
-          transition_list.begin(),
-          std::find(transition_list.begin(), transition_list.end(), T_i));
-      model.tokens.insert(model.tokens.begin(), output_list[idx].begin(),
-                          output_list[idx].end());
+      const auto &place_list = model.net.output_n;
+      model.tokens_n.insert(model.tokens_n.begin(), place_list[T_i].begin(),
+                            place_list[T_i].end());
     }
 
     for (const auto &e : new_events) {
@@ -65,17 +51,16 @@ Reducer processTransition(const std::string &T_i, const Eventlog &new_events,
 
     // we know for sure this transition is active because otherwise it wouldn't
     // produce a reducer.
-    model.pending_transitions.erase(std::find(model.pending_transitions.begin(),
-                                              model.pending_transitions.end(),
-                                              T_i));
-    --model.active_transition_count;
+    model.active_transitions_n.erase(
+        std::find(model.active_transitions_n.begin(),
+                  model.active_transitions_n.end(), T_i));
 
     return model;
   };
 }
 
-Reducer runTransition(const std::string &T_i, const PolyAction &task,
-                      const std::string &case_id) {
+Reducer createReducerForTransition(size_t T_i, const PolyAction &task,
+                                   const std::string &case_id) {
   const auto start_time = clock_s::now();
   const auto &[ev, res] = runTransition(task);
   const auto end_time = clock_s::now();
@@ -85,21 +70,7 @@ Reducer runTransition(const std::string &T_i, const PolyAction &task,
                     : processTransition(T_i, ev, res);
 }
 
-int getPriority(const std::pair<std::vector<symmetri::Transition>,
-                                std::vector<int8_t>> &priorities,
-                const symmetri::Transition &t) {
-  const auto &transition_list = priorities.first;
-  const auto &priorities_list = priorities.second;
-  auto prio =
-      std::lower_bound(transition_list.begin(), transition_list.end(), t,
-                       [](const auto &e, const auto &t) { return e < t; });
-
-  auto idx = std::distance(transition_list.begin(), prio);
-  return prio != transition_list.end() ? priorities_list[idx] : 0;
-};
-
-bool canFire(const std::vector<Transition> &pre,
-             const std::vector<Place> &tokens) {
+bool canFire(const SmallVector &pre, const std::vector<size_t> &tokens) {
   return std::all_of(pre.begin(), pre.end(), [&](const auto &m_p) {
     return std::count(tokens.begin(), tokens.end(), m_p) >=
            std::count(pre.begin(), pre.end(), m_p);
@@ -114,75 +85,68 @@ Model &runAll(Model &model,
   // todo; rangify this.
 
   // find possible transitions
-  std::vector<Transition> possible_transition_list;
-  for (const auto &place : model.tokens) {
-    // for all the places that have a token, find the transitions for which it
-    // is an input place.
-    const auto &place_list = model.reverse_loopup.first;
-    const auto &transition_list = model.reverse_loopup.second;
-    const auto ptr =
-        std::lower_bound(place_list.begin(), place_list.end(), place,
-                         [](const auto &haystack, const auto &place) {
-                           return haystack < place;
-                         });
+  llvm::SmallVector<uint8_t, 32> possible_transition_list_n;
 
-    if (ptr != place_list.end()) {
-      auto idx = std::distance(place_list.begin(), ptr);
-      possible_transition_list.insert(possible_transition_list.begin(),
-                                      transition_list[idx].begin(),
-                                      transition_list[idx].end());
-    }
+  for (const size_t place : model.tokens_n) {
+    possible_transition_list_n.insert(possible_transition_list_n.begin(),
+                                      model.net.p_to_ts_n[place].begin(),
+                                      model.net.p_to_ts_n[place].end());
   }
 
-  // sort transition list
-  std::sort(possible_transition_list.begin(), possible_transition_list.end(),
-            [&](const Transition &a, const Transition &b) {
-              return getPriority(model.priority, a) >
-                     getPriority(model.priority, b);
+  // sort transition list according to priority
+  std::sort(possible_transition_list_n.begin(),
+            possible_transition_list_n.end(), [&](size_t a, size_t b) {
+              return model.net.priority[a] > model.net.priority[b];
             });
 
-  // loop over transitions
-  const auto &transition_list = model.net.transition;
-  const auto &input_list = model.net.input;
-  const auto &output_list = model.net.output;
-
-  for (const auto &T_i : possible_transition_list) {
-    const auto idx = std::distance(
-        transition_list.begin(),
-        std::find(transition_list.begin(), transition_list.end(), T_i));
-    const auto &pre = input_list[idx];
-    if (canFire(pre, model.tokens)) {
+  for (const size_t T_i : possible_transition_list_n) {
+    const auto &pre = model.net.input_n[T_i];
+    if (canFire(pre, model.tokens_n)) {
       // deduct the marking
-      for (const auto &place : pre) {
+      for (const size_t place : pre) {
         // erase one by one. using std::remove_if would remove all tokens at a
         // particular place.
-        model.tokens.erase(
-            std::find(model.tokens.begin(), model.tokens.end(), place));
+        model.tokens_n.erase(
+            std::find(model.tokens_n.begin(), model.tokens_n.end(), place));
       }
+
+      const auto &task = model.net.store[T_i];
 
       // if the function is nullopt_t, we short-circuit the
       // marking mutation and do it immediately.
-      const auto &task =
-          std::find_if(model.store.begin(), model.store.end(),
-                       [&](const auto &u) { return u.first == T_i; })
-              ->second;
-
       if constexpr (std::is_same_v<std::nullopt_t, decltype(task)>) {
-        auto idx = std::distance(
-            transition_list.begin(),
-            std::find(transition_list.begin(), transition_list.end(), T_i));
-        model.tokens.insert(model.tokens.begin(), output_list[idx].begin(),
-                            output_list[idx].end());
+        model.tokens_n.insert(model.tokens_n.begin(),
+                              model.net.output_n[T_i].begin(),
+                              model.net.output_n[T_i].end());
       } else {
-        polymorphic_actions.enqueue([=, T_i = T_i, task = task, &reducers] {
-          reducers.enqueue(runTransition(T_i, task, case_id));
+        polymorphic_actions.enqueue([=, &reducers] {
+          reducers.enqueue(createReducerForTransition(T_i, task, case_id));
         });
-        model.pending_transitions.push_back(T_i);
-        ++model.active_transition_count;
+        model.active_transitions_n.push_back(T_i);
       }
     }
+    // exit early if we're out of tokens.
+    if (model.tokens_n.size() == 0) {
+      break;
+    }
   }
-
   return model;
 }
+
+std::vector<Place> Model::getMarking() const {
+  std::vector<Place> marking;
+  std::transform(tokens_n.cbegin(), tokens_n.cend(),
+                 std::back_inserter(marking),
+                 [&](auto place_index) { return net.place[place_index]; });
+  return marking;
+}
+
+std::vector<Transition> Model::getActiveTransitions() const {
+  std::vector<Transition> transition_list;
+  std::transform(active_transitions_n.cbegin(), active_transitions_n.cend(),
+                 std::back_inserter(transition_list),
+                 [&](auto place_index) { return net.transition[place_index]; });
+  return transition_list;
+}
+
 }  // namespace symmetri

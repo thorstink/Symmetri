@@ -43,9 +43,10 @@ TransitionResult runTransition(const T& x) {
   }
 }
 
-bool MarkingEquality(const std::vector<Place>& m1,
-                     const std::vector<Place>& m2);
-bool MarkingReached(const std::vector<Place>& marking,
-                    const std::vector<Place>& final_marking);
+template <typename T>
+bool MarkingEquality(const std::vector<T>& m1, const std::vector<T>& m2);
+template <typename T>
+bool MarkingReached(const std::vector<T>& marking,
+                    const std::vector<T>& final_marking);
 bool StateNetEquality(const StateNet& net1, const StateNet& net2);
 }  // namespace symmetri

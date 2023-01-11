@@ -9,6 +9,7 @@
 #include <condition_variable>
 #include <fstream>
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <numeric>
 #include <optional>
@@ -116,35 +117,27 @@ struct Impl {
   TransitionResult run() {
     // todo.. not have to assign it manually to reset.
     m.event_log = {};
-    m.tokens = {};
-    for (auto [p, c] : m0_) {
-      for (int i = 0; i < c; i++) {
-        m.tokens.push_back(p);
-      }
-    }
-    std::vector<Place> final_tokens;
+    m.tokens_n = m.initial_tokens;
+    std::vector<size_t> final_tokens;
     if (final_marking.has_value()) {
       for (const auto &[p, c] : final_marking.value()) {
         for (int i = 0; i < c; i++) {
-          final_tokens.push_back(p);
+          final_tokens.push_back(toIndex(m.net.place, p));
         }
       }
     }
-    std::sort(final_tokens.begin(), final_tokens.end());
-
-    // enqueue a noop to start, not
-    // doing this would require
-    // external input to 'start' (even if the petri net is alive)
-    reducers.enqueue([](Model &&m) -> Model & { return m; });
 
     // this is the check whether we should break the loop. It's either early
     // exit, otherwise there must be event_logs.
     auto stop_condition = [&] {
       return EARLY_EXIT.load(std::memory_order_relaxed) ||
-             (m.active_transition_count == 0 && !m.event_log.empty());
+             (m.active_transitions_n.size() == 0 && !m.event_log.empty());
     };
     active.store(true);
+
     Reducer f;
+    // start!
+    m = runAll(m, reducers, stp, case_id);
     // get a reducer. Immediately, or wait a bit
     while (!stop_condition() &&
            reducers.wait_dequeue_timed(f, std::chrono::seconds(9000))) {
@@ -152,10 +145,10 @@ struct Impl {
         m = f(std::move(m));
       } while (reducers.try_dequeue(f));
       blockIfPaused(case_id);
-      m = runAll(m, reducers, stp, case_id);
-      if (MarkingReached(m.tokens, final_tokens)) {
+      if (MarkingReached(m.tokens_n, final_tokens)) {
         break;
       }
+      m = runAll(m, reducers, stp, case_id);
     }
     active.store(false);
 
@@ -163,14 +156,13 @@ struct Impl {
     TransitionState result;
     if (EARLY_EXIT.load()) {
       result = TransitionState::UserExit;
-    } else if (MarkingReached(m.tokens, final_tokens)) {
+    } else if (MarkingReached(m.tokens_n, final_tokens)) {
       result = TransitionState::Completed;
-    } else if (m.pending_transitions.empty()) {
+    } else if (m.active_transitions_n.empty()) {
       result = TransitionState::Deadlock;
     } else {
       result = TransitionState::Error;
     }
-
     return {m.event_log, result};
   }
 };
@@ -213,11 +205,11 @@ void Application::createApplication(
     // register a function that "forces" transitions into the queue.
     p = [this](const std::string &t) {
       if (impl->active.load()) {
-        impl->stp.enqueue([t, this, task = getTransition(impl->m.store, t)] {
+        impl->stp.enqueue([this, t_index = toIndex(impl->m.net.transition, t)] {
           // this should be cleaned the next iteration
-          impl->m.pending_transitions.push_back(t);
-          ++impl->m.active_transition_count;
-          impl->reducers.enqueue(runTransition(t, task, impl->case_id));
+          impl->m.active_transitions_n.push_back(t_index);
+          impl->reducers.enqueue(createReducerForTransition(
+              t_index, impl->m.net.store[t_index], impl->case_id));
         });
       }
     };
@@ -239,8 +231,8 @@ std::tuple<clock_s::time_point, symmetri::Eventlog,
 Application::get() const noexcept {
   auto &m = impl->getModel();
 
-  return std::make_tuple(m.timestamp, impl->getEventLog(), m.tokens,
-                         m.pending_transitions);
+  return std::make_tuple(m.timestamp, impl->getEventLog(), m.getMarking(),
+                         m.getActiveTransitions());
 }
 
 void Application::doMeData(std::function<void()> f) const {

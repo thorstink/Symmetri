@@ -1,5 +1,5 @@
 #pragma once
-
+#define LLVM_SMALL_VECTOR_IMPLEMENTATION
 #include <blockingconcurrentqueue.h>
 
 #include <chrono>
@@ -9,99 +9,107 @@
 #include <set>
 #include <tuple>
 
+#include "small_vector.hpp"
 #include "symmetri/symmetri.h"
-
 namespace symmetri {
+
+using SmallVector = llvm::SmallVector<size_t, 4>;
+
+inline size_t toIndex(const std::vector<std::string> &m, const std::string &s) {
+  auto ptr = std::find(m.begin(), m.end(), s);
+  return std::distance(m.begin(), ptr);
+}
 
 struct Model;
 using Reducer = std::function<Model &(Model &&)>;
-PolyAction getTransition(const Store &s, const std::string &t);
 
-Reducer runTransition(const std::string &T_i, const PolyAction &task,
-                      const std::string &case_id);
+Reducer createReducerForTransition(size_t T_i, const PolyAction &task,
+                                   const std::string &case_id);
 
 struct Model {
   Model(const StateNet &_net, const Store &store,
-        std::vector<std::pair<symmetri::Transition, int8_t>> _priority,
+        const std::vector<std::pair<symmetri::Transition, int8_t>> &_priority,
         const NetMarking &M0)
-      : store(store), timestamp(clock_s::now()), active_transition_count(0) {
+      : timestamp(clock_s::now()) {
     // populate net:
-    const auto net_size = _net.size();
-    net.transition.reserve(net_size);
-    net.input.reserve(net_size);
-    net.output.reserve(net_size);
+    const auto transition_count = _net.size();
+    net.transition.reserve(transition_count);
+    net.store.reserve(transition_count);
     for (const auto &[t, io] : _net) {
       net.transition.push_back(t);
-      net.input.push_back(io.first);
-      net.output.push_back(io.second);
+      net.store.push_back(store.at(t));
+      for (const auto &p : io.first) {
+        net.place.push_back(p);
+      }
+      for (const auto &p : io.second) {
+        net.place.push_back(p);
+      }
     }
-
-    // sort priority so the vectors are sorted
-    std::sort(_priority.begin(), _priority.end(),
-              [](auto a, auto b) { return a.first < b.first; });
-    for (const auto &[t, p] : _priority) {
-      priority.first.push_back(t);
-      priority.second.push_back(p);
+    {
+      // sort and remove duplicates.
+      std::sort(net.place.begin(), net.place.end());
+      auto last = std::unique(net.place.begin(), net.place.end());
+      net.place.erase(last, net.place.end());
     }
-
-    // reserve some heap memory for pending transtitions.
-    pending_transitions.reserve(15);
-
-    // create reverse lookup table
-    std::vector<Place> unique_input_places;
-    for (size_t c = 0; c < net_size; c++) {
-      unique_input_places.insert(unique_input_places.begin(),
-                                 net.input[c].begin(), net.input[c].end());
+    {
+      for (const auto &[t, io] : _net) {
+        SmallVector q;
+        for (const auto &p : io.first) {
+          q.push_back(toIndex(net.place, p));
+        }
+        net.input_n.push_back(q);
+        q.clear();
+        for (const auto &p : io.second) {
+          q.push_back(toIndex(net.place, p));
+        }
+        net.output_n.push_back(q);
+      }
     }
-    // sort and remove duplicates.
-    std::sort(unique_input_places.begin(), unique_input_places.end());
-    auto last =
-        std::unique(unique_input_places.begin(), unique_input_places.end());
-    unique_input_places.erase(last, unique_input_places.end());
-
-    // create a reverse lookup map that associates a place to the transitions to
-    // which it is an input place.
-    for (const auto &place : unique_input_places) {
-      std::vector<Transition> transitions;
-      for (size_t c = 0; c < net_size; c++) {
-        for (const auto &input_place : net.input[c]) {
-          if (place == input_place) {
-            transitions.push_back(net.transition[c]);
+    {
+      for (size_t p = 0; p < net.place.size(); p++) {
+        SmallVector p_to_ts_n;
+        for (size_t c = 0; c < transition_count; c++) {
+          for (const auto &input_place : net.input_n[c]) {
+            if (p == input_place) {
+              p_to_ts_n.push_back(c);
+            }
           }
         }
+        net.p_to_ts_n.push_back(p_to_ts_n);
       }
+    }
 
-      if (!transitions.empty()) {
-        reverse_loopup.first.push_back(place);
-        reverse_loopup.second.push_back(transitions);
-      }
+    for (const auto &t : net.transition) {
+      auto ptr = std::find_if(_priority.begin(), _priority.end(),
+                              [t](const auto &a) { return a.first == t; });
+      net.priority.push_back(ptr != _priority.end() ? ptr->second : 0);
     }
 
     // populate initial marking
     for (auto [place, c] : M0) {
       for (int i = 0; i < c; i++) {
-        tokens.push_back(place);
+        initial_tokens.push_back(toIndex(net.place, place));
       }
     }
+    tokens_n = initial_tokens;
   }
+  std::vector<Place> getMarking() const;
+  std::vector<Transition> getActiveTransitions() const;
 
   Model &operator=(const Model &) { return *this; }
   Model(const Model &) = delete;
 
   struct {
     std::vector<Transition> transition;
-    std::vector<std::vector<Place>> input, output;
+    std::vector<Place> place;
+    std::vector<SmallVector> input_n, output_n, p_to_ts_n;
+    std::vector<int8_t> priority;
+    std::vector<PolyAction> store;
   } net;
 
-  std::vector<Place> tokens;
-  std::pair<std::vector<Transition>, std::vector<int8_t>> priority;
-  std::pair<std::vector<Place>, std::vector<std::vector<Transition>>>
-      reverse_loopup;
-  const Store &store;
-
+  std::vector<size_t> tokens_n, initial_tokens;
+  std::vector<size_t> active_transitions_n;
   clock_s::time_point timestamp;
-  std::vector<Transition> pending_transitions;
-  uint16_t active_transition_count;
   Eventlog event_log;
 };
 
