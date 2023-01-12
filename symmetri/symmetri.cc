@@ -150,6 +150,7 @@ struct Impl {
       }
       m = runAll(m, reducers, stp, case_id);
     }
+
     active.store(false);
 
     // determine what was the reason we terminated.

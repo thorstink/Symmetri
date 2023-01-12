@@ -29,18 +29,21 @@ using NetMarking = std::unordered_map<Place, uint16_t>;
 
 template <typename T>
 TransitionResult runTransition(const T& x) {
-  if constexpr (std::is_invocable_v<T>) {
-    if constexpr (std::is_same_v<TransitionState, decltype(x())>) {
-      return {{}, x()};
-    } else if constexpr (std::is_same_v<TransitionResult, decltype(x())>) {
-      return x();
-    } else {
-      x();
-      return {{}, TransitionState::Completed};
-    }
+  if constexpr (!std::is_invocable_v<T>) {
+    return {{}, TransitionState::Completed};
+  } else if constexpr (std::is_same_v<TransitionState, decltype(x())>) {
+    return {{}, x()};
+  } else if constexpr (std::is_same_v<TransitionResult, decltype(x())>) {
+    return x();
   } else {
+    x();
     return {{}, TransitionState::Completed};
   }
+}
+
+template <typename T>
+bool directTransition(const T& x) {
+  return !std::is_invocable_v<T>;
 }
 
 template <typename T>

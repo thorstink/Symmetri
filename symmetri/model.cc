@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include "symmetri/types.h"
 namespace symmetri {
 
 auto getThreadId() {
@@ -19,6 +20,7 @@ Reducer processTransition(size_t T_i, const std::string &case_id,
       model.tokens_n.insert(model.tokens_n.begin(), place_list[T_i].begin(),
                             place_list[T_i].end());
     }
+
     model.event_log.push_back({case_id, model.net.transition[T_i],
                                TransitionState::Started, start_time,
                                thread_id});
@@ -104,12 +106,14 @@ Model &runAll(Model &model,
               const StoppablePool &polymorphic_actions,
               const std::string &case_id) {
   model.timestamp = clock_s::now();
+
   // todo; rangify this.
 
   // find possible transitions
   auto possible_transition_list_n = possibleTransitions(
       model.tokens_n, model.net.p_to_ts_n, model.net.priority);
   // fire possible transitions
+  size_t t = 0;
   for (size_t i = 0;
        i < possible_transition_list_n.size() && model.tokens_n.size() > 0;
        ++i) {
@@ -124,19 +128,26 @@ Model &runAll(Model &model,
             std::find(model.tokens_n.begin(), model.tokens_n.end(), place));
       }
 
-      const auto &task = model.net.store[T_i];
+      auto task = model.net.store[T_i];
 
       // if the function is nullopt_t, we short-circuit the
       // marking mutation and do it immediately.
-      if constexpr (std::is_same_v<std::nullopt_t, decltype(task)>) {
+      if (directTransition(task) && t < 1e6) {
         model.tokens_n.insert(model.tokens_n.begin(),
                               model.net.output_n[T_i].begin(),
                               model.net.output_n[T_i].end());
+        model.event_log.push_back({case_id, model.net.transition[T_i],
+                                   TransitionState::Started, model.timestamp,
+                                   0});
+        model.event_log.push_back({case_id, model.net.transition[T_i],
+                                   TransitionState::Completed, model.timestamp,
+                                   0});
+        t++;
       } else {
+        model.active_transitions_n.push_back(T_i);
         polymorphic_actions.enqueue([=, &reducers] {
           reducers.enqueue(createReducerForTransition(T_i, task, case_id));
         });
-        model.active_transitions_n.push_back(T_i);
       }
 
       // reset counter & update possible fire-list
