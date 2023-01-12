@@ -77,6 +77,24 @@ bool canFire(const SmallVector &pre, const std::vector<size_t> &tokens) {
   });
 };
 
+llvm::SmallVector<uint8_t, 32> possibleTransitions(
+    const std::vector<size_t> tokens, std::vector<SmallVector> &p_to_ts_n,
+    std::vector<int8_t> &priorities) {
+  llvm::SmallVector<uint8_t, 32> possible_transition_list_n;
+  for (const size_t place : tokens) {
+    possible_transition_list_n.insert(possible_transition_list_n.begin(),
+                                      p_to_ts_n[place].begin(),
+                                      p_to_ts_n[place].end());
+  }
+
+  // sort transition list according to priority
+  std::sort(possible_transition_list_n.begin(),
+            possible_transition_list_n.end(),
+            [&](size_t a, size_t b) { return priorities[a] > priorities[b]; });
+
+  return possible_transition_list_n;
+}
+
 Model &runAll(Model &model,
               moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
               const StoppablePool &polymorphic_actions,
@@ -85,21 +103,14 @@ Model &runAll(Model &model,
   // todo; rangify this.
 
   // find possible transitions
-  llvm::SmallVector<uint8_t, 32> possible_transition_list_n;
+  auto possible_transition_list_n = possibleTransitions(
+      model.tokens_n, model.net.p_to_ts_n, model.net.priority);
 
-  for (const size_t place : model.tokens_n) {
-    possible_transition_list_n.insert(possible_transition_list_n.begin(),
-                                      model.net.p_to_ts_n[place].begin(),
-                                      model.net.p_to_ts_n[place].end());
-  }
-
-  // sort transition list according to priority
-  std::sort(possible_transition_list_n.begin(),
-            possible_transition_list_n.end(), [&](size_t a, size_t b) {
-              return model.net.priority[a] > model.net.priority[b];
-            });
-
-  for (const size_t T_i : possible_transition_list_n) {
+  // fire possible transitions
+  for (size_t i = 0;
+       i < possible_transition_list_n.size() && model.tokens_n.size() > 0;
+       ++i) {
+    size_t T_i = possible_transition_list_n[i];
     const auto &pre = model.net.input_n[T_i];
     if (canFire(pre, model.tokens_n)) {
       // deduct the marking
@@ -124,10 +135,11 @@ Model &runAll(Model &model,
         });
         model.active_transitions_n.push_back(T_i);
       }
-    }
-    // exit early if we're out of tokens.
-    if (model.tokens_n.size() == 0) {
-      break;
+
+      // reset counter & update possible fire-list
+      i = -1;  // minus 1 because it gets incremented by the for loop
+      possible_transition_list_n = possibleTransitions(
+          model.tokens_n, model.net.p_to_ts_n, model.net.priority);
     }
   }
   return model;
