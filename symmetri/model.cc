@@ -82,9 +82,13 @@ llvm::SmallVector<uint8_t, 32> possibleTransitions(
     std::vector<int8_t> &priorities) {
   llvm::SmallVector<uint8_t, 32> possible_transition_list_n;
   for (const size_t place : tokens) {
-    possible_transition_list_n.insert(possible_transition_list_n.begin(),
-                                      p_to_ts_n[place].begin(),
-                                      p_to_ts_n[place].end());
+    for (size_t t : p_to_ts_n[place]) {
+      if (std::find(possible_transition_list_n.begin(),
+                    possible_transition_list_n.end(),
+                    t) == possible_transition_list_n.end()) {
+        possible_transition_list_n.push_back(t);
+      }
+    }
   }
 
   // sort transition list according to priority
@@ -105,7 +109,6 @@ Model &runAll(Model &model,
   // find possible transitions
   auto possible_transition_list_n = possibleTransitions(
       model.tokens_n, model.net.p_to_ts_n, model.net.priority);
-
   // fire possible transitions
   for (size_t i = 0;
        i < possible_transition_list_n.size() && model.tokens_n.size() > 0;

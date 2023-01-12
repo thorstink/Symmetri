@@ -4,6 +4,7 @@
 
 #include <chrono>
 #include <functional>
+#include <iostream>
 #include <map>
 #include <memory>
 #include <set>
@@ -70,7 +71,9 @@ struct Model {
         SmallVector p_to_ts_n;
         for (size_t c = 0; c < transition_count; c++) {
           for (const auto &input_place : net.input_n[c]) {
-            if (p == input_place) {
+            if (p == input_place &&
+                std::find(p_to_ts_n.begin(), p_to_ts_n.end(), c) ==
+                    p_to_ts_n.end()) {
               p_to_ts_n.push_back(c);
             }
           }
