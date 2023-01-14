@@ -101,10 +101,10 @@ llvm::SmallVector<uint8_t, 32> possibleTransitions(
   return possible_transition_list_n;
 }
 
-Model &runAll(Model &model,
-              moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
-              const StoppablePool &polymorphic_actions,
-              const std::string &case_id) {
+Model &runTransitions(Model &model,
+                      moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
+                      const StoppablePool &polymorphic_actions, bool run_all,
+                      const std::string &case_id) {
   model.timestamp = clock_s::now();
 
   // todo; rangify this.
@@ -113,7 +113,6 @@ Model &runAll(Model &model,
   auto possible_transition_list_n = possibleTransitions(
       model.tokens_n, model.net.p_to_ts_n, model.net.priority);
   // fire possible transitions
-  size_t t = 0;
   for (size_t i = 0;
        i < possible_transition_list_n.size() && model.tokens_n.size() > 0;
        ++i) {
@@ -132,7 +131,7 @@ Model &runAll(Model &model,
 
       // if the function is nullopt_t, we short-circuit the
       // marking mutation and do it immediately.
-      if (directTransition(task) && t < 1e6) {
+      if (directTransition(task)) {
         model.tokens_n.insert(model.tokens_n.begin(),
                               model.net.output_n[T_i].begin(),
                               model.net.output_n[T_i].end());
@@ -142,18 +141,20 @@ Model &runAll(Model &model,
         model.event_log.push_back({case_id, model.net.transition[T_i],
                                    TransitionState::Completed, model.timestamp,
                                    0});
-        t++;
       } else {
         model.active_transitions_n.push_back(T_i);
         polymorphic_actions.enqueue([=, &reducers] {
           reducers.enqueue(createReducerForTransition(T_i, task, case_id));
         });
       }
-
-      // reset counter & update possible fire-list
-      i = -1;  // minus 1 because it gets incremented by the for loop
-      possible_transition_list_n = possibleTransitions(
-          model.tokens_n, model.net.p_to_ts_n, model.net.priority);
+      if (run_all) {
+        // reset counter & update possible fire-list
+        i = -1;  // minus 1 because it gets incremented by the for loop
+        possible_transition_list_n = possibleTransitions(
+            model.tokens_n, model.net.p_to_ts_n, model.net.priority);
+      } else {
+        break;
+      }
     }
   }
   return model;

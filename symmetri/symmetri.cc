@@ -137,7 +137,7 @@ struct Impl {
 
     Reducer f;
     // start!
-    m = runAll(m, reducers, stp, case_id);
+    m = runTransitions(m, reducers, stp, true, case_id);
     // get a reducer. Immediately, or wait a bit
     while (!stop_condition() &&
            reducers.wait_dequeue_timed(f, std::chrono::seconds(9000))) {
@@ -148,7 +148,7 @@ struct Impl {
       if (MarkingReached(m.tokens_n, final_tokens)) {
         break;
       }
-      m = runAll(m, reducers, stp, case_id);
+      m = runTransitions(m, reducers, stp, true, case_id);
     }
 
     active.store(false);

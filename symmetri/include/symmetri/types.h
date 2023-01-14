@@ -42,7 +42,7 @@ TransitionResult runTransition(const T& x) {
 }
 
 template <typename T>
-bool directTransition(const T& x) {
+bool constexpr directTransition(const T&) {
   return !std::is_invocable_v<T>;
 }
 

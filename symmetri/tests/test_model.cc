@@ -66,7 +66,7 @@ TEST_CASE("Run one transition iteration in a petri net") {
   StoppablePool stp(1);
 
   // t0 is enabled.
-  m = runAll(m, reducers, stp);
+  m = runTransitions(m, reducers, stp, true);
   // t0 is dispatched but it's reducer has not yet run, so pre-conditions are
   // processed but post are not:
   REQUIRE(m.getActiveTransitions() ==
@@ -111,7 +111,7 @@ TEST_CASE("Run until net dies") {
   reducers.enqueue([](Model&& m) -> Model& { return m; });
   do {
     if (reducers.try_dequeue(r)) {
-      m = runAll(r(std::move(m)), reducers, stp);
+      m = runTransitions(r(std::move(m)), reducers, stp, true);
     }
   } while (m.active_transitions_n.size() > 0);
 
@@ -138,7 +138,7 @@ TEST_CASE("Run until net dies with std::nullopt") {
   reducers.enqueue([](Model&& m) -> Model& { return m; });
   do {
     if (reducers.try_dequeue(r)) {
-      m = runAll(r(std::move(m)), reducers, stp);
+      m = runTransitions(r(std::move(m)), reducers, stp, true);
     }
   } while (m.active_transitions_n.size() > 0);
 
