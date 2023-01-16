@@ -121,9 +121,4 @@ Model &runTransitions(Model &model,
                       const StoppablePool &polymorphic_actions, bool run_all,
                       const std::string &case_id = "undefined_case_id");
 
-Model &runOnce(Model &model,
-               moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
-               const StoppablePool &polymorphic_actions,
-               const std::string &case_id = "undefined_case_id");
-
 }  // namespace symmetri
