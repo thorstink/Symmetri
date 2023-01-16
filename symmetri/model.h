@@ -14,7 +14,7 @@
 #include "symmetri/symmetri.h"
 namespace symmetri {
 
-using SmallVector = llvm::SmallVector<size_t, 4>;
+using SmallVector = gch::small_vector<size_t, 4>;
 
 inline size_t toIndex(const std::vector<std::string> &m, const std::string &s) {
   auto ptr = std::find(m.begin(), m.end(), s);

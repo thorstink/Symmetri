@@ -79,10 +79,10 @@ bool canFire(const SmallVector &pre, const std::vector<size_t> &tokens) {
   });
 };
 
-llvm::SmallVector<uint8_t, 32> possibleTransitions(
+gch::small_vector<uint8_t, 32> possibleTransitions(
     const std::vector<size_t> tokens, std::vector<SmallVector> &p_to_ts_n,
     std::vector<int8_t> &priorities) {
-  llvm::SmallVector<uint8_t, 32> possible_transition_list_n;
+  gch::small_vector<uint8_t, 32> possible_transition_list_n;
   for (const size_t place : tokens) {
     for (size_t t : p_to_ts_n[place]) {
       if (std::find(possible_transition_list_n.begin(),
