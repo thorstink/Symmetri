@@ -42,11 +42,12 @@ TEST_CASE("Firing the same transition before it can complete should work") {
   auto m = Model(net, store, priority, m0);
   moodycamel::BlockingConcurrentQueue<Reducer> reducers(4);
   StoppablePool stp(2);
-  REQUIRE(m.pending_transitions.empty());
-  m = runAll(m, reducers, stp);
-  REQUIRE(std::count(m.tokens.begin(), m.tokens.end(), "Pa") == 0);
-  REQUIRE(m.pending_transitions == std::vector<symmetri::Transition>{"t", "t"});
-  REQUIRE(m.active_transition_count == 2);
+  REQUIRE(m.active_transitions_n.empty());
+  m = runTransitions(m, reducers, stp, true);
+  REQUIRE(m.getMarking().empty());
+  CHECK(m.getActiveTransitions() ==
+        std::vector<symmetri::Transition>{"t", "t"});
+  REQUIRE(m.active_transitions_n.size() == 2);
 
   {
     std::lock_guard<std::mutex> lk(cv_m);
@@ -57,11 +58,11 @@ TEST_CASE("Firing the same transition before it can complete should work") {
 
   reducers.wait_dequeue_timed(r, std::chrono::milliseconds(250));
   m = r(std::move(m));
-  REQUIRE(std::count(m.tokens.begin(), m.tokens.end(), "Pb") == 1);
+  REQUIRE(MarkingEquality(m.getMarking(), {"Pb"}));
 
   // offending test, but fixed :-)
-  REQUIRE(m.pending_transitions == std::vector<symmetri::Transition>{"t"});
-  REQUIRE(m.active_transition_count == 1);
+  CHECK(m.getActiveTransitions() == std::vector<symmetri::Transition>{"t"});
+  REQUIRE(m.active_transitions_n.size() == 1);
   {
     std::lock_guard<std::mutex> lk(cv_m);
     is_ready2 = true;
@@ -70,6 +71,7 @@ TEST_CASE("Firing the same transition before it can complete should work") {
   reducers.wait_dequeue_timed(r, std::chrono::milliseconds(250));
   m = r(std::move(m));
 
-  REQUIRE(std::count(m.tokens.begin(), m.tokens.end(), "Pb") == 2);
-  REQUIRE(m.pending_transitions.empty());
+  REQUIRE(MarkingEquality(m.getMarking(), {"Pb", "Pb"}));
+
+  CHECK(m.active_transitions_n.empty());
 }

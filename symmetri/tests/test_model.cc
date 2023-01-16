@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <iostream>
 
 #include "model.h"
 using namespace symmetri;
@@ -55,26 +56,6 @@ TEST_CASE("Create a model") {
   REQUIRE(after_model_creation > m.timestamp);
 }
 
-// this test is broken, because there's no run a single transition yet that
-// updates the active transitions (yet.. or maybe never to come.) TEST_CASE("Run
-// a transition") {
-//   auto [net, store, priority, m0] = testNet();
-//   auto m = Model(net, store, priority, m0);
-
-//   // by "manually calling" a transition like this, we don't deduct the
-//   // pre-conditions from the marking.
-//   auto reducer = runTransition("t0", getTransition(m.store, "t0"), "nocase");
-
-//   // run the reducer
-//   m = reducer(std::move(m));
-
-//   // the reducer only processes the post-conditions on the marking, for t0
-//   that
-//   // means  place Pc gets a +1.
-//   REQUIRE(std::count(m.tokens.begin(), m.tokens.end(), "Pc") == 1);
-//   REQUIRE(T0_COUNTER == 1);
-// }
-
 TEST_CASE("Run one transition iteration in a petri net") {
   using namespace moodycamel;
 
@@ -85,12 +66,13 @@ TEST_CASE("Run one transition iteration in a petri net") {
   StoppablePool stp(1);
 
   // t0 is enabled.
-  m = runAll(m, reducers, stp);
+  m = runTransitions(m, reducers, stp, true);
   // t0 is dispatched but it's reducer has not yet run, so pre-conditions are
   // processed but post are not:
-  REQUIRE(m.pending_transitions ==
+  REQUIRE(m.getActiveTransitions() ==
           std::vector<symmetri::Transition>{"t0", "t0"});
-  REQUIRE(MarkingEquality(m.tokens, {"Pa", "Pa"}));
+  REQUIRE(m.getMarking() == std::vector<symmetri::Place>{"Pa", "Pa"});
+  // REQUIRE(MarkingEquality(m.getMarking(), {"Pa", "Pa"}));
 
   // now there should be two reducers;
   Reducer r1, r2;
@@ -99,16 +81,20 @@ TEST_CASE("Run one transition iteration in a petri net") {
   // verify that t0 has actually ran twice.
   REQUIRE(T0_COUNTER == 2);
   // the marking should still be the same.
-  REQUIRE(MarkingEquality(m.tokens, {"Pa", "Pa"}));
-  REQUIRE(m.pending_transitions ==
-          std::vector<symmetri::Transition>{"t0", "t0"});
+  // REQUIRE(MarkingEquality(m.getMarking(), {"Pa", "Pa"}));
+  REQUIRE(m.getMarking() == std::vector<symmetri::Place>{"Pa", "Pa"});
+
+  CHECK(m.getActiveTransitions() ==
+        std::vector<symmetri::Transition>{"t0", "t0"});
 
   // process the reducers
   m = r1(std::move(m));
   m = r2(std::move(m));
   // and now the post-conditions are processed:
-  REQUIRE(m.pending_transitions.empty());
-  REQUIRE(MarkingEquality(m.tokens, {"Pa", "Pa", "Pc", "Pc"}));
+  REQUIRE(m.active_transitions_n.empty());
+  std::cout << std::endl;
+  REQUIRE(MarkingEquality(
+      m.getMarking(), std::vector<symmetri::Place>{"Pa", "Pa", "Pc", "Pc"}));
   stp.stop();
 }
 
@@ -125,13 +111,13 @@ TEST_CASE("Run until net dies") {
   reducers.enqueue([](Model&& m) -> Model& { return m; });
   do {
     if (reducers.try_dequeue(r)) {
-      m = runAll(r(std::move(m)), reducers, stp);
+      m = runTransitions(r(std::move(m)), reducers, stp, true);
     }
-    // } while (!m.pending_transitions.empty());
-  } while (m.active_transition_count > 0);
+  } while (m.active_transitions_n.size() > 0);
 
   // For this specific net we expect:
-  REQUIRE(MarkingEquality(m.tokens, {"Pb", "Pb", "Pd", "Pd"}));
+  REQUIRE(MarkingEquality(
+      m.getMarking(), std::vector<symmetri::Place>{"Pb", "Pb", "Pd", "Pd"}));
 
   REQUIRE(T0_COUNTER.load() == 4);
   REQUIRE(T1_COUNTER.load() == 2);
@@ -152,12 +138,12 @@ TEST_CASE("Run until net dies with std::nullopt") {
   reducers.enqueue([](Model&& m) -> Model& { return m; });
   do {
     if (reducers.try_dequeue(r)) {
-      m = runAll(r(std::move(m)), reducers, stp);
+      m = runTransitions(r(std::move(m)), reducers, stp, true);
     }
-    // } while (!m.pending_transitions.empty());
-  } while (m.active_transition_count > 0);
+  } while (m.active_transitions_n.size() > 0);
 
   // For this specific net we expect:
-  REQUIRE(MarkingEquality(m.tokens, {"Pb", "Pb", "Pd", "Pd"}));
+  REQUIRE(MarkingEquality(
+      m.getMarking(), std::vector<symmetri::Place>{"Pb", "Pb", "Pd", "Pd"}));
   stp.stop();
 }

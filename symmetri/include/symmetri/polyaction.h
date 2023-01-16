@@ -12,17 +12,24 @@ class PolyAction {
   friend TransitionResult runTransition(const PolyAction &x) {
     return x.self_->run_();
   }
+  friend bool directTransition(const PolyAction &x) {
+    return x.self_->simple_();
+  }
 
  private:
   struct concept_t {
     virtual ~concept_t() = default;
     virtual TransitionResult run_() const = 0;
+    virtual bool simple_() const = 0;
   };
   template <typename T>
   struct model final : concept_t {
     model(T x) : transition_function_(std::move(x)) {}
     TransitionResult run_() const override {
       return runTransition(transition_function_);
+    }
+    bool simple_() const override {
+      return directTransition(transition_function_);
     }
     T transition_function_;
   };

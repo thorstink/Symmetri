@@ -18,7 +18,7 @@ namespace symmetri {
 size_t calculateTrace(const Eventlog &event_log) noexcept;
 std::string printState(symmetri::TransitionState s) noexcept;
 
-using Store = std::vector<std::pair<std::string, PolyAction>>;
+using Store = std::map<std::string, PolyAction>;
 
 struct Impl;
 struct Application {
@@ -55,11 +55,9 @@ struct Application {
 
   void doMeData(std::function<void()> f) const;
 
-  std::tuple<clock_s::time_point, symmetri::Eventlog, symmetri::StateNet,
+  std::tuple<clock_s::time_point, symmetri::Eventlog,
              std::vector<symmetri::Place>, std::vector<std::string>>
   get() const noexcept;
-
-  const symmetri::StateNet &getNet();
 
   TransitionResult operator()() const noexcept;
   void togglePause();

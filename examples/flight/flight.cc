@@ -4,7 +4,6 @@
 #include <random>
 #include <thread>
 
-#include "symmetri/retry.h"
 #include "symmetri/symmetri.h"
 
 symmetri::Eventlog getNewEvents(const symmetri::Eventlog &el,

@@ -1,12 +1,11 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>symmetri</name>
-  <version>1.0.0</version>
+  <version>0.4.0</version>
   <description>A C++ library for interfacing with petri nets</description>
   <maintainer email="thomas@mainblades.com">Thomas Horstink</maintainer>
   <author>Thomas Horstink</author>
   <license>Mainblades internal</license>
-
   <buildtool_depend>cmake</buildtool_depend>
   <export>
     <build_type>cmake</build_type>
