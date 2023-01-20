@@ -1,6 +1,7 @@
 #include "symmetri/types.h"
 
 #include <algorithm>
+#include <numeric>
 namespace symmetri {
 
 template <>
@@ -89,4 +90,37 @@ bool StateNetEquality(const StateNet& net1, const StateNet& net2) {
 
   return true;
 }
+
+size_t calculateTrace(const Eventlog& event_log) noexcept {
+  // calculate a trace-id, in a simple way.
+  return std::hash<std::string>{}(std::accumulate(
+      event_log.begin(), event_log.end(), std::string(""),
+      [](const auto& acc, const Event& n) {
+        return n.state == TransitionState::Completed ? acc + n.transition : acc;
+      }));
+}
+
+std::string printState(symmetri::TransitionState s) noexcept {
+  std::string ret;
+  switch (s) {
+    case TransitionState::Started:
+      ret = "Started";
+      break;
+    case TransitionState::Completed:
+      ret = "Completed";
+      break;
+    case TransitionState::Deadlock:
+      ret = "Deadlock";
+      break;
+    case TransitionState::UserExit:
+      ret = "UserExit";
+      break;
+    case TransitionState::Error:
+      ret = "Error";
+      break;
+  }
+
+  return ret;
+}
+
 }  // namespace symmetri

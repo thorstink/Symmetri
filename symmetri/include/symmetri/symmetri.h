@@ -48,19 +48,14 @@ struct Application {
       const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
       const std::string &case_id, const symmetri::StoppablePool &stp);
 
-  inline std::function<void()> registerTransitionCallback(
-      const std::string &transition) const {
-    return [transition, this]() { p(transition); };
-  }
-
-  void doMeData(std::function<void()> f) const;
-
-  std::tuple<clock_s::time_point, symmetri::Eventlog,
-             std::vector<symmetri::Place>, std::vector<std::string>>
-  get() const noexcept;
-
   TransitionResult operator()() const noexcept;
-  void togglePause();
+  symmetri::Eventlog getEvenLog() const noexcept;
+  std::vector<symmetri::Place> getMarking() const noexcept;
+  std::vector<std::string> getActiveTransitions() const noexcept;
+  std::function<void()> registerTransitionCallback(
+      const std::string &transition) const noexcept;
+  void togglePause() const noexcept;
+  void exitEarly() const noexcept;
 };
 
 }  // namespace symmetri

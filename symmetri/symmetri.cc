@@ -1,20 +1,13 @@
 #include "symmetri/symmetri.h"
 
 #include <blockingconcurrentqueue.h>
-#include <signal.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
-#include <unistd.h>
 
 #include <condition_variable>
-#include <fstream>
 #include <functional>
-#include <iostream>
 #include <memory>
-#include <numeric>
-#include <optional>
 #include <sstream>
-#include <tuple>
 
 #include "model.h"
 #include "symmetri/pnml_parser.h"
@@ -22,59 +15,33 @@ namespace symmetri {
 
 std::condition_variable cv;
 std::mutex cv_m;  // This mutex is used for two purposes:
-                  // 1) to synchronize accesses to PAUSE
+                  // 1) to synchronize accesses to PAUSE & EARLY_EXIT
                   // 2) for the condition variable cv
+
 std::atomic<bool> PAUSE(false);
+std::atomic<bool> EARLY_EXIT(false);
+
+// The default exit handler just sets early exit to true.
+std::function<void()> EARLY_EXIT_HANDLER = []() {
+  spdlog::info("User requests exit");
+  std::lock_guard<std::mutex> lk(cv_m);
+  EARLY_EXIT.store(true);
+  cv.notify_all();
+};
 
 void blockIfPaused(const std::string &case_id) {
   std::unique_lock<std::mutex> lk(cv_m);
   if (PAUSE.load(std::memory_order_relaxed)) {
     spdlog::get(case_id)->info("Execution is paused");
-    cv.wait(lk, [] { return !PAUSE.load(); });
+    cv.wait(lk, [] { return !PAUSE.load() || EARLY_EXIT.load(); });
     spdlog::get(case_id)->info("Execution is resumed");
   }
 }
 
 // Define the function to be called when ctrl-c (SIGINT) is sent to process
-std::atomic<bool> EARLY_EXIT(false);
-inline void signal_handler(int) noexcept {
-  spdlog::info("User requests exit");
-  EARLY_EXIT.store(true);
-}
+inline void exit_handler(int) noexcept { EARLY_EXIT_HANDLER(); }
 
 using namespace moodycamel;
-
-size_t calculateTrace(const Eventlog &event_log) noexcept {
-  // calculate a trace-id, in a simple way.
-  return std::hash<std::string>{}(std::accumulate(
-      event_log.begin(), event_log.end(), std::string(""),
-      [](const auto &acc, const Event &n) {
-        return n.state == TransitionState::Completed ? acc + n.transition : acc;
-      }));
-}
-
-std::string printState(symmetri::TransitionState s) noexcept {
-  std::string ret;
-  switch (s) {
-    case TransitionState::Started:
-      ret = "Started";
-      break;
-    case TransitionState::Completed:
-      ret = "Completed";
-      break;
-    case TransitionState::Deadlock:
-      ret = "Deadlock";
-      break;
-    case TransitionState::UserExit:
-      ret = "UserExit";
-      break;
-    case TransitionState::Error:
-      ret = "Error";
-      break;
-  }
-
-  return ret;
-}
 
 bool check(const Store &store, const symmetri::StateNet &net) noexcept {
   return std::all_of(net.cbegin(), net.cend(), [&store](const auto &p) {
@@ -111,7 +78,17 @@ struct Impl {
         stp(stp),
         case_id(case_id),
         active(false),
-        final_marking(final_marking) {}
+        final_marking(final_marking) {
+    EARLY_EXIT_HANDLER = [this]() {
+      spdlog::info("User requests exit");
+      std::lock_guard<std::mutex> lk(cv_m);
+      if (!EARLY_EXIT.load()) {
+        EARLY_EXIT.store(true);
+      }
+      reducers.enqueue([](Model &&model) -> Model & { return model; });
+      cv.notify_all();
+    };
+  }
   const Model &getModel() const { return m; }
   symmetri::Eventlog getEventLog() const { return m.event_log; }
   TransitionResult run() {
@@ -134,13 +111,12 @@ struct Impl {
              (m.active_transitions_n.size() == 0 && !m.event_log.empty());
     };
     active.store(true);
-
     Reducer f;
     // start!
     m = runTransitions(m, reducers, stp, true, case_id);
     // get a reducer. Immediately, or wait a bit
-    while (!stop_condition() &&
-           reducers.wait_dequeue_timed(f, std::chrono::seconds(9000))) {
+    while (!stop_condition() && reducers.wait_dequeue_timed(f, -1) &&
+           !stop_condition()) {
       do {
         m = f(std::move(m));
       } while (reducers.try_dequeue(f));
@@ -193,7 +169,7 @@ void Application::createApplication(
     const Store &store,
     const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
     const std::string &case_id, const symmetri::StoppablePool &stp) {
-  signal(SIGINT, signal_handler);
+  signal(SIGINT, exit_handler);
   std::stringstream s;
   s << "[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] [" << case_id << "] %v";
   auto console = spdlog::stdout_color_mt(case_id);
@@ -227,23 +203,24 @@ TransitionResult Application::operator()() const noexcept {
   }
 }
 
-std::tuple<clock_s::time_point, symmetri::Eventlog,
-           std::vector<symmetri::Place>, std::vector<std::string>>
-Application::get() const noexcept {
-  auto &m = impl->getModel();
+symmetri::Eventlog Application::getEvenLog() const noexcept {
+  return impl->getEventLog();
+};
+std::vector<symmetri::Place> Application::getMarking() const noexcept {
+  return impl->getModel().getMarking();
+};
+std::vector<std::string> Application::getActiveTransitions() const noexcept {
+  return impl->getModel().getActiveTransitions();
+};
 
-  return std::make_tuple(m.timestamp, impl->getEventLog(), m.getMarking(),
-                         m.getActiveTransitions());
+std::function<void()> Application::registerTransitionCallback(
+    const std::string &transition) const noexcept {
+  return [transition, this]() { p(transition); };
 }
 
-void Application::doMeData(std::function<void()> f) const {
-  impl->reducers.enqueue([=](Model &&m) -> Model & {
-    f();
-    return m;
-  });
-}
+void Application::exitEarly() const noexcept { EARLY_EXIT_HANDLER(); }
 
-void Application::togglePause() {
+void Application::togglePause() const noexcept {
   std::lock_guard<std::mutex> lk(cv_m);
   PAUSE.store(!PAUSE.load());
   cv.notify_all();
