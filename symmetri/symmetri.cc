@@ -6,6 +6,7 @@
 
 #include <condition_variable>
 #include <functional>
+#include <future>
 #include <memory>
 #include <sstream>
 
@@ -140,6 +141,9 @@ struct Impl {
     } else {
       result = TransitionState::Error;
     }
+    spdlog::get(case_id)->info("Petri net finished with result {0}",
+                               printState(result));
+
     return {m.event_log, result};
   }
 };
@@ -204,13 +208,47 @@ TransitionResult Application::operator()() const noexcept {
 }
 
 symmetri::Eventlog Application::getEvenLog() const noexcept {
-  return impl->getEventLog();
+  if (impl->active.load()) {
+    std::promise<symmetri::Eventlog> el;
+    std::future<symmetri::Eventlog> el_getter = el.get_future();
+    impl->reducers.enqueue([&](Model &&model) -> Model & {
+      el.set_value(model.event_log);
+      return model;
+    });
+    return el_getter.get();
+  } else {
+    return impl->getEventLog();
+  }
 };
+
 std::vector<symmetri::Place> Application::getMarking() const noexcept {
-  return impl->getModel().getMarking();
+  if (impl->active.load()) {
+    std::promise<std::vector<symmetri::Place>> marking;
+    std::future<std::vector<symmetri::Place>> marking_getter =
+        marking.get_future();
+    impl->reducers.enqueue([&](Model &&model) -> Model & {
+      marking.set_value(model.getMarking());
+      return model;
+    });
+    return marking_getter.get();
+  } else {
+    return impl->getModel().getMarking();
+  }
 };
+
 std::vector<std::string> Application::getActiveTransitions() const noexcept {
-  return impl->getModel().getActiveTransitions();
+  if (impl->active.load()) {
+    std::promise<std::vector<std::string>> transitions;
+    std::future<std::vector<std::string>> transitions_getter =
+        transitions.get_future();
+    impl->reducers.enqueue([&](Model &&model) -> Model & {
+      transitions.set_value(model.getActiveTransitions());
+      return model;
+    });
+    return transitions_getter.get();
+  } else {
+    return impl->getModel().getActiveTransitions();
+  }
 };
 
 std::function<void()> Application::registerTransitionCallback(
