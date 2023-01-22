@@ -66,11 +66,10 @@ struct Impl {
   const symmetri::StoppablePool &stp;
   const std::string case_id;
   std::atomic<bool> active;
-  std::optional<symmetri::NetMarking> final_marking;
+  symmetri::NetMarking final_marking;
   Impl(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
        const symmetri::StoppablePool &stp,
-       const std::optional<symmetri::NetMarking> &final_marking,
-       const Store &store,
+       const symmetri::NetMarking &final_marking, const Store &store,
        const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
        const std::string &case_id)
       : m(net, store, priority, m0),
@@ -80,8 +79,8 @@ struct Impl {
         case_id(case_id),
         active(false),
         final_marking(final_marking) {
-    EARLY_EXIT_HANDLER = [this]() {
-      spdlog::info("User requests exit");
+    EARLY_EXIT_HANDLER = [case_id, this]() {
+      spdlog::get(case_id)->info("User requests exit");
       std::lock_guard<std::mutex> lk(cv_m);
       if (!EARLY_EXIT.load()) {
         EARLY_EXIT.store(true);
@@ -93,15 +92,15 @@ struct Impl {
   const Model &getModel() const { return m; }
   symmetri::Eventlog getEventLog() const { return m.event_log; }
   TransitionResult run() {
+    // we are running!
+    active.store(true);
     // todo.. not have to assign it manually to reset.
     m.event_log = {};
     m.tokens_n = m.initial_tokens;
     std::vector<size_t> final_tokens;
-    if (final_marking.has_value()) {
-      for (const auto &[p, c] : final_marking.value()) {
-        for (int i = 0; i < c; i++) {
-          final_tokens.push_back(toIndex(m.net.place, p));
-        }
+    for (const auto &[p, c] : final_marking) {
+      for (int i = 0; i < c; i++) {
+        final_tokens.push_back(toIndex(m.net.place, p));
       }
     }
 
@@ -111,7 +110,6 @@ struct Impl {
       return EARLY_EXIT.load(std::memory_order_relaxed) ||
              (m.active_transitions_n.size() == 0 && !m.event_log.empty());
     };
-    active.store(true);
     Reducer f;
     // start!
     m = runTransitions(m, reducers, stp, true, case_id);
@@ -127,7 +125,6 @@ struct Impl {
       }
       m = runTransitions(m, reducers, stp, true, case_id);
     }
-
     active.store(false);
 
     // determine what was the reason we terminated.
@@ -150,8 +147,7 @@ struct Impl {
 
 Application::Application(
     const std::set<std::string> &files,
-    const std::optional<symmetri::NetMarking> &final_marking,
-    const Store &store,
+    const symmetri::NetMarking &final_marking, const Store &store,
     const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
     const std::string &case_id, const symmetri::StoppablePool &stp) {
   const auto &[net, m0] = readPetriNets(files);
@@ -160,8 +156,7 @@ Application::Application(
 
 Application::Application(
     const symmetri::StateNet &net, const symmetri::NetMarking &m0,
-    const std::optional<symmetri::NetMarking> &final_marking,
-    const Store &store,
+    const symmetri::NetMarking &final_marking, const Store &store,
     const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
     const std::string &case_id, const symmetri::StoppablePool &stp) {
   createApplication(net, m0, final_marking, store, priority, case_id, stp);
@@ -169,8 +164,7 @@ Application::Application(
 
 void Application::createApplication(
     const symmetri::StateNet &net, const symmetri::NetMarking &m0,
-    const std::optional<symmetri::NetMarking> &final_marking,
-    const Store &store,
+    const symmetri::NetMarking &final_marking, const Store &store,
     const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
     const std::string &case_id, const symmetri::StoppablePool &stp) {
   signal(SIGINT, exit_handler);
@@ -180,7 +174,6 @@ void Application::createApplication(
 
   console->set_pattern(s.str());
   if (check(store, net)) {
-    // init
     impl = std::make_shared<Impl>(net, m0, stp, final_marking, store, priority,
                                   case_id);
     // register a function that "forces" transitions into the queue.
@@ -199,7 +192,13 @@ void Application::createApplication(
 
 TransitionResult Application::operator()() const noexcept {
   if (impl == nullptr) {
-    spdlog::error("Error not all transitions are in the store");
+    spdlog::info("Something went seriously wrong. Please send a bug report.");
+    return {{}, TransitionState::Error};
+  } else if (impl->active.load()) {
+    spdlog::get(impl->case_id)
+        ->info(
+            "The net is already active, it can not run it again before it is "
+            "finished.");
     return {{}, TransitionState::Error};
   } else {
     auto res = impl->run();

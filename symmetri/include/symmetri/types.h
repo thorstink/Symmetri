@@ -11,8 +11,23 @@ using Place = std::string;
 using Transition = std::string;
 using clock_s = std::chrono::steady_clock;
 
-enum class TransitionState { Started, Completed, Deadlock, UserExit, Error };
+/**
+ * @brief The difference kinds of results a transition can have.
+ *
+ */
+enum class TransitionState {
+  Started,    /// The transition started
+  Completed,  /// The transition completed as expected
+  Deadlock,   /// The transition deadlocked (e.g. it was a petri net)
+  UserExit,   /// The transition or interupted and was stopped
+  Error       /// None of the above
+};
 
+/**
+ * @brief This struct defines a subset of data that we associate with the
+ * payload of each transition.
+ *
+ */
 struct Event {
   std::string case_id;
   std::string transition;
@@ -66,10 +81,39 @@ TransitionResult runTransition(const T& transition) {
   }
 }
 
+/**
+ * @brief Checks if the markings are exactly the same.
+ *
+ * @tparam T
+ * @param m1
+ * @param m2
+ * @return true
+ * @return false
+ */
 template <typename T>
 bool MarkingEquality(const std::vector<T>& m1, const std::vector<T>& m2);
+
+/**
+ * @brief Checks if marking is at least at least a subset of final_marking.
+ *
+ * @tparam T
+ * @param marking
+ * @param final_marking
+ * @return true
+ * @return false
+ */
 template <typename T>
 bool MarkingReached(const std::vector<T>& marking,
                     const std::vector<T>& final_marking);
+
+/**
+ * @brief Checks if two petri-nets have the equal amount of arcs between places
+ * and transitions of the same name.
+ *
+ * @param net1
+ * @param net2
+ * @return true
+ * @return false
+ */
 bool StateNetEquality(const StateNet& net1, const StateNet& net2);
 }  // namespace symmetri

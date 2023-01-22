@@ -25,7 +25,7 @@ TEST_CASE("Create a using the net constructor without end condition.") {
   auto [net, store, priority, m0] = testNet();
   StoppablePool stp(1);
 
-  symmetri::Application app(net, m0, std::nullopt, store, priority,
+  symmetri::Application app(net, m0, {}, store, priority,
                             "test_net_without_end", stp);
   // we can run the net
   auto [ev, res] = app();
@@ -62,8 +62,7 @@ TEST_CASE("Create a using pnml constructor.") {
     // This store is not appropriate for this net,
     Store store = {{"wrong_id", &t0}};
     std::vector<std::pair<symmetri::Transition, int8_t>> priority;
-    symmetri::Application app({pnml_file}, std::nullopt, store, priority,
-                              "fail", stp);
+    symmetri::Application app({pnml_file}, {}, store, priority, "fail", stp);
     // however, we can try running it,
     auto [ev, res] = app();
 

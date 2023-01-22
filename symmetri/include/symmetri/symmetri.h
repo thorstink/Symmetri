@@ -3,7 +3,6 @@
 #include <chrono>
 #include <functional>
 #include <memory>
-#include <optional>
 #include <set>
 #include <string>
 #include <vector>
@@ -61,23 +60,20 @@ class Application {
   std::function<void(const clock_s::time_point &t)> publish;
   void createApplication(
       const symmetri::StateNet &net, const symmetri::NetMarking &m0,
-      const std::optional<symmetri::NetMarking> &final_marking,
-      const Store &store,
+      const symmetri::NetMarking &final_marking, const Store &store,
       const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
       const std::string &case_id, const symmetri::StoppablePool &stp);
 
  public:
   Application(
       const std::set<std::string> &path_to_petri,
-      const std::optional<symmetri::NetMarking> &final_marking,
-      const Store &store,
+      const symmetri::NetMarking &final_marking, const Store &store,
       const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
       const std::string &case_id, const symmetri::StoppablePool &stp);
 
   Application(
       const symmetri::StateNet &net, const symmetri::NetMarking &m0,
-      const std::optional<symmetri::NetMarking> &final_marking,
-      const Store &store,
+      const symmetri::NetMarking &final_marking, const Store &store,
       const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
       const std::string &case_id, const symmetri::StoppablePool &stp);
 
