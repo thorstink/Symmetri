@@ -93,11 +93,15 @@ bool StateNetEquality(const StateNet& net1, const StateNet& net2) {
 
 size_t calculateTrace(const Eventlog& event_log) noexcept {
   // calculate a trace-id, in a simple way.
-  return std::hash<std::string>{}(std::accumulate(
-      event_log.begin(), event_log.end(), std::string(""),
-      [](const auto& acc, const Event& n) {
-        return n.state == TransitionState::Completed ? acc + n.transition : acc;
-      }));
+  return std::hash<std::string>{}(
+      std::accumulate(event_log.begin(), event_log.end(), std::string(""),
+                      [](const auto& acc, const Event& n) {
+                        constexpr auto success = "o";
+                        constexpr auto fail = "x";
+                        return n.state == TransitionState::Completed
+                                   ? acc + n.transition + success
+                                   : acc + fail;
+                      }));
 }
 
 std::string printState(symmetri::TransitionState s) noexcept {

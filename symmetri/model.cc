@@ -131,7 +131,7 @@ Model &runTransitions(Model &model,
 
       // if the function is nullopt_t, we short-circuit the
       // marking mutation and do it immediately.
-      if (directTransition(task)) {
+      if (isDirectTransition(task)) {
         model.tokens_n.insert(model.tokens_n.begin(),
                               model.net.output_n[T_i].begin(),
                               model.net.output_n[T_i].end());

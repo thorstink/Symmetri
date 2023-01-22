@@ -4,6 +4,13 @@
 #include "symmetri/types.h"
 namespace symmetri {
 
+/**
+ * @brief PolyAction is a wrapper around any type that you want to tie to a
+ * transition. Typically this is an invokable object, such as a function, that
+ * executes some side-effects. The output of the invokable object can be used to
+ * communicate success or failure to the petri-net executor.
+ *
+ */
 class PolyAction {
  public:
   template <typename T>
@@ -12,7 +19,7 @@ class PolyAction {
   friend TransitionResult runTransition(const PolyAction &x) {
     return x.self_->run_();
   }
-  friend bool directTransition(const PolyAction &x) {
+  friend bool isDirectTransition(const PolyAction &x) {
     return x.self_->simple_();
   }
 
@@ -29,7 +36,7 @@ class PolyAction {
       return runTransition(transition_function_);
     }
     bool simple_() const override {
-      return directTransition(transition_function_);
+      return isDirectTransition(transition_function_);
     }
     T transition_function_;
   };
