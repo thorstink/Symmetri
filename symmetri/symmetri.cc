@@ -9,9 +9,10 @@
 #include <future>
 #include <memory>
 #include <sstream>
-
+#include <signal.h>
 #include "model.h"
 #include "symmetri/pnml_parser.h"
+
 namespace symmetri {
 
 std::condition_variable cv;
