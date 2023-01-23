@@ -81,3 +81,13 @@ TEST_CASE("The marking is not reached if the final marking is empty") {
   final_marking = {};
   REQUIRE(!MarkingReached(marking, final_marking));
 }
+
+TEST_CASE(
+    "The marking is not reached if the final marking is empty, even if they "
+    "are both empty") {
+  std::vector<Place> marking, final_marking;
+  marking = {};
+  final_marking = {};
+  REQUIRE(!MarkingReached(marking, final_marking));
+  REQUIRE(MarkingEquality(marking, final_marking));
+}

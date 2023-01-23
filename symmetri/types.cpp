@@ -1,6 +1,7 @@
 #include "symmetri/types.h"
 
 #include <algorithm>
+#include <numeric>
 namespace symmetri {
 
 template <>
@@ -61,7 +62,7 @@ bool StateNetEquality(const StateNet& net1, const StateNet& net2) {
     return false;
   }
   for (const auto& [t1, mut1] : net1) {
-    if (net2.contains(t1)) {
+    if (net2.find(t1) != net2.end()) {
       for (const auto& pre : mut1.first) {
         if (mut1.first.size() != net2.at(t1).first.size()) {
           return false;
@@ -89,4 +90,41 @@ bool StateNetEquality(const StateNet& net1, const StateNet& net2) {
 
   return true;
 }
+
+size_t calculateTrace(const Eventlog& event_log) noexcept {
+  // calculate a trace-id, in a simple way.
+  return std::hash<std::string>{}(
+      std::accumulate(event_log.begin(), event_log.end(), std::string(""),
+                      [](const auto& acc, const Event& n) {
+                        constexpr auto success = "o";
+                        constexpr auto fail = "x";
+                        return n.state == TransitionState::Completed
+                                   ? acc + n.transition + success
+                                   : acc + fail;
+                      }));
+}
+
+std::string printState(symmetri::TransitionState s) noexcept {
+  std::string ret;
+  switch (s) {
+    case TransitionState::Started:
+      ret = "Started";
+      break;
+    case TransitionState::Completed:
+      ret = "Completed";
+      break;
+    case TransitionState::Deadlock:
+      ret = "Deadlock";
+      break;
+    case TransitionState::UserExit:
+      ret = "UserExit";
+      break;
+    case TransitionState::Error:
+      ret = "Error";
+      break;
+  }
+
+  return ret;
+}
+
 }  // namespace symmetri

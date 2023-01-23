@@ -129,9 +129,9 @@ Model &runTransitions(Model &model,
 
       auto task = model.net.store[T_i];
 
-      // if the function is nullopt_t, we short-circuit the
+      // if the transition is direct, we short-circuit the
       // marking mutation and do it immediately.
-      if (directTransition(task)) {
+      if (isDirectTransition(task)) {
         model.tokens_n.insert(model.tokens_n.begin(),
                               model.net.output_n[T_i].begin(),
                               model.net.output_n[T_i].end());
@@ -162,6 +162,7 @@ Model &runTransitions(Model &model,
 
 std::vector<Place> Model::getMarking() const {
   std::vector<Place> marking;
+  marking.reserve(tokens_n.size());
   std::transform(tokens_n.cbegin(), tokens_n.cend(),
                  std::back_inserter(marking),
                  [&](auto place_index) { return net.place[place_index]; });
@@ -170,6 +171,7 @@ std::vector<Place> Model::getMarking() const {
 
 std::vector<Transition> Model::getActiveTransitions() const {
   std::vector<Transition> transition_list;
+  transition_list.reserve(active_transitions_n.size());
   std::transform(active_transitions_n.cbegin(), active_transitions_n.cend(),
                  std::back_inserter(transition_list),
                  [&](auto place_index) { return net.transition[place_index]; });
