@@ -124,11 +124,11 @@ TEST_CASE("Run until net dies") {
   stp.stop();
 }
 
-TEST_CASE("Run until net dies with std::nullopt") {
+TEST_CASE("Run until net dies with nullptr") {
   using namespace moodycamel;
 
   auto [net, store, priority, m0] = testNet();
-  store = {{"t0", std::nullopt}, {"t1", std::nullopt}};
+  store = {{"t0", nullptr}, {"t1", nullptr}};
   auto m = Model(net, store, priority, m0);
   BlockingConcurrentQueue<Reducer> reducers(4);
   StoppablePool stp(1);

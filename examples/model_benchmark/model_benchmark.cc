@@ -15,7 +15,7 @@ int main(int, char *argv[]) {
     if (bolus) {
       store.insert({t, []() {}});
     } else {
-      store.insert({t, std::nullopt});
+      store.insert({t, nullptr});
     }
   }
 

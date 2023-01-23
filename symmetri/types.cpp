@@ -62,7 +62,7 @@ bool StateNetEquality(const StateNet& net1, const StateNet& net2) {
     return false;
   }
   for (const auto& [t1, mut1] : net1) {
-    if (net2.contains(t1)) {
+    if (net2.find(t1) != net2.end()) {
       for (const auto& pre : mut1.first) {
         if (mut1.first.size() != net2.at(t1).first.size()) {
           return false;

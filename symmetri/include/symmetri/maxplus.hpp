@@ -155,7 +155,7 @@ inline size_t hashf(const T &matrix) {
 std::map<std::tuple<size_t, size_t, size_t>, MatrixXd> cache;
 MatrixXd system(const MatrixXd &A, const MatrixXd &x0, size_t k = 1) {
   auto t = std::tuple{hashf(A), hashf(x0), k};
-  if (cache.contains(t)) {
+  if (cache.find(t) != cache.end()) {
     return cache[t];
   } else {
     if (k == 1) {
@@ -180,7 +180,7 @@ std::tuple<double, double, double> pgc(const MatrixXd &A, const MatrixXd &x0,
   std::map<size_t, MatrixXd> stans;
   const auto s = x0.size();
   for (size_t p = 1; p < r; p++) {
-    stans.contains(p) ? stans[p] : stans[p] = system(A, x0, p);
+    stans.find(p) != stans.end() ? stans[p] : stans[p] = system(A, x0, p);
     for (size_t q = 1; q < (p - 1); q++) {
       // use normal minus operator..
       Eigen::VectorXd diff = Eigen::Map<Eigen::VectorXd>(stans[p].data(), s) -

@@ -129,7 +129,7 @@ Model &runTransitions(Model &model,
 
       auto task = model.net.store[T_i];
 
-      // if the function is nullopt_t, we short-circuit the
+      // if the transition is direct, we short-circuit the
       // marking mutation and do it immediately.
       if (isDirectTransition(task)) {
         model.tokens_n.insert(model.tokens_n.begin(),

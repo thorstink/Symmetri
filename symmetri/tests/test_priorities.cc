@@ -40,13 +40,13 @@ TEST_CASE(
   }
 }
 
-TEST_CASE("Using nullopts does not queue reducers.") {
+TEST_CASE("Using nullptr does not queue reducers.") {
   std::list<std::vector<std::pair<symmetri::Transition, int8_t>>> priorities = {
       {{"t0", 1}, {"t1", 0}}, {{"t0", 0}, {"t1", 1}}};
   for (auto priority : priorities) {
     BlockingConcurrentQueue<Reducer> reducers(4);
     StateNet net = {{"t0", {{"Pa"}, {"Pb"}}}, {"t1", {{"Pa"}, {"Pc"}}}};
-    Store store = {{"t0", std::nullopt}, {"t1", std::nullopt}};
+    Store store = {{"t0", nullptr}, {"t1", nullptr}};
 
     NetMarking m0 = {{"Pa", 1}, {"Pb", 0}, {"Pc", 0}};
     StoppablePool stp(1);
