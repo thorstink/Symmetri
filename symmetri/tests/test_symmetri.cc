@@ -86,3 +86,37 @@ TEST_CASE("Create a using pnml constructor.") {
   }
   stp.stop();
 }
+
+TEST_CASE("Run transition manually.") {
+  auto [net, store, priority, m0] = testNet();
+  StoppablePool stp(1);
+  symmetri::Application app(net, m0, {}, store, priority, "single_run_net1",
+                            stp);
+
+  REQUIRE(app.tryRunTransition("t0"));
+  stp.stop();
+}
+
+TEST_CASE("Run transition that does not exist manually.") {
+  auto [net, store, priority, m0] = testNet();
+  StoppablePool stp(1);
+  symmetri::Application app(net, m0, {}, store, priority, "single_run_net2",
+                            stp);
+
+  REQUIRE(!app.tryRunTransition("t0dgdsg"));
+  stp.stop();
+}
+
+TEST_CASE("Run transition for which the preconditions are not met manually.") {
+  auto [net, store, priority, m0] = testNet();
+  StoppablePool stp(1);
+  symmetri::Application app(net, m0, {}, store, priority, "single_run_net3",
+                            stp);
+
+  auto l = app.getFireableTransitions();
+  for (auto t : l) {
+    REQUIRE(t != "t1");
+  }
+  REQUIRE(!app.tryRunTransition("t1"));
+  stp.stop();
+}

@@ -192,13 +192,25 @@ void Application::createApplication(
   }
 }
 
+bool Application::tryRunTransition(const std::string &t) const noexcept {
+  if (impl == nullptr) {
+    spdlog::warn("There is no net to run a transition.");
+    return false;
+  }
+  Reducer f;
+  while (impl->reducers.try_dequeue(f)) {
+    impl->m = f(std::move(impl->m));
+  }
+  return impl->m.runTransition(t, impl->reducers, impl->stp, "manual");
+};
+
 TransitionResult Application::operator()() const noexcept {
   if (impl == nullptr) {
-    spdlog::info("Something went seriously wrong. Please send a bug report.");
+    spdlog::error("Something went seriously wrong. Please send a bug report.");
     return {{}, TransitionState::Error};
   } else if (impl->active.load()) {
     spdlog::get(impl->case_id)
-        ->info(
+        ->warn(
             "The net is already active, it can not run it again before it is "
             "finished.");
     return {{}, TransitionState::Error};
@@ -208,7 +220,7 @@ TransitionResult Application::operator()() const noexcept {
   }
 }
 
-symmetri::Eventlog Application::getEvenLog() const noexcept {
+symmetri::Eventlog Application::getEventLog() const noexcept {
   if (impl->active.load()) {
     std::promise<symmetri::Eventlog> el;
     std::future<symmetri::Eventlog> el_getter = el.get_future();
@@ -249,6 +261,21 @@ std::vector<std::string> Application::getActiveTransitions() const noexcept {
     return transitions_getter.get();
   } else {
     return impl->getModel().getActiveTransitions();
+  }
+};
+
+std::vector<std::string> Application::getFireableTransitions() const noexcept {
+  if (impl->active.load()) {
+    std::promise<std::vector<std::string>> transitions;
+    std::future<std::vector<std::string>> transitions_getter =
+        transitions.get_future();
+    impl->reducers.enqueue([&](Model &&model) -> Model & {
+      transitions.set_value(model.getFireableTransitions());
+      return model;
+    });
+    return transitions_getter.get();
+  } else {
+    return impl->getModel().getFireableTransitions();
   }
 };
 

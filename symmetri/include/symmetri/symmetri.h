@@ -50,14 +50,13 @@ using Store = std::map<std::string, PolyAction>;
 struct Impl;
 
 /**
- * @brief The Application class executes the petri net, by using the
+ * @brief The Application class executes the Petri net, by using the
  *
  */
 class Application {
  private:
   mutable std::shared_ptr<Impl> impl;
   std::function<void(const std::string &t)> p;
-  std::function<void(const clock_s::time_point &t)> publish;
   void createApplication(
       const symmetri::StateNet &net, const symmetri::NetMarking &m0,
       const symmetri::NetMarking &final_marking, const Store &store,
@@ -78,11 +77,13 @@ class Application {
       const std::string &case_id, const symmetri::StoppablePool &stp);
 
   TransitionResult operator()() const noexcept;
-  symmetri::Eventlog getEvenLog() const noexcept;
-  std::vector<symmetri::Place> getMarking() const noexcept;
-  std::vector<std::string> getActiveTransitions() const noexcept;
   std::function<void()> registerTransitionCallback(
       const std::string &transition) const noexcept;
+  bool tryRunTransition(const std::string &s) const noexcept;
+  symmetri::Eventlog getEventLog() const noexcept;
+  std::vector<symmetri::Place> getMarking() const noexcept;
+  std::vector<std::string> getActiveTransitions() const noexcept;
+  std::vector<std::string> getFireableTransitions() const noexcept;
   void togglePause() const noexcept;
   void exitEarly() const noexcept;
 };
