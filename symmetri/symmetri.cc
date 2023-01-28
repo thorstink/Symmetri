@@ -1,6 +1,7 @@
 #include "symmetri/symmetri.h"
 
 #include <blockingconcurrentqueue.h>
+#include <signal.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
@@ -9,7 +10,7 @@
 #include <future>
 #include <memory>
 #include <sstream>
-#include <signal.h>
+
 #include "model.h"
 #include "symmetri/pnml_parser.h"
 
@@ -113,7 +114,7 @@ struct Impl {
     };
     Reducer f;
     // start!
-    m = runTransitions(m, reducers, stp, true, case_id);
+    m.runTransitions(reducers, stp, true, case_id);
     // get a reducer. Immediately, or wait a bit
     while (!stop_condition() && reducers.wait_dequeue_timed(f, -1) &&
            !stop_condition()) {
@@ -124,7 +125,7 @@ struct Impl {
       if (MarkingReached(m.tokens_n, final_tokens)) {
         break;
       }
-      m = runTransitions(m, reducers, stp, true, case_id);
+      m.runTransitions(reducers, stp, true, case_id);
     }
     active.store(false);
 
