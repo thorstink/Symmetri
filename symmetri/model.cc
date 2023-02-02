@@ -256,6 +256,10 @@ void Model::runTransitions(
   return;
 }
 
+std::pair<std::vector<Transition>, std::vector<Place>> Model::getState() const {
+  return {getMarking(), getActiveTransitions()};
+}
+
 std::vector<Place> Model::getMarking() const {
   std::vector<Place> marking;
   marking.reserve(tokens_n.size());

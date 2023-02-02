@@ -5,32 +5,23 @@
 
 using namespace symmetri;
 
-std::condition_variable cv;
-std::mutex cv_m;
-bool i_ran(false);
-void t() {
-  {
-    std::lock_guard<std::mutex> lk(cv_m);
-    i_ran = true;
-  }
-  cv.notify_all();
-}
+std::atomic<bool> i_ran(false);
+void t() { i_ran.store(true); }
 
 TEST_CASE("Test external input.") {
-  StateNet net = {{"t0", {{}, {"Pa"}}}};
-  Store store = {{"t0", &t}};
-  NetMarking m0 = {{"Pa", 0}};
-  NetMarking final_m = {{"Pa", 1}};
+  StateNet net = {
+      {"t0", {{}, {"Pa"}}}, {"t1", {{"Pa"}, {"Pb"}}}, {"t2", {{"Pc"}, {"Pb"}}}};
+  Store store = {{"t0", nullptr},
+                 {"t1", &t},
+                 {"t2", []() {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(15));
+                  }}};
+  NetMarking m0 = {{"Pa", 0}, {"Pb", 0}, {"Pc", 1}};
+  NetMarking final_m = {{"Pb", 2}};
   StoppablePool stp(3);
 
   symmetri::Application app(net, m0, final_m, store, {}, "test_net_ext_input",
                             stp);
-
-  // enqueue a test;
-  stp.enqueue([]() {
-    std::unique_lock<std::mutex> lk(cv_m);
-    cv.wait_for(lk, std::chrono::milliseconds(1000), [] { return i_ran; });
-  });
 
   // enqueue a trigger;
   stp.enqueue([trigger = app.registerTransitionCallback("t0")]() {

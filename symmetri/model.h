@@ -34,6 +34,8 @@ struct Model {
   std::vector<Place> getMarking() const;
   std::vector<Transition> getActiveTransitions() const;
   std::vector<Transition> getFireableTransitions() const;
+  std::pair<std::vector<Transition>, std::vector<Place>> getState() const;
+
   bool runTransition(const Transition &t,
                      moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
                      const StoppablePool &polymorphic_actions,

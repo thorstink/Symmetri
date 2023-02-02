@@ -106,18 +106,14 @@ struct Impl {
       }
     }
 
-    // this is the check whether we should break the loop. It's either early
-    // exit, otherwise there must be event_logs.
-    auto stop_condition = [&] {
-      return EARLY_EXIT.load(std::memory_order_relaxed) ||
-             (m.active_transitions_n.size() == 0 && !m.event_log.empty());
-    };
     Reducer f;
     // start!
     m.runTransitions(reducers, stp, true, case_id);
     // get a reducer. Immediately, or wait a bit
-    while (!stop_condition() && reducers.wait_dequeue_timed(f, -1) &&
-           !stop_condition()) {
+    while (m.active_transitions_n.size() > 0 &&
+           !EARLY_EXIT.load(std::memory_order_relaxed) &&
+           reducers.wait_dequeue_timed(f, -1) &&
+           !EARLY_EXIT.load(std::memory_order_relaxed)) {
       do {
         m = f(std::move(m));
       } while (reducers.try_dequeue(f));
@@ -181,16 +177,19 @@ void Application::createApplication(
     // register a function that "forces" transitions into the queue.
     p = [this](const std::string &t) {
       if (impl->active.load()) {
-        impl->stp.enqueue([this, t_index = toIndex(impl->m.net.transition, t)] {
-          // this should be cleaned the next iteration
-          impl->m.active_transitions_n.push_back(t_index);
+        impl->reducers.enqueue([this, t = t](Model &&m) -> Model & {
+          const auto t_index = toIndex(m.net.transition, t);
+          m.active_transitions_n.push_back(t_index);
           impl->reducers.enqueue(createReducerForTransition(
-              t_index, impl->m.net.store[t_index], impl->case_id));
+              t_index, m.net.store[t_index], impl->case_id));
+          return m;
         });
       }
     };
   }
 }
+
+Application::~Application() {}
 
 bool Application::tryRunTransition(const std::string &t) const noexcept {
   if (impl == nullptr) {
@@ -234,35 +233,20 @@ symmetri::Eventlog Application::getEventLog() const noexcept {
   }
 };
 
-std::vector<symmetri::Place> Application::getMarking() const noexcept {
+std::pair<std::vector<Transition>, std::vector<Place>> Application::getState()
+    const noexcept {
   if (impl->active.load()) {
-    std::promise<std::vector<symmetri::Place>> marking;
-    std::future<std::vector<symmetri::Place>> marking_getter =
-        marking.get_future();
+    std::promise<std::pair<std::vector<Transition>, std::vector<Place>>> state;
+    auto getter = state.get_future();
     impl->reducers.enqueue([&](Model &&model) -> Model & {
-      marking.set_value(model.getMarking());
+      state.set_value(model.getState());
       return model;
     });
-    return marking_getter.get();
+    return getter.get();
   } else {
-    return impl->getModel().getMarking();
+    return impl->getModel().getState();
   }
-};
-
-std::vector<std::string> Application::getActiveTransitions() const noexcept {
-  if (impl->active.load()) {
-    std::promise<std::vector<std::string>> transitions;
-    std::future<std::vector<std::string>> transitions_getter =
-        transitions.get_future();
-    impl->reducers.enqueue([&](Model &&model) -> Model & {
-      transitions.set_value(model.getActiveTransitions());
-      return model;
-    });
-    return transitions_getter.get();
-  } else {
-    return impl->getModel().getActiveTransitions();
-  }
-};
+}
 
 std::vector<std::string> Application::getFireableTransitions() const noexcept {
   if (impl->active.load()) {

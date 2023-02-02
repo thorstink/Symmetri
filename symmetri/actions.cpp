@@ -44,6 +44,7 @@ void StoppablePool::stop() {
     if (t.joinable()) {
       t.join();
     }
-  }}
+  }
+}
 
 }  // namespace symmetri

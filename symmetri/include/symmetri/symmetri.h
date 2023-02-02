@@ -75,14 +75,14 @@ class Application {
       const symmetri::NetMarking &final_marking, const Store &store,
       const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
       const std::string &case_id, const symmetri::StoppablePool &stp);
-
+  ~Application();
   TransitionResult operator()() const noexcept;
   std::function<void()> registerTransitionCallback(
       const std::string &transition) const noexcept;
   bool tryRunTransition(const std::string &s) const noexcept;
   symmetri::Eventlog getEventLog() const noexcept;
-  std::vector<symmetri::Place> getMarking() const noexcept;
-  std::vector<std::string> getActiveTransitions() const noexcept;
+  std::pair<std::vector<Transition>, std::vector<Place>> getState()
+      const noexcept;
   std::vector<std::string> getFireableTransitions() const noexcept;
   void togglePause() const noexcept;
   void exitEarly() const noexcept;

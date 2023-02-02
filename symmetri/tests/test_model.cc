@@ -206,6 +206,7 @@ TEST_CASE("Step through transitions") {
     // one token should be gone.
     REQUIRE(token_count_before - m.getMarking().size() - 1 == 0);
   }
+  stp.stop();
   // validate we only ran transition b
   REQUIRE(hitmap["a"] == 0);
   REQUIRE(hitmap["b"] == 4);
