@@ -51,7 +51,7 @@ TEST_CASE("Test equaliy of nets") {
 TEST_CASE("Create a model") {
   auto [net, store, priority, m0] = testNet();
   auto before_model_creation = clock_s::now();
-  auto m = Model(net, store, priority, m0);
+  Model m(net, store, priority, m0);
   auto after_model_creation = clock_s::now();
   REQUIRE(before_model_creation <= m.timestamp);
   REQUIRE(after_model_creation > m.timestamp);
@@ -164,7 +164,7 @@ TEST_CASE(
   }
   // with this initial marking, all but transition e are possible.
   NetMarking m0 = {{"Pa", 1}};
-  auto m = Model(net, store, {}, m0);
+  Model m(net, store, {}, m0);
   auto fireable_transitions = m.getFireableTransitions();
   auto find = [&](auto a) {
     return std::find(fireable_transitions.begin(), fireable_transitions.end(),
