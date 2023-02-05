@@ -95,6 +95,7 @@ TEST_CASE("Run transition manually.") {
                             stp);
 
   REQUIRE(app.tryRunTransition("t0"));
+  app.exitEarly();
   stp.stop();
 }
 
@@ -105,6 +106,7 @@ TEST_CASE("Run transition that does not exist manually.") {
                             stp);
 
   REQUIRE(!app.tryRunTransition("t0dgdsg"));
+  app.exitEarly();
   stp.stop();
 }
 
@@ -119,5 +121,6 @@ TEST_CASE("Run transition for which the preconditions are not met manually.") {
     REQUIRE(t != "t1");
   }
   REQUIRE(!app.tryRunTransition("t1"));
+  app.exitEarly();
   stp.stop();
 }
