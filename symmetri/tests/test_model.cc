@@ -187,7 +187,7 @@ TEST_CASE("Step through transitions") {
   std::map<std::string, size_t> hitmap;
 
   Store store;
-  for (auto [t, dm] : net) {
+  for (const auto& [t, dm] : net) {
     hitmap.insert({t, 0});
     store.insert({t, [&, t = t] { hitmap[t] += 1; }});
   }
@@ -206,6 +206,7 @@ TEST_CASE("Step through transitions") {
     // one token should be gone.
     REQUIRE(token_count_before - m.getMarking().size() - 1 == 0);
   }
+  std::this_thread::sleep_for(std::chrono::milliseconds(22));
   stp.stop();
   // validate we only ran transition b
   REQUIRE(hitmap["a"] == 0);

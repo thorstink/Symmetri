@@ -53,12 +53,11 @@ TEST_CASE("Create a using the net constructor with end condition.") {
 }
 
 TEST_CASE("Create a using pnml constructor.") {
-  StoppablePool stp(1);
-
   const std::string pnml_file = std::filesystem::current_path().append(
       "../../../symmetri/tests/assets/PT1.pnml");
 
   {
+    StoppablePool stp(1);
     // This store is not appropriate for this net,
     Store store = {{"wrong_id", &t0}};
     std::vector<std::pair<symmetri::Transition, int8_t>> priority;
@@ -69,9 +68,11 @@ TEST_CASE("Create a using pnml constructor.") {
     // but the result is an error.
     REQUIRE(res == TransitionState::Error);
     REQUIRE(ev.empty());
+    stp.stop();
   }
 
   {
+    StoppablePool stp(1);
     // This store is appropriate for this net,
     Store store = symmetri::Store{{"T0", &t0}};
     std::vector<std::pair<symmetri::Transition, int8_t>> priority;
@@ -83,8 +84,8 @@ TEST_CASE("Create a using pnml constructor.") {
     // and the result is properly completed.
     REQUIRE(res == TransitionState::Completed);
     REQUIRE(!ev.empty());
+    stp.stop();
   }
-  stp.stop();
 }
 
 TEST_CASE("Run transition manually.") {
