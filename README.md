@@ -1,14 +1,30 @@
 # Symmetri
 
-A C++ library that parses petri nets and *executes* them by tying *functions* to *transitions*.
+A C++-17 library that takes a Petri net and turns it into a program. This is done by mapping *[transitions](https://en.wikipedia.org/wiki/Petri_net#Petri_net_basics)* to *functions* and calling the functions for which their transition counterpart is *[firable](https://en.wikipedia.org/wiki/Petri_net#Execution_semantics)*. Petri nets are a graphical language that naturally can model concurrent and distributed systems [wikipedia](https://en.wikipedia.org/wiki/Petri_net#Petri_net_basics).
+
+```mermaid
+    graph LR
+    classDef inactive fill:#ffc0;
+    classDef active fill:#0050cb;
+    classDef fake_tok_place color:#ffc0;
+    classDef place color:#00c0cb;
+
+    B-->D[foo]:::inactive;
+    Z(("#9679;")):::place-->A
+    A:::inactive-->B(("#9679;" )):::fake_tok_place;
+    A[bar]:::active-->C(("#9679;")):::fake_tok_place;
+    C-->D;
+    D-->Z
+    D-->B;
+```
 
 ```cpp
 using namespace symmetri;
-StateNet net = {{"t0", {{"Pa", "Pb"}, {"Pc"}}},
-                {"t1", {{"Pc", "Pc"}, {"Pb", "Pb", "Pd"}}}};
-Store store = {{"t0", &foo}, {"t1", &bar}};
+StateNet net = {{"foo", {{"B", "C"}, {"Z"}}},
+                {"bar", {{"Z"}, {"B", "C"}}}};
+Store store = {{"foo", &foo}, {"bar", &bar}};
 std::vector<std::pair<symmetri::Transition, int8_t>> priority = {};
-NetMarking m0 = {{"Pa", 4}, {"Pb", 2}, {"Pc", 0}, {"Pd", 0}};
+NetMarking m0 = {{"Z", 1}, {"B", 0}, {"C", 0}};
 StoppablePool stp(1);
 symmetri::Application app(net, m0, {}, store, priority,
                           "test_net_without_end", stp);
