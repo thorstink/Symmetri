@@ -257,7 +257,7 @@ void Model::runTransitions(
 }
 
 std::pair<std::vector<Transition>, std::vector<Place>> Model::getState() const {
-  return {getMarking(), getActiveTransitions()};
+  return {getActiveTransitions(), getMarking()};
 }
 
 std::vector<Place> Model::getMarking() const {
