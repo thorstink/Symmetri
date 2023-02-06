@@ -11,7 +11,7 @@ jobs:
     - name: apt dependencies
       run: |
         sudo apt update
-        sudo apt install -y build-essential lcov gcovr ninja-build libeigen3-dev git libtool pkg-config libspdlog-dev
+        sudo apt install -y ninja-build libeigen3-dev libspdlog-dev
 
     - name: catch2
       run: |
@@ -25,11 +25,19 @@ jobs:
         git submodule update --init --recursive
         mkdir build
         cd build
-        bash -c 'cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON -DCODE_COVERAGE=ON ..'
+        bash -c 'cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=ON ..'
         ninja
 
-    - name: "test and coverage"
+    - name: "tests with ASAN"
       run: |
         cd build
+        bash -c 'cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DASAN_BUILD=ON -DTSAN_BUILD=OFF ..'
+        ninja
         ctest -VV
-        # gcovr -r ../ .
+
+    - name: "tests with TSAN"
+      run: |
+        cd build
+        bash -c 'cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DASAN_BUILD=OFF -DTSAN_BUILD=ON ..'
+        ninja
+        ctest -VV

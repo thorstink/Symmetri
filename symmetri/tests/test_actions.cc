@@ -8,8 +8,8 @@ TEST_CASE("Run the executor") {
   // Create a simple stoppable threadpool with 1 thread.
   StoppablePool stp(1);
   // launch a task
-  std::atomic<bool> ran = false;
-  stp.enqueue([&]() { ran = true; });
+  std::atomic<bool> ran(false);
+  stp.enqueue([&]() { ran.store(true); });
   // wait a little before shutting the thread pool down.
   std::this_thread::sleep_for(std::chrono::milliseconds(5));
   REQUIRE(ran);
@@ -22,27 +22,29 @@ TEST_CASE("Run the executor parallel tasks") {
   StoppablePool stp(2);
 
   // launch a task
-  std::atomic<bool> ran1 = false;
-  std::atomic<bool> ran2 = false;
+  std::atomic<bool> ran1(false);
+  std::atomic<bool> ran2(false);
+  std::thread::id thread_id1, thread_id2;
+  const std::thread::id main_thread(std::this_thread::get_id());
 
   stp.enqueue([&]() {
     std::this_thread::sleep_for(std::chrono::milliseconds(3));
-    ran1 = true;
+    thread_id1 = std::this_thread::get_id();
+    ran1.store(true);
   });
   stp.enqueue([&]() {
     std::this_thread::sleep_for(std::chrono::milliseconds(3));
-    ran2 = true;
+    thread_id2 = std::this_thread::get_id();
+    ran2.store(true);
   });
 
-  const auto now = std::chrono::steady_clock::now();
-  // 4 ms is not enough to run two 3 ms tasks.. unless of course it does it in
-  // parallel!
-  while (std::chrono::steady_clock::now() - now <
-         std::chrono::milliseconds(4)) {  // loop
+  // block until both tasks finished
+  while (!ran1.load() || !ran2.load()) {
   }
-  REQUIRE((ran1 && ran2));
-  REQUIRE(
-      (std::chrono::steady_clock::now() < now + std::chrono::milliseconds(6)));
+  REQUIRE((ran1.load() && ran2.load()));
+  REQUIRE_FALSE(thread_id1 == thread_id2);
+  REQUIRE_FALSE(main_thread == thread_id2);
+  REQUIRE_FALSE(thread_id1 == main_thread);
   // stop the pool.
   stp.stop();
 }

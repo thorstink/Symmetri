@@ -53,12 +53,11 @@ TEST_CASE("Create a using the net constructor with end condition.") {
 }
 
 TEST_CASE("Create a using pnml constructor.") {
-  StoppablePool stp(1);
-
   const std::string pnml_file = std::filesystem::current_path().append(
       "../../../symmetri/tests/assets/PT1.pnml");
 
   {
+    StoppablePool stp(1);
     // This store is not appropriate for this net,
     Store store = {{"wrong_id", &t0}};
     std::vector<std::pair<symmetri::Transition, int8_t>> priority;
@@ -69,9 +68,11 @@ TEST_CASE("Create a using pnml constructor.") {
     // but the result is an error.
     REQUIRE(res == TransitionState::Error);
     REQUIRE(ev.empty());
+    stp.stop();
   }
 
   {
+    StoppablePool stp(1);
     // This store is appropriate for this net,
     Store store = symmetri::Store{{"T0", &t0}};
     std::vector<std::pair<symmetri::Transition, int8_t>> priority;
@@ -83,6 +84,43 @@ TEST_CASE("Create a using pnml constructor.") {
     // and the result is properly completed.
     REQUIRE(res == TransitionState::Completed);
     REQUIRE(!ev.empty());
+    stp.stop();
   }
+}
+
+TEST_CASE("Run transition manually.") {
+  auto [net, store, priority, m0] = testNet();
+  StoppablePool stp(1);
+  symmetri::Application app(net, m0, {}, store, priority, "single_run_net1",
+                            stp);
+
+  REQUIRE(app.tryRunTransition("t0"));
+  app.exitEarly();
+  stp.stop();
+}
+
+TEST_CASE("Run transition that does not exist manually.") {
+  auto [net, store, priority, m0] = testNet();
+  StoppablePool stp(1);
+  symmetri::Application app(net, m0, {}, store, priority, "single_run_net2",
+                            stp);
+
+  REQUIRE(!app.tryRunTransition("t0dgdsg"));
+  app.exitEarly();
+  stp.stop();
+}
+
+TEST_CASE("Run transition for which the preconditions are not met manually.") {
+  auto [net, store, priority, m0] = testNet();
+  StoppablePool stp(1);
+  symmetri::Application app(net, m0, {}, store, priority, "single_run_net3",
+                            stp);
+
+  auto l = app.getFireableTransitions();
+  for (auto t : l) {
+    REQUIRE(t != "t1");
+  }
+  REQUIRE(!app.tryRunTransition("t1"));
+  app.exitEarly();
   stp.stop();
 }

@@ -46,15 +46,12 @@ int main(int, char *argv[]) {
   symmetri::Application bignet(net, final_marking, store, priority, "pluto",
                                pool);
 
-  std::atomic<bool> running(true);
-
   auto [el, result] = bignet();  // infinite loop
-  running.store(false);
   for (const auto &[caseid, t, s, c, tid] : el) {
     spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),
                  c.time_since_epoch().count());
   }
-
+  pool.stop();
   spdlog::info("Result of this net: {0}", printState(result));
 
   return result == symmetri::TransitionState::Completed ? 0 : -1;

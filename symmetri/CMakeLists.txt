@@ -87,12 +87,6 @@ install(
   NAMESPACE ${PROJECT_NAME}::
 )
 
-set(ui_files
-  ${CMAKE_CURRENT_SOURCE_DIR}/web
-)
-
-install(DIRECTORY ${ui_files} DESTINATION share)
-
 if(BUILD_TESTING)
   add_subdirectory(tests)
 endif()
