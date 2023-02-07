@@ -1,6 +1,10 @@
 # Symmetri
 
-A C++-17 library that takes a Petri net and turns it into a program. This is done by mapping *[transitions](https://en.wikipedia.org/wiki/Petri_net#Petri_net_basics)* to *functions* and calling the functions for which their transition counterpart is *[fireable](https://en.wikipedia.org/wiki/Petri_net#Execution_semantics)*. Petri nets are a graphical language that naturally can model concurrent and distributed systems [wikipedia](https://en.wikipedia.org/wiki/Petri_net#Petri_net_basics).
+A C++-17 library that takes a Petri net and turns it into a program. This is done by mapping *[transitions](https://en.wikipedia.org/wiki/Petri_net#Petri_net_basics)* to *functions* and calling the functions for which their transition counterpart is *[fireable](https://en.wikipedia.org/wiki/Petri_net#Execution_semantics)*. Petri nets are a graphical language that naturally can model concurrent and distributed systems ([*wikipedia*](https://en.wikipedia.org/wiki/Petri_net#Petri_net_basics)).
+
+## Principle
+
+The graph below represents a Petri net. The transitions `bar` is fireable, and if it would fire it would consume the *token* ("#9679;")
 
 ```mermaid
     graph LR
@@ -11,8 +15,8 @@ A C++-17 library that takes a Petri net and turns it into a program. This is don
 
     B-->D[foo]:::inactive;
     Z(("#9679;")):::place-->A
-    A:::inactive-->B(("#9679;" )):::fake_tok_place;
-    A[bar]:::active-->C(("#9679;")):::fake_tok_place;
+    A[bar]:::active-->B(("#9679;" )):::fake_tok_place;
+    A-->C(("#9679;")):::fake_tok_place;
     C-->D;
     D-->Z
     D-->B;
@@ -20,7 +24,7 @@ A C++-17 library that takes a Petri net and turns it into a program. This is don
 
 ```cpp
 using namespace symmetri;
-StateNet net = {{"foo", {{"B", "C"}, {"Z"}}},
+StateNet net = {{"foo", {{"B", "C"}, {"Z", "B"}}},
                 {"bar", {{"Z"}, {"B", "C"}}}};
 Store store = {{"foo", &foo}, {"bar", &bar}};
 std::vector<std::pair<symmetri::Transition, int8_t>> priority = {};
