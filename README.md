@@ -4,7 +4,7 @@ A C++-17 library that takes a Petri net and turns it into a program. This is don
 
 ## Principle
 
-The graph below represents a Petri net. The transitions `bar` is fireable, and if it would fire it would consume the *token* ("#9679;")
+The graph below represents a Petri net. The transitions `bar` is fireable, and if it would fire it would consume the *token* (<span style="color:#00c0cb;">&#9679;</span>) and produce two new tokens in the output places. These new tokens would enable `foo` and the cycle would continue for ever, while accumelating tokens in the most left place. 
 
 ```mermaid
     graph LR
@@ -22,6 +22,8 @@ The graph below represents a Petri net. The transitions `bar` is fireable, and i
     D-->B;
 ```
 
+This Petri net can be described using Symmetri:
+
 ```cpp
 using namespace symmetri;
 StateNet net = {{"foo", {{"B", "C"}, {"Z", "B"}}},
@@ -32,9 +34,16 @@ NetMarking m0 = {{"Z", 1}, {"B", 0}, {"C", 0}};
 StoppablePool stp(1);
 symmetri::Application app(net, m0, {}, store, priority,
                           "test_net_without_end", stp);
-auto [ev, res] = app(); // run untill done.
+auto [eventlog, res] = app(); // run untill done.
 stp.stop();
 ```
+
+- `net` is a multiset description of a Petri net
+- `store` is a lookup table that links the *symbolic* transitions to actual functions
+- `priority` can be used if some transitions are more equal than others ([Wiki on prioritized Petri nets](https://en.wikipedia.org/wiki/Prioritised_Petri_net))
+- `m0` is the initial token distribution (also known as _initial marking_)
+- `stp` is a simple lockfree-queue based threadpool
+- `app` is all the ingredients put together - creating something that can be executed! it outputs a result (`res`) and a log (`eventlog`)
 
 ## Build
 
