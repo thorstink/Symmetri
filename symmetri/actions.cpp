@@ -35,7 +35,7 @@ void StoppablePool::enqueue(PolyAction &&p) const {
   actions.enqueue(std::forward<PolyAction>(p));
 }
 
-void StoppablePool::stop() {
+void StoppablePool::stop() const {
   stop_flag.store(true, std::memory_order_seq_cst);
   for (size_t i = 0; i < pool.size(); ++i) {
     actions.enqueue([] {});

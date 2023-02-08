@@ -9,7 +9,8 @@ int main(int, char *argv[]) {
   auto pnml1 = std::string(argv[1]);
   const auto &[net, m0] = readPetriNets({pnml1});
   bool bolus = false;
-  symmetri::StoppablePool pool(16);
+  auto pool = symmetri::createStoppablePool(16);
+
   symmetri::Store store;
   for (const auto &[t, io] : net) {
     if (bolus) {

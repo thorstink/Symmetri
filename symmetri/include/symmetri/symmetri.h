@@ -61,20 +61,23 @@ class Application {
       const symmetri::StateNet &net, const symmetri::NetMarking &m0,
       const symmetri::NetMarking &final_marking, const Store &store,
       const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
-      const std::string &case_id, const symmetri::StoppablePool &stp);
+      const std::string &case_id,
+      std::shared_ptr<const symmetri::StoppablePool> stp);
 
  public:
   Application(
       const std::set<std::string> &path_to_petri,
       const symmetri::NetMarking &final_marking, const Store &store,
       const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
-      const std::string &case_id, const symmetri::StoppablePool &stp);
+      const std::string &case_id,
+      std::shared_ptr<const symmetri::StoppablePool> stp);
 
   Application(
       const symmetri::StateNet &net, const symmetri::NetMarking &m0,
       const symmetri::NetMarking &final_marking, const Store &store,
       const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
-      const std::string &case_id, const symmetri::StoppablePool &stp);
+      const std::string &case_id,
+      std::shared_ptr<const symmetri::StoppablePool> stp);
   ~Application();
   TransitionResult operator()() const noexcept;
   std::function<void()> registerTransitionCallback(

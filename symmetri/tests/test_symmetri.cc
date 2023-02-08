@@ -23,13 +23,13 @@ testNet() {
 
 TEST_CASE("Create a using the net constructor without end condition.") {
   auto [net, store, priority, m0] = testNet();
-  StoppablePool stp(1);
+  auto stp = createStoppablePool(1);
 
   symmetri::Application app(net, m0, {}, store, priority,
                             "test_net_without_end", stp);
   // we can run the net
   auto [ev, res] = app();
-  stp.stop();
+  stp->stop();
 
   // because there's no final marking, but the net is finite, it deadlocks.
   REQUIRE(res == TransitionState::Deadlock);
@@ -37,7 +37,7 @@ TEST_CASE("Create a using the net constructor without end condition.") {
 }
 
 TEST_CASE("Create a using the net constructor with end condition.") {
-  StoppablePool stp(1);
+  auto stp = createStoppablePool(1);
 
   NetMarking final_marking({{"Pa", 0}, {"Pb", 2}, {"Pc", 0}, {"Pd", 2}});
   auto [net, store, priority, m0] = testNet();
@@ -45,7 +45,7 @@ TEST_CASE("Create a using the net constructor with end condition.") {
                             "test_net_with_end", stp);
   // we can run the net
   auto [ev, res] = app();
-  stp.stop();
+  stp->stop();
 
   // now there is an end conition.
   REQUIRE(res == TransitionState::Completed);
@@ -57,7 +57,7 @@ TEST_CASE("Create a using pnml constructor.") {
       "../../../symmetri/tests/assets/PT1.pnml");
 
   {
-    StoppablePool stp(1);
+    auto stp = createStoppablePool(1);
     // This store is not appropriate for this net,
     Store store = {{"wrong_id", &t0}};
     std::vector<std::pair<symmetri::Transition, int8_t>> priority;
@@ -68,11 +68,11 @@ TEST_CASE("Create a using pnml constructor.") {
     // but the result is an error.
     REQUIRE(res == TransitionState::Error);
     REQUIRE(ev.empty());
-    stp.stop();
+    stp->stop();
   }
 
   {
-    StoppablePool stp(1);
+    auto stp = createStoppablePool(1);
     // This store is appropriate for this net,
     Store store = symmetri::Store{{"T0", &t0}};
     std::vector<std::pair<symmetri::Transition, int8_t>> priority;
@@ -84,35 +84,35 @@ TEST_CASE("Create a using pnml constructor.") {
     // and the result is properly completed.
     REQUIRE(res == TransitionState::Completed);
     REQUIRE(!ev.empty());
-    stp.stop();
+    stp->stop();
   }
 }
 
 TEST_CASE("Run transition manually.") {
   auto [net, store, priority, m0] = testNet();
-  StoppablePool stp(1);
+  auto stp = createStoppablePool(1);
   symmetri::Application app(net, m0, {}, store, priority, "single_run_net1",
                             stp);
 
   REQUIRE(app.tryRunTransition("t0"));
   app.exitEarly();
-  stp.stop();
+  stp->stop();
 }
 
 TEST_CASE("Run transition that does not exist manually.") {
   auto [net, store, priority, m0] = testNet();
-  StoppablePool stp(1);
+  auto stp = createStoppablePool(1);
   symmetri::Application app(net, m0, {}, store, priority, "single_run_net2",
                             stp);
 
   REQUIRE(!app.tryRunTransition("t0dgdsg"));
   app.exitEarly();
-  stp.stop();
+  stp->stop();
 }
 
 TEST_CASE("Run transition for which the preconditions are not met manually.") {
   auto [net, store, priority, m0] = testNet();
-  StoppablePool stp(1);
+  auto stp = createStoppablePool(1);
   symmetri::Application app(net, m0, {}, store, priority, "single_run_net3",
                             stp);
 
@@ -122,5 +122,5 @@ TEST_CASE("Run transition for which the preconditions are not met manually.") {
   }
   REQUIRE(!app.tryRunTransition("t1"));
   app.exitEarly();
-  stp.stop();
+  stp->stop();
 }

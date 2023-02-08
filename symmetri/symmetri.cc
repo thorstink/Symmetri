@@ -65,12 +65,12 @@ struct Impl {
   Model m;
   const symmetri::NetMarking m0_;
   BlockingConcurrentQueue<Reducer> reducers;
-  const symmetri::StoppablePool &stp;
+  std::shared_ptr<const symmetri::StoppablePool> stp;
   const std::string case_id;
   std::atomic<bool> active;
   symmetri::NetMarking final_marking;
   Impl(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
-       const symmetri::StoppablePool &stp,
+       std::shared_ptr<const symmetri::StoppablePool> stp,
        const symmetri::NetMarking &final_marking, const Store &store,
        const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
        const std::string &case_id)
@@ -108,7 +108,7 @@ struct Impl {
 
     Reducer f;
     // start!
-    m.runTransitions(reducers, stp, true, case_id);
+    m.runTransitions(reducers, *stp, true, case_id);
     // get a reducer. Immediately, or wait a bit
     while (m.active_transitions_n.size() > 0 &&
            !EARLY_EXIT.load(std::memory_order_relaxed) &&
@@ -121,7 +121,7 @@ struct Impl {
       if (MarkingReached(m.tokens_n, final_tokens)) {
         break;
       }
-      m.runTransitions(reducers, stp, true, case_id);
+      m.runTransitions(reducers, *stp, true, case_id);
     }
     active.store(false);
 
@@ -147,7 +147,8 @@ Application::Application(
     const std::set<std::string> &files,
     const symmetri::NetMarking &final_marking, const Store &store,
     const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
-    const std::string &case_id, const symmetri::StoppablePool &stp) {
+    const std::string &case_id,
+    std::shared_ptr<const symmetri::StoppablePool> stp) {
   const auto &[net, m0] = readPetriNets(files);
   createApplication(net, m0, final_marking, store, priority, case_id, stp);
 }
@@ -156,7 +157,8 @@ Application::Application(
     const symmetri::StateNet &net, const symmetri::NetMarking &m0,
     const symmetri::NetMarking &final_marking, const Store &store,
     const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
-    const std::string &case_id, const symmetri::StoppablePool &stp) {
+    const std::string &case_id,
+    std::shared_ptr<const symmetri::StoppablePool> stp) {
   createApplication(net, m0, final_marking, store, priority, case_id, stp);
 }
 
@@ -164,7 +166,8 @@ void Application::createApplication(
     const symmetri::StateNet &net, const symmetri::NetMarking &m0,
     const symmetri::NetMarking &final_marking, const Store &store,
     const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
-    const std::string &case_id, const symmetri::StoppablePool &stp) {
+    const std::string &case_id,
+    std::shared_ptr<const symmetri::StoppablePool> stp) {
   signal(SIGINT, exit_handler);
   std::stringstream s;
   s << "[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] [" << case_id << "] %v";
@@ -200,7 +203,7 @@ bool Application::tryRunTransition(const std::string &t) const noexcept {
   while (impl->reducers.try_dequeue(f)) {
     impl->m = f(std::move(impl->m));
   }
-  return impl->m.runTransition(t, impl->reducers, impl->stp, "manual");
+  return impl->m.runTransition(t, impl->reducers, *impl->stp, "manual");
 };
 
 TransitionResult Application::operator()() const noexcept {

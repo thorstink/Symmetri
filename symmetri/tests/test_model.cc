@@ -62,10 +62,10 @@ TEST_CASE("Run one transition iteration in a petri net") {
 
   Model m(net, store, priority, m0);
   BlockingConcurrentQueue<Reducer> reducers(4);
-  StoppablePool stp(1);
+  auto stp = createStoppablePool(1);
 
   // t0 is enabled.
-  m.runTransitions(reducers, stp, true, "");
+  m.runTransitions(reducers, *stp, true, "");
   // t0 is dispatched but it's reducer has not yet run, so pre-conditions are
   // processed but post are not:
   REQUIRE(m.getActiveTransitions() ==
@@ -92,7 +92,7 @@ TEST_CASE("Run one transition iteration in a petri net") {
   std::cout << std::endl;
   REQUIRE(MarkingEquality(
       m.getMarking(), std::vector<symmetri::Place>{"Pa", "Pa", "Pc", "Pc"}));
-  stp.stop();
+  stp->stop();
 }
 
 TEST_CASE("Run until net dies") {
@@ -102,7 +102,8 @@ TEST_CASE("Run until net dies") {
   Model m(net, store, priority, m0);
 
   BlockingConcurrentQueue<Reducer> reducers(4);
-  StoppablePool stp(1);
+  auto stp = createStoppablePool(1);
+
   Reducer r;
   PolyAction a([] {});
   // we need to enqueue one 'no-operation' to start the live net.
@@ -110,7 +111,7 @@ TEST_CASE("Run until net dies") {
   do {
     if (reducers.try_dequeue(r)) {
       m = r(std::move(m));
-      m.runTransitions(reducers, stp, true);
+      m.runTransitions(reducers, *stp, true);
     }
   } while (m.active_transitions_n.size() > 0);
 
@@ -120,7 +121,7 @@ TEST_CASE("Run until net dies") {
 
   REQUIRE(T0_COUNTER.load() == 4);
   REQUIRE(T1_COUNTER.load() == 2);
-  stp.stop();
+  stp->stop();
 }
 
 TEST_CASE("Run until net dies with nullptr") {
@@ -131,7 +132,8 @@ TEST_CASE("Run until net dies with nullptr") {
   Model m(net, store, priority, m0);
 
   BlockingConcurrentQueue<Reducer> reducers(4);
-  StoppablePool stp(1);
+  auto stp = createStoppablePool(1);
+
   Reducer r;
   PolyAction a([] {});
   // we need to enqueue one 'no-operation' to start the live net.
@@ -139,14 +141,14 @@ TEST_CASE("Run until net dies with nullptr") {
   do {
     if (reducers.try_dequeue(r)) {
       m = r(std::move(m));
-      m.runTransitions(reducers, stp, true);
+      m.runTransitions(reducers, *stp, true);
     }
   } while (m.active_transitions_n.size() > 0);
 
   // For this specific net we expect:
   REQUIRE(MarkingEquality(
       m.getMarking(), std::vector<symmetri::Place>{"Pb", "Pb", "Pd", "Pd"}));
-  stp.stop();
+  stp->stop();
 }
 
 TEST_CASE(
@@ -192,8 +194,7 @@ TEST_CASE("Step through transitions") {
     store.insert({t, [&, t = t] { hitmap[t] += 1; }});
   }
   BlockingConcurrentQueue<Reducer> reducers(1);
-  StoppablePool stp(1);
-
+  auto stp = createStoppablePool(1);
   // with this initial marking, all but transition e are possible.
   NetMarking m0 = {{"Pa", 4}};
   Model m(net, store, {}, m0);
@@ -202,12 +203,12 @@ TEST_CASE("Step through transitions") {
     // expected tokens left
     int token_count_before = m.getMarking().size();
     // run only transition b
-    m.runTransition("b", reducers, stp);
+    m.runTransition("b", reducers, *stp);
     // one token should be gone.
     REQUIRE(token_count_before - m.getMarking().size() - 1 == 0);
   }
   std::this_thread::sleep_for(std::chrono::milliseconds(22));
-  stp.stop();
+  stp->stop();
   // validate we only ran transition b
   REQUIRE(hitmap["a"] == 0);
   REQUIRE(hitmap["b"] == 4);

@@ -17,10 +17,10 @@ TEST_CASE(
     Store store = {{"t0", [] {}}, {"t1", [] {}}};
 
     NetMarking m0 = {{"Pa", 1}, {"Pb", 0}, {"Pc", 0}};
-    StoppablePool stp(1);
+    auto stp = createStoppablePool(1);
 
     auto m = Model(net, store, priority, m0);
-    m.runTransitions(reducers, stp, true);
+    m.runTransitions(reducers, *stp, true);
     Reducer r;
 
     REQUIRE(reducers.wait_dequeue_timed(r, std::chrono::seconds(1)));
@@ -49,10 +49,10 @@ TEST_CASE("Using nullptr does not queue reducers.") {
     Store store = {{"t0", nullptr}, {"t1", nullptr}};
 
     NetMarking m0 = {{"Pa", 1}, {"Pb", 0}, {"Pc", 0}};
-    StoppablePool stp(1);
+    auto stp = createStoppablePool(1);
 
     auto m = Model(net, store, priority, m0);
-    m.runTransitions(reducers, stp, true);
+    m.runTransitions(reducers, *stp, true);
     // no reducers needed, as simple transitions are handled within run all.
     auto prio_t0 = std::find_if(priority.begin(), priority.end(), [](auto e) {
                      return e.first == "t0";

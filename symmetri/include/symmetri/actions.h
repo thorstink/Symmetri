@@ -1,23 +1,37 @@
 #pragma once
 
+#include <atomic>
 #include <thread>
 #include <vector>
-#include <atomic>
+
 #include "symmetri/polyaction.h"
 
 namespace symmetri {
 
+class StoppablePool;
+
+std::shared_ptr<const StoppablePool> createStoppablePool(
+    unsigned int thread_count);
+
 class StoppablePool {
  private:
   void loop();
-  std::vector<std::thread> pool;
-  std::atomic<bool> stop_flag;
+  mutable std::vector<std::thread> pool;
+  mutable std::atomic<bool> stop_flag;
+  StoppablePool(const StoppablePool&) = delete;
+  StoppablePool& operator=(const StoppablePool&) = delete;
+  friend std::shared_ptr<const StoppablePool> createStoppablePool(
+      unsigned int thread_count) {
+    return std::shared_ptr<const StoppablePool>(
+        new StoppablePool(thread_count));
+  }
+
+  StoppablePool(unsigned int thread_count);
 
  public:
-  StoppablePool(unsigned int thread_count);
   ~StoppablePool();
   void enqueue(PolyAction&& p) const;
-  void stop();
+  void stop() const;
 };
 
 }  // namespace symmetri

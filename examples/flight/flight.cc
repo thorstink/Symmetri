@@ -29,7 +29,7 @@ int main(int, char *argv[]) {
   auto pnml2 = std::string(argv[2]);
   auto pnml3 = std::string(argv[3]);
 
-  symmetri::StoppablePool pool(4);
+  auto pool = symmetri::createStoppablePool(4);
 
   symmetri::NetMarking final_marking2 = {{"P2", 1}};
   symmetri::Store s2 = {{"T0", helloT("T01")}, {"T1", helloT("T02")}};
@@ -51,7 +51,7 @@ int main(int, char *argv[]) {
     spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),
                  c.time_since_epoch().count());
   }
-  pool.stop();
+  pool->stop();
   spdlog::info("Result of this net: {0}", printState(result));
 
   return result == symmetri::TransitionState::Completed ? 0 : -1;

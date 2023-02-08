@@ -42,9 +42,9 @@ TEST_CASE("Firing the same transition before it can complete should work") {
   Model m(net, store, priority, m0);
 
   moodycamel::BlockingConcurrentQueue<Reducer> reducers(4);
-  StoppablePool stp(2);
+  auto stp = createStoppablePool(2);
   REQUIRE(m.active_transitions_n.empty());
-  m.runTransitions(reducers, stp, true);
+  m.runTransitions(reducers, *stp, true);
   REQUIRE(m.getMarking().empty());
   CHECK(m.getActiveTransitions() ==
         std::vector<symmetri::Transition>{"t", "t"});
