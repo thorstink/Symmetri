@@ -61,8 +61,8 @@ TEST_CASE("Run one transition iteration in a petri net") {
   auto [net, store, priority, m0] = testNet();
 
   Model m(net, store, priority, m0);
-  BlockingConcurrentQueue<Reducer> reducers(4);
   auto stp = createStoppablePool(1);
+  auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
 
   // t0 is enabled.
   m.runTransitions(reducers, *stp, true, "");
@@ -74,8 +74,8 @@ TEST_CASE("Run one transition iteration in a petri net") {
 
   // now there should be two reducers;
   Reducer r1, r2;
-  REQUIRE(reducers.wait_dequeue_timed(r1, std::chrono::seconds(1)));
-  REQUIRE(reducers.wait_dequeue_timed(r2, std::chrono::seconds(1)));
+  REQUIRE(reducers->wait_dequeue_timed(r1, std::chrono::seconds(1)));
+  REQUIRE(reducers->wait_dequeue_timed(r2, std::chrono::seconds(1)));
   // verify that t0 has actually ran twice.
   REQUIRE(T0_COUNTER == 2);
   // the marking should still be the same.
@@ -92,7 +92,7 @@ TEST_CASE("Run one transition iteration in a petri net") {
   std::cout << std::endl;
   REQUIRE(MarkingEquality(
       m.getMarking(), std::vector<symmetri::Place>{"Pa", "Pa", "Pc", "Pc"}));
-  stp->stop();
+  ;
 }
 
 TEST_CASE("Run until net dies") {
@@ -101,15 +101,16 @@ TEST_CASE("Run until net dies") {
   auto [net, store, priority, m0] = testNet();
   Model m(net, store, priority, m0);
 
-  BlockingConcurrentQueue<Reducer> reducers(4);
+  auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
+
   auto stp = createStoppablePool(1);
 
   Reducer r;
   PolyAction a([] {});
   // we need to enqueue one 'no-operation' to start the live net.
-  reducers.enqueue([](Model&& m) -> Model& { return m; });
+  reducers->enqueue([](Model&& m) -> Model& { return m; });
   do {
-    if (reducers.try_dequeue(r)) {
+    if (reducers->try_dequeue(r)) {
       m = r(std::move(m));
       m.runTransitions(reducers, *stp, true);
     }
@@ -121,7 +122,7 @@ TEST_CASE("Run until net dies") {
 
   REQUIRE(T0_COUNTER.load() == 4);
   REQUIRE(T1_COUNTER.load() == 2);
-  stp->stop();
+  ;
 }
 
 TEST_CASE("Run until net dies with nullptr") {
@@ -131,15 +132,15 @@ TEST_CASE("Run until net dies with nullptr") {
   store = {{"t0", nullptr}, {"t1", nullptr}};
   Model m(net, store, priority, m0);
 
-  BlockingConcurrentQueue<Reducer> reducers(4);
+  auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
   auto stp = createStoppablePool(1);
 
   Reducer r;
   PolyAction a([] {});
   // we need to enqueue one 'no-operation' to start the live net.
-  reducers.enqueue([](Model&& m) -> Model& { return m; });
+  reducers->enqueue([](Model&& m) -> Model& { return m; });
   do {
-    if (reducers.try_dequeue(r)) {
+    if (reducers->try_dequeue(r)) {
       m = r(std::move(m));
       m.runTransitions(reducers, *stp, true);
     }
@@ -148,7 +149,7 @@ TEST_CASE("Run until net dies with nullptr") {
   // For this specific net we expect:
   REQUIRE(MarkingEquality(
       m.getMarking(), std::vector<symmetri::Place>{"Pb", "Pb", "Pd", "Pd"}));
-  stp->stop();
+  ;
 }
 
 TEST_CASE(
@@ -180,39 +181,48 @@ TEST_CASE(
 }
 
 TEST_CASE("Step through transitions") {
-  StateNet net = {{"a", {{"Pa"}, {}}},
-                  {"b", {{"Pa"}, {}}},
-                  {"c", {{"Pa"}, {}}},
-                  {"d", {{"Pa"}, {}}},
-                  {"e", {{"Pb"}, {}}}};
-
   std::map<std::string, size_t> hitmap;
-
-  Store store;
-  for (const auto& [t, dm] : net) {
-    hitmap.insert({t, 0});
-    store.insert({t, [&, t = t] { hitmap[t] += 1; }});
-  }
-  BlockingConcurrentQueue<Reducer> reducers(1);
-  auto stp = createStoppablePool(1);
-  // with this initial marking, all but transition e are possible.
-  NetMarking m0 = {{"Pa", 4}};
-  Model m(net, store, {}, m0);
-  for (size_t i = 0; m.getMarking().size() > 0; i++) {
-    auto fireable_transitions = m.getFireableTransitions();
-    // expected tokens left
-    int token_count_before = m.getMarking().size();
-    // run only transition b
+  {
+    StateNet net = {{"a", {{"Pa"}, {}}},
+                    {"b", {{"Pa"}, {}}},
+                    {"c", {{"Pa"}, {}}},
+                    {"d", {{"Pa"}, {}}},
+                    {"e", {{"Pb"}, {}}}};
+    Store store;
+    for (const auto& [t, dm] : net) {
+      hitmap.insert({t, 0});
+      store.insert({t, [&, t = t] { hitmap[t] += 1; }});
+    }
+    auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(500);
+    auto stp = createStoppablePool(1);
+    // with this initial marking, all but transition e are possible.
+    NetMarking m0 = {{"Pa", 4}};
+    Model m(net, store, {}, m0);
+    m.runTransition("e", reducers, *stp);
     m.runTransition("b", reducers, *stp);
-    // one token should be gone.
-    REQUIRE(token_count_before - m.getMarking().size() - 1 == 0);
+    m.runTransition("b", reducers, *stp);
+    m.runTransition("c", reducers, *stp);
+    m.runTransition("b", reducers, *stp);
+    // there are no reducers ran, so this doesn't update.
+    REQUIRE(m.getActiveTransitions().size() == 4);
+    // there should be no markers left.
+    REQUIRE(m.getMarking().size() == 0);
+    // there should be nothing left to fire
+    REQUIRE(m.getFireableTransitions().size() == 0);
+    int j = 0;
+    Reducer r;
+    while (j < 4 && reducers->wait_dequeue_timed(r, std::chrono::seconds(1))) {
+      j++;
+      m = r(std::move(m));
+    }
+    // reducers update, there should be active transitions left.
+    REQUIRE(m.getActiveTransitions().size() == 0);
   }
-  std::this_thread::sleep_for(std::chrono::milliseconds(22));
-  stp->stop();
-  // validate we only ran transition b
-  REQUIRE(hitmap["a"] == 0);
-  REQUIRE(hitmap["b"] == 4);
-  REQUIRE(hitmap["c"] == 0);
-  REQUIRE(hitmap["d"] == 0);
-  REQUIRE(hitmap["e"] == 0);
+
+  // validate we only ran transition 3 times b, 1 time c and none of the others.
+  REQUIRE(hitmap.at("a") == 0);
+  REQUIRE(hitmap.at("b") == 3);
+  REQUIRE(hitmap.at("c") == 1);
+  REQUIRE(hitmap.at("d") == 0);
+  REQUIRE(hitmap.at("e") == 0);
 }

@@ -29,7 +29,7 @@ TEST_CASE("Create a using the net constructor without end condition.") {
                             "test_net_without_end", stp);
   // we can run the net
   auto [ev, res] = app();
-  stp->stop();
+  ;
 
   // because there's no final marking, but the net is finite, it deadlocks.
   REQUIRE(res == TransitionState::Deadlock);
@@ -45,7 +45,7 @@ TEST_CASE("Create a using the net constructor with end condition.") {
                             "test_net_with_end", stp);
   // we can run the net
   auto [ev, res] = app();
-  stp->stop();
+  ;
 
   // now there is an end conition.
   REQUIRE(res == TransitionState::Completed);
@@ -68,7 +68,7 @@ TEST_CASE("Create a using pnml constructor.") {
     // but the result is an error.
     REQUIRE(res == TransitionState::Error);
     REQUIRE(ev.empty());
-    stp->stop();
+    ;
   }
 
   {
@@ -84,7 +84,7 @@ TEST_CASE("Create a using pnml constructor.") {
     // and the result is properly completed.
     REQUIRE(res == TransitionState::Completed);
     REQUIRE(!ev.empty());
-    stp->stop();
+    ;
   }
 }
 
@@ -96,7 +96,7 @@ TEST_CASE("Run transition manually.") {
 
   REQUIRE(app.tryRunTransition("t0"));
   app.exitEarly();
-  stp->stop();
+  ;
 }
 
 TEST_CASE("Run transition that does not exist manually.") {
@@ -107,7 +107,7 @@ TEST_CASE("Run transition that does not exist manually.") {
 
   REQUIRE(!app.tryRunTransition("t0dgdsg"));
   app.exitEarly();
-  stp->stop();
+  ;
 }
 
 TEST_CASE("Run transition for which the preconditions are not met manually.") {
@@ -122,5 +122,5 @@ TEST_CASE("Run transition for which the preconditions are not met manually.") {
   }
   REQUIRE(!app.tryRunTransition("t1"));
   app.exitEarly();
-  stp->stop();
+  ;
 }

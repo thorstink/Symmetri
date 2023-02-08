@@ -62,22 +62,22 @@ bool check(const Store &store, const symmetri::StateNet &net) noexcept {
   });
 }
 
-struct Impl {
+struct Petri {
   Model m;
   const symmetri::NetMarking m0_;
-  BlockingConcurrentQueue<Reducer> reducers;
+  std::shared_ptr<BlockingConcurrentQueue<Reducer>> reducers;
   std::shared_ptr<const symmetri::StoppablePool> stp;
   const std::string case_id;
   std::atomic<bool> active;
   symmetri::NetMarking final_marking;
-  Impl(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
-       std::shared_ptr<const symmetri::StoppablePool> stp,
-       const symmetri::NetMarking &final_marking, const Store &store,
-       const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
-       const std::string &case_id)
+  Petri(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
+        std::shared_ptr<const symmetri::StoppablePool> stp,
+        const symmetri::NetMarking &final_marking, const Store &store,
+        const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
+        const std::string &case_id)
       : m(net, store, priority, m0),
         m0_(m0),
-        reducers(256),
+        reducers(std::make_shared<BlockingConcurrentQueue<Reducer>>(256)),
         stp(stp),
         case_id(case_id),
         active(false),
@@ -88,7 +88,7 @@ struct Impl {
       if (!EARLY_EXIT.load()) {
         EARLY_EXIT.store(true);
       }
-      reducers.enqueue([](Model &&model) -> Model & { return model; });
+      reducers->enqueue([](Model &&model) -> Model & { return model; });
       cv.notify_all();
     };
   }
@@ -113,11 +113,11 @@ struct Impl {
     // get a reducer. Immediately, or wait a bit
     while (m.active_transitions_n.size() > 0 &&
            !EARLY_EXIT.load(std::memory_order_relaxed) &&
-           reducers.wait_dequeue_timed(f, -1) &&
+           reducers->wait_dequeue_timed(f, -1) &&
            !EARLY_EXIT.load(std::memory_order_relaxed)) {
       do {
         m = f(std::move(m));
-      } while (reducers.try_dequeue(f));
+      } while (reducers->try_dequeue(f));
       blockIfPaused(case_id);
       if (MarkingReached(m.tokens_n, final_tokens)) {
         break;
@@ -144,7 +144,7 @@ struct Impl {
   }
 };
 
-std::tuple<std::shared_ptr<Impl>, std::function<void(const std::string &)>>
+std::tuple<std::shared_ptr<Petri>, std::function<void(const std::string &)>>
 create(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
        const symmetri::NetMarking &final_marking, const Store &store,
        const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
@@ -155,14 +155,14 @@ create(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
   s << "[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] [" << case_id << "] %v";
   auto console = spdlog::stdout_color_mt(case_id);
   console->set_pattern(s.str());
-  auto impl = std::make_shared<Impl>(net, m0, stp, final_marking, store,
-                                     priority, case_id);
+  auto impl = std::make_shared<Petri>(net, m0, stp, final_marking, store,
+                                      priority, case_id);
   return {impl, [=](const std::string &t) {
             if (impl->active.load()) {
-              impl->reducers.enqueue([=](Model &&m) -> Model & {
+              impl->reducers->enqueue([=](Model &&m) -> Model & {
                 const auto t_index = toIndex(m.net.transition, t);
                 m.active_transitions_n.push_back(t_index);
-                impl->reducers.enqueue(createReducerForTransition(
+                impl->reducers->enqueue(createReducerForTransition(
                     t_index, m.net.store[t_index], impl->case_id));
                 return m;
               });
@@ -203,7 +203,7 @@ bool Application::tryRunTransition(const std::string &t) const noexcept {
     return false;
   }
   Reducer f;
-  while (impl->reducers.try_dequeue(f)) {
+  while (impl->reducers->try_dequeue(f)) {
     impl->m = f(std::move(impl->m));
   }
   return impl->m.runTransition(t, impl->reducers, *impl->stp, "manual");
@@ -229,7 +229,7 @@ symmetri::Eventlog Application::getEventLog() const noexcept {
   if (impl->active.load()) {
     std::promise<symmetri::Eventlog> el;
     std::future<symmetri::Eventlog> el_getter = el.get_future();
-    impl->reducers.enqueue([&](Model &&model) -> Model & {
+    impl->reducers->enqueue([&](Model &&model) -> Model & {
       el.set_value(model.event_log);
       return model;
     });
@@ -244,7 +244,7 @@ std::pair<std::vector<Transition>, std::vector<Place>> Application::getState()
   if (impl->active.load()) {
     std::promise<std::pair<std::vector<Transition>, std::vector<Place>>> state;
     auto getter = state.get_future();
-    impl->reducers.enqueue([&](Model &&model) -> Model & {
+    impl->reducers->enqueue([&](Model &&model) -> Model & {
       state.set_value(model.getState());
       return model;
     });
@@ -259,7 +259,7 @@ std::vector<std::string> Application::getFireableTransitions() const noexcept {
     std::promise<std::vector<std::string>> transitions;
     std::future<std::vector<std::string>> transitions_getter =
         transitions.get_future();
-    impl->reducers.enqueue([&](Model &&model) -> Model & {
+    impl->reducers->enqueue([&](Model &&model) -> Model & {
       transitions.set_value(model.getFireableTransitions());
       return model;
     });

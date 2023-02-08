@@ -36,14 +36,15 @@ struct Model {
   std::vector<Transition> getFireableTransitions() const;
   std::pair<std::vector<Transition>, std::vector<Place>> getState() const;
 
-  bool runTransition(const Transition &t,
-                     moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
-                     const StoppablePool &polymorphic_actions,
-                     const std::string &case_id = "undefined_case_id");
-  void runTransitions(moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
-                      const StoppablePool &polymorphic_actions,
-                      bool run_all = true,
-                      const std::string &case_id = "undefined_case_id");
+  bool runTransition(
+      const Transition &t,
+      std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>> reducers,
+      const StoppablePool &polymorphic_actions,
+      const std::string &case_id = "undefined_case_id");
+  void runTransitions(
+      std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>> reducers,
+      const StoppablePool &polymorphic_actions, bool run_all = true,
+      const std::string &case_id = "undefined_case_id");
 
   Model &operator=(const Model &) { return *this; }
   Model(const Model &) = delete;
@@ -62,10 +63,10 @@ struct Model {
   Eventlog event_log;
 
  private:
-  bool tryFire(const size_t t,
-               moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
-               const StoppablePool &polymorphic_actions,
-               const std::string &case_id);
+  bool tryFire(
+      const size_t t,
+      std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>> reducers,
+      const StoppablePool &polymorphic_actions, const std::string &case_id);
 };
 
 }  // namespace symmetri

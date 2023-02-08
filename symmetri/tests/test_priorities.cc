@@ -12,7 +12,8 @@ TEST_CASE(
   std::list<std::vector<std::pair<symmetri::Transition, int8_t>>> priorities = {
       {{"t0", 1}, {"t1", 0}}, {{"t0", 0}, {"t1", 1}}};
   for (auto priority : priorities) {
-    BlockingConcurrentQueue<Reducer> reducers(4);
+    auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
+
     StateNet net = {{"t0", {{"Pa"}, {"Pb"}}}, {"t1", {{"Pa"}, {"Pc"}}}};
     Store store = {{"t0", [] {}}, {"t1", [] {}}};
 
@@ -23,7 +24,7 @@ TEST_CASE(
     m.runTransitions(reducers, *stp, true);
     Reducer r;
 
-    REQUIRE(reducers.wait_dequeue_timed(r, std::chrono::seconds(1)));
+    REQUIRE(reducers->wait_dequeue_timed(r, std::chrono::seconds(1)));
     m = r(std::move(m));
 
     auto prio_t0 = std::find_if(priority.begin(), priority.end(), [](auto e) {
@@ -44,7 +45,7 @@ TEST_CASE("Using nullptr does not queue reducers.") {
   std::list<std::vector<std::pair<symmetri::Transition, int8_t>>> priorities = {
       {{"t0", 1}, {"t1", 0}}, {{"t0", 0}, {"t1", 1}}};
   for (auto priority : priorities) {
-    BlockingConcurrentQueue<Reducer> reducers(4);
+    auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
     StateNet net = {{"t0", {{"Pa"}, {"Pb"}}}, {"t1", {{"Pa"}, {"Pc"}}}};
     Store store = {{"t0", nullptr}, {"t1", nullptr}};
 

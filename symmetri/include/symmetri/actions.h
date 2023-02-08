@@ -16,8 +16,8 @@ std::shared_ptr<const StoppablePool> createStoppablePool(
 class StoppablePool {
  private:
   void loop();
-  mutable std::vector<std::thread> pool;
-  mutable std::atomic<bool> stop_flag;
+  std::vector<std::thread> pool;
+  std::atomic<bool> stop_flag;
   StoppablePool(const StoppablePool&) = delete;
   StoppablePool& operator=(const StoppablePool&) = delete;
   friend std::shared_ptr<const StoppablePool> createStoppablePool(
@@ -31,7 +31,6 @@ class StoppablePool {
  public:
   ~StoppablePool();
   void enqueue(PolyAction&& p) const;
-  void stop() const;
 };
 
 }  // namespace symmetri

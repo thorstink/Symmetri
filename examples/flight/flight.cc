@@ -51,7 +51,6 @@ int main(int, char *argv[]) {
     spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),
                  c.time_since_epoch().count());
   }
-  pool->stop();
   spdlog::info("Result of this net: {0}", printState(result));
 
   return result == symmetri::TransitionState::Completed ? 0 : -1;

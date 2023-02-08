@@ -32,7 +32,7 @@ TEST_CASE("Test external input.") {
 
   // run the net
   auto [ev, res] = app();
-  stp->stop();
+  // ;
 
   REQUIRE(res == TransitionState::Completed);
   REQUIRE(i_ran);

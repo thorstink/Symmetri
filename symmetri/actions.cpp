@@ -10,12 +10,22 @@ static moodycamel::BlockingConcurrentQueue<PolyAction> actions(256);
 
 StoppablePool::StoppablePool(unsigned int thread_count)
     : pool(thread_count), stop_flag(false) {
-  spdlog::info("Create pool with {0} threads.", thread_count);
   std::generate(std::begin(pool), std::end(pool),
                 [this] { return std::thread(&StoppablePool::loop, this); });
+  spdlog::info("Created pool with {0} threads.", thread_count);
 }
 
-StoppablePool::~StoppablePool() { stop(); }
+StoppablePool::~StoppablePool() {
+  stop_flag.store(true, std::memory_order_seq_cst);
+  for (size_t i = 0; i < pool.size(); ++i) {
+    actions.enqueue([] {});
+  }
+  for (auto &&t : pool) {
+    if (t.joinable()) {
+      t.join();
+    }
+  }
+}
 
 void StoppablePool::loop() {
   PolyAction transition(noop);
@@ -33,18 +43,6 @@ void StoppablePool::loop() {
 
 void StoppablePool::enqueue(PolyAction &&p) const {
   actions.enqueue(std::forward<PolyAction>(p));
-}
-
-void StoppablePool::stop() const {
-  stop_flag.store(true, std::memory_order_seq_cst);
-  for (size_t i = 0; i < pool.size(); ++i) {
-    actions.enqueue([] {});
-  }
-  for (auto &&t : pool) {
-    if (t.joinable()) {
-      t.join();
-    }
-  }
 }
 
 }  // namespace symmetri

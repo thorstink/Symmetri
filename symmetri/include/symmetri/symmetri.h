@@ -47,7 +47,7 @@ using Store = std::map<std::string, PolyAction>;
  * compilation times.
  *
  */
-struct Impl;
+struct Petri;
 
 /**
  * @brief The Application class executes the Petri net, by using the
@@ -55,7 +55,7 @@ struct Impl;
  */
 class Application {
  private:
-  mutable std::shared_ptr<Impl> impl;
+  mutable std::shared_ptr<Petri> impl;
   std::function<void(const std::string &)> p;
 
  public:

@@ -186,9 +186,10 @@ std::vector<Transition> Model::getFireableTransitions() const {
   return fireable_transitions;
 }
 
-bool Model::tryFire(const size_t t,
-                    moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
-                    const StoppablePool &pool, const std::string &case_id) {
+bool Model::tryFire(
+    const size_t t,
+    std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>> reducers,
+    const StoppablePool &pool, const std::string &case_id) {
   const auto &pre = net.input_n[t];
 
   if (canFire(pre, tokens_n)) {
@@ -213,8 +214,8 @@ bool Model::tryFire(const size_t t,
                            TransitionState::Completed, timestamp, 0});
     } else {
       active_transitions_n.push_back(t);
-      pool.enqueue([=, &reducers] {
-        reducers.enqueue(createReducerForTransition(t, task, case_id));
+      pool.enqueue([=] {
+        reducers->enqueue(createReducerForTransition(t, task, case_id));
       });
     }
     return true;
@@ -224,7 +225,8 @@ bool Model::tryFire(const size_t t,
 }
 
 bool Model::runTransition(
-    const Transition &t, moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
+    const Transition &t,
+    std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>> reducers,
     const StoppablePool &pool, const std::string &case_id) {
   auto it = std::find(net.transition.begin(), net.transition.end(), t);
   return it != net.transition.end() &&
@@ -233,7 +235,7 @@ bool Model::runTransition(
 }
 
 void Model::runTransitions(
-    moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
+    std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>> reducers,
     const StoppablePool &pool, bool run_all, const std::string &case_id) {
   // find possible transitions
   auto possible_transition_list_n =
@@ -271,10 +273,13 @@ std::vector<Place> Model::getMarking() const {
 
 std::vector<Transition> Model::getActiveTransitions() const {
   std::vector<Transition> transition_list;
-  transition_list.reserve(active_transitions_n.size());
-  std::transform(active_transitions_n.cbegin(), active_transitions_n.cend(),
-                 std::back_inserter(transition_list),
-                 [&](auto place_index) { return net.transition[place_index]; });
+  if (active_transitions_n.size() > 0) {
+    transition_list.reserve(active_transitions_n.size());
+    std::transform(active_transitions_n.cbegin(), active_transitions_n.cend(),
+                   std::back_inserter(transition_list), [&](auto place_index) {
+                     return net.transition[place_index];
+                   });
+  }
   return transition_list;
 }
 
