@@ -56,13 +56,7 @@ struct Impl;
 class Application {
  private:
   mutable std::shared_ptr<Impl> impl;
-  std::function<void(const std::string &t)> p;
-  void createApplication(
-      const symmetri::StateNet &net, const symmetri::NetMarking &m0,
-      const symmetri::NetMarking &final_marking, const Store &store,
-      const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
-      const std::string &case_id,
-      std::shared_ptr<const symmetri::StoppablePool> stp);
+  std::function<void(const std::string &)> p;
 
  public:
   Application(

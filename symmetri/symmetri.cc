@@ -10,6 +10,7 @@
 #include <future>
 #include <memory>
 #include <sstream>
+#include <tuple>
 
 #include "model.h"
 #include "symmetri/pnml_parser.h"
@@ -143,6 +144,32 @@ struct Impl {
   }
 };
 
+std::tuple<std::shared_ptr<Impl>, std::function<void(const std::string &)>>
+create(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
+       const symmetri::NetMarking &final_marking, const Store &store,
+       const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
+       const std::string &case_id,
+       std::shared_ptr<const symmetri::StoppablePool> stp) {
+  signal(SIGINT, exit_handler);
+  std::stringstream s;
+  s << "[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] [" << case_id << "] %v";
+  auto console = spdlog::stdout_color_mt(case_id);
+  console->set_pattern(s.str());
+  auto impl = std::make_shared<Impl>(net, m0, stp, final_marking, store,
+                                     priority, case_id);
+  return {impl, [=](const std::string &t) {
+            if (impl->active.load()) {
+              impl->reducers.enqueue([=](Model &&m) -> Model & {
+                const auto t_index = toIndex(m.net.transition, t);
+                m.active_transitions_n.push_back(t_index);
+                impl->reducers.enqueue(createReducerForTransition(
+                    t_index, m.net.store[t_index], impl->case_id));
+                return m;
+              });
+            }
+          }};
+}
+
 Application::Application(
     const std::set<std::string> &files,
     const symmetri::NetMarking &final_marking, const Store &store,
@@ -150,7 +177,10 @@ Application::Application(
     const std::string &case_id,
     std::shared_ptr<const symmetri::StoppablePool> stp) {
   const auto &[net, m0] = readPetriNets(files);
-  createApplication(net, m0, final_marking, store, priority, case_id, stp);
+  if (check(store, net)) {
+    std::tie(impl, p) =
+        create(net, m0, final_marking, store, priority, case_id, stp);
+  }
 }
 
 Application::Application(
@@ -159,36 +189,9 @@ Application::Application(
     const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
     const std::string &case_id,
     std::shared_ptr<const symmetri::StoppablePool> stp) {
-  createApplication(net, m0, final_marking, store, priority, case_id, stp);
-}
-
-void Application::createApplication(
-    const symmetri::StateNet &net, const symmetri::NetMarking &m0,
-    const symmetri::NetMarking &final_marking, const Store &store,
-    const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
-    const std::string &case_id,
-    std::shared_ptr<const symmetri::StoppablePool> stp) {
-  signal(SIGINT, exit_handler);
-  std::stringstream s;
-  s << "[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] [" << case_id << "] %v";
-  auto console = spdlog::stdout_color_mt(case_id);
-
-  console->set_pattern(s.str());
   if (check(store, net)) {
-    impl = std::make_shared<Impl>(net, m0, stp, final_marking, store, priority,
-                                  case_id);
-    // register a function that "forces" transitions into the queue.
-    p = [this](const std::string &t) {
-      if (impl->active.load()) {
-        impl->reducers.enqueue([this, t = t](Model &&m) -> Model & {
-          const auto t_index = toIndex(m.net.transition, t);
-          m.active_transitions_n.push_back(t_index);
-          impl->reducers.enqueue(createReducerForTransition(
-              t_index, m.net.store[t_index], impl->case_id));
-          return m;
-        });
-      }
-    };
+    std::tie(impl, p) =
+        create(net, m0, final_marking, store, priority, case_id, stp);
   }
 }
 
