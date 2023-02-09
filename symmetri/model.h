@@ -38,11 +38,13 @@ struct Model {
 
   bool runTransition(
       const Transition &t,
-      std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>> reducers,
+      const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
+          &reducers,
       const StoppablePool &polymorphic_actions,
       const std::string &case_id = "undefined_case_id");
   void runTransitions(
-      std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>> reducers,
+      const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
+          &reducers,
       const StoppablePool &polymorphic_actions, bool run_all = true,
       const std::string &case_id = "undefined_case_id");
 
@@ -65,7 +67,8 @@ struct Model {
  private:
   bool tryFire(
       const size_t t,
-      std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>> reducers,
+      const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
+          &reducers,
       const StoppablePool &polymorphic_actions, const std::string &case_id);
 };
 

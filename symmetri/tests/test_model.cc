@@ -193,11 +193,12 @@ TEST_CASE("Step through transitions") {
       hitmap.insert({t, 0});
       store.insert({t, [&, t = t] { hitmap[t] += 1; }});
     }
-    auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(500);
+    auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(5);
     auto stp = createStoppablePool(1);
     // with this initial marking, all but transition e are possible.
     NetMarking m0 = {{"Pa", 4}};
     Model m(net, store, {}, m0);
+    REQUIRE(m.getFireableTransitions().size() == 4);  // abcd
     m.runTransition("e", reducers, *stp);
     m.runTransition("b", reducers, *stp);
     m.runTransition("b", reducers, *stp);

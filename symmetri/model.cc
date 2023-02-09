@@ -1,5 +1,7 @@
 #include "model.h"
 
+#include <iostream>
+
 namespace symmetri {
 
 auto getThreadId() {
@@ -188,7 +190,8 @@ std::vector<Transition> Model::getFireableTransitions() const {
 
 bool Model::tryFire(
     const size_t t,
-    std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>> reducers,
+    const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
+        &reducers,
     const StoppablePool &pool, const std::string &case_id) {
   const auto &pre = net.input_n[t];
 
@@ -201,7 +204,7 @@ bool Model::tryFire(
       tokens_n.erase(std::find(tokens_n.begin(), tokens_n.end(), place));
     }
 
-    auto task = net.store[t];
+    const auto &task = net.store[t];
 
     // if the transition is direct, we short-circuit the
     // marking mutation and do it immediately.
@@ -226,7 +229,8 @@ bool Model::tryFire(
 
 bool Model::runTransition(
     const Transition &t,
-    std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>> reducers,
+    const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
+        &reducers,
     const StoppablePool &pool, const std::string &case_id) {
   auto it = std::find(net.transition.begin(), net.transition.end(), t);
   return it != net.transition.end() &&
@@ -235,7 +239,8 @@ bool Model::runTransition(
 }
 
 void Model::runTransitions(
-    std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>> reducers,
+    const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
+        &reducers,
     const StoppablePool &pool, bool run_all, const std::string &case_id) {
   // find possible transitions
   auto possible_transition_list_n =
