@@ -47,7 +47,7 @@ inline void exit_handler(int) noexcept { EARLY_EXIT_HANDLER(); }
 
 using namespace moodycamel;
 
-bool check(const Store &store, const symmetri::StateNet &net) noexcept {
+bool check(const Store &store, const symmetri::Net &net) noexcept {
   return std::all_of(net.cbegin(), net.cend(), [&store](const auto &p) {
     const auto &t = std::get<0>(p);
     bool store_has_transition =
@@ -64,15 +64,15 @@ bool check(const Store &store, const symmetri::StateNet &net) noexcept {
 
 struct Petri {
   Model m;
-  const symmetri::NetMarking m0_;
+  const symmetri::Marking m0_;
   std::shared_ptr<BlockingConcurrentQueue<Reducer>> reducers;
   std::shared_ptr<const symmetri::StoppablePool> stp;
   const std::string case_id;
   std::atomic<bool> active;
-  symmetri::NetMarking final_marking;
-  Petri(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
+  symmetri::Marking final_marking;
+  Petri(const symmetri::Net &net, const symmetri::Marking &m0,
         std::shared_ptr<const symmetri::StoppablePool> stp,
-        const symmetri::NetMarking &final_marking, const Store &store,
+        const symmetri::Marking &final_marking, const Store &store,
         const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
         const std::string &case_id)
       : m(net, store, priority, m0),
@@ -94,7 +94,7 @@ struct Petri {
   }
   const Model &getModel() const { return m; }
   symmetri::Eventlog getEventLog() const { return m.event_log; }
-  TransitionResult run() {
+  Result run() {
     // we are running!
     active.store(true);
     // todo.. not have to assign it manually to reset.
@@ -127,15 +127,15 @@ struct Petri {
     active.store(false);
 
     // determine what was the reason we terminated.
-    TransitionState result;
+    State result;
     if (EARLY_EXIT.load()) {
-      result = TransitionState::UserExit;
+      result = State::UserExit;
     } else if (MarkingReached(m.tokens_n, final_tokens)) {
-      result = TransitionState::Completed;
+      result = State::Completed;
     } else if (m.active_transitions_n.empty()) {
-      result = TransitionState::Deadlock;
+      result = State::Deadlock;
     } else {
-      result = TransitionState::Error;
+      result = State::Error;
     }
     spdlog::get(case_id)->info("Petri net finished with result {0}",
                                printState(result));
@@ -145,8 +145,8 @@ struct Petri {
 };
 
 std::tuple<std::shared_ptr<Petri>, std::function<void(const std::string &)>>
-create(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
-       const symmetri::NetMarking &final_marking, const Store &store,
+create(const symmetri::Net &net, const symmetri::Marking &m0,
+       const symmetri::Marking &final_marking, const Store &store,
        const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
        const std::string &case_id,
        std::shared_ptr<const symmetri::StoppablePool> stp) {
@@ -171,8 +171,8 @@ create(const symmetri::StateNet &net, const symmetri::NetMarking &m0,
 }
 
 Application::Application(
-    const std::set<std::string> &files,
-    const symmetri::NetMarking &final_marking, const Store &store,
+    const std::set<std::string> &files, const symmetri::Marking &final_marking,
+    const Store &store,
     const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
     const std::string &case_id,
     std::shared_ptr<const symmetri::StoppablePool> stp) {
@@ -184,8 +184,8 @@ Application::Application(
 }
 
 Application::Application(
-    const symmetri::StateNet &net, const symmetri::NetMarking &m0,
-    const symmetri::NetMarking &final_marking, const Store &store,
+    const symmetri::Net &net, const symmetri::Marking &m0,
+    const symmetri::Marking &final_marking, const Store &store,
     const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
     const std::string &case_id,
     std::shared_ptr<const symmetri::StoppablePool> stp) {
@@ -209,16 +209,16 @@ bool Application::tryRunTransition(const std::string &t) const noexcept {
   return impl->m.runTransition(t, impl->reducers, *impl->stp, "manual");
 };
 
-TransitionResult Application::operator()() const noexcept {
+Result Application::operator()() const noexcept {
   if (impl == nullptr) {
     spdlog::error("Something went seriously wrong. Please send a bug report.");
-    return {{}, TransitionState::Error};
+    return {{}, State::Error};
   } else if (impl->active.load()) {
     spdlog::get(impl->case_id)
         ->warn(
             "The net is already active, it can not run it again before it is "
             "finished.");
-    return {{}, TransitionState::Error};
+    return {{}, State::Error};
   } else {
     auto res = impl->run();
     return res;

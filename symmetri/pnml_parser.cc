@@ -10,11 +10,10 @@
 using namespace tinyxml2;
 using namespace symmetri;
 
-std::tuple<StateNet, NetMarking> readPetriNets(
-    const std::set<std::string> &files) {
+std::tuple<Net, Marking> readPetriNets(const std::set<std::string> &files) {
   std::set<std::string> places, transitions;
-  NetMarking place_initialMarking;
-  StateNet state_net;
+  Marking place_initialMarking;
+  Net state_net;
 
   for (auto file : files) {
     XMLDocument net;
@@ -65,7 +64,7 @@ std::tuple<StateNet, NetMarking> readPetriNets(
       for (int i = 0; i < multiplicity; i++) {
         if (places.find(source_id) != places.end()) {
           // if the source is a place, tokens are consumed.
-          if (state_net.find(target_id) !=  state_net.end()) {
+          if (state_net.find(target_id) != state_net.end()) {
             state_net.find(target_id)->second.first.push_back(source_id);
           } else {
             state_net.insert({target_id, {{source_id}, {}}});

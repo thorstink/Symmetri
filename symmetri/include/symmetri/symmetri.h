@@ -28,10 +28,10 @@ size_t calculateTrace(const Eventlog &event_log) noexcept;
  * @brief A convenience function to get a string representation of the
  * state-enum.
  *
- * @param s The TransitionState
- * @return std::string The TransitionState as a human readable string.
+ * @param s The State
+ * @return std::string The State as a human readable string.
  */
-std::string printState(symmetri::TransitionState s) noexcept;
+std::string printState(symmetri::State s) noexcept;
 
 /**
  * @brief A Store is a mapping from Transitions, represented by a string that is
@@ -61,19 +61,19 @@ class Application {
  public:
   Application(
       const std::set<std::string> &path_to_petri,
-      const symmetri::NetMarking &final_marking, const Store &store,
+      const symmetri::Marking &final_marking, const Store &store,
       const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
       const std::string &case_id,
       std::shared_ptr<const symmetri::StoppablePool> stp);
 
   Application(
-      const symmetri::StateNet &net, const symmetri::NetMarking &m0,
-      const symmetri::NetMarking &final_marking, const Store &store,
+      const symmetri::Net &net, const symmetri::Marking &m0,
+      const symmetri::Marking &final_marking, const Store &store,
       const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
       const std::string &case_id,
       std::shared_ptr<const symmetri::StoppablePool> stp);
   ~Application();
-  TransitionResult operator()() const noexcept;
+  Result operator()() const noexcept;
   std::function<void()> registerTransitionCallback(
       const std::string &transition) const noexcept;
   bool tryRunTransition(const std::string &s) const noexcept;

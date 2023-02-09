@@ -4,7 +4,7 @@ A C++-17 library that takes a Petri net and turns it into a program. This is don
 
 ## Principle
 
-The graph below represents a Petri net. The transitions `bar` is fireable, and if it would fire it would consume the *token* (<span style="color:#00c0cb;">&#9679;</span>) and produce two new tokens in the output places. These new tokens would enable `foo` and the cycle would continue for ever, while accumelating tokens in the most left place. 
+The graph below represents a Petri net. The transitions `bar` is fireable, and if it would fire it would consume the *token* (<span style="color:#00c0cb;">&#9679;</span>) and produce two new tokens in the output places. These new tokens would enable `foo` and the cycle would continue for ever, while accumelating tokens in the most left place.
 
 ```mermaid
     graph LR
@@ -26,16 +26,15 @@ This Petri net can be described using Symmetri:
 
 ```cpp
 using namespace symmetri;
-StateNet net = {{"foo", {{"B", "C"}, {"Z", "B"}}},
+Net net = {{"foo", {{"B", "C"}, {"Z", "B"}}},
                 {"bar", {{"Z"}, {"B", "C"}}}};
 Store store = {{"foo", &foo}, {"bar", &bar}};
 std::vector<std::pair<symmetri::Transition, int8_t>> priority = {};
-NetMarking m0 = {{"Z", 1}, {"B", 0}, {"C", 0}};
+Marking m0 = {{"Z", 1}, {"B", 0}, {"C", 0}};
 StoppablePool stp(1);
 symmetri::Application app(net, m0, {}, store, priority,
                           "test_net_without_end", stp);
 auto [eventlog, res] = app(); // run untill done.
-stp.stop();
 ```
 
 - `net` is a multiset description of a Petri net

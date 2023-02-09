@@ -19,13 +19,13 @@
 void helloWorld() { std::this_thread::sleep_for(std::chrono::seconds(1)); }
 
 // If you want to specify 'success' or 'failure' you can return a
-// "TransitionState". It can be {Started, Completed, Deadlock, UserExit, Error},
+// "State". It can be {Started, Completed, Deadlock, UserExit, Error},
 // and in the case of defining your own function it makes sense to return either
 // "Completed" or "Error". The Other states re meant when the function is a
 // nested petri-net.
-symmetri::TransitionState helloResult() {
+symmetri::State helloResult() {
   std::this_thread::sleep_for(std::chrono::seconds(1));
-  return symmetri::TransitionState::Completed;
+  return symmetri::State::Completed;
 }
 
 // The main is simply the body of a cpp program. It has to start somewhere, so
@@ -102,5 +102,5 @@ int main(int, char *argv[]) {
 
   // return the result! in linux is enverything went well, you typically return
   // 0.
-  return result == symmetri::TransitionState::Completed ? 0 : -1;
+  return result == symmetri::State::Completed ? 0 : -1;
 }

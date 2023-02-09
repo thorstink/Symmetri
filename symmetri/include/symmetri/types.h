@@ -15,7 +15,7 @@ using clock_s = std::chrono::steady_clock;
  * @brief The difference kinds of results a transition can have.
  *
  */
-enum class TransitionState {
+enum class State {
   Started,    /// The transition started
   Completed,  /// The transition completed as expected
   Deadlock,   /// The transition deadlocked (e.g. it was a petri net)
@@ -31,17 +31,17 @@ enum class TransitionState {
 struct Event {
   std::string case_id;
   std::string transition;
-  TransitionState state;
+  State state;
   clock_s::time_point stamp;
   size_t thread_id;
 };
 
 using Eventlog = std::list<Event>;
-using TransitionResult = std::pair<Eventlog, TransitionState>;
-using StateNet =
+using Result = std::pair<Eventlog, State>;
+using Net =
     std::unordered_map<Transition,
                        std::pair<std::vector<Place>, std::vector<Place>>>;
-using NetMarking = std::unordered_map<Place, uint16_t>;
+using Marking = std::unordered_map<Place, uint16_t>;
 
 /**
  * @brief Checks if the transition-function can be invoked.
@@ -57,27 +57,25 @@ bool constexpr isDirectTransition(const T&) {
 }
 
 /**
- * @brief Generates a TransitionResult based on what kind of information the
+ * @brief Generates a Result based on what kind of information the
  * transition-function returns.
  *
  * @tparam T The transition-function type.
  * @param transition The function to be executed.
- * @return TransitionResult Contains information on the result-state and
+ * @return Result Contains information on the result-state and
  * possible eventlog of the transition.
  */
 template <typename T>
-TransitionResult runTransition(const T& transition) {
+Result runTransition(const T& transition) {
   if constexpr (!std::is_invocable_v<T>) {
-    return {{}, TransitionState::Completed};
-  } else if constexpr (std::is_same_v<TransitionState,
-                                      decltype(transition())>) {
+    return {{}, State::Completed};
+  } else if constexpr (std::is_same_v<State, decltype(transition())>) {
     return {{}, transition()};
-  } else if constexpr (std::is_same_v<TransitionResult,
-                                      decltype(transition())>) {
+  } else if constexpr (std::is_same_v<Result, decltype(transition())>) {
     return transition();
   } else {
     transition();
-    return {{}, TransitionState::Completed};
+    return {{}, State::Completed};
   }
 }
 
@@ -115,5 +113,5 @@ bool MarkingReached(const std::vector<T>& marking,
  * @return true
  * @return false
  */
-bool StateNetEquality(const StateNet& net1, const StateNet& net2);
+bool StateNetEquality(const Net& net1, const Net& net2);
 }  // namespace symmetri

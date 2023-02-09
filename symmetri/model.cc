@@ -9,25 +9,22 @@ auto getThreadId() {
       std::hash<std::thread::id>()(std::this_thread::get_id()));
 }
 
-Reducer processTransition(size_t t_i, const std::string &case_id,
-                          TransitionState result, size_t thread_id,
-                          clock_s::time_point start_time,
+Reducer processTransition(size_t t_i, const std::string &case_id, State result,
+                          size_t thread_id, clock_s::time_point start_time,
                           clock_s::time_point end_time) {
   return [=](Model &&model) -> Model & {
-    if (result == TransitionState::Completed) {
+    if (result == State::Completed) {
       const auto &place_list = model.net.output_n;
       model.tokens_n.insert(model.tokens_n.begin(), place_list[t_i].begin(),
                             place_list[t_i].end());
     }
 
     model.event_log.push_back({case_id, model.net.transition[t_i],
-                               TransitionState::Started, start_time,
-                               thread_id});
-    model.event_log.push_back({case_id, model.net.transition[t_i],
-                               result == TransitionState::Completed
-                                   ? TransitionState::Completed
-                                   : TransitionState::Error,
-                               end_time, thread_id});
+                               State::Started, start_time, thread_id});
+    model.event_log.push_back(
+        {case_id, model.net.transition[t_i],
+         result == State::Completed ? State::Completed : State::Error, end_time,
+         thread_id});
     // we know for sure this transition is active because otherwise it wouldn't
     // produce a reducer.
     model.active_transitions_n.erase(
@@ -38,9 +35,9 @@ Reducer processTransition(size_t t_i, const std::string &case_id,
 }
 
 Reducer processTransition(size_t t_i, const Eventlog &new_events,
-                          TransitionState result) {
+                          State result) {
   return [=](Model &&model) -> Model & {
-    if (result == TransitionState::Completed) {
+    if (result == State::Completed) {
       const auto &place_list = model.net.output_n;
       model.tokens_n.insert(model.tokens_n.begin(), place_list[t_i].begin(),
                             place_list[t_i].end());
@@ -102,9 +99,9 @@ gch::small_vector<uint8_t, 32> possibleTransitions(
 }
 
 Model::Model(
-    const StateNet &_net, const Store &store,
+    const Net &_net, const Store &store,
     const std::vector<std::pair<symmetri::Transition, int8_t>> &_priority,
-    const NetMarking &M0)
+    const Marking &M0)
     : timestamp(clock_s::now()) {
   // populate net:
   const auto transition_count = _net.size();
@@ -212,9 +209,9 @@ bool Model::tryFire(
       tokens_n.insert(tokens_n.begin(), net.output_n[t].begin(),
                       net.output_n[t].end());
       event_log.push_back(
-          {case_id, net.transition[t], TransitionState::Started, timestamp, 0});
-      event_log.push_back({case_id, net.transition[t],
-                           TransitionState::Completed, timestamp, 0});
+          {case_id, net.transition[t], State::Started, timestamp, 0});
+      event_log.push_back(
+          {case_id, net.transition[t], State::Completed, timestamp, 0});
     } else {
       active_transitions_n.push_back(t);
       pool.enqueue([=] {

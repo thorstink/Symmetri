@@ -14,10 +14,10 @@ TEST_CASE(
   for (auto priority : priorities) {
     auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
 
-    StateNet net = {{"t0", {{"Pa"}, {"Pb"}}}, {"t1", {{"Pa"}, {"Pc"}}}};
+    Net net = {{"t0", {{"Pa"}, {"Pb"}}}, {"t1", {{"Pa"}, {"Pc"}}}};
     Store store = {{"t0", [] {}}, {"t1", [] {}}};
 
-    NetMarking m0 = {{"Pa", 1}, {"Pb", 0}, {"Pc", 0}};
+    Marking m0 = {{"Pa", 1}, {"Pb", 0}, {"Pc", 0}};
     auto stp = createStoppablePool(1);
 
     auto m = Model(net, store, priority, m0);
@@ -46,10 +46,10 @@ TEST_CASE("Using nullptr does not queue reducers.") {
       {{"t0", 1}, {"t1", 0}}, {{"t0", 0}, {"t1", 1}}};
   for (auto priority : priorities) {
     auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
-    StateNet net = {{"t0", {{"Pa"}, {"Pb"}}}, {"t1", {{"Pa"}, {"Pc"}}}};
+    Net net = {{"t0", {{"Pa"}, {"Pb"}}}, {"t1", {{"Pa"}, {"Pc"}}}};
     Store store = {{"t0", nullptr}, {"t1", nullptr}};
 
-    NetMarking m0 = {{"Pa", 1}, {"Pb", 0}, {"Pc", 0}};
+    Marking m0 = {{"Pa", 1}, {"Pb", 0}, {"Pc", 0}};
     auto stp = createStoppablePool(1);
 
     auto m = Model(net, store, priority, m0);

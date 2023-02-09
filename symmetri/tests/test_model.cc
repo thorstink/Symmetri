@@ -15,22 +15,22 @@ void t0() {
 auto t1() {
   auto inc = T1_COUNTER.load() + 1;
   T1_COUNTER.store(inc);
-  return symmetri::TransitionState::Completed;
+  return symmetri::State::Completed;
 }
 
-std::tuple<StateNet, Store,
-           std::vector<std::pair<symmetri::Transition, int8_t>>, NetMarking>
+std::tuple<Net, Store, std::vector<std::pair<symmetri::Transition, int8_t>>,
+           Marking>
 testNet() {
   T0_COUNTER.store(0);
   T1_COUNTER.store(0);
 
-  StateNet net = {{"t0", {{"Pa", "Pb"}, {"Pc"}}},
-                  {"t1", {{"Pc", "Pc"}, {"Pb", "Pb", "Pd"}}}};
+  Net net = {{"t0", {{"Pa", "Pb"}, {"Pc"}}},
+             {"t1", {{"Pc", "Pc"}, {"Pb", "Pb", "Pd"}}}};
 
   Store store = {{"t0", &t0}, {"t1", &t1}};
   std::vector<std::pair<symmetri::Transition, int8_t>> priority;
 
-  NetMarking m0 = {{"Pa", 4}, {"Pb", 2}, {"Pc", 0}, {"Pd", 0}};
+  Marking m0 = {{"Pa", 4}, {"Pb", 2}, {"Pc", 0}, {"Pd", 0}};
   return {net, store, priority, m0};
 }
 
@@ -155,18 +155,18 @@ TEST_CASE("Run until net dies with nullptr") {
 TEST_CASE(
     "getFireableTransitions return a vector of unique of unique fireable "
     "transitions") {
-  StateNet net = {{"a", {{"Pa"}, {}}},
-                  {"b", {{"Pa"}, {}}},
-                  {"c", {{"Pa"}, {}}},
-                  {"d", {{"Pa"}, {}}},
-                  {"e", {{"Pb"}, {}}}};
+  Net net = {{"a", {{"Pa"}, {}}},
+             {"b", {{"Pa"}, {}}},
+             {"c", {{"Pa"}, {}}},
+             {"d", {{"Pa"}, {}}},
+             {"e", {{"Pb"}, {}}}};
 
   Store store;
   for (auto [t, dm] : net) {
     store.insert({t, nullptr});
   }
   // with this initial marking, all but transition e are possible.
-  NetMarking m0 = {{"Pa", 1}};
+  Marking m0 = {{"Pa", 1}};
   Model m(net, store, {}, m0);
   auto fireable_transitions = m.getFireableTransitions();
   auto find = [&](auto a) {
@@ -183,11 +183,11 @@ TEST_CASE(
 TEST_CASE("Step through transitions") {
   std::map<std::string, size_t> hitmap;
   {
-    StateNet net = {{"a", {{"Pa"}, {}}},
-                    {"b", {{"Pa"}, {}}},
-                    {"c", {{"Pa"}, {}}},
-                    {"d", {{"Pa"}, {}}},
-                    {"e", {{"Pb"}, {}}}};
+    Net net = {{"a", {{"Pa"}, {}}},
+               {"b", {{"Pa"}, {}}},
+               {"c", {{"Pa"}, {}}},
+               {"d", {{"Pa"}, {}}},
+               {"e", {{"Pb"}, {}}}};
     Store store;
     for (const auto& [t, dm] : net) {
       hitmap.insert({t, 0});
@@ -196,7 +196,7 @@ TEST_CASE("Step through transitions") {
     auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(5);
     auto stp = createStoppablePool(1);
     // with this initial marking, all but transition e are possible.
-    NetMarking m0 = {{"Pa", 4}};
+    Marking m0 = {{"Pa", 4}};
     Model m(net, store, {}, m0);
     REQUIRE(m.getFireableTransitions().size() == 4);  // abcd
     m.runTransition("e", reducers, *stp);

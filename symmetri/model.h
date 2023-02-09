@@ -28,9 +28,9 @@ Reducer createReducerForTransition(size_t T_i, const PolyAction &task,
                                    const std::string &case_id);
 
 struct Model {
-  Model(const StateNet &_net, const Store &store,
+  Model(const Net &_net, const Store &store,
         const std::vector<std::pair<symmetri::Transition, int8_t>> &_priority,
-        const NetMarking &M0);
+        const Marking &M0);
   std::vector<Place> getMarking() const;
   std::vector<Transition> getActiveTransitions() const;
   std::vector<Transition> getFireableTransitions() const;
