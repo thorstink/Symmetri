@@ -71,7 +71,7 @@ and look at `http://localhost:2222/` for a live view of the activity.
 
 Some details on the implementation.
 
-<p align="center">
+<p align="center" width="100%">
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="./docs/img/architecture_dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="./docs/img/architecture_light.svg">
