@@ -55,7 +55,7 @@ struct Petri;
  *
  */
 
-class Application {
+class Application final {
  private:
   std::shared_ptr<Petri> impl;
   std::function<void(const std::string &)> p;
@@ -74,7 +74,6 @@ class Application {
       const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
       const std::string &case_id,
       std::shared_ptr<const symmetri::StoppablePool> stp);
-  ~Application();
 
   Result execute() const noexcept;
   std::function<void()> registerTransitionCallback(
@@ -88,6 +87,13 @@ class Application {
   void exitEarly() const noexcept;
 };
 
-Result runTransition(const Application &app);
+/**
+ * @brief by defining a fireTransition for an Application type, we can also nest
+ * Applications as transitions in other nets.
+ *
+ * @param app
+ * @return Result
+ */
+Result fireTransition(const Application &app);
 
 }  // namespace symmetri

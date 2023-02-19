@@ -25,7 +25,7 @@ std::mutex cv_m;  // This mutex is used for two purposes:
 std::atomic<bool> PAUSE(false);
 std::atomic<bool> EARLY_EXIT(false);
 
-Result runTransition(const Application &app) { return app.execute(); };
+Result fireTransition(const Application &app) { return app.execute(); };
 
 // The default exit handler just sets early exit to true.
 std::function<void()> EARLY_EXIT_HANDLER = []() {
@@ -111,7 +111,7 @@ struct Petri {
 
     Reducer f;
     // start!
-    m.runTransitions(reducers, *stp, true, case_id);
+    m.fireTransitions(reducers, *stp, true, case_id);
     // get a reducer. Immediately, or wait a bit
     while (m.active_transitions_n.size() > 0 &&
            !EARLY_EXIT.load(std::memory_order_relaxed) &&
@@ -124,7 +124,7 @@ struct Petri {
       if (MarkingReached(m.tokens_n, final_tokens)) {
         break;
       }
-      m.runTransitions(reducers, *stp, true, case_id);
+      m.fireTransitions(reducers, *stp, true, case_id);
     }
     active.store(false);
 
@@ -197,8 +197,6 @@ Application::Application(
   }
 }
 
-Application::~Application() {}
-
 bool Application::tryRunTransition(const std::string &t) const noexcept {
   if (impl == nullptr) {
     spdlog::warn("There is no net to run a transition.");
@@ -208,7 +206,7 @@ bool Application::tryRunTransition(const std::string &t) const noexcept {
   while (impl->reducers->try_dequeue(f)) {
     impl->m = f(std::move(impl->m));
   }
-  return impl->m.runTransition(t, impl->reducers, *impl->stp, "manual");
+  return impl->m.fireTransition(t, impl->reducers, *impl->stp, "manual");
 };
 
 Result Application::execute() const noexcept {

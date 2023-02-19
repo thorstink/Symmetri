@@ -9,7 +9,7 @@ namespace symmetri {
  * transition. Typically this is an invokable object, such as a function, that
  * executes some side-effects. The output of the invokable object can be used to
  * communicate success or failure to the petri-net executor. You can create
- * custom behavior by defining a tailored "runTransition(const A&)" for your
+ * custom behavior by defining a tailored "fireTransition(const A&)" for your
  * transition payload.
  *
  * Random note, this class is inspired/taken by Sean Parents' talk "inheritance
@@ -22,7 +22,7 @@ class PolyAction {
   PolyAction(T x) : self_(std::make_shared<model<T>>(std::move(x))) {}
 
   /**
-   * @brief You can define your own specialized runTransition function for your
+   * @brief You can define your own specialized fireTransition function for your
    * transition type. This allows you to control what should happen when your
    * transition is fired. If you do not define it, Symmetri will try to invoke
    * it, and otherwise handle it as direct transition.
@@ -30,7 +30,7 @@ class PolyAction {
    * @param x
    * @return Result
    */
-  friend Result runTransition(const PolyAction &x) { return x.self_->run_(); }
+  friend Result fireTransition(const PolyAction &x) { return x.self_->run_(); }
 
   /**
    * @brief You can define a transition payload to be simple by creating a
@@ -53,7 +53,7 @@ class PolyAction {
   template <typename T>
   struct model final : concept_t {
     model(T x) : payload_(std::move(x)) {}
-    Result run_() const override { return runTransition(payload_); }
+    Result run_() const override { return fireTransition(payload_); }
     bool simple_() const override { return isDirectTransition(payload_); }
     T payload_;
   };

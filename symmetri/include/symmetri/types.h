@@ -66,7 +66,7 @@ bool constexpr isDirectTransition(const T&) {
  * possible eventlog of the transition.
  */
 template <typename T>
-Result runTransition(const T& transition) {
+Result fireTransition(const T& transition) {
   if constexpr (!std::is_invocable_v<T>) {
     return {{}, State::Completed};
   } else if constexpr (std::is_same_v<State, decltype(transition())>) {

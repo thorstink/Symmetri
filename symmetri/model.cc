@@ -65,7 +65,7 @@ Reducer processTransition(size_t t_i, const Eventlog &new_events,
 Reducer createReducerForTransition(size_t t_i, const PolyAction &task,
                                    const std::string &case_id) {
   const auto start_time = clock_s::now();
-  const auto &[ev, res] = runTransition(task);
+  const auto &[ev, res] = fireTransition(task);
   const auto end_time = clock_s::now();
   const auto thread_id = getThreadId();
   return ev.empty() ? processTransition(t_i, case_id, res, thread_id,
@@ -229,7 +229,7 @@ bool Model::tryFire(
   }
 }
 
-bool Model::runTransition(
+bool Model::fireTransition(
     const Transition &t,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers,
@@ -240,7 +240,7 @@ bool Model::runTransition(
                  case_id);
 }
 
-void Model::runTransitions(
+void Model::fireTransitions(
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers,
     const StoppablePool &pool, bool run_all, const std::string &case_id) {

@@ -33,13 +33,13 @@ struct Model {
   std::vector<Transition> getFireableTransitions() const;
   std::pair<std::vector<Transition>, std::vector<Place>> getState() const;
 
-  bool runTransition(
+  bool fireTransition(
       const Transition &t,
       const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
           &reducers,
       const StoppablePool &polymorphic_actions,
       const std::string &case_id = "undefined_case_id");
-  void runTransitions(
+  void fireTransitions(
       const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
           &reducers,
       const StoppablePool &polymorphic_actions, bool run_all = true,

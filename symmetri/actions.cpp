@@ -39,7 +39,7 @@ void StoppablePool::loop() {
       if (stop_flag.load(std::memory_order_relaxed) == true) {
         break;
       }
-      runTransition(transition);
+      fireTransition(transition);
       transition = noop;
     }
   } while (stop_flag.load(std::memory_order_relaxed) == false);

@@ -65,7 +65,7 @@ TEST_CASE("Run one transition iteration in a petri net") {
   auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
 
   // t0 is enabled.
-  m.runTransitions(reducers, *stp, true, "");
+  m.fireTransitions(reducers, *stp, true, "");
   // t0 is dispatched but it's reducer has not yet run, so pre-conditions are
   // processed but post are not:
   REQUIRE(m.getActiveTransitions() ==
@@ -112,7 +112,7 @@ TEST_CASE("Run until net dies") {
   do {
     if (reducers->try_dequeue(r)) {
       m = r(std::move(m));
-      m.runTransitions(reducers, *stp, true);
+      m.fireTransitions(reducers, *stp, true);
     }
   } while (m.active_transitions_n.size() > 0);
 
@@ -142,7 +142,7 @@ TEST_CASE("Run until net dies with nullptr") {
   do {
     if (reducers->try_dequeue(r)) {
       m = r(std::move(m));
-      m.runTransitions(reducers, *stp, true);
+      m.fireTransitions(reducers, *stp, true);
     }
   } while (m.active_transitions_n.size() > 0);
 
@@ -199,11 +199,11 @@ TEST_CASE("Step through transitions") {
     Marking m0 = {{"Pa", 4}};
     Model m(net, store, {}, m0);
     REQUIRE(m.getFireableTransitions().size() == 4);  // abcd
-    m.runTransition("e", reducers, *stp);
-    m.runTransition("b", reducers, *stp);
-    m.runTransition("b", reducers, *stp);
-    m.runTransition("c", reducers, *stp);
-    m.runTransition("b", reducers, *stp);
+    m.fireTransition("e", reducers, *stp);
+    m.fireTransition("b", reducers, *stp);
+    m.fireTransition("b", reducers, *stp);
+    m.fireTransition("c", reducers, *stp);
+    m.fireTransition("b", reducers, *stp);
     // there are no reducers ran, so this doesn't update.
     REQUIRE(m.getActiveTransitions().size() == 4);
     // there should be no markers left.
