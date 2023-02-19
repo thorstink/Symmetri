@@ -4,10 +4,10 @@ on: [push]
 
 jobs:
   build-doxygen:
-    if: github.event.pull_request.merged == false
+    # if: github.event.pull_request.merged == false
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Doxygen Action
       uses: mattnotmitt/doxygen-action@v1.1.0
       with:
@@ -20,7 +20,7 @@ jobs:
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./html
+        publish_dir: "."
 
   build-project:
     runs-on: ubuntu-latest
