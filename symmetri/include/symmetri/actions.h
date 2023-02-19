@@ -11,7 +11,7 @@ namespace symmetri {
 class StoppablePool;
 
 /**
- * @brief Create a Stoppable Pool object. The only way to create a StoppablePool
+ * @brief Create a StoppablePool object. The only way to create a StoppablePool
  * is through this factory. We enforce the use of a smart pointer to make sure
  * the pool stays alive untill both the original scope of the pool and net is
  * exited.
@@ -24,6 +24,11 @@ class StoppablePool;
 std::shared_ptr<const StoppablePool> createStoppablePool(
     unsigned int thread_count);
 
+/**
+ * @brief A StoppablePool is a small threadpool based on a
+ * single-producer-multi-consumer thread-safe queue.
+ *
+ */
 class StoppablePool {
  private:
   void loop();

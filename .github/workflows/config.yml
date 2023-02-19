@@ -3,6 +3,15 @@ name: CI
 on: [push]
 
 jobs:
+  build-doxygen:
+    if: github.event.pull_request.merged == false
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: test_pipe
+      run: |
+        echo "hi"
+
   build-project:
     runs-on: ubuntu-latest
     steps:
