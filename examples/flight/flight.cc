@@ -46,7 +46,7 @@ int main(int, char *argv[]) {
   symmetri::Application bignet(net, final_marking, store, priority, "pluto",
                                pool);
 
-  auto [el, result] = bignet();  // infinite loop
+  auto [el, result] = bignet.execute();  // infinite loop
   for (const auto &[caseid, t, s, c, tid] : el) {
     spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),
                  c.time_since_epoch().count());

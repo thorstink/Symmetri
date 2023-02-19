@@ -9,6 +9,11 @@ auto getThreadId() {
       std::hash<std::thread::id>()(std::this_thread::get_id()));
 }
 
+size_t toIndex(const std::vector<std::string> &m, const std::string &s) {
+  auto ptr = std::find(m.begin(), m.end(), s);
+  return std::distance(m.begin(), ptr);
+}
+
 Reducer processTransition(size_t t_i, const std::string &case_id, State result,
                           size_t thread_id, clock_s::time_point start_time,
                           clock_s::time_point end_time) {

@@ -25,6 +25,8 @@ std::mutex cv_m;  // This mutex is used for two purposes:
 std::atomic<bool> PAUSE(false);
 std::atomic<bool> EARLY_EXIT(false);
 
+Result runTransition(const Application &app) { return app.execute(); };
+
 // The default exit handler just sets early exit to true.
 std::function<void()> EARLY_EXIT_HANDLER = []() {
   spdlog::info("User requests exit");
@@ -209,7 +211,7 @@ bool Application::tryRunTransition(const std::string &t) const noexcept {
   return impl->m.runTransition(t, impl->reducers, *impl->stp, "manual");
 };
 
-Result Application::operator()() const noexcept {
+Result Application::execute() const noexcept {
   if (impl == nullptr) {
     spdlog::error("Something went seriously wrong. Please send a bug report.");
     return {{}, State::Error};

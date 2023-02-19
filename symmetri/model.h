@@ -16,10 +16,7 @@ namespace symmetri {
 
 using SmallVector = gch::small_vector<size_t, 4>;
 
-inline size_t toIndex(const std::vector<std::string> &m, const std::string &s) {
-  auto ptr = std::find(m.begin(), m.end(), s);
-  return std::distance(m.begin(), ptr);
-}
+size_t toIndex(const std::vector<std::string> &m, const std::string &s);
 
 struct Model;
 using Reducer = std::function<Model &(Model &&)>;

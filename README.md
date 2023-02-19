@@ -34,7 +34,7 @@ Marking m0 = {{"Z", 1}, {"B", 0}, {"C", 0}};
 StoppablePool stp(1);
 symmetri::Application app(net, m0, {}, store, priority,
                           "test_net_without_end", stp);
-auto [eventlog, res] = app(); // run untill done.
+auto [eventlog, res] = app.execute(); // run untill done.
 ```
 
 - `net` is a multiset description of a Petri net

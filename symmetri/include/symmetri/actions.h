@@ -40,6 +40,7 @@ class StoppablePool {
 
  public:
   ~StoppablePool();
+
   /**
    * @brief enqueue allows to put almost anything as "payload" for a transition.
    *

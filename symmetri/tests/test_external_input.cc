@@ -31,7 +31,7 @@ TEST_CASE("Test external input.") {
   });
 
   // run the net
-  auto [ev, res] = app();
+  auto [ev, res] = app.execute();
   // ;
 
   REQUIRE(res == State::Completed);

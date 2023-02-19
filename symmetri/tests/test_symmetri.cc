@@ -28,7 +28,7 @@ TEST_CASE("Create a using the net constructor without end condition.") {
   symmetri::Application app(net, m0, {}, store, priority,
                             "test_net_without_end", stp);
   // we can run the net
-  auto [ev, res] = app();
+  auto [ev, res] = app.execute();
   ;
 
   // because there's no final marking, but the net is finite, it deadlocks.
@@ -44,8 +44,7 @@ TEST_CASE("Create a using the net constructor with end condition.") {
   symmetri::Application app(net, m0, final_marking, store, priority,
                             "test_net_with_end", stp);
   // we can run the net
-  auto [ev, res] = app();
-  ;
+  auto [ev, res] = app.execute();
 
   // now there is an end conition.
   REQUIRE(res == State::Completed);
@@ -63,7 +62,7 @@ TEST_CASE("Create a using pnml constructor.") {
     std::vector<std::pair<symmetri::Transition, int8_t>> priority;
     symmetri::Application app({pnml_file}, {}, store, priority, "fail", stp);
     // however, we can try running it,
-    auto [ev, res] = app();
+    auto [ev, res] = app.execute();
 
     // but the result is an error.
     REQUIRE(res == State::Error);
@@ -80,7 +79,7 @@ TEST_CASE("Create a using pnml constructor.") {
     symmetri::Application app({pnml_file}, final_marking, store, priority,
                               "success", stp);
     // so we can run it,
-    auto [ev, res] = app();
+    auto [ev, res] = app.execute();
     // and the result is properly completed.
     REQUIRE(res == State::Completed);
     REQUIRE(!ev.empty());

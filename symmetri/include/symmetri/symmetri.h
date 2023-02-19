@@ -50,17 +50,19 @@ using Store = std::map<std::string, PolyAction>;
 struct Petri;
 
 /**
- * @brief The Application class executes the Petri net, by using the
+ * @brief The Application class is a class that can create, configure and
+ * execute a Petri net.
  *
  */
+
 class Application {
  private:
-  mutable std::shared_ptr<Petri> impl;
+  std::shared_ptr<Petri> impl;
   std::function<void(const std::string &)> p;
 
  public:
   Application(
-      const std::set<std::string> &path_to_petri,
+      const std::set<std::string> &path_to_pnml,
       const symmetri::Marking &final_marking, const Store &store,
       const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
       const std::string &case_id,
@@ -73,7 +75,8 @@ class Application {
       const std::string &case_id,
       std::shared_ptr<const symmetri::StoppablePool> stp);
   ~Application();
-  Result operator()() const noexcept;
+
+  Result execute() const noexcept;
   std::function<void()> registerTransitionCallback(
       const std::string &transition) const noexcept;
   bool tryRunTransition(const std::string &s) const noexcept;
@@ -84,5 +87,7 @@ class Application {
   void togglePause() const noexcept;
   void exitEarly() const noexcept;
 };
+
+Result runTransition(const Application &app);
 
 }  // namespace symmetri

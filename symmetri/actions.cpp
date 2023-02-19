@@ -6,6 +6,10 @@
 namespace symmetri {
 const PolyAction noop([] {});
 
+/**
+ * @brief
+ *
+ */
 static moodycamel::BlockingConcurrentQueue<PolyAction> actions(256);
 
 StoppablePool::StoppablePool(unsigned int thread_count)

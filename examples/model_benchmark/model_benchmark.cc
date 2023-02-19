@@ -23,7 +23,7 @@ int main(int, char *argv[]) {
   symmetri::Application bignet(net, m0, {}, store, {}, "pluto", pool);
   spdlog::info("start!");
   const auto start_time = symmetri::clock_s::now();
-  auto [el, result] = bignet();  // infinite loop
+  auto [el, result] = bignet.execute();  // infinite loop
   const auto end_time = symmetri::clock_s::now();
   auto trans_count = el.size() / 2;
   auto delta_t = (double((end_time - start_time).count()) / 1e9);
