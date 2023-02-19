@@ -67,8 +67,13 @@ cd ../build
 
 and look at `http://localhost:2222/` for a live view of the activity.
 
+## Implementation
 
-# WIP / TODO
+Some details on the implementation.
+
+![Alt text](./docs/images/architecture.svg)
+
+## WIP / TODO
 
 - research transition guards/coloured nets
 
