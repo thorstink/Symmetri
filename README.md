@@ -71,7 +71,7 @@ and look at `http://localhost:2222/` for a live view of the activity.
 
 Some details on the implementation.
 
-![Alt text](./docs/images/architecture.svg)
+![Alt text](./docs/img/architecture.svg)
 
 ## WIP / TODO
 
