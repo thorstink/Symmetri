@@ -71,7 +71,7 @@ and look at `http://localhost:2222/` for a live view of the activity.
 
 Some details on the implementation.
 
-![Alt text](./docs/img/architecture.svg)
+![GitHub-Mark-Light](./docs/img/architecture_light.svg)![GitHub-Mark-Dark](./docs/img/architecture_dark.svg)
 
 ## WIP / TODO
 
