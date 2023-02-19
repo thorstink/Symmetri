@@ -54,7 +54,6 @@ struct Petri;
  * execute a Petri net.
  *
  */
-
 class Application final {
  private:
   std::shared_ptr<Petri> impl;
