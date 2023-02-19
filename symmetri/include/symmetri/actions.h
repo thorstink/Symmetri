@@ -10,6 +10,17 @@ namespace symmetri {
 
 class StoppablePool;
 
+/**
+ * @brief Create a Stoppable Pool object. The only way to create a StoppablePool
+ * is through this factory. We enforce the use of a smart pointer to make sure
+ * the pool stays alive untill both the original scope of the pool and net is
+ * exited.
+ *
+ * @param thread_count the amount of threads in the pool. The simplest way to
+ * avoid deadlocks in the net is to make sure thread_count is at least the
+ * maximum amount of transitions in the net. are ran in parallel.
+ * @return std::shared_ptr<const StoppablePool>
+ */
 std::shared_ptr<const StoppablePool> createStoppablePool(
     unsigned int thread_count);
 
@@ -25,11 +36,15 @@ class StoppablePool {
     return std::shared_ptr<const StoppablePool>(
         new StoppablePool(thread_count));
   }
-
   StoppablePool(unsigned int thread_count);
 
  public:
   ~StoppablePool();
+  /**
+   * @brief enqueue allows to put almost anything as "payload" for a transition.
+   *
+   * @param p
+   */
   void enqueue(PolyAction&& p) const;
 };
 
