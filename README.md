@@ -67,8 +67,19 @@ cd ../build
 
 and look at `http://localhost:2222/` for a live view of the activity.
 
+## Implementation
 
-# WIP / TODO
+Some details on the implementation.
+
+<p align="center" width="100%">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/img/architecture_dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="./docs/img/architecture_light.svg">
+  <img alt="architecture" src="./docs/img/architecture_light.svg">
+</picture>
+</p>
+
+## WIP / TODO
 
 - research transition guards/coloured nets
 
