@@ -93,7 +93,7 @@ int main(int, char *argv[]) {
 
   // this simply prints the event log
   uint64_t oldt = 0;
-  for (const auto &[caseid, t, s, c, tid] : el) {
+  for (const auto &[caseid, t, s, c] : el) {
     spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),
                  c.time_since_epoch().count());
     spdlog::info("{0}", c.time_since_epoch().count() - oldt);

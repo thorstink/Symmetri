@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['enqueue_0',['enqueue',['../classsymmetri_1_1StoppablePool.html#aaf483b9f2c1e32d479cb39d031e07f23',1,'symmetri::StoppablePool']]]
+  ['application_0',['Application',['../classsymmetri_1_1Application.html#a124011359c99879bb594b6a7874e8efc',1,'symmetri::Application::Application(const std::set&lt; std::string &gt; &amp;path_to_pnml, const symmetri::Marking &amp;final_marking, const Store &amp;store, const std::vector&lt; std::pair&lt; symmetri::Transition, int8_t &gt; &gt; &amp;priority, const std::string &amp;case_id, std::shared_ptr&lt; const symmetri::StoppablePool &gt; stp)'],['../classsymmetri_1_1Application.html#a4658201f16d308f47c45423b43e1d1c8',1,'symmetri::Application::Application(const symmetri::Net &amp;net, const symmetri::Marking &amp;m0, const symmetri::Marking &amp;final_marking, const Store &amp;store, const std::vector&lt; std::pair&lt; symmetri::Transition, int8_t &gt; &gt; &amp;priority, const std::string &amp;case_id, std::shared_ptr&lt; const symmetri::StoppablePool &gt; stp)']]]
 ];
