@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>My Project: symmetri::Event Struct Reference</title>
+<title>Symmetri: symmetri::Event Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -21,7 +21,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">My Project
+   <div id="projectname">Symmetri
    </div>
   </td>
  </tr>
@@ -80,7 +80,7 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 
-<p>This struct defines a subset of data that we associate with the payload of each transition.  
+<p>This struct defines a subset of data that we associate with the result of firing a transition.  
  <a href="structsymmetri_1_1Event.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="types_8h_source.html">types.h</a>&gt;</code></p>
@@ -88,18 +88,19 @@ $(function() {
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:ab103e727752222c9b86b3baea03b6840"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Event.html#ab103e727752222c9b86b3baea03b6840">case_id</a></td></tr>
+<tr class="memdesc:ab103e727752222c9b86b3baea03b6840"><td class="mdescLeft">&#160;</td><td class="mdescRight">The case_id of this event.  <br /></td></tr>
 <tr class="separator:ab103e727752222c9b86b3baea03b6840"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2fa4203222f063102f9799229f966b29"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Event.html#a2fa4203222f063102f9799229f966b29">transition</a></td></tr>
+<tr class="memdesc:a2fa4203222f063102f9799229f966b29"><td class="mdescLeft">&#160;</td><td class="mdescRight">The transition that generated the event.  <br /></td></tr>
 <tr class="separator:a2fa4203222f063102f9799229f966b29"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a640691cd84a1d64758c731d3815379e6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacesymmetri.html#ae147e58da807a85fe4e776557f3ddd7a">State</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Event.html#a640691cd84a1d64758c731d3815379e6">state</a></td></tr>
-<tr class="memdesc:a640691cd84a1d64758c731d3815379e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">The string representation of a transition.  <br /></td></tr>
+<tr class="memdesc:a640691cd84a1d64758c731d3815379e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">The resulting state of the event.  <br /></td></tr>
 <tr class="separator:a640691cd84a1d64758c731d3815379e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae21075532f8a1e9d3b2e0bdbca740bec"><td class="memItemLeft" align="right" valign="top">clock_s::time_point&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Event.html#ae21075532f8a1e9d3b2e0bdbca740bec">stamp</a></td></tr>
-<tr class="memdesc:ae21075532f8a1e9d3b2e0bdbca740bec"><td class="mdescLeft">&#160;</td><td class="mdescRight">The resulting State of the event.  <br /></td></tr>
 <tr class="separator:ae21075532f8a1e9d3b2e0bdbca740bec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>This struct defines a subset of data that we associate with the payload of each transition. </p>
+<div class="textblock"><p>This struct defines a subset of data that we associate with the result of firing a transition. </p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
 <a id="ab103e727752222c9b86b3baea03b6840" name="ab103e727752222c9b86b3baea03b6840"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab103e727752222c9b86b3baea03b6840">&#9670;&#160;</a></span>case_id</h2>
@@ -112,6 +113,8 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>The case_id of this event. </p>
 
 </div>
 </div>
@@ -126,8 +129,7 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>The resulting State of the event. </p>
+<p>The timestamp when the reducer of this event was processed (not generated/occured) </p>
 
 </div>
 </div>
@@ -143,7 +145,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>The string representation of a transition. </p>
+<p>The resulting state of the event. </p>
 
 </div>
 </div>
@@ -158,7 +160,8 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>A case_id allows to distinguish between multiple instance of the same net </p>
+
+<p>The transition that generated the event. </p>
 
 </div>
 </div>

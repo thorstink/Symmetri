@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>My Project: symmetri Namespace Reference</title>
+<title>Symmetri: symmetri Namespace Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -21,7 +21,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">My Project
+   <div id="projectname">Symmetri
    </div>
   </td>
  </tr>
@@ -85,7 +85,7 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="classsymmetri_1_1Application.html" title="The Application class is a class that can create, configure and execute a Petri net.">Application</a> class is a class that can create, configure and execute a <a class="el" href="structsymmetri_1_1Petri.html">Petri</a> net.  <a href="classsymmetri_1_1Application.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Event.html">Event</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">This struct defines a subset of data that we associate with the payload of each transition.  <a href="structsymmetri_1_1Event.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">This struct defines a subset of data that we associate with the result of firing a transition.  <a href="structsymmetri_1_1Event.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Model.html">Model</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -169,8 +169,6 @@ Functions</h2></td></tr>
 <tr class="memitem:afe0956f02fe9491059bfd33603b19c7c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesymmetri.html#afe0956f02fe9491059bfd33603b19c7c">StateNetEquality</a> (const <a class="el" href="namespacesymmetri.html#a5260f5a518791717e194eb3f37caa656">Net</a> &amp;net1, const <a class="el" href="namespacesymmetri.html#a5260f5a518791717e194eb3f37caa656">Net</a> &amp;net2)</td></tr>
 <tr class="memdesc:afe0956f02fe9491059bfd33603b19c7c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if two petri-nets have equal amount of arcs between places and transitions of the same name.  <br /></td></tr>
 <tr class="separator:afe0956f02fe9491059bfd33603b19c7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab83e5ab8cb246b665708e19f0a041303"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesymmetri.html#ab83e5ab8cb246b665708e19f0a041303">getThreadId</a> ()</td></tr>
-<tr class="separator:ab83e5ab8cb246b665708e19f0a041303"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acf5def1daa631f8fae536487ba1e09da"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesymmetri.html#acf5def1daa631f8fae536487ba1e09da">toIndex</a> (const std::vector&lt; std::string &gt; &amp;m, const std::string &amp;s)</td></tr>
 <tr class="separator:acf5def1daa631f8fae536487ba1e09da"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:addb51a0a7d15de879e35c891b4d4f931"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacesymmetri.html#a50a153fb9f52980c5a97a44aa65885df">Reducer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesymmetri.html#addb51a0a7d15de879e35c891b4d4f931">processTransition</a> (size_t t_i, const std::string &amp;case_id, <a class="el" href="namespacesymmetri.html#ae147e58da807a85fe4e776557f3ddd7a">State</a> result, clock_s::time_point start_time, clock_s::time_point end_time)</td></tr>
@@ -385,15 +383,15 @@ Variables</h2></td></tr>
 
 <p>The difference kinds of results a transition can have. </p>
 <table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ae147e58da807a85fe4e776557f3ddd7aa8428552d86c0d262a542a528af490afa" name="ae147e58da807a85fe4e776557f3ddd7aa8428552d86c0d262a542a528af490afa"></a>Started&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="ae147e58da807a85fe4e776557f3ddd7aa07ca5050e697392c9ed47e6453f1453f" name="ae147e58da807a85fe4e776557f3ddd7aa07ca5050e697392c9ed47e6453f1453f"></a>Completed&#160;</td><td class="fielddoc"><p>The transition started. </p>
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ae147e58da807a85fe4e776557f3ddd7aa8428552d86c0d262a542a528af490afa" name="ae147e58da807a85fe4e776557f3ddd7aa8428552d86c0d262a542a528af490afa"></a>Started&#160;</td><td class="fielddoc"><p>The transition started. </p>
 </td></tr>
-<tr><td class="fieldname"><a id="ae147e58da807a85fe4e776557f3ddd7aab5b078c00f1f60fe13c379ba56a7eb79" name="ae147e58da807a85fe4e776557f3ddd7aab5b078c00f1f60fe13c379ba56a7eb79"></a>Deadlock&#160;</td><td class="fielddoc"><p>The transition completed as expected. </p>
+<tr><td class="fieldname"><a id="ae147e58da807a85fe4e776557f3ddd7aa07ca5050e697392c9ed47e6453f1453f" name="ae147e58da807a85fe4e776557f3ddd7aa07ca5050e697392c9ed47e6453f1453f"></a>Completed&#160;</td><td class="fielddoc"><p>The transition completed as expected. </p>
 </td></tr>
-<tr><td class="fieldname"><a id="ae147e58da807a85fe4e776557f3ddd7aa1a08e188c45a9dc17bf2eb94f6c1a42f" name="ae147e58da807a85fe4e776557f3ddd7aa1a08e188c45a9dc17bf2eb94f6c1a42f"></a>UserExit&#160;</td><td class="fielddoc"><p>The transition deadlocked (e.g. it was a petri net) </p>
+<tr><td class="fieldname"><a id="ae147e58da807a85fe4e776557f3ddd7aab5b078c00f1f60fe13c379ba56a7eb79" name="ae147e58da807a85fe4e776557f3ddd7aab5b078c00f1f60fe13c379ba56a7eb79"></a>Deadlock&#160;</td><td class="fielddoc"><p>The transition deadlocked (e.g. it was a petri net) </p>
 </td></tr>
-<tr><td class="fieldname"><a id="ae147e58da807a85fe4e776557f3ddd7aa902b0d55fddef6f8d651fe1035b7d4bd" name="ae147e58da807a85fe4e776557f3ddd7aa902b0d55fddef6f8d651fe1035b7d4bd"></a>Error&#160;</td><td class="fielddoc"><p>The transition or interupted and was stopped. </p>
-<p>None of the above </p>
+<tr><td class="fieldname"><a id="ae147e58da807a85fe4e776557f3ddd7aa1a08e188c45a9dc17bf2eb94f6c1a42f" name="ae147e58da807a85fe4e776557f3ddd7aa1a08e188c45a9dc17bf2eb94f6c1a42f"></a>UserExit&#160;</td><td class="fielddoc"><p>The transition or interupted and was stopped. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ae147e58da807a85fe4e776557f3ddd7aa902b0d55fddef6f8d651fe1035b7d4bd" name="ae147e58da807a85fe4e776557f3ddd7aa902b0d55fddef6f8d651fe1035b7d4bd"></a>Error&#160;</td><td class="fielddoc"><p>None of the above. </p>
 </td></tr>
 </table>
 
@@ -739,23 +737,6 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Result Contains information on the result-state and possible eventlog of the transition. </dd></dl>
-
-</div>
-</div>
-<a id="ab83e5ab8cb246b665708e19f0a041303" name="ab83e5ab8cb246b665708e19f0a041303"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab83e5ab8cb246b665708e19f0a041303">&#9670;&#160;</a></span>getThreadId()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">auto symmetri::getThreadId </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
 
 </div>
 </div>
@@ -1291,13 +1272,12 @@ false </dd></dl>
 </div><div class="memdoc">
 <b>Initial value:</b><div class="fragment"><div class="line">= []() {</div>
 <div class="line">  spdlog::info(<span class="stringliteral">&quot;User requests exit&quot;</span>);</div>
-<div class="line">  std::lock_guard&lt;std::mutex&gt; lk(<a class="code hl_variable" href="test__bugs_8cc.html#a32b523f231e8593f857ef2848df59e29">cv_m</a>);</div>
+<div class="line">  std::lock_guard&lt;std::mutex&gt; lk(cv_m);</div>
 <div class="line">  <a class="code hl_function" href="namespacesymmetri.html#acfba705686235ac7c7b6944639f1b1cb">EARLY_EXIT</a>.store(<span class="keyword">true</span>);</div>
-<div class="line">  <a class="code hl_variable" href="test__bugs_8cc.html#a0afa02d14fff34c480aabfbc41ad193c">cv</a>.notify_all();</div>
+<div class="line">  <a class="code hl_variable" href="namespacesymmetri.html#a5eb990e0c5152b0a20c5ee141ed695f7">cv</a>.notify_all();</div>
 <div class="line">}</div>
+<div class="ttc" id="anamespacesymmetri_html_a5eb990e0c5152b0a20c5ee141ed695f7"><div class="ttname"><a href="namespacesymmetri.html#a5eb990e0c5152b0a20c5ee141ed695f7">symmetri::cv</a></div><div class="ttdeci">std::condition_variable cv</div><div class="ttdef"><b>Definition:</b> symmetri.cc:20</div></div>
 <div class="ttc" id="anamespacesymmetri_html_acfba705686235ac7c7b6944639f1b1cb"><div class="ttname"><a href="namespacesymmetri.html#acfba705686235ac7c7b6944639f1b1cb">symmetri::EARLY_EXIT</a></div><div class="ttdeci">std::atomic&lt; bool &gt; EARLY_EXIT(false)</div></div>
-<div class="ttc" id="atest__bugs_8cc_html_a0afa02d14fff34c480aabfbc41ad193c"><div class="ttname"><a href="test__bugs_8cc.html#a0afa02d14fff34c480aabfbc41ad193c">cv</a></div><div class="ttdeci">std::condition_variable cv</div><div class="ttdef"><b>Definition:</b> test_bugs.cc:10</div></div>
-<div class="ttc" id="atest__bugs_8cc_html_a32b523f231e8593f857ef2848df59e29"><div class="ttname"><a href="test__bugs_8cc.html#a32b523f231e8593f857ef2848df59e29">cv_m</a></div><div class="ttdeci">std::mutex cv_m</div><div class="ttdef"><b>Definition:</b> test_bugs.cc:11</div></div>
 </div><!-- fragment -->
 </div>
 </div>

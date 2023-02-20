@@ -180,7 +180,7 @@ Application::Application(
     std::shared_ptr<const symmetri::StoppablePool> stp) {
   const auto &[net, m0] = readPetriNets(files);
   if (check(store, net)) {
-    std::tie(impl, p) =
+    std::tie(impl, register_functor) =
         create(net, m0, final_marking, store, priority, case_id, stp);
   }
 }
@@ -192,12 +192,12 @@ Application::Application(
     const std::string &case_id,
     std::shared_ptr<const symmetri::StoppablePool> stp) {
   if (check(store, net)) {
-    std::tie(impl, p) =
+    std::tie(impl, register_functor) =
         create(net, m0, final_marking, store, priority, case_id, stp);
   }
 }
 
-bool Application::tryRunTransition(const std::string &t) const noexcept {
+bool Application::tryFireTransition(const std::string &t) const noexcept {
   if (impl == nullptr) {
     spdlog::warn("There is no net to run a transition.");
     return false;
@@ -271,7 +271,7 @@ std::vector<std::string> Application::getFireableTransitions() const noexcept {
 
 std::function<void()> Application::registerTransitionCallback(
     const std::string &transition) const noexcept {
-  return [transition, this]() { p(transition); };
+  return [transition, this]() { register_functor(transition); };
 }
 
 void Application::exitEarly() const noexcept { EARLY_EXIT_HANDLER(); }

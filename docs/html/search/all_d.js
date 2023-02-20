@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['readme_2emd_0',['README.md',['../README_8md.html',1,'(Global Namespace)'],['../symmetri_2tests_2assets_2README_8md.html',1,'(Global Namespace)']]],
+  ['readme_2emd_0',['README.md',['../README_8md.html',1,'']]],
   ['readpetrinets_1',['readPetriNets',['../pnml__parser_8h.html#a0fb404af43e307fc38072e05465b2d1f',1,'readPetriNets(const std::set&lt; std::string &gt; &amp;files):&#160;pnml_parser.cc'],['../pnml__parser_8cc.html#ab7030aa1d9458f8a4e8429289cd2731b',1,'readPetriNets(const std::set&lt; std::string &gt; &amp;files):&#160;pnml_parser.cc']]],
   ['reducer_2',['Reducer',['../namespacesymmetri.html#a50a153fb9f52980c5a97a44aa65885df',1,'symmetri']]],
   ['reducers_3',['reducers',['../structsymmetri_1_1Petri.html#ac5c15fc5b1aa94e3858e30fe735fb6a5',1,'symmetri::Petri']]],

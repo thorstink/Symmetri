@@ -9,6 +9,6 @@ var searchData=
   ['create_6',['create',['../namespacesymmetri.html#a7cba4730959eb4a7c4ebbbc8bdac5784',1,'symmetri']]],
   ['createreducerfortransition_7',['createReducerForTransition',['../namespacesymmetri.html#ab6a0298b354e122c045d6bf42ccc820e',1,'symmetri']]],
   ['createstoppablepool_8',['createStoppablePool',['../classsymmetri_1_1StoppablePool.html#a2dafbcb4e8116e553386b49d52caa1a2',1,'symmetri::StoppablePool::createStoppablePool()'],['../namespacesymmetri.html#a7aee846c36b54021c295119b5a4dce3c',1,'symmetri::createStoppablePool(unsigned int thread_count)']]],
-  ['cv_9',['cv',['../namespacesymmetri.html#a5eb990e0c5152b0a20c5ee141ed695f7',1,'symmetri::cv()'],['../test__bugs_8cc.html#a0afa02d14fff34c480aabfbc41ad193c',1,'cv():&#160;test_bugs.cc']]],
-  ['cv_5fm_10',['cv_m',['../namespacesymmetri.html#a8e1158f05733423c2be3d0e75aaecb16',1,'symmetri::cv_m()'],['../test__bugs_8cc.html#a32b523f231e8593f857ef2848df59e29',1,'cv_m():&#160;test_bugs.cc']]]
+  ['cv_9',['cv',['../namespacesymmetri.html#a5eb990e0c5152b0a20c5ee141ed695f7',1,'symmetri']]],
+  ['cv_5fm_10',['cv_m',['../namespacesymmetri.html#a8e1158f05733423c2be3d0e75aaecb16',1,'symmetri']]]
 ];

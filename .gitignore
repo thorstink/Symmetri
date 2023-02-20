@@ -35,3 +35,6 @@ install
 *.exe
 *.out
 *.app
+
+# macos
+.DS_Store

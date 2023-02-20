@@ -16,25 +16,24 @@ using clock_s = std::chrono::steady_clock;
  *
  */
 enum class State {
-  Started,    /// The transition started
-  Completed,  /// The transition completed as expected
-  Deadlock,   /// The transition deadlocked (e.g. it was a petri net)
-  UserExit,   /// The transition or interupted and was stopped
-  Error       /// None of the above
+  Started,    ///< The transition started
+  Completed,  ///< The transition completed as expected
+  Deadlock,   ///< The transition deadlocked (e.g. it was a petri net)
+  UserExit,   ///< The transition or interupted and was stopped
+  Error       ///< None of the above
 };
 
 /**
  * @brief This struct defines a subset of data that we associate with the
- * payload of each transition.
+ * result of firing a transition.
  *
  */
 struct Event {
-  std::string case_id;     /// A case_id allows to distinguish between multiple
-                           /// instance of the same net
-  std::string transition;  /// The string representation of a transition
-  State state;             /// The resulting State of the event
-  clock_s::time_point stamp;  /// The timestamp when the reducer of this
-                              /// event-result was processed
+  std::string case_id;        ///< The case_id of this event
+  std::string transition;     ///< The transition that generated the event
+  State state;                ///< The resulting state of the event
+  clock_s::time_point stamp;  ///< The timestamp when the reducer of this
+                              ///< event was processed (not generated/occured)
 };
 
 using Eventlog = std::list<Event>;

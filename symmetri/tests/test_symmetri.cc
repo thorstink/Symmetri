@@ -93,7 +93,7 @@ TEST_CASE("Run transition manually.") {
   symmetri::Application app(net, m0, {}, store, priority, "single_run_net1",
                             stp);
 
-  REQUIRE(app.tryRunTransition("t0"));
+  REQUIRE(app.tryFireTransition("t0"));
   app.exitEarly();
   ;
 }
@@ -104,7 +104,7 @@ TEST_CASE("Run transition that does not exist manually.") {
   symmetri::Application app(net, m0, {}, store, priority, "single_run_net2",
                             stp);
 
-  REQUIRE(!app.tryRunTransition("t0dgdsg"));
+  REQUIRE(!app.tryFireTransition("t0dgdsg"));
   app.exitEarly();
   ;
 }
@@ -119,7 +119,7 @@ TEST_CASE("Run transition for which the preconditions are not met manually.") {
   for (auto t : l) {
     REQUIRE(t != "t1");
   }
-  REQUIRE(!app.tryRunTransition("t1"));
+  REQUIRE(!app.tryFireTransition("t1"));
   app.exitEarly();
   ;
 }

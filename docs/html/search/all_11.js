@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['what_27s_20this_0',['What&apos;s this',['../md_symmetri_tests_assets_README.html',1,'']]]
+  ['_7estoppablepool_0',['~StoppablePool',['../classsymmetri_1_1StoppablePool.html#a3d9ccd1da1eb03fd470f1e5c6b7ca1a5',1,'symmetri::StoppablePool']]]
 ];

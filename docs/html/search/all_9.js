@@ -9,8 +9,7 @@ var searchData=
   ['markingreached_6',['MarkingReached',['../namespacesymmetri.html#a418009feff8440061b68e708f273021b',1,'symmetri']]],
   ['markingreached_3c_20size_5ft_20_3e_7',['MarkingReached&lt; size_t &gt;',['../namespacesymmetri.html#acb70142416ff52fd1f876f37035e0b1e',1,'symmetri']]],
   ['markingreached_3c_20std_3a_3astring_20_3e_8',['MarkingReached&lt; std::string &gt;',['../namespacesymmetri.html#a6828da1a8416373259b16cf20213bb62',1,'symmetri']]],
-  ['maxplus_2ecc_9',['maxplus.cc',['../maxplus_8cc.html',1,'']]],
-  ['model_10',['Model',['../structsymmetri_1_1Model.html#aba992d940210c82e8237cad7ca8f89aa',1,'symmetri::Model::Model(const Net &amp;_net, const Store &amp;store, const std::vector&lt; std::pair&lt; symmetri::Transition, int8_t &gt; &gt; &amp;_priority, const Marking &amp;M0)'],['../structsymmetri_1_1Model.html#a0c2d6275a31a83dcd39f223c782fcbd5',1,'symmetri::Model::Model(const Model &amp;)=delete'],['../structsymmetri_1_1Model.html',1,'symmetri::Model']]],
-  ['model_2ecc_11',['model.cc',['../model_8cc.html',1,'']]],
-  ['model_2eh_12',['model.h',['../model_8h.html',1,'']]]
+  ['model_9',['Model',['../structsymmetri_1_1Model.html#aba992d940210c82e8237cad7ca8f89aa',1,'symmetri::Model::Model(const Net &amp;_net, const Store &amp;store, const std::vector&lt; std::pair&lt; symmetri::Transition, int8_t &gt; &gt; &amp;_priority, const Marking &amp;M0)'],['../structsymmetri_1_1Model.html#a0c2d6275a31a83dcd39f223c782fcbd5',1,'symmetri::Model::Model(const Model &amp;)=delete'],['../structsymmetri_1_1Model.html',1,'symmetri::Model']]],
+  ['model_2ecc_10',['model.cc',['../model_8cc.html',1,'']]],
+  ['model_2eh_11',['model.h',['../model_8h.html',1,'']]]
 ];

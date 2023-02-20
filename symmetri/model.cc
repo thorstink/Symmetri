@@ -1,13 +1,6 @@
 #include "model.h"
 
-#include <iostream>
-
 namespace symmetri {
-
-auto getThreadId() {
-  return static_cast<size_t>(
-      std::hash<std::thread::id>()(std::this_thread::get_id()));
-}
 
 size_t toIndex(const std::vector<std::string> &m, const std::string &s) {
   auto ptr = std::find(m.begin(), m.end(), s);
@@ -30,6 +23,7 @@ Reducer processTransition(size_t t_i, const std::string &case_id, State result,
         {case_id, model.net.transition[t_i],
          result == State::Completed ? State::Completed : State::Error,
          end_time});
+
     // we know for sure this transition is active because otherwise it wouldn't
     // produce a reducer.
     model.active_transitions_n.erase(
@@ -67,6 +61,7 @@ Reducer createReducerForTransition(size_t t_i, const PolyAction &task,
   const auto start_time = clock_s::now();
   const auto &[ev, res] = fireTransition(task);
   const auto end_time = clock_s::now();
+
   return ev.empty() ? processTransition(t_i, case_id, res, start_time, end_time)
                     : processTransition(t_i, ev, res);
 }
