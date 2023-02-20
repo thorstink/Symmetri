@@ -13,7 +13,7 @@ class StoppablePool;
 /**
  * @brief Create a StoppablePool object. The only way to create a StoppablePool
  * is through this factory. We enforce the use of a smart pointer to make sure
- * the pool stays alive untill both the original scope of the pool and net is
+ * the pool stays alive until both the original scope of the pool and net is
  * exited.
  *
  * @param thread_count the amount of threads in the pool. The simplest way to

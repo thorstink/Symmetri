@@ -102,7 +102,7 @@ struct Model {
       const std::string &case_id = "undefined_case_id");
 
   /**
-   * @brief Tries to run a transition (or all) untill it 'deadlocks'. The list
+   * @brief Tries to run a transition (or all) until it 'deadlocks'. The list
    * of actions is queued and the function returns.
    *
    * @param reducers pointer reducer queue, needed to construct the reducer(s)

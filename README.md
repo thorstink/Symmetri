@@ -34,7 +34,7 @@ Marking m0 = {{"Z", 1}, {"B", 0}, {"C", 0}};
 StoppablePool stp(1);
 symmetri::Application app(net, m0, {}, store, priority,
                           "test_net_without_end", stp);
-auto [eventlog, res] = app.execute(); // run untill done.
+auto [eventlog, res] = app.execute(); // run until done.
 ```
 
 - `net` is a multiset description of a Petri net
@@ -46,26 +46,32 @@ auto [eventlog, res] = app.execute(); // run untill done.
 
 ## Build
 
-Clone the repository and make sure you also initialize the submodules.
+Clone the repository and make sure you also initialize the submodules:
 
 ```bash
+git clone https://github.com/thorstink/Symmetri.git
+git submodule update --init --recursive
 mkdir build
 cd build
-cmake .. -DBUILD_TESTING=0 -DBUILD_EXAMPLES=0
-cmake .. -DBUILD_TESTING=1 -DBUILD_EXAMPLES=0
-cmake .. -DBUILD_TESTING=1 -DBUILD_EXAMPLES=1
+# Debug build without sanitizers
+cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_EXAMPLES=ON -DBUILD_TESTING=ON -DASAN_BUILD=OFF -DTSAN_BUILD=OFF ..
+# Debug build with thread sanitizers
+cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_EXAMPLES=ON -DBUILD_TESTING=ON -DASAN_BUILD=OFF -DTSAN_BUILD=ON ..
+# Debug build with adress sanitizers
+cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_EXAMPLES=ON -DBUILD_TESTING=ON -DASAN_BUILD=ON -DTSAN_BUILD=OFF ..
+# After picking:
+make && make test
 ```
 
-## Run
+## Run examples
 
-```
+```bash
 cd ../build
+# finishes with a deadlock
+./examples/hello_world/symmetri_hello_world ../nets/passive_n1.pnml ../nets/T50startP0.pnml
+# finishes by reaching the final marking (e.g. completed)
 ./examples/flight/symmetri_flight ../nets/PT1.pnml ../nets/PT2.pnml ../nets/PT3.pnml
-# or
-./Symmetri_hello_world ../nets/passive_n1.pnml ../nets/T50startP0.pnml
 ```
-
-and look at `http://localhost:2222/` for a live view of the activity.
 
 ## Implementation
 
@@ -79,17 +85,6 @@ Some details on the implementation.
 </picture>
 </p>
 
-## WIP / TODO
+## State of the library
 
-- research transition guards/coloured nets
-
-https://www.youtube.com/watch?v=2KGkcGtGVM4
-https://stlab.cc/tip/2017/12/23/small-object-optimizations.html
-
-# Cloc
-
-https://www.youtube.com/watch?v=2KGkcGtGVM4
-https://stlab.cc/tip/2017/12/23/small-object-optimizations.html
-```
-cloc --exclude-list-file=.clocignore .
-```
+Still in alpha! Improving as we go. None the less, Symmetri is already being used in industry ;-). Feel free to contact me if you are curious or have questions.
