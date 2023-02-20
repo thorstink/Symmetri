@@ -57,7 +57,7 @@ bool MarkingReached<std::string>(
   });
 }
 
-bool StateNetEquality(const StateNet& net1, const StateNet& net2) {
+bool stateNetEquality(const Net& net1, const Net& net2) {
   if (net1.size() != net2.size()) {
     return false;
   }
@@ -93,33 +93,32 @@ bool StateNetEquality(const StateNet& net1, const StateNet& net2) {
 
 size_t calculateTrace(const Eventlog& event_log) noexcept {
   // calculate a trace-id, in a simple way.
-  return std::hash<std::string>{}(
-      std::accumulate(event_log.begin(), event_log.end(), std::string(""),
-                      [](const auto& acc, const Event& n) {
-                        constexpr auto success = "o";
-                        constexpr auto fail = "x";
-                        return n.state == TransitionState::Completed
-                                   ? acc + n.transition + success
-                                   : acc + fail;
-                      }));
+  return std::hash<std::string>{}(std::accumulate(
+      event_log.begin(), event_log.end(), std::string(""),
+      [](const auto& acc, const Event& n) {
+        constexpr auto success = "o";
+        constexpr auto fail = "x";
+        return n.state == State::Completed ? acc + n.transition + success
+                                           : acc + fail;
+      }));
 }
 
-std::string printState(symmetri::TransitionState s) noexcept {
+std::string printState(symmetri::State s) noexcept {
   std::string ret;
   switch (s) {
-    case TransitionState::Started:
+    case State::Started:
       ret = "Started";
       break;
-    case TransitionState::Completed:
+    case State::Completed:
       ret = "Completed";
       break;
-    case TransitionState::Deadlock:
+    case State::Deadlock:
       ret = "Deadlock";
       break;
-    case TransitionState::UserExit:
+    case State::UserExit:
       ret = "UserExit";
       break;
-    case TransitionState::Error:
+    case State::Error:
       ret = "Error";
       break;
   }

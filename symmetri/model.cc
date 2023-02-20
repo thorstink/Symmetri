@@ -2,30 +2,28 @@
 
 namespace symmetri {
 
-auto getThreadId() {
-  return static_cast<size_t>(
-      std::hash<std::thread::id>()(std::this_thread::get_id()));
+size_t toIndex(const std::vector<std::string> &m, const std::string &s) {
+  auto ptr = std::find(m.begin(), m.end(), s);
+  return std::distance(m.begin(), ptr);
 }
 
-Reducer processTransition(size_t t_i, const std::string &case_id,
-                          TransitionState result, size_t thread_id,
+Reducer processTransition(size_t t_i, const std::string &case_id, State result,
                           clock_s::time_point start_time,
                           clock_s::time_point end_time) {
   return [=](Model &&model) -> Model & {
-    if (result == TransitionState::Completed) {
+    if (result == State::Completed) {
       const auto &place_list = model.net.output_n;
       model.tokens_n.insert(model.tokens_n.begin(), place_list[t_i].begin(),
                             place_list[t_i].end());
     }
 
-    model.event_log.push_back({case_id, model.net.transition[t_i],
-                               TransitionState::Started, start_time,
-                               thread_id});
-    model.event_log.push_back({case_id, model.net.transition[t_i],
-                               result == TransitionState::Completed
-                                   ? TransitionState::Completed
-                                   : TransitionState::Error,
-                               end_time, thread_id});
+    model.event_log.push_back(
+        {case_id, model.net.transition[t_i], State::Started, start_time});
+    model.event_log.push_back(
+        {case_id, model.net.transition[t_i],
+         result == State::Completed ? State::Completed : State::Error,
+         end_time});
+
     // we know for sure this transition is active because otherwise it wouldn't
     // produce a reducer.
     model.active_transitions_n.erase(
@@ -36,9 +34,9 @@ Reducer processTransition(size_t t_i, const std::string &case_id,
 }
 
 Reducer processTransition(size_t t_i, const Eventlog &new_events,
-                          TransitionState result) {
+                          State result) {
   return [=](Model &&model) -> Model & {
-    if (result == TransitionState::Completed) {
+    if (result == State::Completed) {
       const auto &place_list = model.net.output_n;
       model.tokens_n.insert(model.tokens_n.begin(), place_list[t_i].begin(),
                             place_list[t_i].end());
@@ -61,11 +59,10 @@ Reducer processTransition(size_t t_i, const Eventlog &new_events,
 Reducer createReducerForTransition(size_t t_i, const PolyAction &task,
                                    const std::string &case_id) {
   const auto start_time = clock_s::now();
-  const auto &[ev, res] = runTransition(task);
+  const auto &[ev, res] = fireTransition(task);
   const auto end_time = clock_s::now();
-  const auto thread_id = getThreadId();
-  return ev.empty() ? processTransition(t_i, case_id, res, thread_id,
-                                        start_time, end_time)
+
+  return ev.empty() ? processTransition(t_i, case_id, res, start_time, end_time)
                     : processTransition(t_i, ev, res);
 }
 
@@ -100,9 +97,9 @@ gch::small_vector<uint8_t, 32> possibleTransitions(
 }
 
 Model::Model(
-    const StateNet &_net, const Store &store,
+    const Net &_net, const Store &store,
     const std::vector<std::pair<symmetri::Transition, int8_t>> &_priority,
-    const NetMarking &M0)
+    const Marking &M0)
     : timestamp(clock_s::now()) {
   // populate net:
   const auto transition_count = _net.size();
@@ -186,9 +183,11 @@ std::vector<Transition> Model::getFireableTransitions() const {
   return fireable_transitions;
 }
 
-bool Model::tryFire(const size_t t,
-                    moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
-                    const StoppablePool &pool, const std::string &case_id) {
+bool Model::tryFire(
+    const size_t t,
+    const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
+        &reducers,
+    const StoppablePool &pool, const std::string &case_id) {
   const auto &pre = net.input_n[t];
 
   if (canFire(pre, tokens_n)) {
@@ -200,7 +199,7 @@ bool Model::tryFire(const size_t t,
       tokens_n.erase(std::find(tokens_n.begin(), tokens_n.end(), place));
     }
 
-    auto task = net.store[t];
+    const auto &task = net.store[t];
 
     // if the transition is direct, we short-circuit the
     // marking mutation and do it immediately.
@@ -208,13 +207,13 @@ bool Model::tryFire(const size_t t,
       tokens_n.insert(tokens_n.begin(), net.output_n[t].begin(),
                       net.output_n[t].end());
       event_log.push_back(
-          {case_id, net.transition[t], TransitionState::Started, timestamp, 0});
-      event_log.push_back({case_id, net.transition[t],
-                           TransitionState::Completed, timestamp, 0});
+          {case_id, net.transition[t], State::Started, timestamp});
+      event_log.push_back(
+          {case_id, net.transition[t], State::Completed, timestamp});
     } else {
       active_transitions_n.push_back(t);
-      pool.enqueue([=, &reducers] {
-        reducers.enqueue(createReducerForTransition(t, task, case_id));
+      pool.enqueue([=] {
+        reducers->enqueue(createReducerForTransition(t, task, case_id));
       });
     }
     return true;
@@ -223,8 +222,10 @@ bool Model::tryFire(const size_t t,
   }
 }
 
-bool Model::runTransition(
-    const Transition &t, moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
+bool Model::fireTransition(
+    const Transition &t,
+    const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
+        &reducers,
     const StoppablePool &pool, const std::string &case_id) {
   auto it = std::find(net.transition.begin(), net.transition.end(), t);
   return it != net.transition.end() &&
@@ -232,8 +233,9 @@ bool Model::runTransition(
                  case_id);
 }
 
-void Model::runTransitions(
-    moodycamel::BlockingConcurrentQueue<Reducer> &reducers,
+void Model::fireTransitions(
+    const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
+        &reducers,
     const StoppablePool &pool, bool run_all, const std::string &case_id) {
   // find possible transitions
   auto possible_transition_list_n =
@@ -271,10 +273,13 @@ std::vector<Place> Model::getMarking() const {
 
 std::vector<Transition> Model::getActiveTransitions() const {
   std::vector<Transition> transition_list;
-  transition_list.reserve(active_transitions_n.size());
-  std::transform(active_transitions_n.cbegin(), active_transitions_n.cend(),
-                 std::back_inserter(transition_list),
-                 [&](auto place_index) { return net.transition[place_index]; });
+  if (active_transitions_n.size() > 0) {
+    transition_list.reserve(active_transitions_n.size());
+    std::transform(active_transitions_n.cbegin(), active_transitions_n.cend(),
+                   std::back_inserter(transition_list), [&](auto place_index) {
+                     return net.transition[place_index];
+                   });
+  }
   return transition_list;
 }
 

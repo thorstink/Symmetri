@@ -19,13 +19,13 @@
 void helloWorld() { std::this_thread::sleep_for(std::chrono::seconds(1)); }
 
 // If you want to specify 'success' or 'failure' you can return a
-// "TransitionState". It can be {Started, Completed, Deadlock, UserExit, Error},
+// "State". It can be {Started, Completed, Deadlock, UserExit, Error},
 // and in the case of defining your own function it makes sense to return either
 // "Completed" or "Error". The Other states re meant when the function is a
 // nested petri-net.
-symmetri::TransitionState helloResult() {
+symmetri::State helloResult() {
   std::this_thread::sleep_for(std::chrono::seconds(1));
-  return symmetri::TransitionState::Completed;
+  return symmetri::State::Completed;
 }
 
 // The main is simply the body of a cpp program. It has to start somewhere, so
@@ -49,7 +49,7 @@ int main(int, char *argv[]) {
                               {"t4", &helloWorld},  {"t50", &helloWorld}};
 
   // This is a very simple thread pool. It can be shared among nets.
-  symmetri::StoppablePool pool(1);
+  auto pool = symmetri::createStoppablePool(1);
 
   // This is the construction of the class that executes the functions in the
   // store based on the petri net. You can specifiy a final marking, the amount
@@ -84,8 +84,8 @@ int main(int, char *argv[]) {
                                    // becomes false.
       });
 
-  auto [el, result] =
-      net();  // This function blocks until either the net completes, deadlocks
+  auto [el, result] = net.execute();  // This function blocks until either the
+                                      // net completes, deadlocks
   // or user requests exit (ctrl-c)
   running.store(false);  // We set this to false so the thread that we launched
                          // gets interrupted.
@@ -93,7 +93,7 @@ int main(int, char *argv[]) {
 
   // this simply prints the event log
   uint64_t oldt = 0;
-  for (const auto &[caseid, t, s, c, tid] : el) {
+  for (const auto &[caseid, t, s, c] : el) {
     spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),
                  c.time_since_epoch().count());
     spdlog::info("{0}", c.time_since_epoch().count() - oldt);
@@ -102,5 +102,5 @@ int main(int, char *argv[]) {
 
   // return the result! in linux is enverything went well, you typically return
   // 0.
-  return result == symmetri::TransitionState::Completed ? 0 : -1;
+  return result == symmetri::State::Completed ? 0 : -1;
 }

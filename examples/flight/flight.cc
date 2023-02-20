@@ -29,9 +29,9 @@ int main(int, char *argv[]) {
   auto pnml2 = std::string(argv[2]);
   auto pnml3 = std::string(argv[3]);
 
-  symmetri::StoppablePool pool(4);
+  auto pool = symmetri::createStoppablePool(4);
 
-  symmetri::NetMarking final_marking2 = {{"P2", 1}};
+  symmetri::Marking final_marking2 = {{"P2", 1}};
   symmetri::Store s2 = {{"T0", helloT("T01")}, {"T1", helloT("T02")}};
   auto snet = {pnml1, pnml2};
 
@@ -40,19 +40,18 @@ int main(int, char *argv[]) {
   symmetri::Store store = {
       {"T0", subnet}, {"T1", helloT("T1")}, {"T2", helloT("T2")}};
 
-  symmetri::NetMarking final_marking = {{"P3", 5}};
+  symmetri::Marking final_marking = {{"P3", 5}};
   auto net = {pnml1, pnml2, pnml3};
   std::vector<std::pair<symmetri::Transition, int8_t>> priority;
   symmetri::Application bignet(net, final_marking, store, priority, "pluto",
                                pool);
 
-  auto [el, result] = bignet();  // infinite loop
-  for (const auto &[caseid, t, s, c, tid] : el) {
+  auto [el, result] = bignet.execute();  // infinite loop
+  for (const auto &[caseid, t, s, c] : el) {
     spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),
                  c.time_since_epoch().count());
   }
-  pool.stop();
   spdlog::info("Result of this net: {0}", printState(result));
 
-  return result == symmetri::TransitionState::Completed ? 0 : -1;
+  return result == symmetri::State::Completed ? 0 : -1;
 }

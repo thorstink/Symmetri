@@ -27,13 +27,13 @@ void t() {
   });
 }
 
-std::tuple<StateNet, Store,
-           std::vector<std::pair<symmetri::Transition, int8_t>>, NetMarking>
+std::tuple<Net, Store, std::vector<std::pair<symmetri::Transition, int8_t>>,
+           Marking>
 testNet() {
-  StateNet net = {{"t", {{"Pa"}, {"Pb"}}}};
+  Net net = {{"t", {{"Pa"}, {"Pb"}}}};
   Store store = {{"t", &t}};
   std::vector<std::pair<symmetri::Transition, int8_t>> priority;
-  NetMarking m0 = {{"Pa", 2}};
+  Marking m0 = {{"Pa", 2}};
   return {net, store, priority, m0};
 }
 
@@ -41,10 +41,11 @@ TEST_CASE("Firing the same transition before it can complete should work") {
   auto [net, store, priority, m0] = testNet();
   Model m(net, store, priority, m0);
 
-  moodycamel::BlockingConcurrentQueue<Reducer> reducers(4);
-  StoppablePool stp(2);
+  auto reducers =
+      std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(4);
+  auto stp = createStoppablePool(2);
   REQUIRE(m.active_transitions_n.empty());
-  m.runTransitions(reducers, stp, true);
+  m.fireTransitions(reducers, *stp, true);
   REQUIRE(m.getMarking().empty());
   CHECK(m.getActiveTransitions() ==
         std::vector<symmetri::Transition>{"t", "t"});
@@ -57,7 +58,7 @@ TEST_CASE("Firing the same transition before it can complete should work") {
   cv.notify_one();
   Reducer r;
 
-  reducers.wait_dequeue_timed(r, std::chrono::milliseconds(250));
+  reducers->wait_dequeue_timed(r, std::chrono::milliseconds(250));
   m = r(std::move(m));
   REQUIRE(MarkingEquality(m.getMarking(), {"Pb"}));
 
@@ -69,7 +70,7 @@ TEST_CASE("Firing the same transition before it can complete should work") {
     is_ready2 = true;
   }
   cv.notify_one();
-  reducers.wait_dequeue_timed(r, std::chrono::milliseconds(250));
+  reducers->wait_dequeue_timed(r, std::chrono::milliseconds(250));
   m = r(std::move(m));
 
   REQUIRE(MarkingEquality(m.getMarking(), {"Pb", "Pb"}));

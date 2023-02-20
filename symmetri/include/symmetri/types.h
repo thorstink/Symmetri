@@ -15,33 +15,33 @@ using clock_s = std::chrono::steady_clock;
  * @brief The difference kinds of results a transition can have.
  *
  */
-enum class TransitionState {
-  Started,    /// The transition started
-  Completed,  /// The transition completed as expected
-  Deadlock,   /// The transition deadlocked (e.g. it was a petri net)
-  UserExit,   /// The transition or interupted and was stopped
-  Error       /// None of the above
+enum class State {
+  Started,    ///< The transition started
+  Completed,  ///< The transition completed as expected
+  Deadlock,   ///< The transition deadlocked (e.g. it was a petri net)
+  UserExit,   ///< The transition or interupted and was stopped
+  Error       ///< None of the above
 };
 
 /**
  * @brief This struct defines a subset of data that we associate with the
- * payload of each transition.
+ * result of firing a transition.
  *
  */
 struct Event {
-  std::string case_id;
-  std::string transition;
-  TransitionState state;
-  clock_s::time_point stamp;
-  size_t thread_id;
+  std::string case_id;        ///< The case_id of this event
+  std::string transition;     ///< The transition that generated the event
+  State state;                ///< The resulting state of the event
+  clock_s::time_point stamp;  ///< The timestamp when the reducer of this
+                              ///< event was processed (not generated/occured)
 };
 
 using Eventlog = std::list<Event>;
-using TransitionResult = std::pair<Eventlog, TransitionState>;
-using StateNet =
+using Result = std::pair<Eventlog, State>;
+using Net =
     std::unordered_map<Transition,
                        std::pair<std::vector<Place>, std::vector<Place>>>;
-using NetMarking = std::unordered_map<Place, uint16_t>;
+using Marking = std::unordered_map<Place, uint16_t>;
 
 /**
  * @brief Checks if the transition-function can be invoked.
@@ -57,32 +57,36 @@ bool constexpr isDirectTransition(const T&) {
 }
 
 /**
- * @brief Generates a TransitionResult based on what kind of information the
+ * @brief Generates a Result based on what kind of information the
  * transition-function returns.
  *
  * @tparam T The transition-function type.
  * @param transition The function to be executed.
- * @return TransitionResult Contains information on the result-state and
+ * @return Result Contains information on the result-state and
  * possible eventlog of the transition.
  */
 template <typename T>
-TransitionResult runTransition(const T& transition) {
+Result fireTransition(const T& transition) {
   if constexpr (!std::is_invocable_v<T>) {
-    return {{}, TransitionState::Completed};
-  } else if constexpr (std::is_same_v<TransitionState,
-                                      decltype(transition())>) {
+    return {{}, State::Completed};
+  } else if constexpr (std::is_same_v<State, decltype(transition())>) {
     return {{}, transition()};
-  } else if constexpr (std::is_same_v<TransitionResult,
-                                      decltype(transition())>) {
+  } else if constexpr (std::is_same_v<Result, decltype(transition())>) {
     return transition();
   } else {
     transition();
-    return {{}, TransitionState::Completed};
+    return {{}, State::Completed};
   }
 }
 
 /**
- * @brief Checks if the markings are exactly the same.
+ * @brief Checks if the markings are exactly the same. Note that this uses a
+ * different type for Marking compared to the Marking type used to
+ * construct a net (an unordered map of strings). In this format the amount of
+ * tokens in a particular place is represented by how often that place occurs in
+ * the vector. For example: {"A","A","B"} is a marking with two tokens in place
+ * "A" and one token in place "B". This format does not have the overhead of
+ * mentioning all empty places.
  *
  * @tparam T
  * @param m1
@@ -94,7 +98,13 @@ template <typename T>
 bool MarkingEquality(const std::vector<T>& m1, const std::vector<T>& m2);
 
 /**
- * @brief Checks if marking is at least at least a subset of final_marking.
+ * @brief Checks if marking is at least a subset of final_marking. Note
+ * that this uses a different type for Marking compared to the Marking
+ * type used to construct a net (an unordered map of strings). In this
+ * format the amount of tokens in a particular place is represented by how often
+ * that place occurs in the vector. For example: {"A","A","B"} is a marking with
+ * two tokens in place "A" and one token in place "B". This format does not have
+ * the overhead of mentioning all empty places.
  *
  * @tparam T
  * @param marking
@@ -107,7 +117,7 @@ bool MarkingReached(const std::vector<T>& marking,
                     const std::vector<T>& final_marking);
 
 /**
- * @brief Checks if two petri-nets have the equal amount of arcs between places
+ * @brief Checks if two petri-nets have equal amount of arcs between places
  * and transitions of the same name.
  *
  * @param net1
@@ -115,5 +125,5 @@ bool MarkingReached(const std::vector<T>& marking,
  * @return true
  * @return false
  */
-bool StateNetEquality(const StateNet& net1, const StateNet& net2);
+bool stateNetEquality(const Net& net1, const Net& net2);
 }  // namespace symmetri
