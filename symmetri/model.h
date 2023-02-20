@@ -121,12 +121,26 @@ struct Model {
   Model(const Model &) = delete;
 
   struct {
-    std::vector<Transition> transition;
-    std::vector<Place> place;
-    std::vector<SmallVector> input_n, output_n, p_to_ts_n;
-    std::vector<int8_t> priority;
-    std::vector<PolyAction> store;
-  } net;
+    std::vector<Transition>
+        transition;  ///< (ordered) list of string representation of transitions
+    std::vector<Place>
+        place;  ///< (ordered) list of string representation of places
+    std::vector<SmallVector>
+        input_n;  ///< list of list of inputs to transitions. This vector is
+                  ///< indexed like `transition`.
+    std::vector<SmallVector>
+        output_n;  ///< list of list of outputs of transitions. This vector is
+                   ///< indexed like `transition`.
+    std::vector<SmallVector>
+        p_to_ts_n;  ///< list of list of transitions that have places as inputs.
+                    ///< This vector is index like `place`
+    std::vector<int8_t>
+        priority;  ///< This vector holds priorities for all transitions. This
+                   ///< vector is index like `transition`.
+    std::vector<PolyAction>
+        store;  ///< This is the same 'lookup table', only index using
+                ///< `transition` so it is compatible with index lookup.
+  } net;        ///< Is a data-oriented design of a Petri net
 
   std::vector<size_t> initial_tokens;        ///< The intial marking
   std::vector<size_t> tokens_n;              ///< The current marking
@@ -135,6 +149,16 @@ struct Model {
   Eventlog event_log;             ///< The most actual event_log
 
  private:
+  /**
+   * @brief Tries to fire a transition.
+   *
+   * @param t
+   * @param reducers
+   * @param polymorphic_actions
+   * @param case_id
+   * @return true if the transition fired.
+   * @return false if it did not fire.
+   */
   bool tryFire(
       const size_t t,
       const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
