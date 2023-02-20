@@ -49,7 +49,7 @@ inline void exit_handler(int) noexcept { EARLY_EXIT_HANDLER(); }
 
 using namespace moodycamel;
 
-bool check(const Store &store, const symmetri::Net &net) noexcept {
+bool check(const Store &store, const Net &net) noexcept {
   return std::all_of(net.cbegin(), net.cend(), [&store](const auto &p) {
     const auto &t = std::get<0>(p);
     bool store_has_transition =
@@ -64,18 +64,42 @@ bool check(const Store &store, const symmetri::Net &net) noexcept {
   });
 }
 
+/**
+ * @brief Petri is the class that holds the implementation of the Petri net. It
+ * holds pointers to the reducer queue and that thread pool. Calling `run()` on
+ * this class will do the *actual* execution of the Petri net.
+ *
+ */
 struct Petri {
-  Model m;
-  const symmetri::Marking m0_;
+  Model m;            ///< The Petri net model
+  const Marking m0_;  ///< The initial marking for this instance
   std::shared_ptr<BlockingConcurrentQueue<Reducer>> reducers;
-  std::shared_ptr<const symmetri::StoppablePool> stp;
-  const std::string case_id;
-  std::atomic<bool> active;
-  symmetri::Marking final_marking;
-  Petri(const symmetri::Net &net, const symmetri::Marking &m0,
-        std::shared_ptr<const symmetri::StoppablePool> stp,
-        const symmetri::Marking &final_marking, const Store &store,
-        const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
+  std::shared_ptr<const StoppablePool> stp;
+  const std::string case_id;  ///< The case id of this particular Petri instance
+  std::atomic<bool>
+      active;  ///< The net is active as long as it is still dequeuing reducers
+  Marking final_marking;  ///< The net will stop queueing reducers
+                          ///< once the marking has been reached
+
+  /**
+   * @brief Construct a new Petri object. Most importantly, it also creates the
+   * reducer queue and exposes the `run` function to actually execute the petri
+   * net. During construction some `EARLY_EXIT_HANDLER` is reassigned to a
+   * function that sets EARLY_EXIT to true and queues an empty reducer. This is
+   * done to force the check for an early exit.
+   *
+   * @param net
+   * @param m0
+   * @param stp
+   * @param final_marking
+   * @param store
+   * @param priority
+   * @param case_id
+   */
+  Petri(const Net &net, const Marking &m0,
+        std::shared_ptr<const StoppablePool> stp, const Marking &final_marking,
+        const Store &store,
+        const std::vector<std::pair<Transition, int8_t>> &priority,
         const std::string &case_id)
       : m(net, store, priority, m0),
         m0_(m0),
@@ -94,8 +118,28 @@ struct Petri {
       cv.notify_all();
     };
   }
+
+  /**
+   * @brief Get the Model object
+   *
+   * @return const Model&
+   */
   const Model &getModel() const { return m; }
-  symmetri::Eventlog getEventLog() const { return m.event_log; }
+
+  /**
+   * @brief Get the Event Log object
+   *
+   * @return Eventlog
+   */
+  Eventlog getEventLog() const { return m.event_log; }
+
+  /**
+   * @brief run the petri net. This initializes the net with the initial marking
+   * and blocks until it a) reached the final marking, b) deadlocked or c)
+   * exited early.
+   *
+   * @return Result
+   */
   Result run() {
     // we are running!
     active.store(true);
@@ -146,12 +190,25 @@ struct Petri {
   }
 };
 
-std::tuple<std::shared_ptr<Petri>, std::function<void(const std::string &)>>
-create(const symmetri::Net &net, const symmetri::Marking &m0,
-       const symmetri::Marking &final_marking, const Store &store,
-       const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
-       const std::string &case_id,
-       std::shared_ptr<const symmetri::StoppablePool> stp) {
+/**
+ * @brief A factory function that creates a Petri and a handler that allows to
+ * register triggers to functions.
+ *
+ * @param net
+ * @param m0
+ * @param final_marking
+ * @param store
+ * @param priority
+ * @param case_id
+ * @param stp
+ * @return std::tuple<std::shared_ptr<Petri>, std::function<void(const
+ * Transition &)>>
+ */
+std::tuple<std::shared_ptr<Petri>, std::function<void(const Transition &)>>
+create(const Net &net, const Marking &m0, const Marking &final_marking,
+       const Store &store,
+       const std::vector<std::pair<Transition, int8_t>> &priority,
+       const std::string &case_id, std::shared_ptr<const StoppablePool> stp) {
   signal(SIGINT, exit_handler);
   std::stringstream s;
   s << "[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] [" << case_id << "] %v";
@@ -159,7 +216,7 @@ create(const symmetri::Net &net, const symmetri::Marking &m0,
   console->set_pattern(s.str());
   auto impl = std::make_shared<Petri>(net, m0, stp, final_marking, store,
                                       priority, case_id);
-  return {impl, [=](const std::string &t) {
+  return {impl, [=](const Transition &t) {
             if (impl->active.load()) {
               impl->reducers->enqueue([=](Model &&m) -> Model & {
                 const auto t_index = toIndex(m.net.transition, t);
@@ -173,11 +230,10 @@ create(const symmetri::Net &net, const symmetri::Marking &m0,
 }
 
 Application::Application(
-    const std::set<std::string> &files, const symmetri::Marking &final_marking,
+    const std::set<std::string> &files, const Marking &final_marking,
     const Store &store,
-    const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
-    const std::string &case_id,
-    std::shared_ptr<const symmetri::StoppablePool> stp) {
+    const std::vector<std::pair<Transition, int8_t>> &priority,
+    const std::string &case_id, std::shared_ptr<const StoppablePool> stp) {
   const auto &[net, m0] = readPetriNets(files);
   if (check(store, net)) {
     std::tie(impl, register_functor) =
@@ -186,18 +242,17 @@ Application::Application(
 }
 
 Application::Application(
-    const symmetri::Net &net, const symmetri::Marking &m0,
-    const symmetri::Marking &final_marking, const Store &store,
-    const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
-    const std::string &case_id,
-    std::shared_ptr<const symmetri::StoppablePool> stp) {
+    const Net &net, const Marking &m0, const Marking &final_marking,
+    const Store &store,
+    const std::vector<std::pair<Transition, int8_t>> &priority,
+    const std::string &case_id, std::shared_ptr<const StoppablePool> stp) {
   if (check(store, net)) {
     std::tie(impl, register_functor) =
         create(net, m0, final_marking, store, priority, case_id, stp);
   }
 }
 
-bool Application::tryFireTransition(const std::string &t) const noexcept {
+bool Application::tryFireTransition(const Transition &t) const noexcept {
   if (impl == nullptr) {
     spdlog::warn("There is no net to run a transition.");
     return false;
@@ -225,10 +280,10 @@ Result Application::execute() const noexcept {
   }
 }
 
-symmetri::Eventlog Application::getEventLog() const noexcept {
+Eventlog Application::getEventLog() const noexcept {
   if (impl->active.load()) {
-    std::promise<symmetri::Eventlog> el;
-    std::future<symmetri::Eventlog> el_getter = el.get_future();
+    std::promise<Eventlog> el;
+    std::future<Eventlog> el_getter = el.get_future();
     impl->reducers->enqueue([&](Model &&model) -> Model & {
       el.set_value(model.event_log);
       return model;
@@ -254,10 +309,10 @@ std::pair<std::vector<Transition>, std::vector<Place>> Application::getState()
   }
 }
 
-std::vector<std::string> Application::getFireableTransitions() const noexcept {
+std::vector<Transition> Application::getFireableTransitions() const noexcept {
   if (impl->active.load()) {
-    std::promise<std::vector<std::string>> transitions;
-    std::future<std::vector<std::string>> transitions_getter =
+    std::promise<std::vector<Transition>> transitions;
+    std::future<std::vector<Transition>> transitions_getter =
         transitions.get_future();
     impl->reducers->enqueue([&](Model &&model) -> Model & {
       transitions.set_value(model.getFireableTransitions());
@@ -270,7 +325,7 @@ std::vector<std::string> Application::getFireableTransitions() const noexcept {
 };
 
 std::function<void()> Application::registerTransitionCallback(
-    const std::string &transition) const noexcept {
+    const Transition &transition) const noexcept {
   return [transition, this]() { register_functor(transition); };
 }
 
