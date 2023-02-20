@@ -1,6 +1,7 @@
 # folders
 build
 install
+docs/html
 .vscode
 
 # Prerequisites
@@ -35,3 +36,6 @@ install
 *.exe
 *.out
 *.app
+
+# macos
+.DS_Store

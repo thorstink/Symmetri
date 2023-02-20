@@ -38,14 +38,14 @@ TEST_CASE("Test equaliy of nets") {
   auto [net, store, priority, m0] = testNet();
   auto net2 = net;
   auto net3 = net;
-  REQUIRE(StateNetEquality(net, net2));
+  REQUIRE(stateNetEquality(net, net2));
   // change net
   net2.insert({"tx", {{}, {}}});
-  REQUIRE(!StateNetEquality(net, net2));
+  REQUIRE(!stateNetEquality(net, net2));
 
   // same transitions but different places.
   net3.at("t0").second.push_back("px");
-  REQUIRE(!StateNetEquality(net, net3));
+  REQUIRE(!stateNetEquality(net, net3));
 }
 
 TEST_CASE("Create a model") {
