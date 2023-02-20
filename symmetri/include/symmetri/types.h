@@ -125,5 +125,5 @@ bool MarkingReached(const std::vector<T>& marking,
  * @return true
  * @return false
  */
-bool StateNetEquality(const Net& net1, const Net& net2);
+bool stateNetEquality(const Net& net1, const Net& net2);
 }  // namespace symmetri

@@ -97,7 +97,7 @@ class Application final {
 
   /**
    * @brief This executes the net, like a transition, it returns a result.
-   * fireTransition(app) is the same.
+   * This is equal to calling `fireTransition(app)`.
    *
    * @return Result
    */
@@ -153,9 +153,9 @@ class Application final {
    * this call is blocking as it is executed on the Petri net execution loop.
    * Otherwise it directly returns the vector of fireable transitions.
    *
-   * @return std::vector<std::string>
+   * @return std::vector<Transition>
    */
-  std::vector<std::string> getFireableTransitions() const noexcept;
+  std::vector<Transition> getFireableTransitions() const noexcept;
 
   /**
    * @brief Execution of the net will be paused. Meaning no reducers will be

@@ -57,7 +57,7 @@ bool MarkingReached<std::string>(
   });
 }
 
-bool StateNetEquality(const Net& net1, const Net& net2) {
+bool stateNetEquality(const Net& net1, const Net& net2) {
   if (net1.size() != net2.size()) {
     return false;
   }
