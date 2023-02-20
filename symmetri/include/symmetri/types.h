@@ -29,11 +29,12 @@ enum class State {
  *
  */
 struct Event {
-  std::string case_id;
-  std::string transition;
-  State state;
-  clock_s::time_point stamp;
-  size_t thread_id;
+  std::string case_id;     /// A case_id allows to distinguish between multiple
+                           /// instance of the same net
+  std::string transition;  /// The string representation of a transition
+  State state;             /// The resulting State of the event
+  clock_s::time_point stamp;  /// The timestamp when the reducer of this
+                              /// event-result was processed
 };
 
 using Eventlog = std::list<Event>;

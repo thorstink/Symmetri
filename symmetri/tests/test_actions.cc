@@ -13,8 +13,6 @@ TEST_CASE("Run the executor") {
   // wait a little before shutting the thread pool down.
   std::this_thread::sleep_for(std::chrono::milliseconds(5));
   REQUIRE(ran);
-  // stop the pool.
-  ;
 }
 
 TEST_CASE("Run the executor parallel tasks") {
@@ -45,6 +43,4 @@ TEST_CASE("Run the executor parallel tasks") {
   REQUIRE_FALSE(thread_id1 == thread_id2);
   REQUIRE_FALSE(main_thread == thread_id2);
   REQUIRE_FALSE(thread_id1 == main_thread);
-  // stop the pool.
-  ;
 }

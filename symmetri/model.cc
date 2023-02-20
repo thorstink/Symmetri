@@ -15,7 +15,7 @@ size_t toIndex(const std::vector<std::string> &m, const std::string &s) {
 }
 
 Reducer processTransition(size_t t_i, const std::string &case_id, State result,
-                          size_t thread_id, clock_s::time_point start_time,
+                          clock_s::time_point start_time,
                           clock_s::time_point end_time) {
   return [=](Model &&model) -> Model & {
     if (result == State::Completed) {
@@ -24,12 +24,12 @@ Reducer processTransition(size_t t_i, const std::string &case_id, State result,
                             place_list[t_i].end());
     }
 
-    model.event_log.push_back({case_id, model.net.transition[t_i],
-                               State::Started, start_time, thread_id});
+    model.event_log.push_back(
+        {case_id, model.net.transition[t_i], State::Started, start_time});
     model.event_log.push_back(
         {case_id, model.net.transition[t_i],
-         result == State::Completed ? State::Completed : State::Error, end_time,
-         thread_id});
+         result == State::Completed ? State::Completed : State::Error,
+         end_time});
     // we know for sure this transition is active because otherwise it wouldn't
     // produce a reducer.
     model.active_transitions_n.erase(
@@ -67,9 +67,7 @@ Reducer createReducerForTransition(size_t t_i, const PolyAction &task,
   const auto start_time = clock_s::now();
   const auto &[ev, res] = fireTransition(task);
   const auto end_time = clock_s::now();
-  const auto thread_id = getThreadId();
-  return ev.empty() ? processTransition(t_i, case_id, res, thread_id,
-                                        start_time, end_time)
+  return ev.empty() ? processTransition(t_i, case_id, res, start_time, end_time)
                     : processTransition(t_i, ev, res);
 }
 
@@ -214,9 +212,9 @@ bool Model::tryFire(
       tokens_n.insert(tokens_n.begin(), net.output_n[t].begin(),
                       net.output_n[t].end());
       event_log.push_back(
-          {case_id, net.transition[t], State::Started, timestamp, 0});
+          {case_id, net.transition[t], State::Started, timestamp});
       event_log.push_back(
-          {case_id, net.transition[t], State::Completed, timestamp, 0});
+          {case_id, net.transition[t], State::Completed, timestamp});
     } else {
       active_transitions_n.push_back(t);
       pool.enqueue([=] {
