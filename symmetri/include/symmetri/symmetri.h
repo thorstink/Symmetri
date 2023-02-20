@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <set>
 
 #include "symmetri/actions.h"
@@ -51,13 +52,13 @@ struct Petri;
  */
 class Application final {
  private:
-  std::shared_ptr<Petri> impl;  /// Pointer to the implementation, all
-                                /// information is stored in Petri
+  std::shared_ptr<Petri> impl;  ///< Pointer to the implementation, all
+                                ///< information is stored in Petri
   std::function<void(const std::string &)>
-      register_functor;  /// At Application construction this function is
-                         /// created. It can be used to assign a trigger to
-                         /// transitions - allowing the user to invoke a
-                         /// transition without meeting the pre-conditions.
+      register_functor;  ///< At Application construction this function is
+                         ///< created. It can be used to assign a trigger to
+                         ///< transitions - allowing the user to invoke a
+                         ///< transition without meeting the pre-conditions.
 
  public:
   /**
