@@ -1,6 +1,7 @@
 # folders
 build
 install
+docs/html
 .vscode
 
 # Prerequisites
