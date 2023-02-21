@@ -1,11 +1,6 @@
 name: Build project
 
-on:
-  pull_request:
-    types:
-      - closed
-      
-# on: [push]
+on: [push]
 
 jobs:
   build-project:
