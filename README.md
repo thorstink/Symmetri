@@ -55,22 +55,18 @@ mkdir build
 cd build
 # Debug build without sanitizers
 cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_EXAMPLES=ON -DBUILD_TESTING=ON -DASAN_BUILD=OFF -DTSAN_BUILD=OFF ..
-# Debug build with thread sanitizers
-cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_EXAMPLES=ON -DBUILD_TESTING=ON -DASAN_BUILD=OFF -DTSAN_BUILD=ON ..
-# Debug build with adress sanitizers
-cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_EXAMPLES=ON -DBUILD_TESTING=ON -DASAN_BUILD=ON -DTSAN_BUILD=OFF ..
-# After picking:
+# Building and running tests:
 make && make test
 ```
 
 ## Run examples
 
 ```bash
-cd ../build
+# assumed you build the examples
 # finishes with a deadlock
-./examples/hello_world/symmetri_hello_world ../nets/passive_n1.pnml ../nets/T50startP0.pnml
+./build/examples/hello_world/symmetri_hello_world nets/pa ssive_n1.pnml nets/T50startP0.pnml
 # finishes by reaching the final marking (e.g. completed)
-./examples/flight/symmetri_flight ../nets/PT1.pnml ../nets/PT2.pnml ../nets/PT3.pnml
+./build/examples/flight/symmetri_flight nets/PT1.pnml nets/PT2.pnml nets/PT3.pnml
 ```
 
 ## Implementation
