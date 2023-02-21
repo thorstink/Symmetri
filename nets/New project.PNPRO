@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- This project file has been saved by the New GreatSPN Editor, v.100 --><project name="New project" version="121">
+  <gspn name="PT" show-color-cmd="false" show-fluid-cmd="false" show-timed-cmd="false" view-rates="false">
+    <nodes/>
+    <edges/>
+  </gspn>
+  <measures gspn-name="PT" name="Measures" simplified-UI="false">
+    <assignments/>
+    <greatspn/>
+    <formulas>
+      <formula comment="Basic statistics of the toolchain execution." language="STAT"/>
+    </formulas>
+  </measures>
+  <gspn name="n1" view-rates="false" zoom="125">
+    <nodes>
+      <place marking="1" name="P0" x="10.0" y="42.6667"/>
+      <place marking="1" name="P1" x="16.4545" y="9.0"/>
+      <place marking="1" name="P2" x="16.0" y="29.0"/>
+      <place marking="1" name="P3" x="4.0" y="42.6667"/>
+      <place name="P4" x="27.0" y="29.0"/>
+      <place name="P5" x="22.0" y="29.0"/>
+      <place name="P6" x="15.0" y="19.0"/>
+      <place name="P7" x="7.0" y="29.0"/>
+      <place name="P8" x="7.0" y="19.0"/>
+      <transition name="t1" nservers-x="0.5" type="EXP" x="23.55" y="3.0"/>
+      <transition name="t0" nservers-x="0.5" type="EXP" x="7.55" y="37.6667"/>
+      <transition name="t2" nservers-x="0.5" type="EXP" x="15.55" y="24.0"/>
+      <transition name="t3" nservers-x="0.5" type="EXP" x="11.55" y="14.0"/>
+      <transition name="t4" nservers-x="0.5" type="EXP" x="7.55" y="24.0"/>
+    </nodes>
+    <edges>
+      <arc head="t0" kind="INPUT" tail="P0"/>
+      <arc head="P4" kind="OUTPUT" tail="t0"/>
+      <arc head="t1" kind="INPUT" tail="P4">
+        <point x="28.0" y="25.0"/>
+        <point x="28.0" y="10.0"/>
+      </arc>
+      <arc head="t1" kind="INPUT" tail="P1"/>
+      <arc head="P5" kind="OUTPUT" tail="t1">
+        <point x="24.0" y="10.0"/>
+        <point x="24.0" y="25.0"/>
+      </arc>
+      <arc head="t2" kind="INPUT" tail="P5"/>
+      <arc head="P6" kind="OUTPUT" tail="t2"/>
+      <arc head="t3" kind="INPUT" tail="P6"/>
+      <arc head="P3" kind="OUTPUT" tail="t3">
+        <point x="4.0" y="20.0"/>
+        <point x="4.0" y="38.6667"/>
+      </arc>
+      <arc head="t0" kind="INPUT" tail="P3"/>
+      <arc head="P7" kind="OUTPUT" tail="t0"/>
+      <arc head="t4" kind="INPUT" tail="P7"/>
+      <arc head="P8" kind="OUTPUT" tail="t4"/>
+      <arc head="t3" kind="INPUT" tail="P8"/>
+      <arc head="t2" kind="INPUT" tail="P2"/>
+      <arc head="P2" kind="OUTPUT" tail="t3">
+        <point x="20.0" y="20.0"/>
+        <point x="20.0" y="25.0"/>
+      </arc>
+      <arc head="P1" kind="OUTPUT" tail="t3"/>
+      <arc head="P0" kind="OUTPUT" tail="t3">
+        <point x="12.0" y="20.0"/>
+        <point x="12.0" y="38.6667"/>
+      </arc>
+    </edges>
+  </gspn>
+  <measures gspn-name="n1" log-uuid="313b6330-8f5b-4b53-b844-4da93947b86e" name="RG of n1" rapid-type="BUILD_RG" simplified-UI="true">
+    <assignments/>
+    <greatspn/>
+    <formulas>
+      <formula language="STAT">
+        <result-table>
+          <stat-result name="STAT">
+            <bindings/>
+            <stat key="build_time" value="0 seconds"/>
+            <stat key="home_state" value="True"/>
+            <stat key="num_dead_markings" value="0"/>
+            <stat key="num_tangible_markings" value="7"/>
+            <stat key="num_vanishing_markings" value="0"/>
+          </stat-result>
+        </result-table>
+      </formula>
+      <formula language="RG">
+        <result-table>
+          <pdf-result filename="/tmp/temporary14261811481134159273-RG of n1.solution/n1-RG-0.pdf" name="RG">
+            <bindings/>
+          </pdf-result>
+        </result-table>
+      </formula>
+    </formulas>
+  </measures>
+  <resource-list>
+    <document-log uuid="313b6330-8f5b-4b53-b844-4da93947b86e">rO0ABXNyABRqYXZhLnV0aWwuTGlua2VkTGlzdAwpU11KYIgiAwAAeHB3BAAAAB90AMcbWzBtRVhFQzogL3Vzci9sb2NhbC9HcmVhdFNQTi9iaW4vV05SRyAiL3RtcC90ZW1wb3JhcnkxNDI2MTgxMTQ4MTEzNDE1OTI3My1SRyBvZiBuMS5zb2x1dGlvbi9uMSIgLWd1aS1zdGF0IC1kb3QtRiAiL3RtcC90ZW1wb3JhcnkxNDI2MTgxMTQ4MTEzNDE1OTI3My1SRyBvZiBuMS5zb2x1dGlvbi9uMS1SRy0wIiAtbWF4LWRvdC1tYXJraW5ncyA4MCAKdABjLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KdAAcVVNFIDogV05SRyBuZXRuYW1lIFstb11bLW1dCnQAAQp0AC1UbyBwbG90IHRoZSBnZW5lcmF0ZWQgUkcgaW4gR3JhcGh2aXogZm9ybWF0Ogp0ADQgICAgICBbLWRvdC1GIGZpbGVuYW1lLmRvdF0gWy1tYXgtZG90LW1hcmtpbmdzIG1heF0KdAA0UGFyYW1ldHJpYyBtYXJraW5nL3JhdGUgcGFyYW1ldGVycyBjYW4gYmUgc2V0IHdpdGg6CnQAOSAgICAgIFstbXBhciBwYXJhbV9uYW1lIHZhbHVlXSAgWy1ycGFyIHBhcmFtX25hbWUgdmFsdWVdCnQAYy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCnQAL1NlbmQgZmlsZXMgbmV0bmFtZS5uZXQsIC5kZWYgdG8gZS1tYWlsIGFkZHJlc3MKdAAqZ3JlYXRzcG5AZGkudW5pdG8uaXQgaWYgeW91IGZpbmQgYW55IGJ1Zy4KdABjLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KdAABCnQAAQp0ACEgKioqKiogUmVhY2hhYmlsaXR5IEdyYXBoICoqKioqIAp0AAEKdAAXVEFOR0lCTEUgTUFSS0lOR1MgIDogNwp0ABdWQU5JU0hJTkcgTUFSS0lOR1MgOiAwCnQAF0RFQUQgTUFSS0lOR1MgICAgICA6IDAKdAABCnQAF1RPVEFMIE1BUktJTkdTICAgICA6IDcKdAABCnQAKiAqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKiogCnQAAQp0ACRUaGUgaW5pdGlhbCBtYXJraW5nIGlzIGEgaG9tZSBzdGF0ZQp0ABxUaW1lIHJlcXVpcmVkIC0tLS0tLS0tLS0+IDAKdAABCnQAKiAqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKiogCnQAIUdlbmVyYXRpbmcgUERGIGZpbGUgdXNpbmcgZG90Li4uCnQAkCAgZG90ICIvdG1wL3RlbXBvcmFyeTE0MjYxODExNDgxMTM0MTU5MjczLVJHIG9mIG4xLnNvbHV0aW9uL24xLmRvdCIgLVRwZGYgLW8gIi90bXAvdGVtcG9yYXJ5MTQyNjE4MTE0ODExMzQxNTkyNzMtUkcgb2YgbjEuc29sdXRpb24vbjEtUkctMC5wZGYiCnQAJxtbMFgbWzMybSBQUk9DRVNTIEVYSVRFRCBOT1JNQUxMWS4bWzBtCnhzcQB+AAB3BAAAAB9zcgARamF2YS5sYW5nLkJvb2xlYW7NIHKA1Zz67gIAAVoABXZhbHVleHABcQB+ACNxAH4AI3EAfgAjcQB+ACNxAH4AI3EAfgAjcQB+ACNxAH4AI3EAfgAjcQB+ACNxAH4AI3EAfgAjcQB+ACNxAH4AI3EAfgAjcQB+ACNxAH4AI3EAfgAjcQB+ACNxAH4AI3EAfgAjcQB+ACNxAH4AI3EAfgAjcQB+ACNxAH4AI3EAfgAjcQB+ACNxAH4AI3EAfgAjeA</document-log>
+  </resource-list>
+</project>

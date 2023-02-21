@@ -1,0 +1,265 @@
+<?xml version="1.0"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+ <net id="SatelliteMemory-PT-X00100Y0003" type="http://www.pnml.org/version-2009/grammar/ptnet">
+  <name>
+   <text>SatelliteMemory-PT-X00100Y0003</text>
+  </name>
+ <page id="g-9194-534CE-1">
+  <place id="p0">
+  <name>
+   <text>p0</text>
+  </name>
+   <initialMarking>
+    <text>1</text>
+   </initialMarking>
+  </place>
+  <place id="p1">
+  <name>
+   <text>p1</text>
+  </name>
+  </place>
+  <place id="p10">
+  <name>
+   <text>p10</text>
+  </name>
+   <initialMarking>
+    <text>3</text>
+   </initialMarking>
+  </place>
+  <place id="p11">
+  <name>
+   <text>p11</text>
+  </name>
+   <initialMarking>
+    <text>1</text>
+   </initialMarking>
+  </place>
+  <place id="p12">
+  <name>
+   <text>p12</text>
+  </name>
+  </place>
+  <place id="p2">
+  <name>
+   <text>p2</text>
+  </name>
+   <initialMarking>
+    <text>1</text>
+   </initialMarking>
+  </place>
+  <place id="p3">
+  <name>
+   <text>p3</text>
+  </name>
+  </place>
+  <place id="p4">
+  <name>
+   <text>p4</text>
+  </name>
+   <initialMarking>
+    <text>100</text>
+   </initialMarking>
+  </place>
+  <place id="p5">
+  <name>
+   <text>p5</text>
+  </name>
+  </place>
+  <place id="p6">
+  <name>
+   <text>p6</text>
+  </name>
+   <initialMarking>
+    <text>94</text>
+   </initialMarking>
+  </place>
+  <place id="p7">
+  <name>
+   <text>p7</text>
+  </name>
+  </place>
+  <place id="p8">
+  <name>
+   <text>p8</text>
+  </name>
+   <initialMarking>
+    <text>1</text>
+   </initialMarking>
+  </place>
+  <place id="p9">
+  <name>
+   <text>p9</text>
+  </name>
+   <initialMarking>
+    <text>97</text>
+   </initialMarking>
+  </place>
+  <transition id="t0">
+  <name>
+   <text>t0</text>
+  </name>
+  </transition>
+  <transition id="t1">
+  <name>
+   <text>t1</text>
+  </name>
+  </transition>
+  <transition id="t2">
+  <name>
+   <text>t2</text>
+  </name>
+  </transition>
+  <transition id="t3">
+  <name>
+   <text>t3</text>
+  </name>
+  </transition>
+  <transition id="t4">
+  <name>
+   <text>t4</text>
+  </name>
+  </transition>
+  <transition id="t5">
+  <name>
+   <text>t5</text>
+  </name>
+  </transition>
+  <transition id="t6">
+  <name>
+   <text>t6</text>
+  </name>
+  </transition>
+  <transition id="t7">
+  <name>
+   <text>t7</text>
+  </name>
+  </transition>
+  <transition id="t8">
+  <name>
+   <text>t8</text>
+  </name>
+  </transition>
+  <transition id="t9">
+  <name>
+   <text>t9</text>
+  </name>
+  </transition>
+  <arc id="e-9194-53508-25" source="p12" target="t0">
+   <inscription>
+    <text>94</text>
+   </inscription>
+  </arc>
+  <arc id="e-9194-5350E-26" source="t1" target="p1">
+  </arc>
+  <arc id="e-9194-5350F-27" source="t1" target="p6">
+  </arc>
+  <arc id="e-9194-53510-28" source="p1" target="t2">
+  </arc>
+  <arc id="e-9194-53512-29" source="p6" target="t2">
+  </arc>
+  <arc id="e-9194-53513-30" source="t2" target="p12">
+  </arc>
+  <arc id="e-9194-53514-31" source="t2" target="p2">
+  </arc>
+  <arc id="e-9194-53515-32" source="t2" target="p3">
+  </arc>
+  <arc id="e-9194-53516-33" source="p3" target="t3">
+   <inscription>
+    <text>100</text>
+   </inscription>
+  </arc>
+  <arc id="e-9194-53517-34" source="t3" target="p4">
+   <inscription>
+    <text>100</text>
+   </inscription>
+  </arc>
+  <arc id="e-9194-53518-35" source="p11" target="t4">
+  </arc>
+  <arc id="e-9194-5351A-36" source="p4" target="t0">
+   <inscription>
+    <text>6</text>
+   </inscription>
+  </arc>
+  <arc id="e-9194-5351C-37" source="t4" target="p5">
+  </arc>
+  <arc id="e-9194-5351C-38" source="p12" target="t5">
+   <inscription>
+    <text>94</text>
+   </inscription>
+  </arc>
+  <arc id="e-9194-53584-39" source="p3" target="t5">
+   <inscription>
+    <text>94</text>
+   </inscription>
+  </arc>
+  <arc id="e-9194-53586-40" source="t5" target="p4">
+   <inscription>
+    <text>94</text>
+   </inscription>
+  </arc>
+  <arc id="e-9194-53587-41" source="t5" target="p6">
+   <inscription>
+    <text>94</text>
+   </inscription>
+  </arc>
+  <arc id="e-9194-5358A-42" source="p10" target="t6">
+  </arc>
+  <arc id="e-9194-5358B-43" source="p12" target="t6">
+  </arc>
+  <arc id="e-9194-5358C-44" source="p5" target="t6">
+  </arc>
+  <arc id="e-9194-5358D-45" source="p8" target="t6">
+  </arc>
+  <arc id="e-9194-5358E-46" source="t6" target="p12">
+  </arc>
+  <arc id="e-9194-5358F-47" source="t0" target="p3">
+   <inscription>
+    <text>6</text>
+   </inscription>
+  </arc>
+  <arc id="e-9194-53590-48" source="t6" target="p5">
+  </arc>
+  <arc id="e-9194-53593-49" source="t6" target="p7">
+  </arc>
+  <arc id="e-9194-53594-50" source="p12" target="t7">
+  </arc>
+  <arc id="e-9194-53595-51" source="p7" target="t7">
+  </arc>
+  <arc id="e-9194-53596-52" source="t7" target="p6">
+  </arc>
+  <arc id="e-9194-53596-53" source="t7" target="p8">
+  </arc>
+  <arc id="e-9194-53597-54" source="t7" target="p9">
+  </arc>
+  <arc id="e-9194-53598-55" source="p9" target="t8">
+   <inscription>
+    <text>100</text>
+   </inscription>
+  </arc>
+  <arc id="e-9194-5359B-56" source="t8" target="p10">
+   <inscription>
+    <text>100</text>
+   </inscription>
+  </arc>
+  <arc id="e-9194-5359C-57" source="p5" target="t9">
+  </arc>
+  <arc id="e-9194-5359D-58" source="t0" target="p6">
+   <inscription>
+    <text>94</text>
+   </inscription>
+  </arc>
+  <arc id="e-9194-5359E-59" source="t9" target="p11">
+  </arc>
+  <arc id="e-9194-5359F-60" source="p0" target="t1">
+  </arc>
+  <arc id="e-9194-535A0-61" source="p2" target="t1">
+  </arc>
+  <arc id="e-9194-535A1-62" source="p4" target="t1">
+  </arc>
+  <arc id="e-9194-535A2-63" source="p6" target="t1">
+  </arc>
+  <arc id="e-9194-535A6-64" source="t1" target="p0">
+  </arc>
+ </page>
+ </net>
+</pnml>
