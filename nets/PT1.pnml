@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+	<!-- Written by GreatSPN Editor. -->
+	<net id="PT" type="http://www.pnml.org/version-2009/grammar/ptnet">
+		<name>
+			<text>PT</text>
+		</name>
+		<page id="page0">
+			<name>
+				<text>DefaultPage</text>
+			</name>
+			<!-- List of places -->
+			<place id="P0">
+				<name>
+					<graphics>
+						<offset x="0" y="15"/>
+					</graphics>
+					<text>P0</text>
+				</name>
+				<graphics>
+					<position x="20" y="60"/>
+				</graphics>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="P1">
+				<name>
+					<graphics>
+						<offset x="0" y="15"/>
+					</graphics>
+					<text>P1</text>
+				</name>
+				<graphics>
+					<position x="140" y="60"/>
+				</graphics>
+			</place>
+			<!-- List of transitions -->
+			<transition id="T0">
+				<name>
+					<graphics>
+						<offset x="0" y="-15"/>
+					</graphics>
+					<text>T0</text>
+				</name>
+				<graphics>
+					<position x="85" y="60"/>
+				</graphics>
+			</transition>
+			<!-- List of arcs -->
+			<arc id="id1" source="P0" target="T0">
+			</arc>
+			<arc id="id2" source="T0" target="P1">
+			</arc>
+		</page>
+	</net>
+</pnml>
