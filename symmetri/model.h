@@ -21,6 +21,7 @@ size_t toIndex(const std::vector<std::string> &m, const std::string &s);
 struct Model;
 using Reducer = std::function<Model &(Model &&)>;
 
+
 Reducer createReducerForTransition(size_t T_i, const PolyAction &task,
                                    const std::string &case_id);
 
@@ -47,8 +48,8 @@ struct Model {
         const Marking &M0);
 
   /**
-   * @brief Get the current marking. It is represented by a vector of places.
-   * Every occurance of a place in this vectors implies a token in that place.
+   * @brief Get the current marking. It is represented by a vector of places:
+   * every occurance of a place in this vectors implies a token in that place.
    * This representation does not show the empty places explicitly; if a place
    * is not in this vector you can assume it has no token.
    *
