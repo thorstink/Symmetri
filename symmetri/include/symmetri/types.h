@@ -1,5 +1,6 @@
 #pragma once
 #include <chrono>
+#include <iostream>
 #include <list>
 #include <map>
 #include <string>
@@ -52,8 +53,13 @@ using Marking = std::unordered_map<Place, uint16_t>;
  * post-marking-mutation should only happen after the transition is invoked.
  */
 template <typename T>
-bool constexpr isDirectTransition(const T&) {
+bool isDirectTransition(const T&) {
   return !std::is_invocable_v<T>;
+}
+
+template <typename T>
+Result cancelTransition(const T&) {
+  return {{}, State::UserExit};
 }
 
 /**

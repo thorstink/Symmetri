@@ -1,5 +1,5 @@
 #pragma once
-#define LLVM_SMALL_VECTOR_IMPLEMENTATION
+// #define LLVM_SMALL_VECTOR_IMPLEMENTATION
 #include <blockingconcurrentqueue.h>
 
 #include <chrono>
@@ -20,7 +20,6 @@ size_t toIndex(const std::vector<std::string> &m, const std::string &s);
 
 struct Model;
 using Reducer = std::function<Model &(Model &&)>;
-
 
 Reducer createReducerForTransition(size_t T_i, const PolyAction &task,
                                    const std::string &case_id);

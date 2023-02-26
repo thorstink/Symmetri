@@ -173,5 +173,6 @@ class Application final {
  * @return Result
  */
 Result fireTransition(const Application &app);
-
+Result cancelTransition(const Application &app);
+bool isDirectTransition(const Application &app);
 }  // namespace symmetri

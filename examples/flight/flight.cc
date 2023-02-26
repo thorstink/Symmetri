@@ -1,10 +1,14 @@
 #include <spdlog/spdlog.h>
 
+#include <csignal>
 #include <iostream>
 #include <random>
 #include <thread>
 
 #include "symmetri/symmetri.h"
+
+std::function<void()> stop = [] {};
+void signal_handler(int) { stop(); }
 
 symmetri::Eventlog getNewEvents(const symmetri::Eventlog &el,
                                 symmetri::clock_s::time_point t) {
@@ -16,14 +20,15 @@ symmetri::Eventlog getNewEvents(const symmetri::Eventlog &el,
 
 std::function<void()> helloT(std::string s) {
   return [s] {
-    std::this_thread::sleep_for(std::chrono::seconds(1));
     spdlog::info(s);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     return;
   };
 };
 
 int main(int, char *argv[]) {
   spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] %v");
+  std::signal(SIGINT, signal_handler);
 
   auto pnml1 = std::string(argv[1]);
   auto pnml2 = std::string(argv[2]);
@@ -33,8 +38,8 @@ int main(int, char *argv[]) {
 
   symmetri::Marking final_marking2 = {{"P2", 1}};
   symmetri::Store s2 = {{"T0", helloT("T01")}, {"T1", helloT("T02")}};
-  auto snet = {pnml1, pnml2};
 
+  auto snet = {pnml1, pnml2};
   symmetri::Application subnet(snet, final_marking2, s2, {}, "charon", pool);
 
   symmetri::Store store = {
@@ -46,7 +51,10 @@ int main(int, char *argv[]) {
   symmetri::Application bignet(net, final_marking, store, priority, "pluto",
                                pool);
 
-  auto [el, result] = bignet.execute();  // infinite loop
+  stop = [&] { cancelTransition(bignet); };
+  // auto [el, result] = bignet.execute();  // infinite loop
+  auto [el, result] = fireTransition(bignet);  // infinite loop
+
   for (const auto &[caseid, t, s, c] : el) {
     spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),
                  c.time_since_epoch().count());

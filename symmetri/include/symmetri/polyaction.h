@@ -44,16 +44,28 @@ class PolyAction {
     return x.self_->simple_();
   }
 
+  /**
+   * @brief
+   *
+   * @param x
+   * @return Result
+   */
+  friend Result cancelTransition(const PolyAction &x) {
+    return x.self_->cancel_();
+  }
+
  private:
   struct concept_t {
     virtual ~concept_t() = default;
     virtual Result run_() const = 0;
+    virtual Result cancel_() const = 0;
     virtual bool simple_() const = 0;
   };
   template <typename T>
   struct model final : concept_t {
     model(T x) : payload_(std::move(x)) {}
     Result run_() const override { return fireTransition(payload_); }
+    Result cancel_() const override { return cancelTransition(payload_); }
     bool simple_() const override { return isDirectTransition(payload_); }
     T payload_;
   };

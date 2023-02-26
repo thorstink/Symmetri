@@ -4,7 +4,6 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-#include <condition_variable>
 #include <functional>
 #include <future>
 #include <memory>
@@ -17,6 +16,13 @@
 namespace symmetri {
 
 Result fireTransition(const Application &app) { return app.execute(); };
+
+Result cancelTransition(const Application &app) {
+  app.exitEarly();
+  return {app.getEventLog(), State::UserExit};
+}
+
+bool isDirectTransition(const Application &) { return false; };
 
 using namespace moodycamel;
 
@@ -132,8 +138,9 @@ struct Petri {
       } while (reducers->try_dequeue(f));
       if (MarkingReached(m.tokens_n, final_marking)) {
         break;
+      } else {
+        m.fireTransitions(reducers, *stp, true, case_id);
       }
-      m.fireTransitions(reducers, *stp, true, case_id);
     }
     active.store(false);
 
@@ -148,6 +155,15 @@ struct Petri {
     } else {
       result = State::Error;
     }
+
+    for (const auto transition_index : m.active_transitions_n) {
+      auto el = std::get<Eventlog>(
+          cancelTransition(m.net.store.at(transition_index)));
+      for (auto e : el) {
+        m.event_log.push_back(e);
+      }
+    }
+
     spdlog::get(case_id)->info("Petri net finished with result {0}",
                                printState(result));
 
@@ -174,7 +190,6 @@ create(const Net &net, const Marking &m0, const Marking &final_marking,
        const Store &store,
        const std::vector<std::pair<Transition, int8_t>> &priority,
        const std::string &case_id, std::shared_ptr<const StoppablePool> stp) {
-  // signal(SIGINT, exit_handler);
   std::stringstream s;
   s << "[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] [" << case_id << "] %v";
   auto console = spdlog::stdout_color_mt(case_id);
@@ -253,7 +268,21 @@ Eventlog Application::getEventLog() const noexcept {
       el.set_value(model.event_log);
       return model;
     });
-    return el_getter.get();
+    std::future_status status;
+    do {
+      switch (status = el_getter.wait_for(std::chrono::milliseconds(100));
+              status) {
+        case std::future_status::deferred:
+          return impl->getEventLog();
+          break;
+        case std::future_status::timeout:
+          return impl->getEventLog();
+          break;
+        case std::future_status::ready:
+          return el_getter.get();
+          break;
+      }
+    } while (status != std::future_status::ready);
   } else {
     return impl->getEventLog();
   }
@@ -268,7 +297,21 @@ std::pair<std::vector<Transition>, std::vector<Place>> Application::getState()
       state.set_value(model.getState());
       return model;
     });
-    return getter.get();
+    std::future_status status;
+    do {
+      switch (status = getter.wait_for(std::chrono::milliseconds(100));
+              status) {
+        case std::future_status::deferred:
+          return impl->getModel().getState();
+          break;
+        case std::future_status::timeout:
+          return impl->getModel().getState();
+          break;
+        case std::future_status::ready:
+          return getter.get();
+          break;
+      }
+    } while (status != std::future_status::ready);
   } else {
     return impl->getModel().getState();
   }
@@ -283,7 +326,22 @@ std::vector<Transition> Application::getFireableTransitions() const noexcept {
       transitions.set_value(model.getFireableTransitions());
       return model;
     });
-    return transitions_getter.get();
+    std::future_status status;
+    do {
+      switch (status =
+                  transitions_getter.wait_for(std::chrono::milliseconds(100));
+              status) {
+        case std::future_status::deferred:
+          return impl->getModel().getFireableTransitions();
+          break;
+        case std::future_status::timeout:
+          return impl->getModel().getFireableTransitions();
+          break;
+        case std::future_status::ready:
+          return transitions_getter.get();
+          break;
+      }
+    } while (status != std::future_status::ready);
   } else {
     return impl->getModel().getFireableTransitions();
   }
@@ -291,7 +349,7 @@ std::vector<Transition> Application::getFireableTransitions() const noexcept {
 
 std::function<void()> Application::registerTransitionCallback(
     const Transition &transition) const noexcept {
-  return [transition, this]() { register_functor(transition); };
+  return [transition, this] { register_functor(transition); };
 }
 
 void Application::exitEarly() const noexcept {
