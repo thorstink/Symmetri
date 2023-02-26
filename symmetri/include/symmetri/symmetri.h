@@ -159,14 +159,6 @@ class Application final {
   std::vector<Transition> getFireableTransitions() const noexcept;
 
   /**
-   * @brief Execution of the net will be paused. Meaning no reducers will be
-   * processed and no new transitions will be queued. Already active transitions
-   * can still be executed though.
-   *
-   */
-  void togglePause() const noexcept;
-
-  /**
    * @brief exitEarly breaks the Petri net loop as soon as possible.
    *
    */

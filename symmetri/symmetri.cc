@@ -1,7 +1,6 @@
 #include "symmetri/symmetri.h"
 
 #include <blockingconcurrentqueue.h>
-#include <signal.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
@@ -17,39 +16,11 @@
 
 namespace symmetri {
 
-std::condition_variable cv;
-std::mutex cv_m;  // This mutex is used for two purposes:
-                  // 1) to synchronize accesses to PAUSE & EARLY_EXIT
-                  // 2) for the condition variable cv
-
-std::atomic<bool> PAUSE(false);
-std::atomic<bool> EARLY_EXIT(false);
-
 Result fireTransition(const Application &app) { return app.execute(); };
-
-// The default exit handler just sets early exit to true.
-std::function<void()> EARLY_EXIT_HANDLER = []() {
-  spdlog::info("User requests exit");
-  std::lock_guard<std::mutex> lk(cv_m);
-  EARLY_EXIT.store(true);
-  cv.notify_all();
-};
-
-void blockIfPaused(const std::string &case_id) {
-  std::unique_lock<std::mutex> lk(cv_m);
-  if (PAUSE.load(std::memory_order_relaxed)) {
-    spdlog::get(case_id)->info("Execution is paused");
-    cv.wait(lk, [] { return !PAUSE.load() || EARLY_EXIT.load(); });
-    spdlog::get(case_id)->info("Execution is resumed");
-  }
-}
-
-// Define the function to be called when ctrl-c (SIGINT) is sent to process
-inline void exit_handler(int) noexcept { EARLY_EXIT_HANDLER(); }
 
 using namespace moodycamel;
 
-bool check(const Store &store, const Net &net) noexcept {
+bool areAllTransitionsInStore(const Store &store, const Net &net) noexcept {
   return std::all_of(net.cbegin(), net.cend(), [&store](const auto &p) {
     const auto &t = std::get<0>(p);
     bool store_has_transition =
@@ -73,20 +44,21 @@ bool check(const Store &store, const Net &net) noexcept {
 struct Petri {
   Model m;            ///< The Petri net model
   const Marking m0_;  ///< The initial marking for this instance
-  std::shared_ptr<BlockingConcurrentQueue<Reducer>> reducers;
-  std::shared_ptr<const StoppablePool> stp;
+  const std::shared_ptr<BlockingConcurrentQueue<Reducer>> reducers;
+  const std::shared_ptr<const StoppablePool> stp;
   const std::string case_id;  ///< The case id of this particular Petri instance
+  const std::vector<size_t>
+      final_marking;  ///< The net will stop queueing reducers
+                      ///< once the marking has been reached
   std::atomic<bool>
       active;  ///< The net is active as long as it is still dequeuing reducers
-  Marking final_marking;  ///< The net will stop queueing reducers
-                          ///< once the marking has been reached
+  std::atomic<bool> early_exit;  ///< once it is true, no more new transitions
+                                 ///< will be queued and the run will exit.
 
   /**
    * @brief Construct a new Petri object. Most importantly, it also creates the
    * reducer queue and exposes the `run` function to actually execute the petri
-   * net. During construction some `EARLY_EXIT_HANDLER` is reassigned to a
-   * function that sets EARLY_EXIT to true and queues an empty reducer. This is
-   * done to force the check for an early exit.
+   * net.
    *
    * @param net
    * @param m0
@@ -106,18 +78,17 @@ struct Petri {
         reducers(std::make_shared<BlockingConcurrentQueue<Reducer>>(256)),
         stp(stp),
         case_id(case_id),
+        final_marking([=]() {
+          std::vector<size_t> final_tokens;
+          for (const auto &[p, c] : final_marking) {
+            for (int i = 0; i < c; i++) {
+              final_tokens.push_back(toIndex(m.net.place, p));
+            }
+          }
+          return final_tokens;
+        }()),
         active(false),
-        final_marking(final_marking) {
-    EARLY_EXIT_HANDLER = [case_id, this]() {
-      spdlog::get(case_id)->info("User requests exit");
-      std::lock_guard<std::mutex> lk(cv_m);
-      if (!EARLY_EXIT.load()) {
-        EARLY_EXIT.store(true);
-      }
-      reducers->enqueue([](Model &&model) -> Model & { return model; });
-      cv.notify_all();
-    };
-  }
+        early_exit(false) {}
 
   /**
    * @brief Get the Model object
@@ -142,30 +113,24 @@ struct Petri {
    */
   Result run() {
     // we are running!
+    early_exit.store(false);
     active.store(true);
-    // todo.. not have to assign it manually to reset.
+    // reassign it manually to reset.
     m.event_log = {};
     m.tokens_n = m.initial_tokens;
-    std::vector<size_t> final_tokens;
-    for (const auto &[p, c] : final_marking) {
-      for (int i = 0; i < c; i++) {
-        final_tokens.push_back(toIndex(m.net.place, p));
-      }
-    }
 
     Reducer f;
     // start!
     m.fireTransitions(reducers, *stp, true, case_id);
     // get a reducer. Immediately, or wait a bit
     while (m.active_transitions_n.size() > 0 &&
-           !EARLY_EXIT.load(std::memory_order_relaxed) &&
+           !early_exit.load(std::memory_order_relaxed) &&
            reducers->wait_dequeue_timed(f, -1) &&
-           !EARLY_EXIT.load(std::memory_order_relaxed)) {
+           !early_exit.load(std::memory_order_relaxed)) {
       do {
         m = f(std::move(m));
       } while (reducers->try_dequeue(f));
-      blockIfPaused(case_id);
-      if (MarkingReached(m.tokens_n, final_tokens)) {
+      if (MarkingReached(m.tokens_n, final_marking)) {
         break;
       }
       m.fireTransitions(reducers, *stp, true, case_id);
@@ -174,9 +139,9 @@ struct Petri {
 
     // determine what was the reason we terminated.
     State result;
-    if (EARLY_EXIT.load()) {
+    if (early_exit.load()) {
       result = State::UserExit;
-    } else if (MarkingReached(m.tokens_n, final_tokens)) {
+    } else if (MarkingReached(m.tokens_n, final_marking)) {
       result = State::Completed;
     } else if (m.active_transitions_n.empty()) {
       result = State::Deadlock;
@@ -209,7 +174,7 @@ create(const Net &net, const Marking &m0, const Marking &final_marking,
        const Store &store,
        const std::vector<std::pair<Transition, int8_t>> &priority,
        const std::string &case_id, std::shared_ptr<const StoppablePool> stp) {
-  signal(SIGINT, exit_handler);
+  // signal(SIGINT, exit_handler);
   std::stringstream s;
   s << "[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] [" << case_id << "] %v";
   auto console = spdlog::stdout_color_mt(case_id);
@@ -235,7 +200,7 @@ Application::Application(
     const std::vector<std::pair<Transition, int8_t>> &priority,
     const std::string &case_id, std::shared_ptr<const StoppablePool> stp) {
   const auto &[net, m0] = readPetriNets(files);
-  if (check(store, net)) {
+  if (areAllTransitionsInStore(store, net)) {
     std::tie(impl, register_functor) =
         create(net, m0, final_marking, store, priority, case_id, stp);
   }
@@ -246,7 +211,7 @@ Application::Application(
     const Store &store,
     const std::vector<std::pair<Transition, int8_t>> &priority,
     const std::string &case_id, std::shared_ptr<const StoppablePool> stp) {
-  if (check(store, net)) {
+  if (areAllTransitionsInStore(store, net)) {
     std::tie(impl, register_functor) =
         create(net, m0, final_marking, store, priority, case_id, stp);
   }
@@ -329,12 +294,9 @@ std::function<void()> Application::registerTransitionCallback(
   return [transition, this]() { register_functor(transition); };
 }
 
-void Application::exitEarly() const noexcept { EARLY_EXIT_HANDLER(); }
-
-void Application::togglePause() const noexcept {
-  std::lock_guard<std::mutex> lk(cv_m);
-  PAUSE.store(!PAUSE.load());
-  cv.notify_all();
+void Application::exitEarly() const noexcept {
+  impl->early_exit.store(true);
+  impl->reducers->enqueue([](Model &&model) -> Model & { return model; });
 }
 
 }  // namespace symmetri
