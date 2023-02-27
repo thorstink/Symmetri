@@ -268,21 +268,10 @@ Eventlog Application::getEventLog() const noexcept {
       el.set_value(model.event_log);
       return model;
     });
-    std::future_status status;
-    do {
-      switch (status = el_getter.wait_for(std::chrono::milliseconds(100));
-              status) {
-        case std::future_status::deferred:
-          return impl->getEventLog();
-          break;
-        case std::future_status::timeout:
-          return impl->getEventLog();
-          break;
-        case std::future_status::ready:
-          return el_getter.get();
-          break;
-      }
-    } while (status != std::future_status::ready);
+    return el_getter.wait_for(std::chrono::milliseconds(100)) ==
+                   std::future_status::ready
+               ? el_getter.get()
+               : impl->getEventLog();
   } else {
     return impl->getEventLog();
   }
@@ -297,21 +286,10 @@ std::pair<std::vector<Transition>, std::vector<Place>> Application::getState()
       state.set_value(model.getState());
       return model;
     });
-    std::future_status status;
-    do {
-      switch (status = getter.wait_for(std::chrono::milliseconds(100));
-              status) {
-        case std::future_status::deferred:
-          return impl->getModel().getState();
-          break;
-        case std::future_status::timeout:
-          return impl->getModel().getState();
-          break;
-        case std::future_status::ready:
-          return getter.get();
-          break;
-      }
-    } while (status != std::future_status::ready);
+    return getter.wait_for(std::chrono::milliseconds(100)) ==
+                   std::future_status::ready
+               ? getter.get()
+               : impl->getModel().getState();
   } else {
     return impl->getModel().getState();
   }
@@ -326,22 +304,10 @@ std::vector<Transition> Application::getFireableTransitions() const noexcept {
       transitions.set_value(model.getFireableTransitions());
       return model;
     });
-    std::future_status status;
-    do {
-      switch (status =
-                  transitions_getter.wait_for(std::chrono::milliseconds(100));
-              status) {
-        case std::future_status::deferred:
-          return impl->getModel().getFireableTransitions();
-          break;
-        case std::future_status::timeout:
-          return impl->getModel().getFireableTransitions();
-          break;
-        case std::future_status::ready:
-          return transitions_getter.get();
-          break;
-      }
-    } while (status != std::future_status::ready);
+    return transitions_getter.wait_for(std::chrono::milliseconds(100)) ==
+                   std::future_status::ready
+               ? transitions_getter.get()
+               : impl->getModel().getFireableTransitions();
   } else {
     return impl->getModel().getFireableTransitions();
   }
