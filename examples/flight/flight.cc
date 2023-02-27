@@ -5,18 +5,11 @@
 #include <random>
 #include <thread>
 
+#include "cancelable_transition.hpp"
 #include "symmetri/symmetri.h"
 
 std::function<void()> stop = [] {};
 void signal_handler(int) { stop(); }
-
-symmetri::Eventlog getNewEvents(const symmetri::Eventlog &el,
-                                symmetri::clock_s::time_point t) {
-  symmetri::Eventlog new_events;
-  std::copy_if(el.begin(), el.end(), std::back_inserter(new_events),
-               [t](const auto &l) { return l.stamp > t; });
-  return new_events;
-}
 
 std::function<void()> helloT(std::string s) {
   return [s] {
@@ -41,9 +34,9 @@ int main(int, char *argv[]) {
 
   auto snet = {pnml1, pnml2};
   symmetri::Application subnet(snet, final_marking2, s2, {}, "charon", pool);
+  auto foo = std::make_shared<Foo>();
 
-  symmetri::Store store = {
-      {"T0", subnet}, {"T1", helloT("T1")}, {"T2", helloT("T2")}};
+  symmetri::Store store = {{"T0", subnet}, {"T1", helloT("T1")}, {"T2", foo}};
 
   symmetri::Marking final_marking = {{"P3", 5}};
   auto net = {pnml1, pnml2, pnml3};

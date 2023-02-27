@@ -19,7 +19,7 @@ Result fireTransition(const Application &app) { return app.execute(); };
 
 Result cancelTransition(const Application &app) {
   app.exitEarly();
-  return {app.getEventLog(), State::UserExit};
+  return {app.getEventLog(), symmetri::State::UserExit};
 }
 
 bool isDirectTransition(const Application &) { return false; };
@@ -156,12 +156,14 @@ struct Petri {
       result = State::Error;
     }
 
+    // populate that eventlog with child eventlog and possible cancelations.
     for (const auto transition_index : m.active_transitions_n) {
-      auto el = std::get<Eventlog>(
-          cancelTransition(m.net.store.at(transition_index)));
+      auto [el, state] = cancelTransition(m.net.store.at(transition_index));
       for (auto e : el) {
         m.event_log.push_back(e);
       }
+      m.event_log.push_back(
+          {case_id, m.net.transition[transition_index], state, clock_s::now()});
     }
 
     spdlog::get(case_id)->info("Petri net finished with result {0}",

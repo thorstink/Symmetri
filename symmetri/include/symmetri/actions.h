@@ -51,7 +51,7 @@ class StoppablePool {
    *
    * @param p
    */
-  void enqueue(PolyAction&& p) const;
+  void enqueue(std::function<void()>&& p) const;
 };
 
 }  // namespace symmetri
