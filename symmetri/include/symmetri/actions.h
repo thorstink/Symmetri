@@ -1,10 +1,9 @@
 #pragma once
 
 #include <atomic>
+#include <functional>
 #include <thread>
 #include <vector>
-
-#include "symmetri/polyaction.h"
 
 namespace symmetri {
 

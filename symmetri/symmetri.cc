@@ -159,9 +159,7 @@ struct Petri {
     // populate that eventlog with child eventlog and possible cancelations.
     for (const auto transition_index : m.active_transitions_n) {
       auto [el, state] = cancelTransition(m.net.store.at(transition_index));
-      for (auto e : el) {
-        m.event_log.push_back(e);
-      }
+      m.event_log.splice(m.event_log.end(), el);
       m.event_log.push_back(
           {case_id, m.net.transition[transition_index], state, clock_s::now()});
     }

@@ -9,7 +9,7 @@
 #include "symmetri/symmetri.h"
 
 std::function<void()> stop = [] {};
-void signal_handler(int) { stop(); }
+void signal_handler(int) {}
 
 std::function<void()> helloT(std::string s) {
   return [s] {
@@ -44,8 +44,9 @@ int main(int, char *argv[]) {
   symmetri::Application bignet(net, final_marking, store, priority, "pluto",
                                pool);
 
+  // here we re-register the interupt signal so it cleanly exits the net.
   stop = [&] { cancelTransition(bignet); };
-  // auto [el, result] = bignet.execute();  // infinite loop
+
   auto [el, result] = fireTransition(bignet);  // infinite loop
 
   for (const auto &[caseid, t, s, c] : el) {

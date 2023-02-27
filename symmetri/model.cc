@@ -35,16 +35,14 @@ Reducer processTransition(size_t t_i, const std::string &case_id, State result,
 
 Reducer processTransition(size_t t_i, const Eventlog &new_events,
                           State result) {
-  return [=](Model &&model) -> Model & {
+  return [=, ev = std::move(new_events)](Model &&model) mutable -> Model & {
     if (result == State::Completed) {
       const auto &place_list = model.net.output_n;
       model.tokens_n.insert(model.tokens_n.begin(), place_list[t_i].begin(),
                             place_list[t_i].end());
     }
 
-    for (const auto &e : new_events) {
-      model.event_log.push_back(e);
-    }
+    model.event_log.splice(model.event_log.end(), ev);
 
     // we know for sure this transition is active because otherwise it wouldn't
     // produce a reducer.
