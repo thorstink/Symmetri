@@ -9,7 +9,7 @@
 #include "symmetri/symmetri.h"
 
 std::function<void()> stop = [] {};
-void signal_handler(int) {}
+void signal_handler(int) { stop(); }
 
 std::function<void()> helloT(std::string s) {
   return [s] {
@@ -49,11 +49,14 @@ int main(int, char *argv[]) {
 
   auto [el, result] = fireTransition(bignet);  // infinite loop
 
+  auto el2 = bignet.getEventLog();
+
+  spdlog::info("Result of this net: {0}", printState(result));
+
   for (const auto &[caseid, t, s, c] : el) {
-    spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),
+    spdlog::info("EventLog: {0}, {1}, {2}, {3}", caseid, t, printState(s),
                  c.time_since_epoch().count());
   }
-  spdlog::info("Result of this net: {0}", printState(result));
 
   return result == symmetri::State::Completed ? 0 : -1;
 }

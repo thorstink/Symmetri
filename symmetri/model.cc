@@ -42,7 +42,8 @@ Reducer processTransition(size_t t_i, const Eventlog &new_events,
                             place_list[t_i].end());
     }
 
-    model.event_log.splice(model.event_log.end(), ev);
+    model.event_log.merge(
+        ev, [](const auto &a, const auto &b) { return a.stamp < b.stamp; });
 
     // we know for sure this transition is active because otherwise it wouldn't
     // produce a reducer.

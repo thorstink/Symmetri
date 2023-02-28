@@ -17,10 +17,7 @@ namespace symmetri {
 
 Result fireTransition(const Application &app) { return app.execute(); };
 
-Result cancelTransition(const Application &app) {
-  app.exitEarly();
-  return {app.getEventLog(), symmetri::State::UserExit};
-}
+Result cancelTransition(const Application &app) { return app.exitEarly(); }
 
 bool isDirectTransition(const Application &) { return false; };
 
@@ -130,19 +127,28 @@ struct Petri {
     m.fireTransitions(reducers, *stp, true, case_id);
     // get a reducer. Immediately, or wait a bit
     while (m.active_transitions_n.size() > 0 &&
-           !early_exit.load(std::memory_order_relaxed) &&
-           reducers->wait_dequeue_timed(f, -1) &&
-           !early_exit.load(std::memory_order_relaxed)) {
+           reducers->wait_dequeue_timed(f, -1)) {
       do {
         m = f(std::move(m));
-      } while (reducers->try_dequeue(f));
-      if (MarkingReached(m.tokens_n, final_marking)) {
+      } while (!early_exit.load(std::memory_order_relaxed) &&
+               reducers->try_dequeue(f));
+      if (MarkingReached(m.tokens_n, final_marking) ||
+          early_exit.load(std::memory_order_relaxed)) {
         break;
       } else {
         m.fireTransitions(reducers, *stp, true, case_id);
       }
     }
     active.store(false);
+
+    // populate that eventlog with child eventlog and possible cancelations.
+    for (const auto transition_index : m.active_transitions_n) {
+      auto [el, state] = cancelTransition(m.net.store.at(transition_index));
+      m.event_log.merge(
+          el, [](const auto &a, const auto &b) { return a.stamp < b.stamp; });
+      m.event_log.push_back(
+          {case_id, m.net.transition[transition_index], state, clock_s::now()});
+    }
 
     // determine what was the reason we terminated.
     State result;
@@ -154,14 +160,6 @@ struct Petri {
       result = State::Deadlock;
     } else {
       result = State::Error;
-    }
-
-    // populate that eventlog with child eventlog and possible cancelations.
-    for (const auto transition_index : m.active_transitions_n) {
-      auto [el, state] = cancelTransition(m.net.store.at(transition_index));
-      m.event_log.splice(m.event_log.end(), el);
-      m.event_log.push_back(
-          {case_id, m.net.transition[transition_index], state, clock_s::now()});
     }
 
     spdlog::get(case_id)->info("Petri net finished with result {0}",
@@ -268,7 +266,7 @@ Eventlog Application::getEventLog() const noexcept {
       el.set_value(model.event_log);
       return model;
     });
-    return el_getter.wait_for(std::chrono::milliseconds(100)) ==
+    return el_getter.wait_for(std::chrono::milliseconds(1000)) ==
                    std::future_status::ready
                ? el_getter.get()
                : impl->getEventLog();
@@ -286,7 +284,7 @@ std::pair<std::vector<Transition>, std::vector<Place>> Application::getState()
       state.set_value(model.getState());
       return model;
     });
-    return getter.wait_for(std::chrono::milliseconds(100)) ==
+    return getter.wait_for(std::chrono::milliseconds(1000)) ==
                    std::future_status::ready
                ? getter.get()
                : impl->getModel().getState();
@@ -304,7 +302,7 @@ std::vector<Transition> Application::getFireableTransitions() const noexcept {
       transitions.set_value(model.getFireableTransitions());
       return model;
     });
-    return transitions_getter.wait_for(std::chrono::milliseconds(100)) ==
+    return transitions_getter.wait_for(std::chrono::milliseconds(1000)) ==
                    std::future_status::ready
                ? transitions_getter.get()
                : impl->getModel().getFireableTransitions();
@@ -318,9 +316,12 @@ std::function<void()> Application::registerTransitionCallback(
   return [transition, this] { register_functor(transition); };
 }
 
-void Application::exitEarly() const noexcept {
-  impl->early_exit.store(true);
-  impl->reducers->enqueue([](Model &&model) -> Model & { return model; });
+Result Application::exitEarly() const noexcept {
+  impl->reducers->enqueue([&](Model &&model) -> Model & {
+    impl->early_exit.store(true);
+    return model;
+  });
+  return {getEventLog(), {State::UserExit}};
 }
 
 }  // namespace symmetri

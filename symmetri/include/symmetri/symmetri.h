@@ -162,7 +162,7 @@ class Application final {
    * @brief exitEarly breaks the Petri net loop as soon as possible.
    *
    */
-  void exitEarly() const noexcept;
+  Result exitEarly() const noexcept;
 };
 
 /**
