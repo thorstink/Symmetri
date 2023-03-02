@@ -1,10 +1,8 @@
 #pragma once
-// #define LLVM_SMALL_VECTOR_IMPLEMENTATION
 #include <blockingconcurrentqueue.h>
 
 #include <chrono>
 #include <functional>
-#include <iostream>
 #include <map>
 #include <memory>
 #include <set>

@@ -1,23 +1,12 @@
 #include <spdlog/spdlog.h>
 
 #include <csignal>
-#include <iostream>
-#include <random>
-#include <thread>
 
 #include "cancelable_transition.hpp"
 #include "symmetri/symmetri.h"
 
 std::function<void()> stop = [] {};
 void signal_handler(int) { stop(); }
-
-std::function<void()> helloT(std::string s) {
-  return [s] {
-    spdlog::info(s);
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    return;
-  };
-};
 
 int main(int, char *argv[]) {
   spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] %v");
@@ -30,13 +19,15 @@ int main(int, char *argv[]) {
   auto pool = symmetri::createStoppablePool(4);
 
   symmetri::Marking final_marking2 = {{"P2", 1}};
-  symmetri::Store s2 = {{"T0", helloT("T01")}, {"T1", helloT("T02")}};
+  symmetri::Store s2 = {{"T0", std::make_shared<Foo>("SubFoo")},
+                        {"T1", std::make_shared<Foo>("SubBar")}};
 
   auto snet = {pnml1, pnml2};
   symmetri::Application subnet(snet, final_marking2, s2, {}, "charon", pool);
-  auto foo = std::make_shared<Foo>();
 
-  symmetri::Store store = {{"T0", subnet}, {"T1", helloT("T1")}, {"T2", foo}};
+  symmetri::Store store = {{"T0", subnet},
+                           {"T1", std::make_shared<Foo>("Bar")},
+                           {"T2", std::make_shared<Foo>("Foo")}};
 
   symmetri::Marking final_marking = {{"P3", 5}};
   auto net = {pnml1, pnml2, pnml3};
