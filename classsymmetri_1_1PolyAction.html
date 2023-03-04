@@ -102,12 +102,47 @@ Friends</h2></td></tr>
 <tr class="memitem:ad94346003cdc4c3ec2736679a45ba8ad"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1PolyAction.html#ad94346003cdc4c3ec2736679a45ba8ad">isDirectTransition</a> (const <a class="el" href="classsymmetri_1_1PolyAction.html">PolyAction</a> &amp;x)</td></tr>
 <tr class="memdesc:ad94346003cdc4c3ec2736679a45ba8ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">You can define a transition payload to be simple by creating a specialized isDirectTransition for your type.  <br /></td></tr>
 <tr class="separator:ad94346003cdc4c3ec2736679a45ba8ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a822072570d42d49999b070554f2cb227"><td class="memItemLeft" align="right" valign="top">Result&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1PolyAction.html#a822072570d42d49999b070554f2cb227">cancelTransition</a> (const <a class="el" href="classsymmetri_1_1PolyAction.html">PolyAction</a> &amp;x)</td></tr>
+<tr class="separator:a822072570d42d49999b070554f2cb227"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classsymmetri_1_1PolyAction.html" title="PolyAction is a wrapper around any type that you want to tie to a transition. Typically this is an in...">PolyAction</a> is a wrapper around any type that you want to tie to a transition. Typically this is an invokable object, such as a function, that executes some side-effects. The output of the invokable object can be used to communicate success or failure to the petri-net executor. You can create custom behavior by defining a tailored "fireTransition(const A&amp;)" for your transition payload. </p>
 <p>Random note, this class is inspired/taken by Sean Parents' talk "inheritance
 is the base class of evil". </p>
 </div><h2 class="groupheader">Friends And Related Function Documentation</h2>
+<a id="a822072570d42d49999b070554f2cb227" name="a822072570d42d49999b070554f2cb227"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a822072570d42d49999b070554f2cb227">&#9670;&#160;</a></span>cancelTransition</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">Result cancelTransition </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classsymmetri_1_1PolyAction.html">PolyAction</a> &amp;&#160;</td>
+          <td class="paramname"><em>x</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">x</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Result </dd></dl>
+
+</div>
+</div>
 <a id="aeb2766685569f2325e358d785673b546" name="aeb2766685569f2325e358d785673b546"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aeb2766685569f2325e358d785673b546">&#9670;&#160;</a></span>fireTransition</h2>
 

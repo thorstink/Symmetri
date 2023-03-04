@@ -111,12 +111,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:adef38df262cf8d990960e3e4364e8443"><td class="memItemLeft" align="right" valign="top">std::vector&lt; Transition &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1Application.html#adef38df262cf8d990960e3e4364e8443">getFireableTransitions</a> () const noexcept</td></tr>
 <tr class="memdesc:adef38df262cf8d990960e3e4364e8443"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a vector of Fireable Transitions. If the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net is running, this call is blocking as it is executed on the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net execution loop. Otherwise it directly returns the vector of fireable transitions.  <br /></td></tr>
 <tr class="separator:adef38df262cf8d990960e3e4364e8443"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a67a947ac003e67dfec42e08774e46aa0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1Application.html#a67a947ac003e67dfec42e08774e46aa0">togglePause</a> () const noexcept</td></tr>
-<tr class="memdesc:a67a947ac003e67dfec42e08774e46aa0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Execution of the net will be paused. Meaning no reducers will be processed and no new transitions will be queued. Already active transitions can still be executed though.  <br /></td></tr>
-<tr class="separator:a67a947ac003e67dfec42e08774e46aa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a93eecce3c591f0cc1185e34fff058c95"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1Application.html#a93eecce3c591f0cc1185e34fff058c95">exitEarly</a> () const noexcept</td></tr>
-<tr class="memdesc:a93eecce3c591f0cc1185e34fff058c95"><td class="mdescLeft">&#160;</td><td class="mdescRight">exitEarly breaks the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net loop as soon as possible.  <br /></td></tr>
-<tr class="separator:a93eecce3c591f0cc1185e34fff058c95"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aab375aeea9334c869df7bc5c60b1aff0"><td class="memItemLeft" align="right" valign="top">Result&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1Application.html#aab375aeea9334c869df7bc5c60b1aff0">exitEarly</a> () const noexcept</td></tr>
+<tr class="memdesc:aab375aeea9334c869df7bc5c60b1aff0"><td class="mdescLeft">&#160;</td><td class="mdescRight">exitEarly breaks the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net loop as soon as possible.  <br /></td></tr>
+<tr class="separator:aab375aeea9334c869df7bc5c60b1aff0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The <a class="el" href="classsymmetri_1_1Application.html" title="The Application class is a class that can create, configure and execute a Petri net.">Application</a> class is a class that can create, configure and execute a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net. </p>
@@ -287,8 +284,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a93eecce3c591f0cc1185e34fff058c95" name="a93eecce3c591f0cc1185e34fff058c95"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a93eecce3c591f0cc1185e34fff058c95">&#9670;&#160;</a></span>exitEarly()</h2>
+<a id="aab375aeea9334c869df7bc5c60b1aff0" name="aab375aeea9334c869df7bc5c60b1aff0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aab375aeea9334c869df7bc5c60b1aff0">&#9670;&#160;</a></span>exitEarly()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -297,7 +294,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void symmetri::Application::exitEarly </td>
+          <td class="memname">Result symmetri::Application::exitEarly </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -430,33 +427,6 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>std::function&lt;void()&gt; </dd></dl>
-
-</div>
-</div>
-<a id="a67a947ac003e67dfec42e08774e46aa0" name="a67a947ac003e67dfec42e08774e46aa0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a67a947ac003e67dfec42e08774e46aa0">&#9670;&#160;</a></span>togglePause()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void symmetri::Application::togglePause </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Execution of the net will be paused. Meaning no reducers will be processed and no new transitions will be queued. Already active transitions can still be executed though. </p>
 
 </div>
 </div>
