@@ -159,18 +159,10 @@ class Application final {
   std::vector<Transition> getFireableTransitions() const noexcept;
 
   /**
-   * @brief Execution of the net will be paused. Meaning no reducers will be
-   * processed and no new transitions will be queued. Already active transitions
-   * can still be executed though.
-   *
-   */
-  void togglePause() const noexcept;
-
-  /**
    * @brief exitEarly breaks the Petri net loop as soon as possible.
    *
    */
-  void exitEarly() const noexcept;
+  Result exitEarly() const noexcept;
 };
 
 /**
@@ -181,5 +173,6 @@ class Application final {
  * @return Result
  */
 Result fireTransition(const Application &app);
-
+Result cancelTransition(const Application &app);
+bool isDirectTransition(const Application &app);
 }  // namespace symmetri

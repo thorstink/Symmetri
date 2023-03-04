@@ -1,10 +1,10 @@
 #pragma once
 
 #include <atomic>
+#include <functional>
+#include <memory>
 #include <thread>
 #include <vector>
-
-#include "symmetri/polyaction.h"
 
 namespace symmetri {
 
@@ -51,7 +51,7 @@ class StoppablePool {
    *
    * @param p
    */
-  void enqueue(PolyAction&& p) const;
+  void enqueue(std::function<void()>&& p) const;
 };
 
 }  // namespace symmetri

@@ -4,9 +4,9 @@
 #include <spdlog/spdlog.h>
 
 namespace symmetri {
-const PolyAction noop([] {});
+const std::function<void()> noop([] {});
 
-static moodycamel::BlockingConcurrentQueue<PolyAction> actions(256);
+static moodycamel::BlockingConcurrentQueue<std::function<void()>> actions(256);
 
 StoppablePool::StoppablePool(unsigned int thread_count)
     : pool(thread_count), stop_flag(false) {
@@ -28,21 +28,21 @@ StoppablePool::~StoppablePool() {
 }
 
 void StoppablePool::loop() {
-  PolyAction transition(noop);
+  std::function<void()> transition(noop);
   do {
     if (actions.wait_dequeue_timed(transition,
                                    std::chrono::milliseconds(250))) {
       if (stop_flag.load(std::memory_order_relaxed) == true) {
         break;
       }
-      fireTransition(transition);
+      transition();
       transition = noop;
     }
   } while (stop_flag.load(std::memory_order_relaxed) == false);
 }
 
-void StoppablePool::enqueue(PolyAction &&p) const {
-  actions.enqueue(std::forward<PolyAction>(p));
+void StoppablePool::enqueue(std::function<void()> &&p) const {
+  actions.enqueue(std::forward<std::function<void()>>(p));
 }
 
 }  // namespace symmetri

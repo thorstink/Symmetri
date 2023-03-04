@@ -106,6 +106,9 @@ size_t calculateTrace(const Eventlog& event_log) noexcept {
 std::string printState(symmetri::State s) noexcept {
   std::string ret;
   switch (s) {
+    case State::Scheduled:
+      ret = "Scheduled";
+      break;
     case State::Started:
       ret = "Started";
       break;

@@ -1,5 +1,4 @@
 #include <catch2/catch_test_macros.hpp>
-#include <iostream>
 
 #include "model.h"
 using namespace symmetri;
@@ -75,6 +74,8 @@ TEST_CASE("Run one transition iteration in a petri net") {
   // now there should be two reducers;
   Reducer r1, r2;
   REQUIRE(reducers->wait_dequeue_timed(r1, std::chrono::seconds(1)));
+  REQUIRE(reducers->wait_dequeue_timed(r1, std::chrono::seconds(1)));
+  REQUIRE(reducers->wait_dequeue_timed(r2, std::chrono::seconds(1)));
   REQUIRE(reducers->wait_dequeue_timed(r2, std::chrono::seconds(1)));
   // verify that t0 has actually ran twice.
   REQUIRE(T0_COUNTER == 2);
@@ -89,10 +90,8 @@ TEST_CASE("Run one transition iteration in a petri net") {
   m = r2(std::move(m));
   // and now the post-conditions are processed:
   REQUIRE(m.active_transitions_n.empty());
-  std::cout << std::endl;
   REQUIRE(MarkingEquality(
       m.getMarking(), std::vector<symmetri::Place>{"Pa", "Pa", "Pc", "Pc"}));
-  ;
 }
 
 TEST_CASE("Run until net dies") {
@@ -122,7 +121,6 @@ TEST_CASE("Run until net dies") {
 
   REQUIRE(T0_COUNTER.load() == 4);
   REQUIRE(T1_COUNTER.load() == 2);
-  ;
 }
 
 TEST_CASE("Run until net dies with nullptr") {
@@ -212,7 +210,8 @@ TEST_CASE("Step through transitions") {
     REQUIRE(m.getFireableTransitions().size() == 0);
     int j = 0;
     Reducer r;
-    while (j < 4 && reducers->wait_dequeue_timed(r, std::chrono::seconds(1))) {
+    while (j < 2 * 4 &&
+           reducers->wait_dequeue_timed(r, std::chrono::seconds(1))) {
       j++;
       m = r(std::move(m));
     }

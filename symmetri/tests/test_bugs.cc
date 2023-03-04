@@ -51,12 +51,17 @@ TEST_CASE("Firing the same transition before it can complete should work") {
         std::vector<symmetri::Transition>{"t", "t"});
   REQUIRE(m.active_transitions_n.size() == 2);
 
+  Reducer r;
+  while (reducers->wait_dequeue_timed(r, std::chrono::milliseconds(250))) {
+    m = r(std::move(m));
+  }
+
   {
     std::lock_guard<std::mutex> lk(cv_m);
     is_ready1 = true;
   }
+
   cv.notify_one();
-  Reducer r;
 
   reducers->wait_dequeue_timed(r, std::chrono::milliseconds(250));
   m = r(std::move(m));

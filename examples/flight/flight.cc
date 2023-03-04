@@ -1,29 +1,16 @@
 #include <spdlog/spdlog.h>
 
-#include <iostream>
-#include <random>
-#include <thread>
+#include <csignal>
 
+#include "cancelable_transition.hpp"
 #include "symmetri/symmetri.h"
 
-symmetri::Eventlog getNewEvents(const symmetri::Eventlog &el,
-                                symmetri::clock_s::time_point t) {
-  symmetri::Eventlog new_events;
-  std::copy_if(el.begin(), el.end(), std::back_inserter(new_events),
-               [t](const auto &l) { return l.stamp > t; });
-  return new_events;
-}
-
-std::function<void()> helloT(std::string s) {
-  return [s] {
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    spdlog::info(s);
-    return;
-  };
-};
+std::function<void()> stop = [] {};
+void signal_handler(int) { stop(); }
 
 int main(int, char *argv[]) {
   spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] %v");
+  std::signal(SIGINT, signal_handler);
 
   auto pnml1 = std::string(argv[1]);
   auto pnml2 = std::string(argv[2]);
@@ -32,13 +19,15 @@ int main(int, char *argv[]) {
   auto pool = symmetri::createStoppablePool(4);
 
   symmetri::Marking final_marking2 = {{"P2", 1}};
-  symmetri::Store s2 = {{"T0", helloT("T01")}, {"T1", helloT("T02")}};
-  auto snet = {pnml1, pnml2};
+  symmetri::Store s2 = {{"T0", std::make_shared<Foo>("SubFoo")},
+                        {"T1", std::make_shared<Foo>("SubBar")}};
 
+  auto snet = {pnml1, pnml2};
   symmetri::Application subnet(snet, final_marking2, s2, {}, "charon", pool);
 
-  symmetri::Store store = {
-      {"T0", subnet}, {"T1", helloT("T1")}, {"T2", helloT("T2")}};
+  symmetri::Store store = {{"T0", subnet},
+                           {"T1", std::make_shared<Foo>("Bar")},
+                           {"T2", std::make_shared<Foo>("Foo")}};
 
   symmetri::Marking final_marking = {{"P3", 5}};
   auto net = {pnml1, pnml2, pnml3};
@@ -46,12 +35,19 @@ int main(int, char *argv[]) {
   symmetri::Application bignet(net, final_marking, store, priority, "pluto",
                                pool);
 
-  auto [el, result] = bignet.execute();  // infinite loop
+  // here we re-register the interupt signal so it cleanly exits the net.
+  stop = [&] { cancelTransition(bignet); };
+
+  auto [el, result] = fireTransition(bignet);  // infinite loop
+
+  auto el2 = bignet.getEventLog();
+
+  spdlog::info("Result of this net: {0}", printState(result));
+
   for (const auto &[caseid, t, s, c] : el) {
-    spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),
+    spdlog::info("EventLog: {0}, {1}, {2}, {3}", caseid, t, printState(s),
                  c.time_since_epoch().count());
   }
-  spdlog::info("Result of this net: {0}", printState(result));
 
   return result == symmetri::State::Completed ? 0 : -1;
 }
