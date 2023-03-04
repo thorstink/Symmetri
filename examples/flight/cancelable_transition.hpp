@@ -3,6 +3,7 @@
 
 #include <chrono>
 #include <memory>
+#include <thread>
 
 #include "symmetri/types.h"
 

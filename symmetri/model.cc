@@ -8,7 +8,6 @@ size_t toIndex(const std::vector<std::string> &m, const std::string &s) {
 }
 
 Reducer processTransition(size_t t_i, const std::string &case_id, State result,
-                          clock_s::time_point start_time,
                           clock_s::time_point end_time) {
   return [=](Model &&model) -> Model & {
     if (result == State::Completed) {
@@ -17,8 +16,6 @@ Reducer processTransition(size_t t_i, const std::string &case_id, State result,
                             place_list[t_i].end());
     }
 
-    model.event_log.push_back(
-        {case_id, model.net.transition[t_i], State::Started, start_time});
     model.event_log.push_back(
         {case_id, model.net.transition[t_i],
          result == State::Completed ? State::Completed : State::Error,
@@ -55,13 +52,21 @@ Reducer processTransition(size_t t_i, const Eventlog &new_events,
   };
 }
 
-Reducer createReducerForTransition(size_t t_i, const PolyAction &task,
-                                   const std::string &case_id) {
+Reducer createReducerForTransition(
+    size_t t_i, const PolyAction &task, const std::string &case_id,
+    const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
+        &reducers) {
   const auto start_time = clock_s::now();
+  reducers->enqueue([=](Model &&model) -> Model & {
+    model.event_log.push_back(
+        {case_id, model.net.transition[t_i], State::Started, start_time});
+    return model;
+  });
+
   const auto [ev, res] = fireTransition(task);
   const auto end_time = clock_s::now();
 
-  return ev.empty() ? processTransition(t_i, case_id, res, start_time, end_time)
+  return ev.empty() ? processTransition(t_i, case_id, res, end_time)
                     : processTransition(t_i, ev, res);
 }
 
@@ -211,8 +216,11 @@ bool Model::tryFire(
           {case_id, net.transition[t], State::Completed, timestamp});
     } else {
       active_transitions_n.push_back(t);
+      event_log.push_back(
+          {case_id, net.transition[t], State::Scheduled, timestamp});
       pool.enqueue([=] {
-        reducers->enqueue(createReducerForTransition(t, task, case_id));
+        reducers->enqueue(
+            createReducerForTransition(t, task, case_id, reducers));
       });
     }
     return true;

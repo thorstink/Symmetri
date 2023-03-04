@@ -16,6 +16,7 @@ using clock_s = std::chrono::steady_clock;
  *
  */
 enum class State {
+  Scheduled,  ///< The transition is put into the transition queue
   Started,    ///< The transition started
   Completed,  ///< The transition completed as expected
   Deadlock,   ///< The transition deadlocked (e.g. it was a petri net)

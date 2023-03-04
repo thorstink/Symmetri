@@ -24,8 +24,9 @@ TEST_CASE(
     m.fireTransitions(reducers, *stp, true);
     Reducer r;
 
-    REQUIRE(reducers->wait_dequeue_timed(r, std::chrono::seconds(1)));
-    m = r(std::move(m));
+    while (reducers->wait_dequeue_timed(r, std::chrono::milliseconds(1))) {
+      m = r(std::move(m));
+    }
 
     auto prio_t0 = std::find_if(priority.begin(), priority.end(), [](auto e) {
                      return e.first == "t0";

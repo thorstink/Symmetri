@@ -19,8 +19,10 @@ size_t toIndex(const std::vector<std::string> &m, const std::string &s);
 struct Model;
 using Reducer = std::function<Model &(Model &&)>;
 
-Reducer createReducerForTransition(size_t T_i, const PolyAction &task,
-                                   const std::string &case_id);
+Reducer createReducerForTransition(
+    size_t T_i, const PolyAction &task, const std::string &case_id,
+    const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
+        &reducers);
 
 /**
  * @brief Model is a different data structure to encode the Petri net. It is

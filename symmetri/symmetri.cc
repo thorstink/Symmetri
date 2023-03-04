@@ -194,17 +194,18 @@ create(const Net &net, const Marking &m0, const Marking &final_marking,
   console->set_pattern(s.str());
   auto impl = std::make_shared<Petri>(net, m0, stp, final_marking, store,
                                       priority, case_id);
-  return {impl, [=](const Transition &t) {
-            if (impl->active.load()) {
-              impl->reducers->enqueue([=](Model &&m) -> Model & {
-                const auto t_index = toIndex(m.net.transition, t);
-                m.active_transitions_n.push_back(t_index);
-                impl->reducers->enqueue(createReducerForTransition(
-                    t_index, m.net.store[t_index], impl->case_id));
-                return m;
-              });
-            }
-          }};
+  return {
+      impl, [=](const Transition &t) {
+        if (impl->active.load()) {
+          impl->reducers->enqueue([=](Model &&m) -> Model & {
+            const auto t_index = toIndex(m.net.transition, t);
+            m.active_transitions_n.push_back(t_index);
+            impl->reducers->enqueue(createReducerForTransition(
+                t_index, m.net.store[t_index], impl->case_id, impl->reducers));
+            return m;
+          });
+        }
+      }};
 }
 
 Application::Application(
