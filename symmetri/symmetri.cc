@@ -144,8 +144,7 @@ struct Petri {
     // populate that eventlog with child eventlog and possible cancelations.
     for (const auto transition_index : m.active_transitions_n) {
       auto [el, state] = cancelTransition(m.net.store.at(transition_index));
-      m.event_log.merge(
-          el, [](const auto &a, const auto &b) { return a.stamp < b.stamp; });
+      m.event_log.insert(m.event_log.end(), el.begin(), el.end());
       m.event_log.push_back(
           {case_id, m.net.transition[transition_index], state, clock_s::now()});
     }
@@ -322,7 +321,7 @@ Result Application::exitEarly() const noexcept {
     impl->early_exit.store(true);
     return model;
   });
-  return {getEventLog(), {State::UserExit}};
+  return {getEventLog(), State::UserExit};
 }
 
 }  // namespace symmetri

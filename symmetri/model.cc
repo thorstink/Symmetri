@@ -38,10 +38,7 @@ Reducer processTransition(size_t t_i, const Eventlog &new_events,
       model.tokens_n.insert(model.tokens_n.begin(), place_list[t_i].begin(),
                             place_list[t_i].end());
     }
-
-    model.event_log.merge(
-        ev, [](const auto &a, const auto &b) { return a.stamp < b.stamp; });
-
+    model.event_log.insert(model.event_log.end(), ev.begin(), ev.end());
     // we know for sure this transition is active because otherwise it wouldn't
     // produce a reducer.
     model.active_transitions_n.erase(
@@ -105,6 +102,8 @@ Model::Model(
     const std::vector<std::pair<symmetri::Transition, int8_t>> &_priority,
     const Marking &M0)
     : timestamp(clock_s::now()) {
+  // reserve arbitrary eventlog space.
+  event_log.reserve(1000);
   // populate net:
   const auto transition_count = _net.size();
   net.transition.reserve(transition_count);

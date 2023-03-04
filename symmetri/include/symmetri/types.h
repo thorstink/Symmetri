@@ -1,6 +1,5 @@
 #pragma once
 #include <chrono>
-#include <list>
 #include <map>
 #include <string>
 #include <unordered_map>
@@ -19,8 +18,8 @@ enum class State {
   Scheduled,  ///< The transition is put into the transition queue
   Started,    ///< The transition started
   Completed,  ///< The transition completed as expected
-  Deadlock,   ///< The transition deadlocked (e.g. it was a petri net)
-  UserExit,   ///< The transition or interupted and was stopped
+  Deadlock,   ///< The transition deadlocked (applies to  petri nets)
+  UserExit,   ///< The transition or interupted and possibly stopped
   Error       ///< None of the above
 };
 
@@ -37,7 +36,7 @@ struct Event {
                               ///< event was processed (not generated/occured)
 };
 
-using Eventlog = std::list<Event>;
+using Eventlog = std::vector<Event>;
 using Result = std::pair<Eventlog, State>;
 using Net =
     std::unordered_map<Transition,

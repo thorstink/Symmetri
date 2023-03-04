@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <catch2/catch_test_macros.hpp>
+#include <list>
 
 #include "model.h"
 using namespace symmetri;
