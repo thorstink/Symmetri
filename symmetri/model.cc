@@ -101,7 +101,7 @@ Model::Model(
     const Net &_net, const Store &store,
     const std::vector<std::pair<symmetri::Transition, int8_t>> &_priority,
     const Marking &M0)
-    : timestamp(clock_s::now()) {
+    : timestamp(clock_s::now()), event_log({}) {
   // reserve arbitrary eventlog space.
   event_log.reserve(1000);
   // populate net:
