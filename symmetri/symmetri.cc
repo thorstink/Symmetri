@@ -211,7 +211,13 @@ Application::Application(
     const std::set<std::string> &files, const Marking &final_marking,
     const Store &store,
     const std::vector<std::pair<Transition, int8_t>> &priority,
-    const std::string &case_id, std::shared_ptr<const StoppablePool> stp) {
+    const std::string &case_id, std::shared_ptr<const StoppablePool> stp)
+    : files_(files),
+      final_marking_(final_marking),
+      store_(store),
+      priority_(priority),
+      stp_(stp),
+      having_input_files_(true) {
   const auto &[net, m0] = readPetriNets(files);
   if (areAllTransitionsInStore(store, net)) {
     std::tie(impl, register_functor) =
@@ -223,7 +229,14 @@ Application::Application(
     const Net &net, const Marking &m0, const Marking &final_marking,
     const Store &store,
     const std::vector<std::pair<Transition, int8_t>> &priority,
-    const std::string &case_id, std::shared_ptr<const StoppablePool> stp) {
+    const std::string &case_id, std::shared_ptr<const StoppablePool> stp)
+    : net_(net),
+      m0_(m0),
+      final_marking_(final_marking),
+      store_(store),
+      priority_(priority),
+      stp_(stp),
+      having_input_files_(false) {
   if (areAllTransitionsInStore(store, net)) {
     std::tie(impl, register_functor) =
         create(net, m0, final_marking, store, priority, case_id, stp);
@@ -322,6 +335,17 @@ Result Application::exitEarly() const noexcept {
     return model;
   });
   return {getEventLog(), State::UserExit};
+}
+
+void Application::resetApplication(const std::string &case_id) {
+  if (having_input_files_) {
+    const auto &[net, m0] = readPetriNets(files_);
+    std::tie(impl, register_functor) =
+        create(net, m0, final_marking_, store_, priority_, case_id, stp_);
+  } else {
+    std::tie(impl, register_functor) =
+        create(net_, m0_, final_marking_, store_, priority_, case_id, stp_);
+  }
 }
 
 }  // namespace symmetri

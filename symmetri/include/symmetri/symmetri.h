@@ -60,6 +60,17 @@ class Application final {
                          ///< transitions - allowing the user to invoke a
                          ///< transition without meeting the pre-conditions.
 
+  const std::set<std::string> files_;
+  const symmetri::Net net_;
+  const symmetri::Marking m0_;
+  const symmetri::Marking final_marking_;
+  const Store store_;
+  const std::vector<std::pair<symmetri::Transition, int8_t>> priority_;
+  std::shared_ptr<const symmetri::StoppablePool> stp_;
+  const bool having_input_files_;
+
+  std::vector<std::string> register_functor_transitions_;
+
  public:
   /**
    * @brief Construct a new Application object from a set of paths to pnml-files
@@ -163,6 +174,13 @@ class Application final {
    *
    */
   Result exitEarly() const noexcept;
+  /**
+   * @brief resetApplication resets impl such that the same net can be used
+   * again after an exitEarly call.
+   *
+   */
+
+  void resetApplication(const std::string &case_id);
 };
 
 /**
