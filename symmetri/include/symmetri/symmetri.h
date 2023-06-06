@@ -14,7 +14,7 @@ namespace symmetri {
  * the order of the completions of transitions and if the output of those
  * transitions is Completed, or something else.
  *
- * @param event_log An eventlog, can be both from a terminated or a still active
+ * @param event_log An eventlog, can both be from a terminated or a still active
  * net.
  * @return size_t The hashed result.
  */
@@ -163,6 +163,14 @@ class Application final {
    *
    */
   Result exitEarly() const noexcept;
+
+  /**
+   * @brief reuseApplication resets the application such that the same net can
+   * be used again after an exitEarly call. You do need to supply a new case_id
+   * which must be different.
+   *
+   */
+  bool reuseApplication(const std::string &case_id);
 };
 
 /**

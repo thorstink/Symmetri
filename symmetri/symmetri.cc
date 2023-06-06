@@ -21,6 +21,13 @@ Result cancelTransition(const Application &app) { return app.exitEarly(); }
 
 bool isDirectTransition(const Application &) { return false; };
 
+void resetLogger(const std::string &case_id) {
+  std::stringstream s;
+  s << "[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] [" << case_id << "] %v";
+  auto console = spdlog::stdout_color_mt(case_id);
+  console->set_pattern(s.str());
+}
+
 using namespace moodycamel;
 
 bool areAllTransitionsInStore(const Store &store, const Net &net) noexcept {
@@ -45,14 +52,18 @@ bool areAllTransitionsInStore(const Store &store, const Net &net) noexcept {
  *
  */
 struct Petri {
-  Model m;            ///< The Petri net model
-  const Marking m0_;  ///< The initial marking for this instance
-  const std::shared_ptr<BlockingConcurrentQueue<Reducer>> reducers;
-  const std::shared_ptr<const StoppablePool> stp;
-  const std::string case_id;  ///< The case id of this particular Petri instance
+  using PriorityTable = std::vector<std::pair<Transition, int8_t>>;
+  Model m;                          ///< The Petri net model
+  const Marking m0_;                ///< The initial marking for this instance
+  const Net net_;                   ///< The net
+  const Store &store_;              ///< Reference to the store
+  const PriorityTable priorities_;  ///< The priority table for this instance
   const std::vector<size_t>
       final_marking;  ///< The net will stop queueing reducers
                       ///< once the marking has been reached
+  const std::shared_ptr<const StoppablePool> stp;
+  std::shared_ptr<BlockingConcurrentQueue<Reducer>> reducers;
+  std::string case_id;  ///< The case id of this particular Petri instance
   std::atomic<bool>
       active;  ///< The net is active as long as it is still dequeuing reducers
   std::atomic<bool> early_exit;  ///< once it is true, no more new transitions
@@ -73,14 +84,13 @@ struct Petri {
    */
   Petri(const Net &net, const Marking &m0,
         std::shared_ptr<const StoppablePool> stp, const Marking &final_marking,
-        const Store &store,
-        const std::vector<std::pair<Transition, int8_t>> &priority,
+        const Store &store, const PriorityTable &priorities,
         const std::string &case_id)
-      : m(net, store, priority, m0),
+      : m(net, store, priorities, m0),
         m0_(m0),
-        reducers(std::make_shared<BlockingConcurrentQueue<Reducer>>(256)),
-        stp(stp),
-        case_id(case_id),
+        net_(net),
+        store_(store),
+        priorities_(priorities),
         final_marking([=]() {
           std::vector<size_t> final_tokens;
           for (const auto &[p, c] : final_marking) {
@@ -90,9 +100,28 @@ struct Petri {
           }
           return final_tokens;
         }()),
+        stp(stp),
+        reducers(std::make_shared<BlockingConcurrentQueue<Reducer>>(256)),
+        case_id(case_id),
         active(false),
-        early_exit(false) {}
+        early_exit(false) {
+    resetLogger(case_id);
+  }
 
+  bool reset(const std::string &new_case_id) {
+    if (active || new_case_id == case_id) {
+      return false;
+    }
+
+    // recreate model.
+    m = Model(net_, store_, priorities_, m0_);
+    case_id = new_case_id;
+    resetLogger(case_id);
+    reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(256);
+    active.store(false);
+    early_exit.store(false);
+    return true;
+  }
   /**
    * @brief Get the Model object
    *
@@ -187,10 +216,6 @@ create(const Net &net, const Marking &m0, const Marking &final_marking,
        const Store &store,
        const std::vector<std::pair<Transition, int8_t>> &priority,
        const std::string &case_id, std::shared_ptr<const StoppablePool> stp) {
-  std::stringstream s;
-  s << "[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] [" << case_id << "] %v";
-  auto console = spdlog::stdout_color_mt(case_id);
-  console->set_pattern(s.str());
   auto impl = std::make_shared<Petri>(net, m0, stp, final_marking, store,
                                       priority, case_id);
   return {
@@ -322,6 +347,10 @@ Result Application::exitEarly() const noexcept {
     return model;
   });
   return {getEventLog(), State::UserExit};
+}
+
+bool Application::reuseApplication(const std::string &new_case_id) {
+  return impl->reset(new_case_id);
 }
 
 }  // namespace symmetri
