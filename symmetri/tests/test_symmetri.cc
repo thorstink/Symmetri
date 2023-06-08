@@ -29,7 +29,6 @@ TEST_CASE("Create a using the net constructor without end condition.") {
                             "test_net_without_end", stp);
   // we can run the net
   auto [ev, res] = app.execute();
-  ;
 
   // because there's no final marking, but the net is finite, it deadlocks.
   REQUIRE(res == State::Deadlock);
@@ -67,7 +66,6 @@ TEST_CASE("Create a using pnml constructor.") {
     // but the result is an error.
     REQUIRE(res == State::Error);
     REQUIRE(ev.empty());
-    ;
   }
 
   {
@@ -83,7 +81,6 @@ TEST_CASE("Create a using pnml constructor.") {
     // and the result is properly completed.
     REQUIRE(res == State::Completed);
     REQUIRE(!ev.empty());
-    ;
   }
 }
 
@@ -95,7 +92,6 @@ TEST_CASE("Run transition manually.") {
 
   REQUIRE(app.tryFireTransition("t0"));
   app.exitEarly();
-  ;
 }
 
 TEST_CASE("Run transition that does not exist manually.") {
@@ -106,7 +102,6 @@ TEST_CASE("Run transition that does not exist manually.") {
 
   REQUIRE(!app.tryFireTransition("t0dgdsg"));
   app.exitEarly();
-  ;
 }
 
 TEST_CASE("Run transition for which the preconditions are not met manually.") {
@@ -121,5 +116,35 @@ TEST_CASE("Run transition for which the preconditions are not met manually.") {
   }
   REQUIRE(!app.tryFireTransition("t1"));
   app.exitEarly();
-  ;
+}
+
+TEST_CASE("Reuse an application with a new case_id.") {
+  auto [net, store, priority, m0] = testNet();
+  const auto initial_id = "initial0";
+  const auto new_id = "something_different0";
+  auto stp = createStoppablePool(1);
+  symmetri::Application app(net, m0, {}, store, priority, initial_id, stp);
+  REQUIRE(!app.reuseApplication(initial_id));
+  REQUIRE(app.reuseApplication(new_id));
+  // fire a transition so that there's an entry in the eventlog
+  auto eventlog = app.execute().first;
+  // double check that the eventlog is not empty
+  REQUIRE(!eventlog.empty());
+  // the eventlog should have a different case id.
+  for (const auto& event : eventlog) {
+    REQUIRE(event.case_id == new_id);
+  }
+}
+
+TEST_CASE("Can not reuse an active application with a new case_id.") {
+  auto [net, store, priority, m0] = testNet();
+  const auto initial_id = "initial1";
+  const auto new_id = "something_different1";
+  auto stp = createStoppablePool(1);
+  symmetri::Application app(net, m0, {}, store, priority, initial_id, stp);
+  stp->enqueue([&]() mutable {
+    // this should fail because we can not do this while everything is active.
+    REQUIRE(!app.reuseApplication(new_id));
+  });
+  auto [ev, res] = app.execute();
 }
