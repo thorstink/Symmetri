@@ -74,7 +74,7 @@ class Application final {
   Application(
       const std::set<std::string> &path_to_pnml,
       const symmetri::Marking &final_marking, const Store &store,
-      const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
+      const PriorityTable &priority,
       const std::string &case_id,
       std::shared_ptr<const symmetri::StoppablePool> stp);
 
@@ -92,7 +92,7 @@ class Application final {
   Application(
       const symmetri::Net &net, const symmetri::Marking &m0,
       const symmetri::Marking &final_marking, const Store &store,
-      const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
+      const PriorityTable &priority,
       const std::string &case_id,
       std::shared_ptr<const symmetri::StoppablePool> stp);
 

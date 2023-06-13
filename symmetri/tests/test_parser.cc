@@ -2,8 +2,8 @@
 #include <filesystem>
 #include <iostream>
 
+#include "symmetri/grml_parser.h"
 #include "symmetri/pnml_parser.h"
-
 using namespace symmetri;
 
 TEST_CASE("Load p1.pnml net") {
@@ -26,11 +26,46 @@ TEST_CASE("Load p1.pnml net") {
 
   // for this particular net, the following transitions connect places:
   Net net_test;
-  net_test["t0"] = {{"P0", "P3"}, {"P4", "P7"}};
-  net_test["t1"] = {{"P1", "P4"}, {"P5"}};
+  net_test["t0"] = {{"P0", "P3"}, {"P4", "P4", "P7"}};
+  net_test["t1"] = {{"P1", "P4", "P4"}, {"P5"}};
   net_test["t2"] = {{"P2", "P5"}, {"P6"}};
   net_test["t3"] = {{"P6", "P8"}, {"P0", "P1", "P2", "P3"}};
   net_test["t4"] = {{"P7"}, {"P8"}};
+
+  REQUIRE(stateNetEquality(net_test, net));
+}
+
+TEST_CASE("Load p1.grml net") {
+  const std::string grml_file = std::filesystem::current_path().append(
+      "../../../symmetri/tests/assets/n1.grml");
+  const auto &[net, m0, priorities] = readGrml({grml_file});
+
+  // for this particular net, the initial marking is:
+  Marking m_test;
+  m_test["P0"] = 1;
+  m_test["P1"] = 1;
+  m_test["P2"] = 1;
+  m_test["P3"] = 1;
+  m_test["P4"] = 0;
+  m_test["P5"] = 0;
+  m_test["P6"] = 0;
+  m_test["P7"] = 0;
+  m_test["P8"] = 0;
+  REQUIRE(m_test == m0);
+
+  // for this particular net, the following transitions connect places:
+  Net net_test;
+  net_test["t0"] = {{"P0", "P3"}, {"P4", "P4", "P7"}};
+  net_test["t1"] = {{"P1", "P4", "P4"}, {"P5"}};
+  net_test["t2"] = {{"P2", "P5"}, {"P6"}};
+  net_test["t3"] = {{"P6", "P8"}, {"P0", "P1", "P2", "P3"}};
+  net_test["t4"] = {{"P7"}, {"P8"}};
+
+  // for this particular net the priorities are like this:
+  PriorityTable priorities_gr = {{"t0", 2}};
+
+  REQUIRE(priorities_gr == priorities);
+
   REQUIRE(stateNetEquality(net_test, net));
 }
 

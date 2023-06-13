@@ -31,7 +31,7 @@ int main(int, char *argv[]) {
 
   symmetri::Marking final_marking = {{"P3", 5}};
   auto net = {pnml1, pnml2, pnml3};
-  std::vector<std::pair<symmetri::Transition, int8_t>> priority;
+  PriorityTable priority;
   symmetri::Application bignet(net, final_marking, store, priority, "pluto",
                                pool);
 

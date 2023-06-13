@@ -1,12 +1,8 @@
 #include "symmetri/pnml_parser.h"
 
-#include <spdlog/fmt/ostr.h>  // must be included
-#include <spdlog/spdlog.h>
-
-#include <sstream>
+#include <stdexcept>
 
 #include "tinyxml2/tinyxml2.h"
-
 using namespace tinyxml2;
 using namespace symmetri;
 
@@ -17,7 +13,6 @@ std::tuple<Net, Marking> readPetriNets(const std::set<std::string> &files) {
 
   for (auto file : files) {
     XMLDocument net;
-    spdlog::debug("PNML file-path: {0}", file);
     net.LoadFile(file.c_str());
 
     tinyxml2::XMLElement *levelElement = net.FirstChildElement("pnml")
@@ -77,37 +72,14 @@ std::tuple<Net, Marking> readPetriNets(const std::set<std::string> &files) {
             state_net.insert({source_id, {{}, {target_id}}});
           }
         } else {
-          auto arc_id = child->Attribute("id");
-          spdlog::error(
-              "error: arc {0} is not connecting a place to a transition.",
-              arc_id);
+          const auto arc_id = child->Attribute("id");
+          throw std::runtime_error(
+              std::string("error: arc ") + arc_id +
+              std::string("is not connecting a place to a transition."));
         }
       }
     }
   }
-
-  std::stringstream netstring;
-  netstring << "\n========\n";
-  for (auto [transition, mut] : state_net) {
-    auto [pre, post] = mut;
-    netstring << "transition: " << transition;
-    netstring << ", pre: ";
-    for (auto p : pre) {
-      netstring << p << ",";
-    }
-    netstring << " post: ";
-    for (auto p : post) {
-      netstring << p << ",";
-    }
-    netstring << std::endl;
-  }
-
-  for (auto [p, tokens] : place_initialMarking) {
-    netstring << p << " : " << tokens << "\n";
-  }
-  netstring << "========\n";
-
-  spdlog::debug(netstring.str());
 
   return {state_net, place_initialMarking};
 }
