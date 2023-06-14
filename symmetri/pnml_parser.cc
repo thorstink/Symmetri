@@ -15,12 +15,12 @@ std::tuple<Net, Marking> readPetriNets(const std::set<std::string> &files) {
     XMLDocument net;
     net.LoadFile(file.c_str());
 
-    tinyxml2::XMLElement *levelElement = net.FirstChildElement("pnml")
+    XMLElement *levelElement = net.FirstChildElement("pnml")
                                              ->FirstChildElement("net")
                                              ->FirstChildElement("page");
 
     // loop places.
-    for (tinyxml2::XMLElement *child = levelElement->FirstChildElement("place");
+    for (XMLElement *child = levelElement->FirstChildElement("place");
          child != NULL; child = child->NextSiblingElement("place")) {
       auto place_id = child->Attribute("id");
       auto initial_marking =
@@ -35,7 +35,7 @@ std::tuple<Net, Marking> readPetriNets(const std::set<std::string> &files) {
     }
 
     // loop transitions
-    for (tinyxml2::XMLElement *child =
+    for (XMLElement *child =
              levelElement->FirstChildElement("transition");
          child != NULL; child = child->NextSiblingElement("transition")) {
       auto transition_id = child->Attribute("id");
@@ -43,7 +43,7 @@ std::tuple<Net, Marking> readPetriNets(const std::set<std::string> &files) {
     }
 
     // loop arcs
-    for (tinyxml2::XMLElement *child = levelElement->FirstChildElement("arc");
+    for (XMLElement *child = levelElement->FirstChildElement("arc");
          child != NULL; child = child->NextSiblingElement("arc")) {
       // do something with each child element
 

@@ -20,8 +20,8 @@ std::tuple<Net, Marking, PriorityTable> readGrml(
     XMLDocument net;
     net.LoadFile(file.c_str());
 
-    tinyxml2::XMLElement *levelElement = net.FirstChildElement("model");
-    for (tinyxml2::XMLElement *child = levelElement->FirstChildElement("node");
+    XMLElement *levelElement = net.FirstChildElement("model");
+    for (XMLElement *child = levelElement->FirstChildElement("node");
          child != NULL; child = child->NextSiblingElement("node")) {
       const auto type = std::string(child->Attribute("nodeType"));
       const int id = std::stoi(child->Attribute("id"));
@@ -29,7 +29,7 @@ std::tuple<Net, Marking, PriorityTable> readGrml(
         // loop places & initial values
         std::string place_id;
         uint16_t initial_marking;
-        for (tinyxml2::XMLElement *attribute =
+        for (XMLElement *attribute =
                  child->FirstChildElement("attribute");
              attribute != NULL;
              attribute = attribute->NextSiblingElement("attribute")) {
@@ -51,7 +51,7 @@ std::tuple<Net, Marking, PriorityTable> readGrml(
         // loop transitions
         std::string transition_id;
         int8_t priority = 0;
-        for (tinyxml2::XMLElement *attribute =
+        for (XMLElement *attribute =
                  child->FirstChildElement("attribute");
              attribute != NULL;
              attribute = attribute->NextSiblingElement("attribute")) {
@@ -72,7 +72,7 @@ std::tuple<Net, Marking, PriorityTable> readGrml(
         }
       }
     }
-    for (tinyxml2::XMLElement *child = levelElement->FirstChildElement("arc");
+    for (XMLElement *child = levelElement->FirstChildElement("arc");
          child != NULL; child = child->NextSiblingElement("arc")) {
       const auto source_id =
           id_lookup_table[std::stoi(child->Attribute("source"))];

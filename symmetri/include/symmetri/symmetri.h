@@ -27,7 +27,7 @@ size_t calculateTrace(const Eventlog &event_log) noexcept;
  * @param s The State
  * @return std::string The State as a human readable string.
  */
-std::string printState(symmetri::State s) noexcept;
+std::string printState(State s) noexcept;
 
 /**
  * @brief A Store is a mapping from Transitions, represented by a string that is
@@ -35,7 +35,7 @@ std::string printState(symmetri::State s) noexcept;
  * PolyTask may contain side-effects.
  *
  */
-using Store = std::map<std::string, PolyAction>;
+using Store = std::map<Transition, PolyAction>;
 
 /**
  * @brief Forward decleration for the implementation of the Application class.
@@ -71,12 +71,10 @@ class Application final {
    * @param case_id
    * @param stp
    */
-  Application(
-      const std::set<std::string> &path_to_pnml,
-      const symmetri::Marking &final_marking, const Store &store,
-      const PriorityTable &priority,
-      const std::string &case_id,
-      std::shared_ptr<const symmetri::StoppablePool> stp);
+  Application(const std::set<std::string> &path_to_pnml,
+              const Marking &final_marking, const Store &store,
+              const PriorityTable &priority, const std::string &case_id,
+              std::shared_ptr<const StoppablePool> stp);
 
   /**
    * @brief Construct a new Application object from a net and initial marking
@@ -89,12 +87,10 @@ class Application final {
    * @param case_id
    * @param stp
    */
-  Application(
-      const symmetri::Net &net, const symmetri::Marking &m0,
-      const symmetri::Marking &final_marking, const Store &store,
-      const PriorityTable &priority,
-      const std::string &case_id,
-      std::shared_ptr<const symmetri::StoppablePool> stp);
+  Application(const Net &net, const Marking &m0, const Marking &final_marking,
+              const Store &store, const PriorityTable &priority,
+              const std::string &case_id,
+              std::shared_ptr<const StoppablePool> stp);
 
   /**
    * @brief This executes the net, like a transition, it returns a result.
@@ -133,9 +129,9 @@ class Application final {
    * directly returns the log.
    *
    *
-   * @return symmetri::Eventlog
+   * @return Eventlog
    */
-  symmetri::Eventlog getEventLog() const noexcept;
+  Eventlog getEventLog() const noexcept;
 
   /**
    * @brief Get the State, represented by a vector of *active* transitions (who
