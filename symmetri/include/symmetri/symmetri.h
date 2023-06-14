@@ -77,6 +77,20 @@ class Application final {
               std::shared_ptr<const StoppablePool> stp);
 
   /**
+   * @brief Construct a new Application object from a set of paths to grml-files
+   *
+   * @param path_to_grml
+   * @param final_marking
+   * @param store
+   * @param case_id
+   * @param stp
+   */
+  Application(const std::set<std::string> &path_to_grml,
+              const Marking &final_marking, const Store &store,
+              const std::string &case_id,
+              std::shared_ptr<const StoppablePool> stp);
+
+  /**
    * @brief Construct a new Application object from a net and initial marking
    *
    * @param net

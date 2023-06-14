@@ -12,6 +12,7 @@
 
 #include "model.h"
 #include "symmetri/pnml_parser.h"
+#include "symmetri/grml_parser.h"
 
 namespace symmetri {
 
@@ -52,7 +53,6 @@ bool areAllTransitionsInStore(const Store &store, const Net &net) noexcept {
  *
  */
 struct Petri {
-  using PriorityTable = std::vector<std::pair<Transition, int8_t>>;
   Model m;                          ///< The Petri net model
   const Marking m0_;                ///< The initial marking for this instance
   const Net net_;                   ///< The net
@@ -214,7 +214,7 @@ struct Petri {
 std::tuple<std::shared_ptr<Petri>, std::function<void(const Transition &)>>
 create(const Net &net, const Marking &m0, const Marking &final_marking,
        const Store &store,
-       const std::vector<std::pair<Transition, int8_t>> &priority,
+       const PriorityTable &priority,
        const std::string &case_id, std::shared_ptr<const StoppablePool> stp) {
   auto impl = std::make_shared<Petri>(net, m0, stp, final_marking, store,
                                       priority, case_id);
@@ -235,23 +235,34 @@ create(const Net &net, const Marking &m0, const Marking &final_marking,
 Application::Application(
     const std::set<std::string> &files, const Marking &final_marking,
     const Store &store,
-    const std::vector<std::pair<Transition, int8_t>> &priority,
+    const PriorityTable &priorities,
     const std::string &case_id, std::shared_ptr<const StoppablePool> stp) {
-  const auto &[net, m0] = readPetriNets(files);
+  const auto &[net, m0] = readPnml(files);
   if (areAllTransitionsInStore(store, net)) {
     std::tie(impl, register_functor) =
-        create(net, m0, final_marking, store, priority, case_id, stp);
+        create(net, m0, final_marking, store, priorities, case_id, stp);
+  }
+}
+
+Application::Application(
+    const std::set<std::string> &files, const Marking &final_marking,
+    const Store &store,
+    const std::string &case_id, std::shared_ptr<const StoppablePool> stp) {
+  const auto &[net, m0, priorities] = readGrml(files);
+  if (areAllTransitionsInStore(store, net)) {
+    std::tie(impl, register_functor) =
+        create(net, m0, final_marking, store, priorities, case_id, stp);
   }
 }
 
 Application::Application(
     const Net &net, const Marking &m0, const Marking &final_marking,
     const Store &store,
-    const std::vector<std::pair<Transition, int8_t>> &priority,
+    const PriorityTable &priorities,
     const std::string &case_id, std::shared_ptr<const StoppablePool> stp) {
   if (areAllTransitionsInStore(store, net)) {
     std::tie(impl, register_functor) =
-        create(net, m0, final_marking, store, priority, case_id, stp);
+        create(net, m0, final_marking, store, priorities, case_id, stp);
   }
 }
 

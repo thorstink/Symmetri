@@ -14,5 +14,5 @@
  * @param files
  * @return std::tuple<symmetri::Net, symmetri::Marking>
  */
-std::tuple<symmetri::Net, symmetri::Marking> readPetriNets(
+std::tuple<symmetri::Net, symmetri::Marking> readPnml(
     const std::set<std::string> &files);

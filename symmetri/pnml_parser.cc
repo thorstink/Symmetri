@@ -6,7 +6,7 @@
 using namespace tinyxml2;
 using namespace symmetri;
 
-std::tuple<Net, Marking> readPetriNets(const std::set<std::string> &files) {
+std::tuple<Net, Marking> readPnml(const std::set<std::string> &files) {
   std::set<std::string> places, transitions;
   Marking place_initialMarking;
   Net state_net;

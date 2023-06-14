@@ -9,7 +9,7 @@ using namespace symmetri;
 TEST_CASE("Load p1.pnml net") {
   const std::string pnml_file = std::filesystem::current_path().append(
       "../../../symmetri/tests/assets/n1.pnml");
-  const auto &[net, m0] = readPetriNets({pnml_file});
+  const auto &[net, m0] = readPnml({pnml_file});
 
   // for this particular net, the initial marking is:
   Marking m_test;
@@ -73,7 +73,7 @@ TEST_CASE("Load p1_multi.pnml net") {
   const std::string pnml_file = std::filesystem::current_path().append(
       "../../../symmetri/tests/assets/n1_multi.pnml");
 
-  const auto &[net, m0] = readPetriNets({pnml_file});
+  const auto &[net, m0] = readPnml({pnml_file});
 
   // for this particular net, the initial marking is:
   Marking m_test;
@@ -106,7 +106,7 @@ TEST_CASE("Compose PT1.pnml and PT2.pnml nets") {
   const std::string p2 = std::filesystem::current_path().append(
       "../../../symmetri/tests/assets/PT2.pnml");
 
-  const auto &[net, m0] = readPetriNets({p1, p2});
+  const auto &[net, m0] = readPnml({p1, p2});
 
   // for this compositions of nets, the initial marking is:
   Marking m_test;
