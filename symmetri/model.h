@@ -43,7 +43,7 @@ struct Model {
    * @param M0
    */
   Model(const Net &net, const Store &store,
-        const std::vector<std::pair<symmetri::Transition, int8_t>> &priority,
+        const PriorityTable &priority,
         const Marking &M0);
 
   /**

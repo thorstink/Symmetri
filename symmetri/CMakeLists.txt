@@ -24,6 +24,7 @@ add_library(${PROJECT_NAME} SHARED
   symmetri.cc
   model.cc
   pnml_parser.cc
+  grml_parser.cc
   types.cpp
   submodules/tinyxml2/tinyxml2.cpp
 )

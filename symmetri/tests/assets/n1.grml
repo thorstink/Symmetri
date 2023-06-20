@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model id="1" formalismUrl="http://formalisms.cosyverif.org/sptgd-net.fml" xmlns="http://cosyverif.org/ns/model">
+<attribute name="declaration">
+<attribute name="constants">
+	<attribute name="intConsts">
+	</attribute>
+	<attribute name="realConsts">
+	</attribute>
+</attribute>
+</attribute>
+<node id="2" nodeType="place" x="120" y="120">
+	<attribute name="name">P0</attribute>
+	<attribute name="marking">
+	<attribute name="expr">
+		<attribute name="intValue">1</attribute>
+	</attribute>
+
+
+	</attribute>
+</node>
+<node id="3" nodeType="place" x="160" y="160">
+	<attribute name="name">P1</attribute>
+	<attribute name="marking">
+	<attribute name="expr">
+		<attribute name="intValue">1</attribute>
+	</attribute>
+
+
+	</attribute>
+</node>
+<node id="4" nodeType="place" x="200" y="200">
+	<attribute name="name">P2</attribute>
+	<attribute name="marking">
+	<attribute name="expr">
+		<attribute name="intValue">1</attribute>
+	</attribute>
+
+
+	</attribute>
+</node>
+<node id="5" nodeType="place" x="80" y="80">
+	<attribute name="name">P3</attribute>
+	<attribute name="marking">
+	<attribute name="expr">
+		<attribute name="intValue">1</attribute>
+	</attribute>
+
+
+	</attribute>
+</node>
+<node id="6" nodeType="place" x="240" y="120">
+	<attribute name="name">P4</attribute>
+	<attribute name="marking">
+	<attribute name="expr">
+		<attribute name="intValue">0</attribute>
+	</attribute>
+
+
+	</attribute>
+</node>
+<node id="7" nodeType="place" x="320" y="160">
+	<attribute name="name">P5</attribute>
+	<attribute name="marking">
+	<attribute name="expr">
+		<attribute name="intValue">0</attribute>
+	</attribute>
+
+
+	</attribute>
+</node>
+<node id="8" nodeType="place" x="240" y="240">
+	<attribute name="name">P6</attribute>
+	<attribute name="marking">
+	<attribute name="expr">
+		<attribute name="intValue">0</attribute>
+	</attribute>
+
+
+	</attribute>
+</node>
+<node id="9" nodeType="place" x="200" y="40">
+	<attribute name="name">P7</attribute>
+	<attribute name="marking">
+	<attribute name="expr">
+		<attribute name="intValue">0</attribute>
+	</attribute>
+
+
+	</attribute>
+</node>
+<node id="10" nodeType="place" x="40" y="40">
+	<attribute name="name">P8</attribute>
+	<attribute name="marking">
+	<attribute name="expr">
+		<attribute name="intValue">0</attribute>
+	</attribute>
+
+
+	</attribute>
+</node>
+<node id="11" nodeType="transition" x="239" y="160">
+	<attribute name="name">t1</attribute>
+	<attribute name="distribution">
+		<attribute name="type">EXPONENTIAL</attribute>
+		<attribute name="param"><attribute name="expr"><attribute name="numValue">1.0</attribute></attribute></attribute>
+	</attribute>
+	<attribute name="service"><attribute name="expr">inf</attribute></attribute>
+</node>
+<node id="12" nodeType="transition" x="159" y="120">
+	<attribute name="name">t0</attribute>
+	<attribute name="distribution">
+		<attribute name="type">IMMEDIATE</attribute>
+	</attribute>
+	<attribute name="weight"><attribute name="expr"><attribute name="numValue">1.0</attribute></attribute></attribute>
+	<attribute name="priority"><attribute name="expr"><attribute name="intValue">2</attribute></attribute></attribute>
+</node>
+<node id="13" nodeType="transition" x="279" y="240">
+	<attribute name="name">t2</attribute>
+	<attribute name="distribution">
+		<attribute name="type">EXPONENTIAL</attribute>
+		<attribute name="param"><attribute name="expr"><attribute name="numValue">1.0</attribute></attribute></attribute>
+	</attribute>
+	<attribute name="service"><attribute name="expr">inf</attribute></attribute>
+</node>
+<node id="14" nodeType="transition" x="119" y="240">
+	<attribute name="name">t3</attribute>
+	<attribute name="distribution">
+		<attribute name="type">EXPONENTIAL</attribute>
+		<attribute name="param"><attribute name="expr"><attribute name="numValue">1.0</attribute></attribute></attribute>
+	</attribute>
+	<attribute name="service"><attribute name="expr">inf</attribute></attribute>
+</node>
+<node id="15" nodeType="transition" x="79" y="40">
+	<attribute name="name">t4</attribute>
+	<attribute name="distribution">
+		<attribute name="type">EXPONENTIAL</attribute>
+		<attribute name="param"><attribute name="expr"><attribute name="numValue">1.0</attribute></attribute></attribute>
+	</attribute>
+	<attribute name="service"><attribute name="expr">inf</attribute></attribute>
+</node>
+<arc id="16" arcType="arc" source="2" target="12">
+	<attribute name="valuation"><attribute name="expr"><attribute name="intValue">1</attribute></attribute>
+</attribute>
+</arc>
+<arc id="17" arcType="arc" source="12" target="6">
+	<attribute name="valuation"><attribute name="expr"><attribute name="intValue">2</attribute></attribute>
+</attribute>
+</arc>
+<arc id="18" arcType="arc" source="6" target="11">
+	<attribute name="valuation"><attribute name="expr"><attribute name="intValue">2</attribute></attribute>
+</attribute>
+</arc>
+<arc id="19" arcType="arc" source="3" target="11">
+	<attribute name="valuation"><attribute name="expr"><attribute name="intValue">1</attribute></attribute>
+</attribute>
+</arc>
+<arc id="20" arcType="arc" source="11" target="7">
+	<attribute name="valuation"><attribute name="expr"><attribute name="intValue">1</attribute></attribute>
+</attribute>
+</arc>
+<arc id="21" arcType="arc" source="7" target="13">
+	<attribute name="valuation"><attribute name="expr"><attribute name="intValue">1</attribute></attribute>
+</attribute>
+</arc>
+<arc id="22" arcType="arc" source="13" target="8">
+	<attribute name="valuation"><attribute name="expr"><attribute name="intValue">1</attribute></attribute>
+</attribute>
+</arc>
+<arc id="23" arcType="arc" source="8" target="14">
+	<attribute name="valuation"><attribute name="expr"><attribute name="intValue">1</attribute></attribute>
+</attribute>
+</arc>
+<arc id="24" arcType="arc" source="14" target="5">
+	<attribute name="valuation"><attribute name="expr"><attribute name="intValue">1</attribute></attribute>
+</attribute>
+</arc>
+<arc id="25" arcType="arc" source="5" target="12">
+	<attribute name="valuation"><attribute name="expr"><attribute name="intValue">1</attribute></attribute>
+</attribute>
+</arc>
+<arc id="26" arcType="arc" source="12" target="9">
+	<attribute name="valuation"><attribute name="expr"><attribute name="intValue">1</attribute></attribute>
+</attribute>
+</arc>
+<arc id="27" arcType="arc" source="9" target="15">
+	<attribute name="valuation"><attribute name="expr"><attribute name="intValue">1</attribute></attribute>
+</attribute>
+</arc>
+<arc id="28" arcType="arc" source="15" target="10">
+	<attribute name="valuation"><attribute name="expr"><attribute name="intValue">1</attribute></attribute>
+</attribute>
+</arc>
+<arc id="29" arcType="arc" source="10" target="14">
+	<attribute name="valuation"><attribute name="expr"><attribute name="intValue">1</attribute></attribute>
+</attribute>
+</arc>
+<arc id="30" arcType="arc" source="4" target="13">
+	<attribute name="valuation"><attribute name="expr"><attribute name="intValue">1</attribute></attribute>
+</attribute>
+</arc>
+<arc id="31" arcType="arc" source="14" target="4">
+	<attribute name="valuation"><attribute name="expr"><attribute name="intValue">1</attribute></attribute>
+</attribute>
+</arc>
+<arc id="32" arcType="arc" source="14" target="3">
+	<attribute name="valuation"><attribute name="expr"><attribute name="intValue">1</attribute></attribute>
+</attribute>
+</arc>
+<arc id="33" arcType="arc" source="14" target="2">
+	<attribute name="valuation"><attribute name="expr"><attribute name="intValue">1</attribute></attribute>
+</attribute>
+</arc>
+</model>

@@ -23,6 +23,8 @@ StoppablePool::~StoppablePool() {
   for (auto &&t : pool) {
     if (t.joinable()) {
       t.join();
+    } else {
+      t.detach();
     }
   }
 }

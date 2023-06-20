@@ -99,7 +99,7 @@ gch::small_vector<uint8_t, 32> possibleTransitions(
 
 Model::Model(
     const Net &_net, const Store &store,
-    const std::vector<std::pair<symmetri::Transition, int8_t>> &_priority,
+    const PriorityTable &_priority,
     const Marking &M0)
     : timestamp(clock_s::now()), event_log({}) {
   // reserve arbitrary eventlog space.
