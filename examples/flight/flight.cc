@@ -23,7 +23,7 @@ int main(int, char *argv[]) {
                         {"T1", std::make_shared<Foo>("SubBar")}};
 
   auto snet = {pnml1, pnml2};
-  symmetri::Application subnet(snet, final_marking2, s2, {}, "charon", pool);
+  symmetri::Application subnet(snet, final_marking2, s2, {}, "SubNet", pool);
 
   symmetri::Store store = {{"T0", subnet},
                            {"T1", std::make_shared<Foo>("Bar")},
@@ -32,16 +32,18 @@ int main(int, char *argv[]) {
   symmetri::Marking final_marking = {{"P3", 5}};
   auto net = {pnml1, pnml2, pnml3};
   symmetri::PriorityTable priority;
-  symmetri::Application bignet(net, final_marking, store, priority, "pluto",
+  symmetri::Application bignet(net, final_marking, store, priority, "RootNet",
                                pool);
 
   // here we re-register the interupt signal so it cleanly exits the net.
-  stop = [&] { cancelTransition(bignet); };
+  stop = [&] {
+    spdlog::info("signal cancel");
+    cancelTransition(bignet);
+  };
 
   auto [el, result] = fireTransition(bignet);  // infinite loop
 
   auto el2 = bignet.getEventLog();
-
   spdlog::info("Result of this net: {0}", printState(result));
 
   for (const auto &[caseid, t, s, c] : el) {

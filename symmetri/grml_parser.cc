@@ -29,8 +29,7 @@ std::tuple<Net, Marking, PriorityTable> readGrml(
         // loop places & initial values
         std::string place_id;
         uint16_t initial_marking;
-        for (XMLElement *attribute =
-                 child->FirstChildElement("attribute");
+        for (XMLElement *attribute = child->FirstChildElement("attribute");
              attribute != NULL;
              attribute = attribute->NextSiblingElement("attribute")) {
           const std::string child_attribute =
