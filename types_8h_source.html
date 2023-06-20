@@ -110,40 +110,41 @@ $(function() {
 <div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    std::unordered_map&lt;Transition,</div>
 <div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>                       std::pair&lt;std::vector&lt;Place&gt;, std::vector&lt;Place&gt;&gt;&gt;;</div>
 <div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="keyword">using </span>Marking = std::unordered_map&lt;Place, uint16_t&gt;;</div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span><span class="keywordtype">bool</span> isDirectTransition(<span class="keyword">const</span> T&amp;) {</div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>  <span class="keywordflow">return</span> !std::is_invocable_v&lt;T&gt;;</div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>}</div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span> </div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>Result cancelTransition(<span class="keyword">const</span> T&amp;) {</div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>  <span class="keywordflow">return</span> {{}, State::UserExit};</div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>}</div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span> </div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>Result fireTransition(<span class="keyword">const</span> T&amp; transition) {</div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>  <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (!std::is_invocable_v&lt;T&gt;) {</div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    <span class="keywordflow">return</span> {{}, State::Completed};</div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (std::is_same_v&lt;State, <span class="keyword">decltype</span>(transition())&gt;) {</div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    <span class="keywordflow">return</span> {{}, transition()};</div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (std::is_same_v&lt;Result, <span class="keyword">decltype</span>(transition())&gt;) {</div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    <span class="keywordflow">return</span> transition();</div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>  } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    transition();</div>
-<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>    <span class="keywordflow">return</span> {{}, State::Completed};</div>
-<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>  }</div>
-<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>}</div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span> </div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span><span class="keywordtype">bool</span> MarkingEquality(<span class="keyword">const</span> std::vector&lt;T&gt;&amp; m1, <span class="keyword">const</span> std::vector&lt;T&gt;&amp; m2);</div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span> </div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="keywordtype">bool</span> MarkingReached(<span class="keyword">const</span> std::vector&lt;T&gt;&amp; marking,</div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>                    <span class="keyword">const</span> std::vector&lt;T&gt;&amp; final_marking);</div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span> </div>
-<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span><span class="keywordtype">bool</span> stateNetEquality(<span class="keyword">const</span> Net&amp; net1, <span class="keyword">const</span> Net&amp; net2);</div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>}  <span class="comment">// namespace symmetri</span></div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="keyword">using </span>PriorityTable = std::vector&lt;std::pair&lt;Transition, int8_t&gt;&gt;;</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span> </div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span><span class="keywordtype">bool</span> isDirectTransition(<span class="keyword">const</span> T&amp;) {</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>  <span class="keywordflow">return</span> !std::is_invocable_v&lt;T&gt;;</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>}</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span> </div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>Result cancelTransition(<span class="keyword">const</span> T&amp;) {</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>  <span class="keywordflow">return</span> {{}, State::UserExit};</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>}</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span> </div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>Result fireTransition(<span class="keyword">const</span> T&amp; transition) {</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>  <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (!std::is_invocable_v&lt;T&gt;) {</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    <span class="keywordflow">return</span> {{}, State::Completed};</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (std::is_same_v&lt;State, <span class="keyword">decltype</span>(transition())&gt;) {</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    <span class="keywordflow">return</span> {{}, transition()};</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (std::is_same_v&lt;Result, <span class="keyword">decltype</span>(transition())&gt;) {</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>    <span class="keywordflow">return</span> transition();</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>  } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>    transition();</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    <span class="keywordflow">return</span> {{}, State::Completed};</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>  }</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>}</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span> </div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span><span class="keywordtype">bool</span> MarkingEquality(<span class="keyword">const</span> std::vector&lt;T&gt;&amp; m1, <span class="keyword">const</span> std::vector&lt;T&gt;&amp; m2);</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span> </div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span><span class="keywordtype">bool</span> MarkingReached(<span class="keyword">const</span> std::vector&lt;T&gt;&amp; marking,</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>                    <span class="keyword">const</span> std::vector&lt;T&gt;&amp; final_marking);</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span> </div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span><span class="keywordtype">bool</span> stateNetEquality(<span class="keyword">const</span> Net&amp; net1, <span class="keyword">const</span> Net&amp; net2);</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>}  <span class="comment">// namespace symmetri</span></div>
 <div class="ttc" id="astructsymmetri_1_1Event_html"><div class="ttname"><a href="structsymmetri_1_1Event.html">symmetri::Event</a></div><div class="ttdoc">This struct defines a subset of data that we associate with the result of firing a transition.</div><div class="ttdef"><b>Definition</b> types.h:31</div></div>
 <div class="ttc" id="astructsymmetri_1_1Event_html_a2fa4203222f063102f9799229f966b29"><div class="ttname"><a href="structsymmetri_1_1Event.html#a2fa4203222f063102f9799229f966b29">symmetri::Event::transition</a></div><div class="ttdeci">std::string transition</div><div class="ttdoc">The transition that generated the event.</div><div class="ttdef"><b>Definition</b> types.h:33</div></div>
 <div class="ttc" id="astructsymmetri_1_1Event_html_a640691cd84a1d64758c731d3815379e6"><div class="ttname"><a href="structsymmetri_1_1Event.html#a640691cd84a1d64758c731d3815379e6">symmetri::Event::state</a></div><div class="ttdeci">State state</div><div class="ttdoc">The resulting state of the event.</div><div class="ttdef"><b>Definition</b> types.h:34</div></div>

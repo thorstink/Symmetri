@@ -88,9 +88,9 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a542c6a42b22c3e94b3552da0ea2c7b67"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Model.html#a542c6a42b22c3e94b3552da0ea2c7b67">Model</a> (const Net &amp;<a class="el" href="structsymmetri_1_1Model.html#a41b5784bd4a6161aeb4686df1d5dfe62">net</a>, const Store &amp;<a class="el" href="structsymmetri_1_1Model.html#ad0e4772effc73a22a7d13b750e02b5f6">store</a>, const std::vector&lt; std::pair&lt; symmetri::Transition, int8_t &gt; &gt; &amp;<a class="el" href="structsymmetri_1_1Model.html#a630f9c0f279d9eaa8db8487027feee11">priority</a>, const Marking &amp;M0)</td></tr>
-<tr class="memdesc:a542c6a42b22c3e94b3552da0ea2c7b67"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="structsymmetri_1_1Model.html" title="Model is a different data structure to encode the Petri net. It is optimized for calculating the fire...">Model</a> from a multiset description of a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net, a lookup table for the transitions, optional priorities and an initial marking. A lot of conversion work is done in the constructor, so you should avoid creating Models during the run-time of a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> application.  <br /></td></tr>
-<tr class="separator:a542c6a42b22c3e94b3552da0ea2c7b67"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a4aea252282d635407624c8eb6a99bc"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Model.html#a8a4aea252282d635407624c8eb6a99bc">Model</a> (const Net &amp;<a class="el" href="structsymmetri_1_1Model.html#a41b5784bd4a6161aeb4686df1d5dfe62">net</a>, const Store &amp;<a class="el" href="structsymmetri_1_1Model.html#ad0e4772effc73a22a7d13b750e02b5f6">store</a>, const PriorityTable &amp;<a class="el" href="structsymmetri_1_1Model.html#a630f9c0f279d9eaa8db8487027feee11">priority</a>, const Marking &amp;M0)</td></tr>
+<tr class="memdesc:a8a4aea252282d635407624c8eb6a99bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="structsymmetri_1_1Model.html" title="Model is a different data structure to encode the Petri net. It is optimized for calculating the fire...">Model</a> from a multiset description of a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net, a lookup table for the transitions, optional priorities and an initial marking. A lot of conversion work is done in the constructor, so you should avoid creating Models during the run-time of a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> application.  <br /></td></tr>
+<tr class="separator:a8a4aea252282d635407624c8eb6a99bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a23f845511ba78d816c27b94765b3ae35"><td class="memItemLeft" align="right" valign="top">std::vector&lt; Place &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Model.html#a23f845511ba78d816c27b94765b3ae35">getMarking</a> () const</td></tr>
 <tr class="memdesc:a23f845511ba78d816c27b94765b3ae35"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current marking. It is represented by a vector of places: every occurance of a place in this vectors implies a token in that place. This representation does not show the empty places explicitly; if a place is not in this vector you can assume it has no token.  <br /></td></tr>
 <tr class="separator:a23f845511ba78d816c27b94765b3ae35"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -166,8 +166,8 @@ Eventlog&#160;</td><td class="memItemRight" valign="bottom"><b>event_log</b></td
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="structsymmetri_1_1Model.html" title="Model is a different data structure to encode the Petri net. It is optimized for calculating the fire...">Model</a> is a different data structure to encode the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net. It is optimized for calculating the fireable transitions and quick lookups in ordered vectors. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a542c6a42b22c3e94b3552da0ea2c7b67" name="a542c6a42b22c3e94b3552da0ea2c7b67"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a542c6a42b22c3e94b3552da0ea2c7b67">&#9670;&#160;</a></span>Model()</h2>
+<a id="a8a4aea252282d635407624c8eb6a99bc" name="a8a4aea252282d635407624c8eb6a99bc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8a4aea252282d635407624c8eb6a99bc">&#9670;&#160;</a></span>Model()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -187,7 +187,7 @@ Eventlog&#160;</td><td class="memItemRight" valign="bottom"><b>event_log</b></td
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::vector&lt; std::pair&lt; symmetri::Transition, int8_t &gt; &gt; &amp;&#160;</td>
+          <td class="paramtype">const PriorityTable &amp;&#160;</td>
           <td class="paramname"><em>priority</em>, </td>
         </tr>
         <tr>

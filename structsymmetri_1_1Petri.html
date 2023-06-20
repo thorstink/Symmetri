@@ -74,7 +74,6 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structsymmetri_1_1Petri-members.html">List of all members</a>  </div>
@@ -85,12 +84,6 @@ $(function() {
 <p><a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> is the class that holds the implementation of the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net. It holds pointers to the reducer queue and that thread pool. Calling <code><a class="el" href="structsymmetri_1_1Petri.html#a3af89a04c50cf0b0458fb73587b16805" title="run the petri net. This initializes the net with the initial marking and blocks until it a) reached t...">run()</a></code> on this class will do the <em>actual</em> execution of the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net.  
  <a href="structsymmetri_1_1Petri.html#details">More...</a></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-types" name="pub-types"></a>
-Public Types</h2></td></tr>
-<tr class="memitem:a3b1ad4d83ddd01f84e985d17d378d75c"><td class="memItemLeft" align="right" valign="top"><a id="a3b1ad4d83ddd01f84e985d17d378d75c" name="a3b1ad4d83ddd01f84e985d17d378d75c"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>PriorityTable</b> = std::vector&lt; std::pair&lt; Transition, int8_t &gt; &gt;</td></tr>
-<tr class="separator:a3b1ad4d83ddd01f84e985d17d378d75c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:ace2133a9873675fbd66fb563b07cfaa9"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#ace2133a9873675fbd66fb563b07cfaa9">Petri</a> (const Net &amp;net, const Marking &amp;m0, std::shared_ptr&lt; const <a class="el" href="classsymmetri_1_1StoppablePool.html">StoppablePool</a> &gt; stp, const Marking &amp;<a class="el" href="structsymmetri_1_1Petri.html#a7b1ad2f7fd4f50d017fbecce19c82387">final_marking</a>, const Store &amp;store, const PriorityTable &amp;priorities, const std::string &amp;<a class="el" href="structsymmetri_1_1Petri.html#aa2acc8bf32bcd39c86f5eb029586c34b">case_id</a>)</td></tr>
@@ -115,6 +108,10 @@ Public Attributes</h2></td></tr>
 <a class="el" href="structsymmetri_1_1Model.html">Model</a>&#160;</td><td class="memItemRight" valign="bottom"><b>m</b></td></tr>
 <tr class="memdesc:ae5897effb033277b9f8a8b8b65ac7f5a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net model. <br /></td></tr>
 <tr class="separator:ae5897effb033277b9f8a8b8b65ac7f5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d3b6a12654707d06fc90c977115c018"><td class="memItemLeft" align="right" valign="top"><a id="a5d3b6a12654707d06fc90c977115c018" name="a5d3b6a12654707d06fc90c977115c018"></a>
+std::thread::id&#160;</td><td class="memItemRight" valign="bottom"><b>thread_id_</b></td></tr>
+<tr class="memdesc:a5d3b6a12654707d06fc90c977115c018"><td class="mdescLeft">&#160;</td><td class="mdescRight">The id of the thread from which run is called. <br /></td></tr>
+<tr class="separator:a5d3b6a12654707d06fc90c977115c018"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab6a18be9021fd1af10ea1711a62840b9"><td class="memItemLeft" align="right" valign="top"><a id="ab6a18be9021fd1af10ea1711a62840b9" name="ab6a18be9021fd1af10ea1711a62840b9"></a>
 const Marking&#160;</td><td class="memItemRight" valign="bottom"><b>m0_</b></td></tr>
 <tr class="memdesc:ab6a18be9021fd1af10ea1711a62840b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">The initial marking for this instance. <br /></td></tr>
