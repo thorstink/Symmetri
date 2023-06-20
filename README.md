@@ -29,7 +29,7 @@ using namespace symmetri;
 Net net = {{"foo", {{"B", "C"}, {"Z", "B"}}},
                 {"bar", {{"Z"}, {"B", "C"}}}};
 Store store = {{"foo", &foo}, {"bar", &bar}};
-std::vector<std::pair<symmetri::Transition, int8_t>> priority = {};
+PriorityTable priority = {};
 Marking m0 = {{"Z", 1}, {"B", 0}, {"C", 0}};
 StoppablePool stp(1);
 symmetri::Application app(net, m0, {}, store, priority,

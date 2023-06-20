@@ -8,14 +8,14 @@ using namespace symmetri;
 void t0() {}
 auto t1() {}
 
-std::tuple<Net, Store, std::vector<std::pair<symmetri::Transition, int8_t>>,
+std::tuple<Net, Store, PriorityTable,
            Marking>
 testNet() {
   Net net = {{"t0", {{"Pa", "Pb"}, {"Pc"}}},
              {"t1", {{"Pc", "Pc"}, {"Pb", "Pb", "Pd"}}}};
 
   Store store = {{"t0", &t0}, {"t1", &t1}};
-  std::vector<std::pair<symmetri::Transition, int8_t>> priority;
+  PriorityTable priority;
 
   Marking m0 = {{"Pa", 4}, {"Pb", 2}, {"Pc", 0}, {"Pd", 0}};
   return {net, store, priority, m0};
@@ -58,7 +58,7 @@ TEST_CASE("Create a using pnml constructor.") {
     auto stp = createStoppablePool(1);
     // This store is not appropriate for this net,
     Store store = {{"wrong_id", &t0}};
-    std::vector<std::pair<symmetri::Transition, int8_t>> priority;
+    PriorityTable priority;
     symmetri::Application app({pnml_file}, {}, store, priority, "fail", stp);
     // however, we can try running it,
     auto [ev, res] = app.execute();
@@ -72,7 +72,7 @@ TEST_CASE("Create a using pnml constructor.") {
     auto stp = createStoppablePool(1);
     // This store is appropriate for this net,
     Store store = symmetri::Store{{"T0", &t0}};
-    std::vector<std::pair<symmetri::Transition, int8_t>> priority;
+    PriorityTable priority;
     Marking final_marking({{"P1", 1}});
     symmetri::Application app({pnml_file}, final_marking, store, priority,
                               "success", stp);

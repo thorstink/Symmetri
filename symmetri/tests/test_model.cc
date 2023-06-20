@@ -17,7 +17,7 @@ auto t1() {
   return symmetri::State::Completed;
 }
 
-std::tuple<Net, Store, std::vector<std::pair<symmetri::Transition, int8_t>>,
+std::tuple<Net, Store, PriorityTable,
            Marking>
 testNet() {
   T0_COUNTER.store(0);
@@ -27,7 +27,7 @@ testNet() {
              {"t1", {{"Pc", "Pc"}, {"Pb", "Pb", "Pd"}}}};
 
   Store store = {{"t0", &t0}, {"t1", &t1}};
-  std::vector<std::pair<symmetri::Transition, int8_t>> priority;
+  PriorityTable priority;
 
   Marking m0 = {{"Pa", 4}, {"Pb", 2}, {"Pc", 0}, {"Pd", 0}};
   return {net, store, priority, m0};

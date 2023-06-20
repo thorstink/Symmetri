@@ -69,7 +69,7 @@
 			<place id="P4">
 				<name>
 					<graphics>
-						<offset x="0" y="15"/>
+						<offset x="10" y="15"/>
 					</graphics>
 					<text>P4</text>
 				</name>
@@ -141,7 +141,7 @@
 					<text>t0</text>
 				</name>
 				<graphics>
-					<position x="155" y="110"/>
+					<position x="158" y="110"/>
 				</graphics>
 			</transition>
 			<transition id="t2">
@@ -181,8 +181,14 @@
 			<arc id="id1" source="P0" target="t0">
 			</arc>
 			<arc id="id2" source="t0" target="P4">
+				<inscription>
+					<text>2</text>
+				</inscription>
 			</arc>
 			<arc id="id3" source="P4" target="t1">
+				<inscription>
+					<text>2</text>
+				</inscription>
 			</arc>
 			<arc id="id4" source="P1" target="t1">
 			</arc>
@@ -231,6 +237,9 @@
 			<arc id="id17" source="t3" target="P1">
 			</arc>
 			<arc id="id18" source="t3" target="P0">
+				<graphics>
+					<position x="119" y="129"/>
+				</graphics>
 			</arc>
 		</page>
 	</net>

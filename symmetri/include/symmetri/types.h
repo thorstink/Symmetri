@@ -42,6 +42,7 @@ using Net =
     std::unordered_map<Transition,
                        std::pair<std::vector<Place>, std::vector<Place>>>;
 using Marking = std::unordered_map<Place, uint16_t>;
+using PriorityTable = std::vector<std::pair<Transition, int8_t>>;
 
 /**
  * @brief Checks if the transition-function can be invoked.

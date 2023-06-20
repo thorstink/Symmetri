@@ -4,14 +4,14 @@
 #include <chrono>
 #include <memory>
 #include <thread>
-
+#include <atomic>
 #include "symmetri/types.h"
 
 struct Foo {
   const std::string message;
   const std::chrono::seconds t;
   Foo(std::string m, int s = 2) : message(m), t(s) {}
-  std::atomic<bool> cancel_ = false;
+  std::atomic<bool> cancel_;
   symmetri::State run() {
     cancel_.store(false);
     spdlog::info("Running {0}", message);

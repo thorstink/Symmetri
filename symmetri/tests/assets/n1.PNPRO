@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- This project file has been saved by the New GreatSPN Editor, v.100 --><project name="New project" version="121">
+  <gspn name="n1" view-rates="false" zoom="200">
+    <nodes>
+      <place marking="1" name="P0" x="11.0" y="11.0"/>
+      <place marking="1" name="P1" x="15.0" y="15.0"/>
+      <place marking="1" name="P2" x="19.0" y="19.0"/>
+      <place marking="1" name="P3" x="7.0" y="7.0"/>
+      <place label-x="1.0" name="P4" x="23.0" y="11.0"/>
+      <place name="P5" x="31.0" y="15.0"/>
+      <place name="P6" x="23.0" y="23.0"/>
+      <place name="P7" x="19.0" y="3.0"/>
+      <place name="P8" x="3.0" y="3.0"/>
+      <transition name="t1" nservers-x="0.5" type="EXP" x="23.5" y="15.0"/>
+      <transition name="t0" priority="2" type="IMM" x="15.8" y="11.0"/>
+      <transition name="t2" nservers-x="0.5" type="EXP" x="27.5" y="23.0"/>
+      <transition name="t3" nservers-x="0.5" type="EXP" x="11.5" y="23.0"/>
+      <transition name="t4" nservers-x="0.5" type="EXP" x="7.5" y="3.0"/>
+    </nodes>
+    <edges>
+      <arc head="t0" head-magnet="0" kind="INPUT" tail="P0" tail-magnet="0"/>
+      <arc head="P4" head-magnet="0" kind="OUTPUT" mult="2" tail="t0" tail-magnet="0"/>
+      <arc head="t1" head-magnet="0" kind="INPUT" mult="2" tail="P4" tail-magnet="0"/>
+      <arc head="t1" head-magnet="0" kind="INPUT" tail="P1" tail-magnet="0"/>
+      <arc head="P5" head-magnet="0" kind="OUTPUT" tail="t1" tail-magnet="0"/>
+      <arc head="t2" head-magnet="0" kind="INPUT" tail="P5" tail-magnet="0">
+        <point x="32.0" y="24.0"/>
+      </arc>
+      <arc head="P6" head-magnet="0" kind="OUTPUT" tail="t2" tail-magnet="0"/>
+      <arc head="t3" head-magnet="0" kind="INPUT" tail="P6" tail-magnet="0"/>
+      <arc head="P3" head-magnet="0" kind="OUTPUT" tail="t3" tail-magnet="0">
+        <point x="8.0" y="20.0"/>
+      </arc>
+      <arc head="t0" head-magnet="0" kind="INPUT" tail="P3" tail-magnet="0">
+        <point x="16.0" y="8.0"/>
+      </arc>
+      <arc head="P7" head-magnet="0" kind="OUTPUT" tail="t0" tail-magnet="0">
+        <point x="20.0" y="8.0"/>
+      </arc>
+      <arc head="t4" head-magnet="0" kind="INPUT" tail="P7" tail-magnet="0"/>
+      <arc head="P8" head-magnet="0" kind="OUTPUT" tail="t4" tail-magnet="0"/>
+      <arc head="t3" head-magnet="0" kind="INPUT" tail="P8" tail-magnet="0">
+        <point x="4.0" y="24.0"/>
+      </arc>
+      <arc head="t2" head-magnet="0" kind="INPUT" tail="P2" tail-magnet="0">
+        <point x="28.0" y="20.0"/>
+      </arc>
+      <arc head="P2" head-magnet="0" kind="OUTPUT" tail="t3" tail-magnet="0"/>
+      <arc head="P1" head-magnet="0" kind="OUTPUT" tail="t3" tail-magnet="0"/>
+      <arc head="P0" head-magnet="0" kind="OUTPUT" mult-k="0.5454101562500001" tail="t3" tail-magnet="0">
+        <point x="11.995834350585938" y="12.999755859375"/>
+      </arc>
+    </edges>
+  </gspn>
+</project>

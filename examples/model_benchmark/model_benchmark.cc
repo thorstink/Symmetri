@@ -7,7 +7,7 @@ int main(int, char *argv[]) {
   spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] %v");
 
   auto pnml1 = std::string(argv[1]);
-  const auto &[net, m0] = readPetriNets({pnml1});
+  const auto &[net, m0] = readPnml({pnml1});
   bool bolus = false;
   auto pool = symmetri::createStoppablePool(16);
 

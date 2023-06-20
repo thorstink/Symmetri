@@ -10,7 +10,7 @@ void t(){};
 
 TEST_CASE(
     "Run a transition with a higher priority over one with a lower priority") {
-  std::list<std::vector<std::pair<symmetri::Transition, int8_t>>> priorities = {
+  std::list<PriorityTable> priorities = {
       {{"t0", 1}, {"t1", 0}}, {{"t0", 0}, {"t1", 1}}};
   for (auto priority : priorities) {
     auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
@@ -44,7 +44,7 @@ TEST_CASE(
 }
 
 TEST_CASE("Using nullptr does not queue reducers.") {
-  std::list<std::vector<std::pair<symmetri::Transition, int8_t>>> priorities = {
+  std::list<PriorityTable> priorities = {
       {{"t0", 1}, {"t1", 0}}, {{"t0", 0}, {"t1", 1}}};
   for (auto priority : priorities) {
     auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);

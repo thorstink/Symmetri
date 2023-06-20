@@ -1,31 +1,26 @@
 #include "symmetri/pnml_parser.h"
 
-#include <spdlog/fmt/ostr.h>  // must be included
-#include <spdlog/spdlog.h>
-
-#include <sstream>
+#include <stdexcept>
 
 #include "tinyxml2/tinyxml2.h"
-
 using namespace tinyxml2;
 using namespace symmetri;
 
-std::tuple<Net, Marking> readPetriNets(const std::set<std::string> &files) {
+std::tuple<Net, Marking> readPnml(const std::set<std::string> &files) {
   std::set<std::string> places, transitions;
   Marking place_initialMarking;
   Net state_net;
 
   for (auto file : files) {
     XMLDocument net;
-    spdlog::debug("PNML file-path: {0}", file);
     net.LoadFile(file.c_str());
 
-    tinyxml2::XMLElement *levelElement = net.FirstChildElement("pnml")
+    XMLElement *levelElement = net.FirstChildElement("pnml")
                                              ->FirstChildElement("net")
                                              ->FirstChildElement("page");
 
     // loop places.
-    for (tinyxml2::XMLElement *child = levelElement->FirstChildElement("place");
+    for (XMLElement *child = levelElement->FirstChildElement("place");
          child != NULL; child = child->NextSiblingElement("place")) {
       auto place_id = child->Attribute("id");
       auto initial_marking =
@@ -40,7 +35,7 @@ std::tuple<Net, Marking> readPetriNets(const std::set<std::string> &files) {
     }
 
     // loop transitions
-    for (tinyxml2::XMLElement *child =
+    for (XMLElement *child =
              levelElement->FirstChildElement("transition");
          child != NULL; child = child->NextSiblingElement("transition")) {
       auto transition_id = child->Attribute("id");
@@ -48,7 +43,7 @@ std::tuple<Net, Marking> readPetriNets(const std::set<std::string> &files) {
     }
 
     // loop arcs
-    for (tinyxml2::XMLElement *child = levelElement->FirstChildElement("arc");
+    for (XMLElement *child = levelElement->FirstChildElement("arc");
          child != NULL; child = child->NextSiblingElement("arc")) {
       // do something with each child element
 
@@ -77,37 +72,14 @@ std::tuple<Net, Marking> readPetriNets(const std::set<std::string> &files) {
             state_net.insert({source_id, {{}, {target_id}}});
           }
         } else {
-          auto arc_id = child->Attribute("id");
-          spdlog::error(
-              "error: arc {0} is not connecting a place to a transition.",
-              arc_id);
+          const auto arc_id = child->Attribute("id");
+          throw std::runtime_error(
+              std::string("error: arc ") + arc_id +
+              std::string("is not connecting a place to a transition."));
         }
       }
     }
   }
-
-  std::stringstream netstring;
-  netstring << "\n========\n";
-  for (auto [transition, mut] : state_net) {
-    auto [pre, post] = mut;
-    netstring << "transition: " << transition;
-    netstring << ", pre: ";
-    for (auto p : pre) {
-      netstring << p << ",";
-    }
-    netstring << " post: ";
-    for (auto p : post) {
-      netstring << p << ",";
-    }
-    netstring << std::endl;
-  }
-
-  for (auto [p, tokens] : place_initialMarking) {
-    netstring << p << " : " << tokens << "\n";
-  }
-  netstring << "========\n";
-
-  spdlog::debug(netstring.str());
 
   return {state_net, place_initialMarking};
 }
