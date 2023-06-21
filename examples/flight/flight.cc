@@ -50,6 +50,5 @@ int main(int, char *argv[]) {
     spdlog::info("EventLog: {0}, {1}, {2}, {3}", caseid, t, printState(s),
                  c.time_since_epoch().count());
   }
-
   return result == symmetri::State::Completed ? 0 : -1;
 }
