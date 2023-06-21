@@ -108,10 +108,10 @@ Public Attributes</h2></td></tr>
 <a class="el" href="structsymmetri_1_1Model.html">Model</a>&#160;</td><td class="memItemRight" valign="bottom"><b>m</b></td></tr>
 <tr class="memdesc:ae5897effb033277b9f8a8b8b65ac7f5a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net model. <br /></td></tr>
 <tr class="separator:ae5897effb033277b9f8a8b8b65ac7f5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5d3b6a12654707d06fc90c977115c018"><td class="memItemLeft" align="right" valign="top"><a id="a5d3b6a12654707d06fc90c977115c018" name="a5d3b6a12654707d06fc90c977115c018"></a>
-std::thread::id&#160;</td><td class="memItemRight" valign="bottom"><b>thread_id_</b></td></tr>
-<tr class="memdesc:a5d3b6a12654707d06fc90c977115c018"><td class="mdescLeft">&#160;</td><td class="mdescRight">The id of the thread from which run is called. <br /></td></tr>
-<tr class="separator:a5d3b6a12654707d06fc90c977115c018"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a864a4c4579ab08691e5e62ec0c254586"><td class="memItemLeft" align="right" valign="top"><a id="a864a4c4579ab08691e5e62ec0c254586" name="a864a4c4579ab08691e5e62ec0c254586"></a>
+std::atomic&lt; std::optional&lt; unsigned int &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>thread_id_</b></td></tr>
+<tr class="memdesc:a864a4c4579ab08691e5e62ec0c254586"><td class="mdescLeft">&#160;</td><td class="mdescRight">The id of the thread from which run is called. <br /></td></tr>
+<tr class="separator:a864a4c4579ab08691e5e62ec0c254586"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab6a18be9021fd1af10ea1711a62840b9"><td class="memItemLeft" align="right" valign="top"><a id="ab6a18be9021fd1af10ea1711a62840b9" name="ab6a18be9021fd1af10ea1711a62840b9"></a>
 const Marking&#160;</td><td class="memItemRight" valign="bottom"><b>m0_</b></td></tr>
 <tr class="memdesc:ab6a18be9021fd1af10ea1711a62840b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">The initial marking for this instance. <br /></td></tr>
@@ -140,10 +140,6 @@ std::shared_ptr&lt; BlockingConcurrentQueue&lt; Reducer &gt; &gt;&#160;</td><td 
 std::string&#160;</td><td class="memItemRight" valign="bottom"><b>case_id</b></td></tr>
 <tr class="memdesc:aa2acc8bf32bcd39c86f5eb029586c34b"><td class="mdescLeft">&#160;</td><td class="mdescRight">The case id of this particular <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> instance. <br /></td></tr>
 <tr class="separator:aa2acc8bf32bcd39c86f5eb029586c34b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa2262c5ebc26b5bc9b20afb16f24da51"><td class="memItemLeft" align="right" valign="top"><a id="aa2262c5ebc26b5bc9b20afb16f24da51" name="aa2262c5ebc26b5bc9b20afb16f24da51"></a>
-std::atomic&lt; bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>active</b></td></tr>
-<tr class="memdesc:aa2262c5ebc26b5bc9b20afb16f24da51"><td class="mdescLeft">&#160;</td><td class="mdescRight">The net is active as long as it is still dequeuing reducers. <br /></td></tr>
-<tr class="separator:aa2262c5ebc26b5bc9b20afb16f24da51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8d4a269a1ae77d20d319dc7bf27b2524"><td class="memItemLeft" align="right" valign="top">std::atomic&lt; bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a8d4a269a1ae77d20d319dc7bf27b2524">early_exit</a></td></tr>
 <tr class="separator:a8d4a269a1ae77d20d319dc7bf27b2524"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
