@@ -14,8 +14,7 @@
 #include <tuple>
 
 #include "model.h"
-#include "symmetri/grml_parser.h"
-#include "symmetri/pnml_parser.h"
+#include "symmetri/parsers.h"
 
 namespace symmetri {
 
@@ -71,7 +70,7 @@ struct Petri {
   const std::vector<size_t>
       final_marking;  ///< The net will stop queueing reducers
                       ///< once the marking has been reached
-  const std::shared_ptr<const StoppablePool> stp;
+  const std::shared_ptr<TaskSystem> stp;
   std::shared_ptr<BlockingConcurrentQueue<Reducer>> reducers;
   std::string case_id;  ///< The case id of this particular Petri instance
   std::atomic<bool> early_exit;  ///< once it is true, no more new transitions
@@ -90,10 +89,9 @@ struct Petri {
    * @param priority
    * @param case_id
    */
-  Petri(const Net &net, const Marking &m0,
-        std::shared_ptr<const StoppablePool> stp, const Marking &final_marking,
-        const Store &store, const PriorityTable &priorities,
-        const std::string &case_id)
+  Petri(const Net &net, const Marking &m0, std::shared_ptr<TaskSystem> stp,
+        const Marking &final_marking, const Store &store,
+        const PriorityTable &priorities, const std::string &case_id)
       : m(net, store, priorities, m0),
         thread_id_(std::nullopt),
         m0_(m0),
@@ -125,21 +123,63 @@ struct Petri {
     reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(256);
 
     early_exit.store(false);
+    thread_id_.store(std::nullopt);
     return true;
   }
-  /**
-   * @brief Get the Model object
-   *
-   * @return const Model&
-   */
-  const Model &getModel() const { return m; }
 
   /**
    * @brief Get the Event Log object
    *
    * @return Eventlog
    */
-  Eventlog getEventLog() const { return m.event_log; }
+  Eventlog getEventLog() const noexcept {
+    const auto maybe_thread_id = thread_id_.load();
+    if (maybe_thread_id && maybe_thread_id.value() != getThreadId()) {
+      std::promise<Eventlog> el;
+      std::future<Eventlog> el_getter = el.get_future();
+      reducers->enqueue([&](Model &&model) {
+        spdlog::error("[{0}] leftovers", case_id);
+        el.set_value(model.event_log);
+        return std::ref(model);
+      });
+      return el_getter.get();
+    } else {
+      return m.event_log;
+    }
+  }
+
+  std::pair<std::vector<Transition>, std::vector<Place>> getState()
+      const noexcept {
+    const auto maybe_thread_id = thread_id_.load();
+    if (maybe_thread_id && maybe_thread_id.value() != getThreadId()) {
+      std::promise<std::pair<std::vector<Transition>, std::vector<Place>>>
+          state;
+      auto getter = state.get_future();
+      reducers->enqueue([&](Model &&model) {
+        state.set_value(model.getState());
+        return std::ref(model);
+      });
+      return getter.get();
+    } else {
+      return m.getState();
+    }
+  }
+
+  std::vector<Transition> getFireableTransitions() const noexcept {
+    const auto maybe_thread_id = thread_id_.load();
+    if (maybe_thread_id && maybe_thread_id.value() != getThreadId()) {
+      std::promise<std::vector<Transition>> transitions;
+      std::future<std::vector<Transition>> transitions_getter =
+          transitions.get_future();
+      reducers->enqueue([&](Model &&model) {
+        transitions.set_value(model.getFireableTransitions());
+        return std::ref(model);
+      });
+      return transitions_getter.get();
+    } else {
+      return m.getFireableTransitions();
+    }
+  };
 
   /**
    * @brief run the petri net. This initializes the net with the initial
@@ -158,7 +198,7 @@ struct Petri {
 
     Reducer f;
     // start!
-    m.fireTransitions(reducers, *stp, true, case_id);
+    m.fireTransitions(reducers, stp, true, case_id);
     // get a reducer. Immediately, or wait a bit
     while (!early_exit.load() && m.active_transitions_n.size() > 0 &&
            reducers->wait_dequeue_timed(f, -1)) {
@@ -168,7 +208,7 @@ struct Petri {
       if (MarkingReached(m.tokens_n, final_marking) || early_exit.load()) {
         break;
       } else {
-        m.fireTransitions(reducers, *stp, true, case_id);
+        m.fireTransitions(reducers, stp, true, case_id);
       }
     }
 
@@ -187,7 +227,7 @@ struct Petri {
             m.event_log.insert(m.event_log.end(), el.begin(), el.end());
           }
           m.event_log.push_back({case_id, m.net.transition[transition_index],
-                                 state, clock_s::now()});
+                                 state, Clock::now()});
         }
         result = State::UserExit;
       }
@@ -199,9 +239,14 @@ struct Petri {
       result = State::Error;
     }
 
+    Result res = {m.event_log, result};
     spdlog::info("[{1}] finished with result {0}", printState(result), case_id);
+    while (reducers->try_dequeue(f)) {
+      spdlog::warn("[{0}] leftovers", case_id);
+      m = f(std::move(m));
+    }
     thread_id_.store(std::nullopt);
-    return {m.event_log, result};
+    return res;
   }
 };
 
@@ -222,18 +267,18 @@ struct Petri {
 std::tuple<std::shared_ptr<Petri>, std::function<void(const Transition &)>>
 create(const Net &net, const Marking &m0, const Marking &final_marking,
        const Store &store, const PriorityTable &priority,
-       const std::string &case_id, std::shared_ptr<const StoppablePool> stp) {
+       const std::string &case_id, std::shared_ptr<TaskSystem> stp) {
   auto impl = std::make_shared<Petri>(net, m0, stp, final_marking, store,
                                       priority, case_id);
   return {
       impl, [=](const Transition &t) {
         if (impl->thread_id_.load()) {
-          impl->reducers->enqueue([=](Model &&m) -> Model & {
+          impl->reducers->enqueue([=](Model &&m) {
             const auto t_index = toIndex(m.net.transition, t);
             m.active_transitions_n.push_back(t_index);
             impl->reducers->enqueue(createReducerForTransition(
                 t_index, m.net.store[t_index], impl->case_id, impl->reducers));
-            return m;
+            return std::ref(m);
           });
         }
       }};
@@ -243,7 +288,7 @@ Application::Application(const std::set<std::string> &files,
                          const Marking &final_marking, const Store &store,
                          const PriorityTable &priorities,
                          const std::string &case_id,
-                         std::shared_ptr<const StoppablePool> stp) {
+                         std::shared_ptr<TaskSystem> stp) {
   const auto [net, m0] = readPnml(files);
   if (areAllTransitionsInStore(store, net)) {
     std::tie(impl, register_functor) =
@@ -254,7 +299,7 @@ Application::Application(const std::set<std::string> &files,
 Application::Application(const std::set<std::string> &files,
                          const Marking &final_marking, const Store &store,
                          const std::string &case_id,
-                         std::shared_ptr<const StoppablePool> stp) {
+                         std::shared_ptr<TaskSystem> stp) {
   const auto [net, m0, priorities] = readGrml(files);
   if (areAllTransitionsInStore(store, net)) {
     std::tie(impl, register_functor) =
@@ -266,7 +311,7 @@ Application::Application(const Net &net, const Marking &m0,
                          const Marking &final_marking, const Store &store,
                          const PriorityTable &priorities,
                          const std::string &case_id,
-                         std::shared_ptr<const StoppablePool> stp) {
+                         std::shared_ptr<TaskSystem> stp) {
   if (areAllTransitionsInStore(store, net)) {
     std::tie(impl, register_functor) =
         create(net, m0, final_marking, store, priorities, case_id, stp);
@@ -282,7 +327,7 @@ bool Application::tryFireTransition(const Transition &t) const noexcept {
   while (impl->reducers->try_dequeue(f)) {
     impl->m = f(std::move(impl->m));
   }
-  return impl->m.fireTransition(t, impl->reducers, *impl->stp, "manual");
+  return impl->m.fireTransition(t, impl->reducers, impl->stp, "manual");
 };
 
 Result Application::execute() const noexcept {
@@ -296,62 +341,21 @@ Result Application::execute() const noexcept {
         impl->case_id);
     return {{}, State::Error};
   } else {
-    auto res = impl->run();
-    return res;
+    return impl->run();
   }
 }
 
 Eventlog Application::getEventLog() const noexcept {
-  std::promise<Eventlog> el;
-  std::future<Eventlog> el_getter = el.get_future();
-  const auto maybe_thread_id = impl->thread_id_.load();
-  if (maybe_thread_id) {
-    impl->reducers->enqueue([&](Model &&model) -> Model & {
-      el.set_value(model.event_log.empty() ? model.event_log : Eventlog({}));
-      return model;
-    });
-  }
-  return maybe_thread_id && maybe_thread_id.value() != getThreadId() &&
-                 el_getter.wait_for(std::chrono::milliseconds(1000)) ==
-                     std::future_status::ready
-             ? el_getter.get()
-             : impl->getEventLog();
+  return impl->getEventLog();
 };
 
 std::pair<std::vector<Transition>, std::vector<Place>> Application::getState()
     const noexcept {
-  std::promise<std::pair<std::vector<Transition>, std::vector<Place>>> state;
-  auto getter = state.get_future();
-  const auto maybe_thread_id = impl->thread_id_.load();
-  if (maybe_thread_id) {
-    impl->reducers->enqueue([&](Model &&model) -> Model & {
-      state.set_value(model.getState());
-      return model;
-    });
-  }
-  return maybe_thread_id && maybe_thread_id.value() != getThreadId() &&
-                 getter.wait_for(std::chrono::milliseconds(1000)) ==
-                     std::future_status::ready
-             ? getter.get()
-             : impl->getModel().getState();
+  return impl->getState();
 }
 
 std::vector<Transition> Application::getFireableTransitions() const noexcept {
-  std::promise<std::vector<Transition>> transitions;
-  std::future<std::vector<Transition>> transitions_getter =
-      transitions.get_future();
-  const auto maybe_thread_id = impl->thread_id_.load();
-  if (maybe_thread_id) {
-    impl->reducers->enqueue([&](Model &&model) -> Model & {
-      transitions.set_value(model.getFireableTransitions());
-      return model;
-    });
-  }
-  return maybe_thread_id && maybe_thread_id.value() != getThreadId() &&
-                 transitions_getter.wait_for(std::chrono::milliseconds(1000)) ==
-                     std::future_status::ready
-             ? transitions_getter.get()
-             : impl->getModel().getFireableTransitions();
+  return impl->getFireableTransitions();
 };
 
 std::function<void()> Application::registerTransitionCallback(
@@ -366,21 +370,21 @@ Result Application::exitEarly() const noexcept {
     std::mutex m;
     std::condition_variable cv;
     bool ready = false;
-    impl->reducers->enqueue([=, &m, &cv, &ready](Model &&model) -> Model & {
+    impl->reducers->enqueue([=, &m, &cv, &ready](Model &&model) {
       impl->early_exit.store(true);
       {
         std::lock_guard lk(m);
         ready = true;
       }
       cv.notify_one();
-      return model;
+      return std::ref(model);
     });
     std::unique_lock lk(m);
     cv.wait(lk, [&] { return ready; });
   } else {
-    impl->reducers->enqueue([=](Model &&model) -> Model & {
+    impl->reducers->enqueue([=](Model &&model) {
       impl->early_exit.store(true);
-      return model;
+      return std::ref(model);
     });
   }
 
@@ -388,22 +392,7 @@ Result Application::exitEarly() const noexcept {
 }
 
 bool Application::reuseApplication(const std::string &new_case_id) {
-  if (impl->reset(new_case_id)) {
-    register_functor = [=](const Transition &t) {
-      if (impl->thread_id_.load()) {
-        impl->reducers->enqueue([=](Model &&m) -> Model & {
-          const auto t_index = toIndex(m.net.transition, t);
-          m.active_transitions_n.push_back(t_index);
-          impl->reducers->enqueue(createReducerForTransition(
-              t_index, m.net.store[t_index], impl->case_id, impl->reducers));
-          return m;
-        });
-      }
-    };
-    return true;
-  } else {
-    return false;
-  }
+  return impl->reset(new_case_id);
 }
 
 }  // namespace symmetri

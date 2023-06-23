@@ -18,13 +18,13 @@ TEST_CASE("Test external input.") {
                   }}};
   Marking m0 = {{"Pa", 0}, {"Pb", 0}, {"Pc", 1}};
   Marking final_m = {{"Pb", 2}};
-  auto stp = createStoppablePool(3);
+  auto stp = std::make_shared<TaskSystem>(3);
 
   symmetri::Application app(net, m0, final_m, store, {}, "test_net_ext_input",
                             stp);
 
   // enqueue a trigger;
-  stp->enqueue([trigger = app.registerTransitionCallback("t0")]() {
+  stp->push([trigger = app.registerTransitionCallback("t0")]() {
     // sleep a bit so it gets triggered _after_ the net started.
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     trigger();

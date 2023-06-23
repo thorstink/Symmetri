@@ -49,7 +49,7 @@ int main(int, char *argv[]) {
                               {"t4", &helloWorld},  {"t50", &helloWorld}};
 
   // This is a very simple thread pool. It can be shared among nets.
-  auto pool = symmetri::createStoppablePool(1);
+  auto pool = std::make_shared<symmetri::TaskSystem>(1);
 
   // This is the construction of the class that executes the functions in the
   // store based on the petri net. You can specifiy a final marking, the amount

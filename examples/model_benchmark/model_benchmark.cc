@@ -1,15 +1,15 @@
 #include <spdlog/spdlog.h>
 
-#include "symmetri/pnml_parser.h"
+#include "symmetri/parsers.h"
 #include "symmetri/symmetri.h"
 
 int main(int, char *argv[]) {
   spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] %v");
 
   auto pnml1 = std::string(argv[1]);
-  const auto &[net, m0] = readPnml({pnml1});
+  const auto &[net, m0] = symmetri::readPnml({pnml1});
   bool bolus = false;
-  auto pool = symmetri::createStoppablePool(16);
+  auto pool = std::make_shared<symmetri::TaskSystem>();
 
   symmetri::Store store;
   for (const auto &[t, io] : net) {
@@ -22,9 +22,9 @@ int main(int, char *argv[]) {
 
   symmetri::Application bignet(net, m0, {}, store, {}, "pluto", pool);
   spdlog::info("start!");
-  const auto start_time = symmetri::clock_s::now();
+  const auto start_time = symmetri::Clock::now();
   auto [el, result] = bignet.execute();  // infinite loop
-  const auto end_time = symmetri::clock_s::now();
+  const auto end_time = symmetri::Clock::now();
   auto trans_count = el.size() / 2;
   auto delta_t = (double((end_time - start_time).count()) / 1e9);
   auto time_per_trans = delta_t / double(trans_count);

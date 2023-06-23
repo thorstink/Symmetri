@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <map>
 
 #include "model.h"
 using namespace symmetri;
@@ -17,9 +18,7 @@ auto t1() {
   return symmetri::State::Completed;
 }
 
-std::tuple<Net, Store, PriorityTable,
-           Marking>
-testNet() {
+std::tuple<Net, Store, PriorityTable, Marking> testNet() {
   T0_COUNTER.store(0);
   T1_COUNTER.store(0);
 
@@ -49,9 +48,9 @@ TEST_CASE("Test equaliy of nets") {
 
 TEST_CASE("Create a model") {
   auto [net, store, priority, m0] = testNet();
-  auto before_model_creation = clock_s::now();
+  auto before_model_creation = Clock::now();
   Model m(net, store, priority, m0);
-  auto after_model_creation = clock_s::now();
+  auto after_model_creation = Clock::now();
   REQUIRE(before_model_creation <= m.timestamp);
   REQUIRE(after_model_creation > m.timestamp);
 }
@@ -60,11 +59,11 @@ TEST_CASE("Run one transition iteration in a petri net") {
   auto [net, store, priority, m0] = testNet();
 
   Model m(net, store, priority, m0);
-  auto stp = createStoppablePool(1);
+  auto stp = std::make_shared<TaskSystem>(1);
   auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
 
   // t0 is enabled.
-  m.fireTransitions(reducers, *stp, true, "");
+  m.fireTransitions(reducers, stp, true, "");
   // t0 is dispatched but it's reducer has not yet run, so pre-conditions are
   // processed but post are not:
   REQUIRE(m.getActiveTransitions() ==
@@ -78,7 +77,7 @@ TEST_CASE("Run one transition iteration in a petri net") {
   REQUIRE(reducers->wait_dequeue_timed(r2, std::chrono::seconds(1)));
   REQUIRE(reducers->wait_dequeue_timed(r2, std::chrono::seconds(1)));
   // verify that t0 has actually ran twice.
-  REQUIRE(T0_COUNTER == 2);
+  REQUIRE(T0_COUNTER.load() == 2);
   // the marking should still be the same.
   REQUIRE(m.getMarking() == std::vector<symmetri::Place>{"Pa", "Pa"});
 
@@ -102,16 +101,16 @@ TEST_CASE("Run until net dies") {
 
   auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
 
-  auto stp = createStoppablePool(1);
+  auto stp = std::make_shared<TaskSystem>(1);
 
   Reducer r;
   PolyAction a([] {});
   // we need to enqueue one 'no-operation' to start the live net.
-  reducers->enqueue([](Model&& m) -> Model& { return m; });
+  reducers->enqueue([](Model&& m) { return std::ref(m); });
   do {
     if (reducers->try_dequeue(r)) {
       m = r(std::move(m));
-      m.fireTransitions(reducers, *stp, true);
+      m.fireTransitions(reducers, stp, true);
     }
   } while (m.active_transitions_n.size() > 0);
 
@@ -131,16 +130,16 @@ TEST_CASE("Run until net dies with nullptr") {
   Model m(net, store, priority, m0);
 
   auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
-  auto stp = createStoppablePool(1);
+  auto stp = std::make_shared<TaskSystem>(1);
 
   Reducer r;
   PolyAction a([] {});
   // we need to enqueue one 'no-operation' to start the live net.
-  reducers->enqueue([](Model&& m) -> Model& { return m; });
+  reducers->enqueue([](Model&& m) { return std::ref(m); });
   do {
     if (reducers->try_dequeue(r)) {
       m = r(std::move(m));
-      m.fireTransitions(reducers, *stp, true);
+      m.fireTransitions(reducers, stp, true);
     }
   } while (m.active_transitions_n.size() > 0);
 
@@ -192,16 +191,16 @@ TEST_CASE("Step through transitions") {
       store.insert({t, [&, t = t] { hitmap[t] += 1; }});
     }
     auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(5);
-    auto stp = createStoppablePool(1);
+    auto stp = std::make_shared<TaskSystem>(1);
     // with this initial marking, all but transition e are possible.
     Marking m0 = {{"Pa", 4}};
     Model m(net, store, {}, m0);
     REQUIRE(m.getFireableTransitions().size() == 4);  // abcd
-    m.fireTransition("e", reducers, *stp);
-    m.fireTransition("b", reducers, *stp);
-    m.fireTransition("b", reducers, *stp);
-    m.fireTransition("c", reducers, *stp);
-    m.fireTransition("b", reducers, *stp);
+    m.fireTransition("e", reducers, stp);
+    m.fireTransition("b", reducers, stp);
+    m.fireTransition("b", reducers, stp);
+    m.fireTransition("c", reducers, stp);
+    m.fireTransition("b", reducers, stp);
     // there are no reducers ran, so this doesn't update.
     REQUIRE(m.getActiveTransitions().size() == 4);
     // there should be no markers left.

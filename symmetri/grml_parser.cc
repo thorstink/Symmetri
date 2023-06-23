@@ -1,11 +1,11 @@
-#include "symmetri/grml_parser.h"
-
+#include <map>
 #include <stdexcept>
 
+#include "symmetri/parsers.h"
 #include "tinyxml2/tinyxml2.h"
-
 using namespace tinyxml2;
-using namespace symmetri;
+
+namespace symmetri {
 
 std::tuple<Net, Marking, PriorityTable> readGrml(
     const std::set<std::string> &files) {
@@ -50,8 +50,7 @@ std::tuple<Net, Marking, PriorityTable> readGrml(
         // loop transitions
         std::string transition_id;
         int8_t priority = 0;
-        for (XMLElement *attribute =
-                 child->FirstChildElement("attribute");
+        for (XMLElement *attribute = child->FirstChildElement("attribute");
              attribute != NULL;
              attribute = attribute->NextSiblingElement("attribute")) {
           const std::string child_attribute =
@@ -107,3 +106,5 @@ std::tuple<Net, Marking, PriorityTable> readGrml(
 
   return {state_net, place_initialMarking, priorities};
 }
+
+}  // namespace symmetri
