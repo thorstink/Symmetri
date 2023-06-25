@@ -56,7 +56,7 @@ struct Model {
   Model &operator=(Model const &) = default;
   Model &operator=(Model &&) noexcept = default;
 
-  std::vector<size_t> toTokens(const symmetri::Marking &marking) const noexcept;
+  std::vector<size_t> toTokens(const Marking &marking) const noexcept;
 
   /**
    * @brief Get the current marking. It is represented by a vector of places:
@@ -80,8 +80,8 @@ struct Model {
   std::vector<Transition> getActiveTransitions() const;
 
   /**
-   * @brief Gives a list of transitions that are fireable given the marking at
-   * the time of calling this function.
+   * @brief Gives a list of unique transitions that are fireable given the
+   * marking at the time of calling this function, sorted by priority.
    *
    * @return std::vector<Transition>
    */
@@ -168,12 +168,11 @@ struct Model {
    * @return true if the transition fired.
    * @return false if it did not fire.
    */
-  bool tryFire(
-      const size_t t,
-      const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
-          &reducers,
-      std::shared_ptr<TaskSystem> polymorphic_actions,
-      const std::string &case_id);
+  bool Fire(const size_t t,
+            const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
+                &reducers,
+            std::shared_ptr<TaskSystem> polymorphic_actions,
+            const std::string &case_id);
 };
 
 }  // namespace symmetri

@@ -28,7 +28,7 @@ struct Petri;
 
 /**
  * @brief The Application class is a class that can create, configure and
- * execute a Petri net.
+ * run a Petri net.
  *
  */
 class Application final {
@@ -58,7 +58,8 @@ class Application final {
               std::shared_ptr<TaskSystem> stp);
 
   /**
-   * @brief Construct a new Application object from a set of paths to grml-files
+   * @brief Construct a new Application object from a set of paths to
+   * grml-files. Grml fils already have priority, so they are not needed.
    *
    * @param path_to_grml
    * @param final_marking
@@ -91,7 +92,7 @@ class Application final {
    *
    * @return Result
    */
-  Result execute() const noexcept;
+  Result run() const noexcept;
 
   /**
    * @brief register transition gives a handle to manually force a transition to
@@ -169,7 +170,23 @@ class Application final {
  * @param app
  * @return Result
  */
-Result fireTransition(const Application &app);
-Result cancelTransition(const Application &app);
-bool isDirectTransition(const Application &app);
+Result fireTransition(const Application &app) { return app.run(); };
+
+/**
+ * @brief if the Petri net is nested, and its parent net tries to cancel the
+ * Petri net, it calls exitEarly.
+ *
+ * @param app
+ * @return Result
+ */
+Result cancelTransition(const Application &app) { return app.exitEarly(); }
+
+/**
+ * @brief obviously a Petri net is not a direct-transition
+ *
+ * @return true
+ * @return false
+ */
+bool isDirectTransition(const Application &) { return false; };
+
 }  // namespace symmetri

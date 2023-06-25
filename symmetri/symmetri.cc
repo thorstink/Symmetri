@@ -30,12 +30,6 @@ unsigned int getThreadId() {
       std::hash<std::thread::id>()(std::this_thread::get_id()));
 }
 
-Result fireTransition(const Application &app) { return app.execute(); };
-
-Result cancelTransition(const Application &app) { return app.exitEarly(); }
-
-bool isDirectTransition(const Application &) { return false; };
-
 using namespace moodycamel;
 
 bool areAllTransitionsInStore(const Store &store, const Net &net) noexcept {
@@ -78,7 +72,7 @@ struct Petri {
 
   /**
    * @brief Construct a new Petri object. Most importantly, it also creates the
-   * reducer queue and exposes the `run` function to actually execute the petri
+   * reducer queue and exposes the `run` function to actually run the petri
    * net.
    *
    * @param net
@@ -109,11 +103,8 @@ struct Petri {
       return false;
     }
 
-    // recreate model.
-    m = Model(net_, store_, priorities_, m0_);
     case_id = new_case_id;
     reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(256);
-
     early_exit.store(false);
     thread_id_.store(std::nullopt);
     return true;
@@ -130,7 +121,6 @@ struct Petri {
       std::promise<Eventlog> el;
       std::future<Eventlog> el_getter = el.get_future();
       reducers->enqueue([&](Model &&model) {
-        spdlog::error("[{0}] leftovers", case_id);
         el.set_value(model.event_log);
         return std::ref(model);
       });
@@ -184,7 +174,6 @@ struct Petri {
     // we are running!
     thread_id_.store(getThreadId());
     early_exit.store(false);
-    // reassign it manually to reset.
     m.event_log.clear();
     m.tokens_n = m.initial_tokens;
 
@@ -192,7 +181,7 @@ struct Petri {
     // start!
     m.fireTransitions(reducers, stp, true, case_id);
     // get a reducer. Immediately, or wait a bit
-    while (!early_exit.load() && m.active_transitions_n.size() > 0 &&
+    while (m.active_transitions_n.size() > 0 &&
            reducers->wait_dequeue_timed(f, -1)) {
       do {
         m = f(std::move(m));
@@ -210,11 +199,7 @@ struct Petri {
       {
         // populate that eventlog with child eventlog and possible cancelations.
         for (const auto transition_index : m.active_transitions_n) {
-          spdlog::info("[{1}] Cancel {0} ...",
-                       m.net.transition[transition_index], case_id);
           auto [el, state] = cancelTransition(m.net.store.at(transition_index));
-          spdlog::info("[{1}] {0} cancelled",
-                       m.net.transition[transition_index], case_id);
           if (!el.empty()) {
             m.event_log.insert(m.event_log.end(), el.begin(), el.end());
           }
@@ -232,9 +217,7 @@ struct Petri {
     }
 
     Result res = {m.event_log, result};
-    spdlog::info("[{1}] finished with result {0}", printState(result), case_id);
     while (reducers->try_dequeue(f)) {
-      spdlog::warn("[{0}] leftovers", case_id);
       m = f(std::move(m));
     }
     thread_id_.store(std::nullopt);
@@ -312,7 +295,6 @@ Application::Application(const Net &net, const Marking &m0,
 
 bool Application::tryFireTransition(const Transition &t) const noexcept {
   if (impl == nullptr) {
-    spdlog::warn("There is no net to run a transition.");
     return false;
   }
   Reducer f;
@@ -322,7 +304,7 @@ bool Application::tryFireTransition(const Transition &t) const noexcept {
   return impl->m.fireTransition(t, impl->reducers, impl->stp, "manual");
 };
 
-Result Application::execute() const noexcept {
+Result Application::run() const noexcept {
   if (impl == nullptr) {
     spdlog::error("Something went seriously wrong. Please send a bug report.");
     return {{}, State::Error};

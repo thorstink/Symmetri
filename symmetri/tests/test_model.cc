@@ -146,7 +146,6 @@ TEST_CASE("Run until net dies with nullptr") {
   // For this specific net we expect:
   REQUIRE(MarkingEquality(
       m.getMarking(), std::vector<symmetri::Place>{"Pb", "Pb", "Pd", "Pd"}));
-  ;
 }
 
 TEST_CASE(

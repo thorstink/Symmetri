@@ -17,6 +17,14 @@ bool isDirectTransition(const T &) {
   return !std::is_invocable_v<T>;
 }
 
+/**
+ * @brief The default cancel implementation is naive. It only returns a
+ * user-exit state and does nothing to the actual transition itself, and it will
+ * still complete. Its' reducer however is never processed.
+ *
+ * @tparam T
+ * @return Result
+ */
 template <typename T>
 Result cancelTransition(const T &) {
   return {{}, State::UserExit};

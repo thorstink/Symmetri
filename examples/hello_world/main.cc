@@ -32,7 +32,7 @@ symmetri::State helloResult() {
 // that's here.
 int main(int, char *argv[]) {
   // Through argc and argv you can gather input arguments. E.g. when you launch
-  // this petri net application you execute something like
+  // this petri net application you run something like
   // "./Symmetri_hello_world ../nets/passive_n1.pnml ../nets/T50startP0.pnml"
   // from the command line. argv[1] binds to ../nets/passive_n1.pnml, etc.
 
@@ -84,8 +84,8 @@ int main(int, char *argv[]) {
                                    // becomes false.
       });
 
-  auto [el, result] = net.execute();  // This function blocks until either the
-                                      // net completes, deadlocks
+  auto [el, result] = net.run();  // This function blocks until either the
+                                  // net completes, deadlocks
   // or user requests exit (ctrl-c)
   running.store(false);  // We set this to false so the thread that we launched
                          // gets interrupted.
