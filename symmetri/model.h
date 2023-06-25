@@ -16,6 +16,11 @@ using SmallVector = gch::small_vector<size_t, 4>;
 using Store = std::unordered_map<Transition, PolyAction>;
 
 size_t toIndex(const std::vector<std::string> &m, const std::string &s);
+gch::small_vector<uint8_t, 32> possibleTransitions(
+    const std::vector<size_t> &tokens,
+    const std::vector<SmallVector> &p_to_ts_n,
+    const std::vector<int8_t> &priorities);
+bool canFire(const SmallVector &pre, const std::vector<size_t> &tokens);
 
 struct Model;
 using Reducer = std::function<Model &(Model &&)>;
@@ -50,6 +55,8 @@ struct Model {
   Model(Model &&) noexcept = delete;
   Model &operator=(Model const &) = default;
   Model &operator=(Model &&) noexcept = default;
+
+  std::vector<size_t> toTokens(const symmetri::Marking &marking) const noexcept;
 
   /**
    * @brief Get the current marking. It is represented by a vector of places:

@@ -5,7 +5,7 @@
 
 using namespace symmetri;
 TEST_CASE("Run the executor") {
-  // Create a simple stoppable threadpool with 1 thread.
+  // Create a simple task system with 1 thread.
   auto stp = std::make_shared<TaskSystem>(1);
   // launch a task
   std::atomic<bool> ran(false);
@@ -16,7 +16,7 @@ TEST_CASE("Run the executor") {
 }
 
 TEST_CASE("Run the executor parallel tasks") {
-  // Create a simple stoppable threadpool with 2 threads.
+  // Create a simple task system with 2 threads.
   auto stp = std::make_shared<TaskSystem>(2);
 
   // launch a task

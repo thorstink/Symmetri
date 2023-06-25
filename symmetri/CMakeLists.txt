@@ -23,6 +23,7 @@ add_library(${PROJECT_NAME} SHARED
   tasks.cpp
   symmetri.cc
   model.cc
+  model_utilities.cc
   pnml_parser.cc
   grml_parser.cc
   types.cpp

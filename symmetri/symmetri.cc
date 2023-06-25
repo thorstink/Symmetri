@@ -98,15 +98,7 @@ struct Petri {
         net_(net),
         store_(store),
         priorities_(priorities),
-        final_marking([=]() {
-          std::vector<size_t> final_tokens;
-          for (const auto &[p, c] : final_marking) {
-            for (int i = 0; i < c; i++) {
-              final_tokens.push_back(toIndex(m.net.place, p));
-            }
-          }
-          return final_tokens;
-        }()),
+        final_marking(m.toTokens(final_marking)),
         stp(stp),
         reducers(std::make_shared<BlockingConcurrentQueue<Reducer>>(256)),
         case_id(case_id),

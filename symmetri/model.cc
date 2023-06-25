@@ -2,99 +2,29 @@
 
 namespace symmetri {
 
-size_t toIndex(const std::vector<std::string> &m, const std::string &s) {
-  auto ptr = std::find(m.begin(), m.end(), s);
-  return std::distance(m.begin(), ptr);
-}
-
-Reducer processTransition(size_t t_i, const std::string &case_id, State result,
-                          Clock::time_point end_time) {
-  return [=](Model &&model) {
-    if (result == State::Completed) {
-      const auto &place_list = model.net.output_n;
-      model.tokens_n.insert(model.tokens_n.begin(), place_list[t_i].begin(),
-                            place_list[t_i].end());
+std::tuple<std::vector<Transition>, std::vector<Place>, std::vector<PolyAction>>
+convert(const Net &_net, const Store &_store) {
+  const auto transition_count = _net.size();
+  std::vector<Transition> transitions;
+  std::vector<Place> places;
+  std::vector<PolyAction> store;
+  transitions.reserve(transition_count);
+  store.reserve(transition_count);
+  for (const auto &[t, io] : _net) {
+    transitions.push_back(t);
+    store.push_back(_store.at(t));
+    for (const auto &p : io.first) {
+      places.push_back(p);
     }
-
-    model.event_log.push_back(
-        {case_id, model.net.transition[t_i],
-         result == State::Completed ? State::Completed : State::Error,
-         end_time});
-
-    // we know for sure this transition is active because otherwise it wouldn't
-    // produce a reducer.
-    model.active_transitions_n.erase(
-        std::find(model.active_transitions_n.begin(),
-                  model.active_transitions_n.end(), t_i));
-    return std::ref(model);
-  };
-}
-
-Reducer processTransition(size_t t_i, const Eventlog &new_events,
-                          State result) {
-  return [=, ev = std::move(new_events)](Model &&model) mutable {
-    if (result == State::Completed) {
-      const auto &place_list = model.net.output_n;
-      model.tokens_n.insert(model.tokens_n.begin(), place_list[t_i].begin(),
-                            place_list[t_i].end());
-    }
-    model.event_log.insert(model.event_log.end(), ev.begin(), ev.end());
-    // we know for sure this transition is active because otherwise it wouldn't
-    // produce a reducer.
-    model.active_transitions_n.erase(
-        std::find(model.active_transitions_n.begin(),
-                  model.active_transitions_n.end(), t_i));
-
-    return std::ref(model);
-  };
-}
-
-Reducer createReducerForTransition(
-    size_t t_i, const PolyAction &task, const std::string &case_id,
-    const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
-        &reducers) {
-  const auto start_time = Clock::now();
-  reducers->enqueue([=](Model &&model) {
-    model.event_log.push_back(
-        {case_id, model.net.transition[t_i], State::Started, start_time});
-    return std::ref(model);
-  });
-
-  const auto [ev, res] = fireTransition(task);
-  const auto end_time = Clock::now();
-
-  return ev.empty() ? processTransition(t_i, case_id, res, end_time)
-                    : processTransition(t_i, ev, res);
-}
-
-bool canFire(const SmallVector &pre, const std::vector<size_t> &tokens) {
-  return std::all_of(pre.begin(), pre.end(), [&](const auto &m_p) {
-    return std::count(tokens.begin(), tokens.end(), m_p) >=
-           std::count(pre.begin(), pre.end(), m_p);
-  });
-};
-
-gch::small_vector<uint8_t, 32> possibleTransitions(
-    const std::vector<size_t> &tokens,
-    const std::vector<SmallVector> &p_to_ts_n,
-    const std::vector<int8_t> &priorities) {
-  gch::small_vector<uint8_t, 32> possible_transition_list_n;
-  for (const size_t place : tokens) {
-    for (size_t t : p_to_ts_n[place]) {
-      if (std::find(possible_transition_list_n.begin(),
-                    possible_transition_list_n.end(),
-                    t) == possible_transition_list_n.end()) {
-        possible_transition_list_n.push_back(t);
-      }
+    for (const auto &p : io.second) {
+      places.push_back(p);
     }
   }
-
-  // sort transition list according to priority
-  std::sort(possible_transition_list_n.begin(),
-            possible_transition_list_n.end(),
-            [&](size_t a, size_t b) { return priorities[a] > priorities[b]; });
-
-  return possible_transition_list_n;
+  // sort and remove duplicates.
+  std::sort(places.begin(), places.end());
+  auto last = std::unique(places.begin(), places.end());
+  places.erase(last, places.end());
+  return {transitions, places, store};
 }
 
 Model::Model(const Net &_net, const Store &store,
@@ -102,26 +32,8 @@ Model::Model(const Net &_net, const Store &store,
     : timestamp(Clock::now()), event_log({}) {
   // reserve arbitrary eventlog space.
   event_log.reserve(1000);
-  // populate net:
-  const auto transition_count = _net.size();
-  net.transition.reserve(transition_count);
-  net.store.reserve(transition_count);
-  for (const auto &[t, io] : _net) {
-    net.transition.push_back(t);
-    net.store.push_back(store.at(t));
-    for (const auto &p : io.first) {
-      net.place.push_back(p);
-    }
-    for (const auto &p : io.second) {
-      net.place.push_back(p);
-    }
-  }
-  {
-    // sort and remove duplicates.
-    std::sort(net.place.begin(), net.place.end());
-    auto last = std::unique(net.place.begin(), net.place.end());
-    net.place.erase(last, net.place.end());
-  }
+  std::tie(net.transition, net.place, net.store) = convert(_net, store);
+
   {
     for (const auto &[t, io] : _net) {
       SmallVector q;
@@ -139,7 +51,7 @@ Model::Model(const Net &_net, const Store &store,
   {
     for (size_t p = 0; p < net.place.size(); p++) {
       SmallVector p_to_ts_n;
-      for (size_t c = 0; c < transition_count; c++) {
+      for (size_t c = 0; c < net.transition.size(); c++) {
         for (const auto &input_place : net.input_n[c]) {
           if (p == input_place && std::find(p_to_ts_n.begin(), p_to_ts_n.end(),
                                             c) == p_to_ts_n.end()) {
@@ -164,6 +76,17 @@ Model::Model(const Net &_net, const Store &store,
     }
   }
   tokens_n = initial_tokens;
+}
+
+std::vector<size_t> Model::toTokens(
+    const symmetri::Marking &marking) const noexcept {
+  std::vector<size_t> tokens;
+  for (const auto &[p, c] : marking) {
+    for (int i = 0; i < c; i++) {
+      tokens.push_back(toIndex(net.place, p));
+    }
+  }
+  return tokens;
 }
 
 std::vector<Transition> Model::getFireableTransitions() const {

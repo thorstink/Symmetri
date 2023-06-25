@@ -15,11 +15,11 @@ using Clock = std::chrono::steady_clock;
  *
  */
 enum class State {
-  Scheduled,  ///< The transition is put into the transition queue
+  Scheduled,  ///< The transition is put into the task system
   Started,    ///< The transition started
   Completed,  ///< The transition completed as expected
   Deadlock,   ///< The transition deadlocked (applies to  petri nets)
-  UserExit,   ///< The transition or interupted and possibly stopped
+  UserExit,   ///< The transition or interrupted and possibly stopped
   Error       ///< None of the above
 };
 
@@ -33,7 +33,7 @@ struct Event {
   std::string transition;   ///< The transition that generated the event
   State state;              ///< The resulting state of the event
   Clock::time_point stamp;  ///< The timestamp when the reducer of this
-                            ///< event was processed (not generated/occured)
+                            ///< event was processed
 };
 
 using Eventlog = std::vector<Event>;
