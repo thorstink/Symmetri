@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Symmetri: Member List</title>
+<title>Symmetri: symmetri::TaskQueue Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -69,21 +69,39 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="namespacesymmetri.html">symmetri</a></li><li class="navelem"><a class="el" href="structsymmetri_1_1Event.html">Event</a></li>  </ul>
+<li class="navelem"><a class="el" href="namespacesymmetri.html">symmetri</a></li><li class="navelem"><a class="el" href="classsymmetri_1_1TaskQueue.html">TaskQueue</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
-  <div class="headertitle"><div class="title">symmetri::Event Member List</div></div>
+  <div class="summary">
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="classsymmetri_1_1TaskQueue-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">symmetri::TaskQueue Class Reference</div></div>
 </div><!--header-->
 <div class="contents">
-
-<p>This is the complete list of members for <a class="el" href="structsymmetri_1_1Event.html">symmetri::Event</a>, including all inherited members.</p>
-<table class="directory">
-  <tr class="even"><td class="entry"><a class="el" href="structsymmetri_1_1Event.html#ab103e727752222c9b86b3baea03b6840">case_id</a></td><td class="entry"><a class="el" href="structsymmetri_1_1Event.html">symmetri::Event</a></td><td class="entry"></td></tr>
-  <tr class="odd"><td class="entry"><a class="el" href="structsymmetri_1_1Event.html#a51e5b4b01acd062d8f09eb9c335017d3">stamp</a></td><td class="entry"><a class="el" href="structsymmetri_1_1Event.html">symmetri::Event</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="structsymmetri_1_1Event.html#a640691cd84a1d64758c731d3815379e6">state</a></td><td class="entry"><a class="el" href="structsymmetri_1_1Event.html">symmetri::Event</a></td><td class="entry"></td></tr>
-  <tr class="odd"><td class="entry"><a class="el" href="structsymmetri_1_1Event.html#a2fa4203222f063102f9799229f966b29">transition</a></td><td class="entry"><a class="el" href="structsymmetri_1_1Event.html">symmetri::Event</a></td><td class="entry"></td></tr>
-</table></div><!-- contents -->
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a6b55724262b2428ae07ffe9825249a73"><td class="memItemLeft" align="right" valign="top"><a id="a6b55724262b2428ae07ffe9825249a73" name="a6b55724262b2428ae07ffe9825249a73"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>pop</b> (TaskSystem::Task &amp;task)</td></tr>
+<tr class="separator:a6b55724262b2428ae07ffe9825249a73"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a49fe870e53525f683414ef6acf3d1d9b"><td class="memItemLeft" align="right" valign="top"><a id="a49fe870e53525f683414ef6acf3d1d9b" name="a49fe870e53525f683414ef6acf3d1d9b"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>push</b> (TaskSystem::Task const &amp;task)</td></tr>
+<tr class="separator:a49fe870e53525f683414ef6acf3d1d9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6e714d8cadb779772970bc7c6f0ad32d"><td class="memItemLeft" align="right" valign="top"><a id="a6e714d8cadb779772970bc7c6f0ad32d" name="a6e714d8cadb779772970bc7c6f0ad32d"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>try_pop</b> (TaskSystem::Task &amp;task)</td></tr>
+<tr class="separator:a6e714d8cadb779772970bc7c6f0ad32d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac693f91fb66ff471a430495b8470b5b6"><td class="memItemLeft" align="right" valign="top"><a id="ac693f91fb66ff471a430495b8470b5b6" name="ac693f91fb66ff471a430495b8470b5b6"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>try_push</b> (TaskSystem::Task const &amp;task)</td></tr>
+<tr class="separator:ac693f91fb66ff471a430495b8470b5b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1dca4930a6278eb262e5f5870c24da7d"><td class="memItemLeft" align="right" valign="top"><a id="a1dca4930a6278eb262e5f5870c24da7d" name="a1dca4930a6278eb262e5f5870c24da7d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>done</b> ()</td></tr>
+<tr class="separator:a1dca4930a6278eb262e5f5870c24da7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<hr/>The documentation for this class was generated from the following file:<ul>
+<li>symmetri/tasks.cpp</li>
+</ul>
+</div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7

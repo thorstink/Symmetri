@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['petri_0',['Petri',['../structsymmetri_1_1Petri.html#ace2133a9873675fbd66fb563b07cfaa9',1,'symmetri::Petri']]]
+  ['isdirecttransition_0',['isDirectTransition',['../namespacesymmetri.html#ae2d32143fe0006093a26a831bb23b631',1,'symmetri::isDirectTransition(const T &amp;)'],['../namespacesymmetri.html#a0b12ab84f3390d6eb4d9788362ef6a8a',1,'symmetri::isDirectTransition(const Application &amp;)']]]
 ];

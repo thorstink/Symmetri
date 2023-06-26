@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['registertransitioncallback_0',['registerTransitionCallback',['../classsymmetri_1_1Application.html#ad603de92cabf52f364d50464df4a705d',1,'symmetri::Application']]],
-  ['reuseapplication_1',['reuseApplication',['../classsymmetri_1_1Application.html#abac1ad0691f6cd6111c942e6b7527424',1,'symmetri::Application']]],
-  ['run_2',['run',['../structsymmetri_1_1Petri.html#a3af89a04c50cf0b0458fb73587b16805',1,'symmetri::Petri']]]
+  ['markingequality_0',['MarkingEquality',['../namespacesymmetri.html#a663f9de17f04a2b8e0d290e47e1dc92d',1,'symmetri']]],
+  ['markingreached_1',['MarkingReached',['../namespacesymmetri.html#a418009feff8440061b68e708f273021b',1,'symmetri']]],
+  ['model_2',['Model',['../structsymmetri_1_1Model.html#a8a4aea252282d635407624c8eb6a99bc',1,'symmetri::Model']]]
 ];
