@@ -32,7 +32,7 @@ Store store = {{"foo", &foo}, {"bar", &bar}};
 PriorityTable priority = {};
 Marking m0 = {{"Z", 1}, {"B", 0}, {"C", 0}};
 StoppablePool stp(1);
-symmetri::Application app(net, m0, {}, store, priority,
+symmetri::PetriNet app(net, m0, {}, store, priority,
                           "test_net_without_end", stp);
 auto [eventlog, res] = app.run(); // run until done.
 ```

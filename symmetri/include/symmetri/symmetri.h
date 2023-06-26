@@ -19,7 +19,7 @@ namespace symmetri {
 using Store = std::unordered_map<Transition, PolyTransition>;
 
 /**
- * @brief Forward declaration for the implementation of the Application class.
+ * @brief Forward declaration for the implementation of the PetriNet class.
  * This is used to hide implementation from the end-user and speed up
  * compilation times.
  *
@@ -27,23 +27,23 @@ using Store = std::unordered_map<Transition, PolyTransition>;
 struct Petri;
 
 /**
- * @brief The Application class is a class that can create, configure and
+ * @brief The PetriNet class is a class that can create, configure and
  * run a Petri net.
  *
  */
-class Application final {
+class PetriNet final {
  private:
   std::shared_ptr<Petri> impl;  ///< Pointer to the implementation, all
                                 ///< information is stored in Petri
   std::function<void(const std::string &)>
-      register_functor;  ///< At Application construction this function is
+      register_functor;  ///< At PetriNet construction this function is
                          ///< created. It can be used to assign a trigger to
                          ///< transitions - allowing the user to invoke a
                          ///< transition without meeting the pre-conditions.
 
  public:
   /**
-   * @brief Construct a new Application object from a set of paths to pnml-files
+   * @brief Construct a new PetriNet object from a set of paths to pnml-files
    *
    * @param path_to_pnml
    * @param final_marking
@@ -52,13 +52,13 @@ class Application final {
    * @param case_id
    * @param stp
    */
-  Application(const std::set<std::string> &path_to_pnml,
-              const Marking &final_marking, const Store &store,
-              const PriorityTable &priority, const std::string &case_id,
-              std::shared_ptr<TaskSystem> stp);
+  PetriNet(const std::set<std::string> &path_to_pnml,
+           const Marking &final_marking, const Store &store,
+           const PriorityTable &priority, const std::string &case_id,
+           std::shared_ptr<TaskSystem> stp);
 
   /**
-   * @brief Construct a new Application object from a set of paths to
+   * @brief Construct a new PetriNet object from a set of paths to
    * grml-files. Grml fils already have priority, so they are not needed.
    *
    * @param path_to_grml
@@ -67,12 +67,12 @@ class Application final {
    * @param case_id
    * @param stp
    */
-  Application(const std::set<std::string> &path_to_grml,
-              const Marking &final_marking, const Store &store,
-              const std::string &case_id, std::shared_ptr<TaskSystem> stp);
+  PetriNet(const std::set<std::string> &path_to_grml,
+           const Marking &final_marking, const Store &store,
+           const std::string &case_id, std::shared_ptr<TaskSystem> stp);
 
   /**
-   * @brief Construct a new Application object from a net and initial marking
+   * @brief Construct a new PetriNet object from a net and initial marking
    *
    * @param net
    * @param m0
@@ -82,9 +82,9 @@ class Application final {
    * @param case_id
    * @param stp
    */
-  Application(const Net &net, const Marking &m0, const Marking &final_marking,
-              const Store &store, const PriorityTable &priority,
-              const std::string &case_id, std::shared_ptr<TaskSystem> stp);
+  PetriNet(const Net &net, const Marking &m0, const Marking &final_marking,
+           const Store &store, const PriorityTable &priority,
+           const std::string &case_id, std::shared_ptr<TaskSystem> stp);
 
   /**
    * @brief This executes the net, like a transition, it returns a result.
@@ -178,14 +178,14 @@ class Application final {
   void resume() const noexcept;
 };
 
-Result fire(const Application &app) { return app.run(); };
+Result fire(const PetriNet &app) { return app.run(); };
 
-Result cancel(const Application &app) { return app.cancel(); }
+Result cancel(const PetriNet &app) { return app.cancel(); }
 
-bool isDirect(const Application &) { return false; };
+bool isDirect(const PetriNet &) { return false; };
 
-void pause(const Application &app) { return app.pause(); };
+void pause(const PetriNet &app) { return app.pause(); };
 
-void resume(const Application &app) { return app.resume(); };
+void resume(const PetriNet &app) { return app.resume(); };
 
 }  // namespace symmetri

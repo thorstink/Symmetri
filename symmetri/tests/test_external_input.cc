@@ -20,8 +20,8 @@ TEST_CASE("Test external input.") {
   Marking final_m = {{"Pb", 2}};
   auto stp = std::make_shared<TaskSystem>(3);
 
-  symmetri::Application app(net, m0, final_m, store, {}, "test_net_ext_input",
-                            stp);
+  symmetri::PetriNet app(net, m0, final_m, store, {}, "test_net_ext_input",
+                         stp);
 
   // enqueue a trigger;
   stp->push([trigger = app.registerTransitionCallback("t0")]() {

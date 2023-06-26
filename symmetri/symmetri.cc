@@ -275,11 +275,10 @@ create(const Net &net, const Marking &m0, const Marking &final_marking,
       }};
 }
 
-Application::Application(const std::set<std::string> &files,
-                         const Marking &final_marking, const Store &store,
-                         const PriorityTable &priorities,
-                         const std::string &case_id,
-                         std::shared_ptr<TaskSystem> stp) {
+PetriNet::PetriNet(const std::set<std::string> &files,
+                   const Marking &final_marking, const Store &store,
+                   const PriorityTable &priorities, const std::string &case_id,
+                   std::shared_ptr<TaskSystem> stp) {
   const auto [net, m0] = readPnml(files);
   if (areAllTransitionsInStore(store, net)) {
     std::tie(impl, register_functor) =
@@ -287,10 +286,10 @@ Application::Application(const std::set<std::string> &files,
   }
 }
 
-Application::Application(const std::set<std::string> &files,
-                         const Marking &final_marking, const Store &store,
-                         const std::string &case_id,
-                         std::shared_ptr<TaskSystem> stp) {
+PetriNet::PetriNet(const std::set<std::string> &files,
+                   const Marking &final_marking, const Store &store,
+                   const std::string &case_id,
+                   std::shared_ptr<TaskSystem> stp) {
   const auto [net, m0, priorities] = readGrml(files);
   if (areAllTransitionsInStore(store, net)) {
     std::tie(impl, register_functor) =
@@ -298,18 +297,17 @@ Application::Application(const std::set<std::string> &files,
   }
 }
 
-Application::Application(const Net &net, const Marking &m0,
-                         const Marking &final_marking, const Store &store,
-                         const PriorityTable &priorities,
-                         const std::string &case_id,
-                         std::shared_ptr<TaskSystem> stp) {
+PetriNet::PetriNet(const Net &net, const Marking &m0,
+                   const Marking &final_marking, const Store &store,
+                   const PriorityTable &priorities, const std::string &case_id,
+                   std::shared_ptr<TaskSystem> stp) {
   if (areAllTransitionsInStore(store, net)) {
     std::tie(impl, register_functor) =
         create(net, m0, final_marking, store, priorities, case_id, stp);
   }
 }
 
-bool Application::tryFireTransition(const Transition &t) const noexcept {
+bool PetriNet::tryFireTransition(const Transition &t) const noexcept {
   if (impl == nullptr) {
     return false;
   }
@@ -320,7 +318,7 @@ bool Application::tryFireTransition(const Transition &t) const noexcept {
   return impl->m.fire(t, impl->reducers, impl->stp, "manual");
 };
 
-Result Application::run() const noexcept {
+Result PetriNet::run() const noexcept {
   if (impl == nullptr) {
     spdlog::error("Something went seriously wrong. Please send a bug report.");
     return {{}, State::Error};
@@ -335,25 +333,23 @@ Result Application::run() const noexcept {
   }
 }
 
-Eventlog Application::getEventLog() const noexcept {
-  return impl->getEventLog();
-};
+Eventlog PetriNet::getEventLog() const noexcept { return impl->getEventLog(); };
 
-std::pair<std::vector<Transition>, std::vector<Place>> Application::getState()
+std::pair<std::vector<Transition>, std::vector<Place>> PetriNet::getState()
     const noexcept {
   return impl->getState();
 }
 
-std::vector<Transition> Application::getFireableTransitions() const noexcept {
+std::vector<Transition> PetriNet::getFireableTransitions() const noexcept {
   return impl->getFireableTransitions();
 };
 
-std::function<void()> Application::registerTransitionCallback(
+std::function<void()> PetriNet::registerTransitionCallback(
     const Transition &transition) const noexcept {
   return [transition, this] { register_functor(transition); };
 }
 
-Result Application::cancel() const noexcept {
+Result PetriNet::cancel() const noexcept {
   const auto maybe_thread_id = impl->thread_id_.load();
   if (maybe_thread_id && maybe_thread_id.value() != getThreadId() &&
       !impl->early_exit.load()) {
@@ -381,11 +377,11 @@ Result Application::cancel() const noexcept {
   return {getEventLog(), State::UserExit};
 }
 
-void Application::pause() const noexcept { impl->pause(); }
+void PetriNet::pause() const noexcept { impl->pause(); }
 
-void Application::resume() const noexcept { impl->resume(); }
+void PetriNet::resume() const noexcept { impl->resume(); }
 
-bool Application::reuseApplication(const std::string &new_case_id) {
+bool PetriNet::reuseApplication(const std::string &new_case_id) {
   return impl->reset(new_case_id);
 }
 
