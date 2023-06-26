@@ -16,7 +16,7 @@ int main(int, char *argv[]) {
   auto pnml2 = std::string(argv[2]);
   auto pnml3 = std::string(argv[3]);
 
-  auto pool = symmetri::createStoppablePool(4);
+  auto pool = std::make_shared<symmetri::TaskSystem>(4);
 
   symmetri::Marking final_marking2 = {{"P2", 1}};
   symmetri::Store s2 = {{"T0", std::make_shared<Foo>("SubFoo")},
@@ -41,9 +41,18 @@ int main(int, char *argv[]) {
     cancelTransition(bignet);
   };
 
-  auto [el, result] = fireTransition(bignet);  // infinite loop
+  auto t = std::thread([&] {
+    std::this_thread::sleep_for(std::chrono::seconds(6));
+    const auto el = bignet.getEventLog();
+    for (const auto &[caseid, t, s, c] : el) {
+      spdlog::info("EventLog: {0}, {1}, {2}, {3}", caseid, t, printState(s),
+                   c.time_since_epoch().count());
+    }
+  });
 
-  auto el2 = bignet.getEventLog();
+  auto [el, result] = fireTransition(bignet);  // infinite loop
+  t.join();
+
   spdlog::info("Result of this net: {0}", printState(result));
 
   for (const auto &[caseid, t, s, c] : el) {

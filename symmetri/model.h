@@ -3,18 +3,24 @@
 
 #include <chrono>
 #include <functional>
-#include <map>
 #include <memory>
-#include <set>
-#include <tuple>
 
 #include "small_vector.hpp"
-#include "symmetri/symmetri.h"
+#include "symmetri/polyaction.h"
+#include "symmetri/tasks.h"
+#include "symmetri/types.h"
+
 namespace symmetri {
 
 using SmallVector = gch::small_vector<size_t, 4>;
+using Store = std::unordered_map<Transition, PolyAction>;
 
 size_t toIndex(const std::vector<std::string> &m, const std::string &s);
+gch::small_vector<uint8_t, 32> possibleTransitions(
+    const std::vector<size_t> &tokens,
+    const std::vector<SmallVector> &p_to_ts_n,
+    const std::vector<int8_t> &priorities);
+bool canFire(const SmallVector &pre, const std::vector<size_t> &tokens);
 
 struct Model;
 using Reducer = std::function<Model &(Model &&)>;
@@ -42,9 +48,15 @@ struct Model {
    * @param priority
    * @param M0
    */
-  Model(const Net &net, const Store &store,
-        const PriorityTable &priority,
-        const Marking &M0);
+  explicit Model(const Net &net, const Store &store,
+                 const PriorityTable &priority, const Marking &M0);
+  ~Model() noexcept = default;
+  Model(Model const &) = delete;
+  Model(Model &&) noexcept = delete;
+  Model &operator=(Model const &) = default;
+  Model &operator=(Model &&) noexcept = default;
+
+  std::vector<size_t> toTokens(const Marking &marking) const noexcept;
 
   /**
    * @brief Get the current marking. It is represented by a vector of places:
@@ -68,8 +80,8 @@ struct Model {
   std::vector<Transition> getActiveTransitions() const;
 
   /**
-   * @brief Gives a list of transitions that are fireable given the marking at
-   * the time of calling this function.
+   * @brief Gives a list of unique transitions that are fireable given the
+   * marking at the time of calling this function, sorted by priority.
    *
    * @return std::vector<Transition>
    */
@@ -98,7 +110,7 @@ struct Model {
       const Transition &t,
       const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
           &reducers,
-      const StoppablePool &polymorphic_actions,
+      std::shared_ptr<TaskSystem> polymorphic_actions,
       const std::string &case_id = "undefined_case_id");
 
   /**
@@ -114,11 +126,8 @@ struct Model {
   void fireTransitions(
       const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
           &reducers,
-      const StoppablePool &polymorphic_actions, bool run_all = true,
+      std::shared_ptr<TaskSystem> polymorphic_actions, bool run_all = true,
       const std::string &case_id = "undefined_case_id");
-
-  Model &operator=(const Model &) { return *this; }
-  Model(const Model &) = delete;
 
   struct {
     std::vector<Transition>
@@ -145,8 +154,8 @@ struct Model {
   std::vector<size_t> initial_tokens;        ///< The intial marking
   std::vector<size_t> tokens_n;              ///< The current marking
   std::vector<size_t> active_transitions_n;  ///< List of active transitions
-  clock_s::time_point timestamp;  ///< Timestamp of latest marking mutation
-  Eventlog event_log;             ///< The most actual event_log
+  Clock::time_point timestamp;  ///< Timestamp of latest marking mutation
+  Eventlog event_log;           ///< The most actual event_log
 
  private:
   /**
@@ -159,11 +168,11 @@ struct Model {
    * @return true if the transition fired.
    * @return false if it did not fire.
    */
-  bool tryFire(
-      const size_t t,
-      const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
-          &reducers,
-      const StoppablePool &polymorphic_actions, const std::string &case_id);
+  bool Fire(const size_t t,
+            const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
+                &reducers,
+            std::shared_ptr<TaskSystem> polymorphic_actions,
+            const std::string &case_id);
 };
 
 }  // namespace symmetri

@@ -5,6 +5,55 @@
 namespace symmetri {
 
 /**
+ * @brief Checks if the transition-function can be invoked.
+ *
+ * @tparam T The type of the transition.
+ * @return true The pre- and post-marking-mutation can happen instantly.
+ * @return false The pre-marking mutation happens instantly and the
+ * post-marking-mutation should only happen after the transition is invoked.
+ */
+template <typename T>
+bool isDirectTransition(const T &) {
+  return !std::is_invocable_v<T>;
+}
+
+/**
+ * @brief The default cancel implementation is naive. It only returns a
+ * user-exit state and does nothing to the actual transition itself, and it will
+ * still complete. Its' reducer however is never processed.
+ *
+ * @tparam T
+ * @return Result
+ */
+template <typename T>
+Result cancelTransition(const T &) {
+  return {{}, State::UserExit};
+}
+
+/**
+ * @brief Generates a Result based on what kind of information the
+ * transition-function returns.
+ *
+ * @tparam T The transition-function type.
+ * @param transition The function to be executed.
+ * @return Result Contains information on the result-state and
+ * possible eventlog of the transition.
+ */
+template <typename T>
+Result fireTransition(const T &transition) {
+  if constexpr (!std::is_invocable_v<T>) {
+    return {{}, State::Completed};
+  } else if constexpr (std::is_same_v<State, decltype(transition())>) {
+    return {{}, transition()};
+  } else if constexpr (std::is_same_v<Result, decltype(transition())>) {
+    return transition();
+  } else {
+    transition();
+    return {{}, State::Completed};
+  }
+}
+
+/**
  * @brief PolyAction is a wrapper around any type that you want to tie to a
  * transition. Typically this is an invokable object, such as a function, that
  * executes some side-effects. The output of the invokable object can be used to
@@ -72,4 +121,5 @@ class PolyAction {
 
   std::shared_ptr<const concept_t> self_;
 };
+
 }  // namespace symmetri

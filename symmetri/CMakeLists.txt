@@ -20,9 +20,10 @@ include_directories(include submodules)
 
 #lib
 add_library(${PROJECT_NAME} SHARED
-  actions.cpp
+  tasks.cpp
   symmetri.cc
   model.cc
+  model_utilities.cc
   pnml_parser.cc
   grml_parser.cc
   types.cpp

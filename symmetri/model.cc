@@ -2,170 +2,101 @@
 
 namespace symmetri {
 
-size_t toIndex(const std::vector<std::string> &m, const std::string &s) {
-  auto ptr = std::find(m.begin(), m.end(), s);
-  return std::distance(m.begin(), ptr);
-}
-
-Reducer processTransition(size_t t_i, const std::string &case_id, State result,
-                          clock_s::time_point end_time) {
-  return [=](Model &&model) -> Model & {
-    if (result == State::Completed) {
-      const auto &place_list = model.net.output_n;
-      model.tokens_n.insert(model.tokens_n.begin(), place_list[t_i].begin(),
-                            place_list[t_i].end());
-    }
-
-    model.event_log.push_back(
-        {case_id, model.net.transition[t_i],
-         result == State::Completed ? State::Completed : State::Error,
-         end_time});
-
-    // we know for sure this transition is active because otherwise it wouldn't
-    // produce a reducer.
-    model.active_transitions_n.erase(
-        std::find(model.active_transitions_n.begin(),
-                  model.active_transitions_n.end(), t_i));
-    return model;
-  };
-}
-
-Reducer processTransition(size_t t_i, const Eventlog &new_events,
-                          State result) {
-  return [=, ev = std::move(new_events)](Model &&model) mutable -> Model & {
-    if (result == State::Completed) {
-      const auto &place_list = model.net.output_n;
-      model.tokens_n.insert(model.tokens_n.begin(), place_list[t_i].begin(),
-                            place_list[t_i].end());
-    }
-    model.event_log.insert(model.event_log.end(), ev.begin(), ev.end());
-    // we know for sure this transition is active because otherwise it wouldn't
-    // produce a reducer.
-    model.active_transitions_n.erase(
-        std::find(model.active_transitions_n.begin(),
-                  model.active_transitions_n.end(), t_i));
-
-    return model;
-  };
-}
-
-Reducer createReducerForTransition(
-    size_t t_i, const PolyAction &task, const std::string &case_id,
-    const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
-        &reducers) {
-  const auto start_time = clock_s::now();
-  reducers->enqueue([=](Model &&model) -> Model & {
-    model.event_log.push_back(
-        {case_id, model.net.transition[t_i], State::Started, start_time});
-    return model;
-  });
-
-  const auto [ev, res] = fireTransition(task);
-  const auto end_time = clock_s::now();
-
-  return ev.empty() ? processTransition(t_i, case_id, res, end_time)
-                    : processTransition(t_i, ev, res);
-}
-
-bool canFire(const SmallVector &pre, const std::vector<size_t> &tokens) {
-  return std::all_of(pre.begin(), pre.end(), [&](const auto &m_p) {
-    return std::count(tokens.begin(), tokens.end(), m_p) >=
-           std::count(pre.begin(), pre.end(), m_p);
-  });
-};
-
-gch::small_vector<uint8_t, 32> possibleTransitions(
-    const std::vector<size_t> &tokens,
-    const std::vector<SmallVector> &p_to_ts_n,
-    const std::vector<int8_t> &priorities) {
-  gch::small_vector<uint8_t, 32> possible_transition_list_n;
-  for (const size_t place : tokens) {
-    for (size_t t : p_to_ts_n[place]) {
-      if (std::find(possible_transition_list_n.begin(),
-                    possible_transition_list_n.end(),
-                    t) == possible_transition_list_n.end()) {
-        possible_transition_list_n.push_back(t);
-      }
-    }
-  }
-
-  // sort transition list according to priority
-  std::sort(possible_transition_list_n.begin(),
-            possible_transition_list_n.end(),
-            [&](size_t a, size_t b) { return priorities[a] > priorities[b]; });
-
-  return possible_transition_list_n;
-}
-
-Model::Model(
-    const Net &_net, const Store &store,
-    const PriorityTable &_priority,
-    const Marking &M0)
-    : timestamp(clock_s::now()), event_log({}) {
-  // reserve arbitrary eventlog space.
-  event_log.reserve(1000);
-  // populate net:
+std::tuple<std::vector<Transition>, std::vector<Place>, std::vector<PolyAction>>
+convert(const Net &_net, const Store &_store) {
   const auto transition_count = _net.size();
-  net.transition.reserve(transition_count);
-  net.store.reserve(transition_count);
+  std::vector<Transition> transitions;
+  std::vector<Place> places;
+  std::vector<PolyAction> store;
+  transitions.reserve(transition_count);
+  store.reserve(transition_count);
   for (const auto &[t, io] : _net) {
-    net.transition.push_back(t);
-    net.store.push_back(store.at(t));
+    transitions.push_back(t);
+    store.push_back(_store.at(t));
     for (const auto &p : io.first) {
-      net.place.push_back(p);
+      places.push_back(p);
     }
     for (const auto &p : io.second) {
-      net.place.push_back(p);
+      places.push_back(p);
     }
-  }
-  {
     // sort and remove duplicates.
-    std::sort(net.place.begin(), net.place.end());
-    auto last = std::unique(net.place.begin(), net.place.end());
-    net.place.erase(last, net.place.end());
+    std::sort(places.begin(), places.end());
+    auto last = std::unique(places.begin(), places.end());
+    places.erase(last, places.end());
   }
-  {
-    for (const auto &[t, io] : _net) {
-      SmallVector q;
-      for (const auto &p : io.first) {
-        q.push_back(toIndex(net.place, p));
-      }
-      net.input_n.push_back(q);
-      q.clear();
-      for (const auto &p : io.second) {
-        q.push_back(toIndex(net.place, p));
-      }
-      net.output_n.push_back(q);
+  return {transitions, places, store};
+}
+
+std::tuple<std::vector<symmetri::SmallVector>,
+           std::vector<symmetri::SmallVector>>
+populateIoLookups(const Net &_net, const std::vector<Place> &ordered_places) {
+  std::vector<symmetri::SmallVector> input_n, output_n;
+  for (const auto &[t, io] : _net) {
+    SmallVector q;
+    for (const auto &p : io.first) {
+      q.push_back(toIndex(ordered_places, p));
     }
+    input_n.push_back(q);
+    q.clear();
+    for (const auto &p : io.second) {
+      q.push_back(toIndex(ordered_places, p));
+    }
+    output_n.push_back(q);
   }
-  {
-    for (size_t p = 0; p < net.place.size(); p++) {
-      SmallVector p_to_ts_n;
-      for (size_t c = 0; c < transition_count; c++) {
-        for (const auto &input_place : net.input_n[c]) {
-          if (p == input_place && std::find(p_to_ts_n.begin(), p_to_ts_n.end(),
-                                            c) == p_to_ts_n.end()) {
-            p_to_ts_n.push_back(c);
-          }
+  return {input_n, output_n};
+}
+
+std::vector<symmetri::SmallVector> createReversePlaceToTransitionLookup(
+    size_t place_count, size_t transition_count,
+    const std::vector<symmetri::SmallVector> &input_transitions) {
+  std::vector<symmetri::SmallVector> p_to_ts_n;
+  for (size_t p = 0; p < place_count; p++) {
+    SmallVector q;
+    for (size_t c = 0; c < transition_count; c++) {
+      for (const auto &input_place : input_transitions[c]) {
+        if (p == input_place && std::find(q.begin(), q.end(), c) == q.end()) {
+          q.push_back(c);
         }
       }
-      net.p_to_ts_n.push_back(p_to_ts_n);
     }
+    p_to_ts_n.push_back(q);
   }
+  return p_to_ts_n;
+}
 
-  for (const auto &t : net.transition) {
+std::vector<int8_t> createPriorityLookup(
+    const std::vector<Transition> transition, const PriorityTable &_priority) {
+  std::vector<int8_t> priority;
+  for (const auto &t : transition) {
     auto ptr = std::find_if(_priority.begin(), _priority.end(),
                             [t](const auto &a) { return a.first == t; });
-    net.priority.push_back(ptr != _priority.end() ? ptr->second : 0);
+    priority.push_back(ptr != _priority.end() ? ptr->second : 0);
   }
+  return priority;
+}
 
-  // populate initial marking
-  for (auto [place, c] : M0) {
+Model::Model(const Net &_net, const Store &store,
+             const PriorityTable &_priority, const Marking &M0)
+    : timestamp(Clock::now()), event_log({}) {
+  // reserve arbitrary eventlog space.
+  event_log.reserve(1000);
+  std::tie(net.transition, net.place, net.store) = convert(_net, store);
+  std::tie(net.input_n, net.output_n) = populateIoLookups(_net, net.place);
+  net.p_to_ts_n = createReversePlaceToTransitionLookup(
+      net.place.size(), net.transition.size(), net.input_n);
+  net.priority = createPriorityLookup(net.transition, _priority);
+  initial_tokens = toTokens(M0);
+  tokens_n = initial_tokens;
+}
+
+std::vector<size_t> Model::toTokens(const Marking &marking) const noexcept {
+  std::vector<size_t> tokens;
+  for (const auto &[p, c] : marking) {
     for (int i = 0; i < c; i++) {
-      initial_tokens.push_back(toIndex(net.place, place));
+      tokens.push_back(toIndex(net.place, p));
     }
   }
-  tokens_n = initial_tokens;
+  return tokens;
 }
 
 std::vector<Transition> Model::getFireableTransitions() const {
@@ -173,10 +104,6 @@ std::vector<Transition> Model::getFireableTransitions() const {
       possibleTransitions(tokens_n, net.p_to_ts_n, net.priority);
   std::vector<Transition> fireable_transitions;
   fireable_transitions.reserve(possible_transition_list_n.size());
-  std::sort(possible_transition_list_n.begin(),
-            possible_transition_list_n.end());
-  std::unique(possible_transition_list_n.begin(),
-              possible_transition_list_n.end());
   for (const size_t t_idx : possible_transition_list_n) {
     const auto &pre = net.input_n[t_idx];
     if (canFire(pre, tokens_n)) {
@@ -186,44 +113,40 @@ std::vector<Transition> Model::getFireableTransitions() const {
   return fireable_transitions;
 }
 
-bool Model::tryFire(
+bool Model::Fire(
     const size_t t,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers,
-    const StoppablePool &pool, const std::string &case_id) {
+    std::shared_ptr<TaskSystem> pool, const std::string &case_id) {
   const auto &pre = net.input_n[t];
 
-  if (canFire(pre, tokens_n)) {
-    timestamp = clock_s::now();
-    // deduct the marking
-    for (const size_t place : pre) {
-      // erase one by one. using std::remove_if would remove all tokens at
-      // a particular place.
-      tokens_n.erase(std::find(tokens_n.begin(), tokens_n.end(), place));
-    }
+  timestamp = Clock::now();
+  // deduct the marking
+  for (const size_t place : pre) {
+    // erase one by one. using std::remove_if would remove all tokens at
+    // a particular place.
+    tokens_n.erase(std::find(tokens_n.begin(), tokens_n.end(), place));
+  }
 
-    const auto &task = net.store[t];
+  const auto &task = net.store[t];
 
-    // if the transition is direct, we short-circuit the
-    // marking mutation and do it immediately.
-    if (isDirectTransition(task)) {
-      tokens_n.insert(tokens_n.begin(), net.output_n[t].begin(),
-                      net.output_n[t].end());
-      event_log.push_back(
-          {case_id, net.transition[t], State::Started, timestamp});
-      event_log.push_back(
-          {case_id, net.transition[t], State::Completed, timestamp});
-    } else {
-      active_transitions_n.push_back(t);
-      event_log.push_back(
-          {case_id, net.transition[t], State::Scheduled, timestamp});
-      pool.enqueue([=] {
-        reducers->enqueue(
-            createReducerForTransition(t, task, case_id, reducers));
-      });
-    }
+  // if the transition is direct, we short-circuit the
+  // marking mutation and do it immediately.
+  if (isDirectTransition(task)) {
+    tokens_n.insert(tokens_n.begin(), net.output_n[t].begin(),
+                    net.output_n[t].end());
+    event_log.push_back(
+        {case_id, net.transition[t], State::Started, timestamp});
+    event_log.push_back(
+        {case_id, net.transition[t], State::Completed, timestamp});
     return true;
   } else {
+    active_transitions_n.push_back(t);
+    event_log.push_back(
+        {case_id, net.transition[t], State::Scheduled, timestamp});
+    pool->push([=] {
+      reducers->enqueue(createReducerForTransition(t, task, case_id, reducers));
+    });
     return false;
   }
 }
@@ -232,35 +155,49 @@ bool Model::fireTransition(
     const Transition &t,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers,
-    const StoppablePool &pool, const std::string &case_id) {
+    std::shared_ptr<TaskSystem> pool, const std::string &case_id) {
   auto it = std::find(net.transition.begin(), net.transition.end(), t);
   return it != net.transition.end() &&
-         tryFire(std::distance(net.transition.begin(), it), reducers, pool,
-                 case_id);
+         canFire(net.input_n[std::distance(net.transition.begin(), it)],
+                 tokens_n) &&
+         !Fire(std::distance(net.transition.begin(), it), reducers, pool,
+               case_id);
 }
 
 void Model::fireTransitions(
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers,
-    const StoppablePool &pool, bool run_all, const std::string &case_id) {
+    std::shared_ptr<TaskSystem> pool, bool run_all,
+    const std::string &case_id) {
   // find possible transitions
   auto possible_transition_list_n =
       possibleTransitions(tokens_n, net.p_to_ts_n, net.priority);
-  // fire possible transitions
-  for (size_t i = 0;
-       i < possible_transition_list_n.size() && tokens_n.size() > 0; ++i) {
-    size_t t = possible_transition_list_n[i];
-    if (tryFire(t, reducers, pool, case_id)) {
-      if (run_all) {
-        // reset counter & update possible fire-list
-        i = -1;  // minus 1 because it gets incremented by the for loop
-        possible_transition_list_n =
-            possibleTransitions(tokens_n, net.p_to_ts_n, net.priority);
-      } else {
-        break;
-      }
-    }
+  auto filter_transitions = [&](const auto &tokens) {
+    possible_transition_list_n.erase(
+        std::remove_if(
+            possible_transition_list_n.begin(),
+            possible_transition_list_n.end(),
+            [&](auto t_idx) { return !canFire(net.input_n[t_idx], tokens); }),
+        possible_transition_list_n.end());
+  };
+
+  // remove transitions that are not fireable;
+  filter_transitions(tokens_n);
+
+  if (possible_transition_list_n.empty()) {
+    return;
   }
+
+  do {
+    // if Fire returns true, update the possible transition list
+    if (Fire(possible_transition_list_n.front(), reducers, pool, case_id)) {
+      possible_transition_list_n =
+          possibleTransitions(tokens_n, net.p_to_ts_n, net.priority);
+    }
+    // remove transitions that are not fireable;
+    filter_transitions(tokens_n);
+  } while (run_all && !possible_transition_list_n.empty());
+
   return;
 }
 

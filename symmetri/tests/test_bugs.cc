@@ -27,9 +27,7 @@ void t() {
   });
 }
 
-std::tuple<Net, Store, PriorityTable,
-           Marking>
-testNet() {
+std::tuple<Net, Store, PriorityTable, Marking> testNet() {
   Net net = {{"t", {{"Pa"}, {"Pb"}}}};
   Store store = {{"t", &t}};
   PriorityTable priority;
@@ -43,9 +41,9 @@ TEST_CASE("Firing the same transition before it can complete should work") {
 
   auto reducers =
       std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(4);
-  auto stp = createStoppablePool(2);
+  auto stp = std::make_shared<TaskSystem>(2);
   REQUIRE(m.active_transitions_n.empty());
-  m.fireTransitions(reducers, *stp, true);
+  m.fireTransitions(reducers, stp, true);
   REQUIRE(m.getMarking().empty());
   CHECK(m.getActiveTransitions() ==
         std::vector<symmetri::Transition>{"t", "t"});

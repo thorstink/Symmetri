@@ -1,25 +1,25 @@
 #pragma once
 #include <chrono>
-#include <map>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 namespace symmetri {
+
 using Place = std::string;
 using Transition = std::string;
-using clock_s = std::chrono::steady_clock;
+using Clock = std::chrono::steady_clock;
 
 /**
  * @brief The difference kinds of results a transition can have.
  *
  */
 enum class State {
-  Scheduled,  ///< The transition is put into the transition queue
+  Scheduled,  ///< The transition is put into the task system
   Started,    ///< The transition started
   Completed,  ///< The transition completed as expected
   Deadlock,   ///< The transition deadlocked (applies to  petri nets)
-  UserExit,   ///< The transition or interupted and possibly stopped
+  UserExit,   ///< The transition or interrupted and possibly stopped
   Error       ///< None of the above
 };
 
@@ -29,11 +29,11 @@ enum class State {
  *
  */
 struct Event {
-  std::string case_id;        ///< The case_id of this event
-  std::string transition;     ///< The transition that generated the event
-  State state;                ///< The resulting state of the event
-  clock_s::time_point stamp;  ///< The timestamp when the reducer of this
-                              ///< event was processed (not generated/occured)
+  std::string case_id;      ///< The case_id of this event
+  std::string transition;   ///< The transition that generated the event
+  State state;              ///< The resulting state of the event
+  Clock::time_point stamp;  ///< The timestamp when the reducer of this
+                            ///< event was processed
 };
 
 using Eventlog = std::vector<Event>;
@@ -43,47 +43,6 @@ using Net =
                        std::pair<std::vector<Place>, std::vector<Place>>>;
 using Marking = std::unordered_map<Place, uint16_t>;
 using PriorityTable = std::vector<std::pair<Transition, int8_t>>;
-
-/**
- * @brief Checks if the transition-function can be invoked.
- *
- * @tparam T The type of the transition.
- * @return true The pre- and post-marking-mutation can happen instantly.
- * @return false The pre-marking mutation happens instantly and the
- * post-marking-mutation should only happen after the transition is invoked.
- */
-template <typename T>
-bool isDirectTransition(const T&) {
-  return !std::is_invocable_v<T>;
-}
-
-template <typename T>
-Result cancelTransition(const T&) {
-  return {{}, State::UserExit};
-}
-
-/**
- * @brief Generates a Result based on what kind of information the
- * transition-function returns.
- *
- * @tparam T The transition-function type.
- * @param transition The function to be executed.
- * @return Result Contains information on the result-state and
- * possible eventlog of the transition.
- */
-template <typename T>
-Result fireTransition(const T& transition) {
-  if constexpr (!std::is_invocable_v<T>) {
-    return {{}, State::Completed};
-  } else if constexpr (std::is_same_v<State, decltype(transition())>) {
-    return {{}, transition()};
-  } else if constexpr (std::is_same_v<Result, decltype(transition())>) {
-    return transition();
-  } else {
-    transition();
-    return {{}, State::Completed};
-  }
-}
 
 /**
  * @brief Checks if the markings are exactly the same. Note that this uses a
@@ -132,4 +91,25 @@ bool MarkingReached(const std::vector<T>& marking,
  * @return false
  */
 bool stateNetEquality(const Net& net1, const Net& net2);
+
+/**
+ * @brief Calculates a hash given an event log. This hash is only influenced by
+ * the order of the completions of transitions and if the output of those
+ * transitions is Completed, or something else.
+ *
+ * @param event_log An eventlog, can both be from a terminated or a still active
+ * net.
+ * @return size_t The hashed result.
+ */
+size_t calculateTrace(const Eventlog& event_log) noexcept;
+
+/**
+ * @brief A convenience function to get a string representation of the
+ * state-enum.
+ *
+ * @param s The State
+ * @return std::string The State as a human readable string.
+ */
+std::string printState(State s) noexcept;
+
 }  // namespace symmetri

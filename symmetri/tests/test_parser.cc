@@ -2,8 +2,7 @@
 #include <filesystem>
 #include <iostream>
 
-#include "symmetri/grml_parser.h"
-#include "symmetri/pnml_parser.h"
+#include "symmetri/parsers.h"
 using namespace symmetri;
 
 TEST_CASE("Load p1.pnml net") {

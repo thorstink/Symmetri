@@ -1,10 +1,12 @@
-#include "symmetri/pnml_parser.h"
-
+#include <map>
 #include <stdexcept>
 
+#include "symmetri/parsers.h"
 #include "tinyxml2/tinyxml2.h"
+
 using namespace tinyxml2;
-using namespace symmetri;
+
+namespace symmetri {
 
 std::tuple<Net, Marking> readPnml(const std::set<std::string> &files) {
   std::set<std::string> places, transitions;
@@ -16,8 +18,8 @@ std::tuple<Net, Marking> readPnml(const std::set<std::string> &files) {
     net.LoadFile(file.c_str());
 
     XMLElement *levelElement = net.FirstChildElement("pnml")
-                                             ->FirstChildElement("net")
-                                             ->FirstChildElement("page");
+                                   ->FirstChildElement("net")
+                                   ->FirstChildElement("page");
 
     // loop places.
     for (XMLElement *child = levelElement->FirstChildElement("place");
@@ -35,8 +37,7 @@ std::tuple<Net, Marking> readPnml(const std::set<std::string> &files) {
     }
 
     // loop transitions
-    for (XMLElement *child =
-             levelElement->FirstChildElement("transition");
+    for (XMLElement *child = levelElement->FirstChildElement("transition");
          child != NULL; child = child->NextSiblingElement("transition")) {
       auto transition_id = child->Attribute("id");
       transitions.insert(transition_id);
@@ -83,3 +84,4 @@ std::tuple<Net, Marking> readPnml(const std::set<std::string> &files) {
 
   return {state_net, place_initialMarking};
 }
+}  // namespace symmetri

@@ -2,32 +2,13 @@
 
 #include <functional>
 #include <set>
+#include <unordered_map>
 
-#include "symmetri/actions.h"
 #include "symmetri/polyaction.h"
+#include "symmetri/tasks.h"
 #include "symmetri/types.h"
 
 namespace symmetri {
-
-/**
- * @brief Calculates a hash given an event log. This hash is only influenced by
- * the order of the completions of transitions and if the output of those
- * transitions is Completed, or something else.
- *
- * @param event_log An eventlog, can both be from a terminated or a still active
- * net.
- * @return size_t The hashed result.
- */
-size_t calculateTrace(const Eventlog &event_log) noexcept;
-
-/**
- * @brief A convenience function to get a string representation of the
- * state-enum.
- *
- * @param s The State
- * @return std::string The State as a human readable string.
- */
-std::string printState(State s) noexcept;
 
 /**
  * @brief A Store is a mapping from Transitions, represented by a string that is
@@ -35,10 +16,10 @@ std::string printState(State s) noexcept;
  * PolyTask may contain side-effects.
  *
  */
-using Store = std::map<Transition, PolyAction>;
+using Store = std::unordered_map<Transition, PolyAction>;
 
 /**
- * @brief Forward decleration for the implementation of the Application class.
+ * @brief Forward declaration for the implementation of the Application class.
  * This is used to hide implementation from the end-user and speed up
  * compilation times.
  *
@@ -47,7 +28,7 @@ struct Petri;
 
 /**
  * @brief The Application class is a class that can create, configure and
- * execute a Petri net.
+ * run a Petri net.
  *
  */
 class Application final {
@@ -74,10 +55,11 @@ class Application final {
   Application(const std::set<std::string> &path_to_pnml,
               const Marking &final_marking, const Store &store,
               const PriorityTable &priority, const std::string &case_id,
-              std::shared_ptr<const StoppablePool> stp);
+              std::shared_ptr<TaskSystem> stp);
 
   /**
-   * @brief Construct a new Application object from a set of paths to grml-files
+   * @brief Construct a new Application object from a set of paths to
+   * grml-files. Grml fils already have priority, so they are not needed.
    *
    * @param path_to_grml
    * @param final_marking
@@ -87,8 +69,7 @@ class Application final {
    */
   Application(const std::set<std::string> &path_to_grml,
               const Marking &final_marking, const Store &store,
-              const std::string &case_id,
-              std::shared_ptr<const StoppablePool> stp);
+              const std::string &case_id, std::shared_ptr<TaskSystem> stp);
 
   /**
    * @brief Construct a new Application object from a net and initial marking
@@ -103,8 +84,7 @@ class Application final {
    */
   Application(const Net &net, const Marking &m0, const Marking &final_marking,
               const Store &store, const PriorityTable &priority,
-              const std::string &case_id,
-              std::shared_ptr<const StoppablePool> stp);
+              const std::string &case_id, std::shared_ptr<TaskSystem> stp);
 
   /**
    * @brief This executes the net, like a transition, it returns a result.
@@ -112,7 +92,7 @@ class Application final {
    *
    * @return Result
    */
-  Result execute() const noexcept;
+  Result run() const noexcept;
 
   /**
    * @brief register transition gives a handle to manually force a transition to
@@ -190,7 +170,23 @@ class Application final {
  * @param app
  * @return Result
  */
-Result fireTransition(const Application &app);
-Result cancelTransition(const Application &app);
-bool isDirectTransition(const Application &app);
+Result fireTransition(const Application &app) { return app.run(); };
+
+/**
+ * @brief if the Petri net is nested, and its parent net tries to cancel the
+ * Petri net, it calls exitEarly.
+ *
+ * @param app
+ * @return Result
+ */
+Result cancelTransition(const Application &app) { return app.exitEarly(); }
+
+/**
+ * @brief obviously a Petri net is not a direct-transition
+ *
+ * @return true
+ * @return false
+ */
+bool isDirectTransition(const Application &) { return false; };
+
 }  // namespace symmetri
