@@ -16,7 +16,7 @@ namespace symmetri {
  * PolyTask may contain side-effects.
  *
  */
-using Store = std::unordered_map<Transition, PolyAction>;
+using Store = std::unordered_map<Transition, PolyTransition>;
 
 /**
  * @brief Forward declaration for the implementation of the Application class.
@@ -88,7 +88,7 @@ class Application final {
 
   /**
    * @brief This executes the net, like a transition, it returns a result.
-   * This is equal to calling `fireTransition(app)`.
+   * This is equal to calling `fire(app)`.
    *
    * @return Result
    */
@@ -149,44 +149,43 @@ class Application final {
   std::vector<Transition> getFireableTransitions() const noexcept;
 
   /**
-   * @brief exitEarly breaks the Petri net loop as soon as possible.
+   * @brief cancel breaks the Petri net loop and recursively tries to cancel all
+   * parent transitions
    *
    */
-  Result exitEarly() const noexcept;
+  Result cancel() const noexcept;
 
   /**
    * @brief reuseApplication resets the application such that the same net can
-   * be used again after an exitEarly call. You do need to supply a new case_id
+   * be used again after an cancel call. You do need to supply a new case_id
    * which must be different.
    *
    */
   bool reuseApplication(const std::string &case_id);
+
+  /**
+   * @brief pause prevents new transitions from being queued, even if their
+   * marking requirement has been met. Reducers that still come in are
+   * processed.
+   *
+   */
+  void pause() const noexcept;
+
+  /**
+   * @brief resumes the petri net by allowing traditions to be fired again.
+   *
+   */
+  void resume() const noexcept;
 };
 
-/**
- * @brief by defining a fireTransition for an Application type, we can also nest
- * Applications as transitions in other nets.
- *
- * @param app
- * @return Result
- */
-Result fireTransition(const Application &app) { return app.run(); };
+Result fire(const Application &app) { return app.run(); };
 
-/**
- * @brief if the Petri net is nested, and its parent net tries to cancel the
- * Petri net, it calls exitEarly.
- *
- * @param app
- * @return Result
- */
-Result cancelTransition(const Application &app) { return app.exitEarly(); }
+Result cancel(const Application &app) { return app.cancel(); }
 
-/**
- * @brief obviously a Petri net is not a direct-transition
- *
- * @return true
- * @return false
- */
-bool isDirectTransition(const Application &) { return false; };
+bool isDirect(const Application &) { return false; };
+
+void pause(const Application &app) { return app.pause(); };
+
+void resume(const Application &app) { return app.resume(); };
 
 }  // namespace symmetri

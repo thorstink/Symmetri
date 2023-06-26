@@ -38,19 +38,24 @@ int main(int, char *argv[]) {
   // here we re-register the interupt signal so it cleanly exits the net.
   stop = [&] {
     spdlog::info("signal cancel");
-    cancelTransition(bignet);
+    cancel(bignet);
   };
 
   auto t = std::thread([&] {
     std::this_thread::sleep_for(std::chrono::seconds(6));
+    spdlog::info("pause");
+    pause(bignet);
     const auto el = bignet.getEventLog();
     for (const auto &[caseid, t, s, c] : el) {
       spdlog::info("EventLog: {0}, {1}, {2}, {3}", caseid, t, printState(s),
                    c.time_since_epoch().count());
     }
+    std::this_thread::sleep_for(std::chrono::seconds(6));
+    spdlog::info("resume");
+    resume(bignet);
   });
 
-  auto [el, result] = fireTransition(bignet);  // infinite loop
+  auto [el, result] = fire(bignet);  // infinite loop
   t.join();
 
   spdlog::info("Result of this net: {0}", printState(result));

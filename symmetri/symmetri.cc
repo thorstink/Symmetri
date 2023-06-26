@@ -163,6 +163,20 @@ struct Petri {
     }
   };
 
+  void pause() const noexcept {
+    reducers->enqueue([&](Model &&model) {
+      model.is_paused = true;
+      return std::ref(model);
+    });
+  };
+
+  void resume() const noexcept {
+    reducers->enqueue([&](Model &&model) {
+      model.is_paused = false;
+      return std::ref(model);
+    });
+  };
+
   /**
    * @brief run the petri net. This initializes the net with the initial
    * marking and blocks until it a) reached the final marking, b) deadlocked
@@ -181,7 +195,7 @@ struct Petri {
     // start!
     m.fireTransitions(reducers, stp, true, case_id);
     // get a reducer. Immediately, or wait a bit
-    while (m.active_transitions_n.size() > 0 &&
+    while ((m.active_transitions_n.size() > 0 || m.is_paused) &&
            reducers->wait_dequeue_timed(f, -1)) {
       do {
         m = f(std::move(m));
@@ -189,7 +203,9 @@ struct Petri {
       if (MarkingReached(m.tokens_n, final_marking) || early_exit.load()) {
         break;
       } else {
-        m.fireTransitions(reducers, stp, true, case_id);
+        if (!m.is_paused) {
+          m.fireTransitions(reducers, stp, true, case_id);
+        }
       }
     }
 
@@ -199,7 +215,7 @@ struct Petri {
       {
         // populate that eventlog with child eventlog and possible cancelations.
         for (const auto transition_index : m.active_transitions_n) {
-          auto [el, state] = cancelTransition(m.net.store.at(transition_index));
+          auto [el, state] = cancel(m.net.store.at(transition_index));
           if (!el.empty()) {
             m.event_log.insert(m.event_log.end(), el.begin(), el.end());
           }
@@ -301,7 +317,7 @@ bool Application::tryFireTransition(const Transition &t) const noexcept {
   while (impl->reducers->try_dequeue(f)) {
     impl->m = f(std::move(impl->m));
   }
-  return impl->m.fireTransition(t, impl->reducers, impl->stp, "manual");
+  return impl->m.fire(t, impl->reducers, impl->stp, "manual");
 };
 
 Result Application::run() const noexcept {
@@ -337,7 +353,7 @@ std::function<void()> Application::registerTransitionCallback(
   return [transition, this] { register_functor(transition); };
 }
 
-Result Application::exitEarly() const noexcept {
+Result Application::cancel() const noexcept {
   const auto maybe_thread_id = impl->thread_id_.load();
   if (maybe_thread_id && maybe_thread_id.value() != getThreadId() &&
       !impl->early_exit.load()) {
@@ -364,6 +380,10 @@ Result Application::exitEarly() const noexcept {
 
   return {getEventLog(), State::UserExit};
 }
+
+void Application::pause() const noexcept { impl->pause(); }
+
+void Application::resume() const noexcept { impl->resume(); }
 
 bool Application::reuseApplication(const std::string &new_case_id) {
   return impl->reset(new_case_id);

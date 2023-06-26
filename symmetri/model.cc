@@ -2,12 +2,13 @@
 
 namespace symmetri {
 
-std::tuple<std::vector<Transition>, std::vector<Place>, std::vector<PolyAction>>
+std::tuple<std::vector<Transition>, std::vector<Place>,
+           std::vector<PolyTransition>>
 convert(const Net &_net, const Store &_store) {
   const auto transition_count = _net.size();
   std::vector<Transition> transitions;
   std::vector<Place> places;
-  std::vector<PolyAction> store;
+  std::vector<PolyTransition> store;
   transitions.reserve(transition_count);
   store.reserve(transition_count);
   for (const auto &[t, io] : _net) {
@@ -77,8 +78,7 @@ std::vector<int8_t> createPriorityLookup(
 
 Model::Model(const Net &_net, const Store &store,
              const PriorityTable &_priority, const Marking &M0)
-    : timestamp(Clock::now()), event_log({}) {
-  // reserve arbitrary eventlog space.
+    : timestamp(Clock::now()), is_paused(false), event_log({}) {
   event_log.reserve(1000);
   std::tie(net.transition, net.place, net.store) = convert(_net, store);
   std::tie(net.input_n, net.output_n) = populateIoLookups(_net, net.place);
@@ -132,7 +132,7 @@ bool Model::Fire(
 
   // if the transition is direct, we short-circuit the
   // marking mutation and do it immediately.
-  if (isDirectTransition(task)) {
+  if (isDirect(task)) {
     tokens_n.insert(tokens_n.begin(), net.output_n[t].begin(),
                     net.output_n[t].end());
     event_log.push_back(
@@ -151,7 +151,7 @@ bool Model::Fire(
   }
 }
 
-bool Model::fireTransition(
+bool Model::fire(
     const Transition &t,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers,

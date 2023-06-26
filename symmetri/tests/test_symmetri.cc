@@ -89,7 +89,7 @@ TEST_CASE("Run transition manually.") {
                             stp);
 
   REQUIRE(app.tryFireTransition("t0"));
-  app.exitEarly();
+  app.cancel();
 }
 
 TEST_CASE("Run transition that does not exist manually.") {
@@ -99,7 +99,7 @@ TEST_CASE("Run transition that does not exist manually.") {
                             stp);
 
   REQUIRE(!app.tryFireTransition("t0dgdsg"));
-  app.exitEarly();
+  app.cancel();
 }
 
 TEST_CASE("Run transition for which the preconditions are not met manually.") {
@@ -113,7 +113,7 @@ TEST_CASE("Run transition for which the preconditions are not met manually.") {
     REQUIRE(t != "t1");
   }
   REQUIRE(!app.tryFireTransition("t1"));
-  app.exitEarly();
+  app.cancel();
 }
 
 TEST_CASE("Reuse an application with a new case_id.") {

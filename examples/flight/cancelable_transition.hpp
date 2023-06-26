@@ -1,10 +1,11 @@
 #pragma once
 #include <spdlog/spdlog.h>
 
+#include <atomic>
 #include <chrono>
 #include <memory>
 #include <thread>
-#include <atomic>
+
 #include "symmetri/types.h"
 
 struct Foo {
@@ -26,12 +27,8 @@ struct Foo {
   }
 };
 
-symmetri::Result fireTransition(const std::shared_ptr<Foo> &f) {
-  return {{}, f->run()};
-}
+symmetri::Result fire(const std::shared_ptr<Foo> &f) { return {{}, f->run()}; }
 
-symmetri::Result cancelTransition(const std::shared_ptr<Foo> &f) {
-  return f->cancel();
-}
+symmetri::Result cancel(const std::shared_ptr<Foo> &f) { return f->cancel(); }
 
-bool isDirectTransition(const std::shared_ptr<Foo> &) { return false; }
+bool isDirect(const std::shared_ptr<Foo> &) { return false; }
