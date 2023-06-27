@@ -82,35 +82,10 @@ class PolyTransition {
   template <typename T>
   PolyTransition(T x) : self_(std::make_shared<model<T>>(std::move(x))) {}
 
-  /**
-   * @brief You can define your own specialized fire function for your
-   * transition type. This allows you to control what should happen when your
-   * transition is fired. If you do not define it, Symmetri will try to invoke
-   * it, and otherwise handle it as direct transition.
-   *
-   * @param x
-   * @return Result
-   */
   friend Result fire(const PolyTransition &x) { return x.self_->run_(); }
-
-  /**
-   * @brief You can define a transition payload to be simple by creating a
-   * specialized isDirect for your type.
-   *
-   * @param x
-   * @return true
-   * @return false
-   */
   friend bool isDirect(const PolyTransition &x) {
     return x.self_->is_direct_();
   }
-
-  /**
-   * @brief
-   *
-   * @param x
-   * @return Result
-   */
   friend Result cancel(const PolyTransition &x) { return x.self_->cancel_(); }
   friend void pause(const PolyTransition &x) { return x.self_->pause_(); }
   friend void resume(const PolyTransition &x) { return x.self_->resume_(); }
