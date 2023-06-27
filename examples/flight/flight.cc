@@ -52,7 +52,7 @@ int main(int, char *argv[]) {
     }
     std::this_thread::sleep_for(std::chrono::seconds(6));
     spdlog::info("resume");
-    resume(bignet);
+    bignet.resume();
   });
 
   auto [el, result] = fire(bignet);  // infinite loop
