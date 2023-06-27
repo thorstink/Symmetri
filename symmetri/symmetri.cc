@@ -163,14 +163,14 @@ struct Petri {
     }
   };
 
-  void pause() const noexcept {
+  void pause_() const noexcept {
     reducers->enqueue([&](Model &&model) {
       model.is_paused = true;
       return std::ref(model);
     });
   };
 
-  void resume() const noexcept {
+  void resume_() const noexcept {
     reducers->enqueue([&](Model &&model) {
       model.is_paused = false;
       return std::ref(model);
@@ -191,6 +191,7 @@ struct Petri {
     m.event_log.clear();
     m.tokens_n = m.initial_tokens;
 
+    bool waiting_for_resume = false;
     Reducer f;
     // start!
     m.fireTransitions(reducers, stp, true, case_id);
@@ -200,11 +201,24 @@ struct Petri {
       do {
         m = f(std::move(m));
       } while (!early_exit.load() && reducers->try_dequeue(f));
+
       if (MarkingReached(m.tokens_n, final_marking) || early_exit.load()) {
+        // we're done
         break;
-      } else {
-        if (!m.is_paused) {
-          m.fireTransitions(reducers, stp, true, case_id);
+      } else if (!m.is_paused && !waiting_for_resume) {
+        // we're firing
+        m.fireTransitions(reducers, stp, true, case_id);
+      } else if (m.is_paused && !waiting_for_resume) {
+        // we've been asked to pause
+        waiting_for_resume = true;
+        for (const auto transition_index : m.active_transitions_n) {
+          pause(m.net.store.at(transition_index));
+        }
+      } else if (!m.is_paused && waiting_for_resume) {
+        // we've been asked to resume
+        waiting_for_resume = false;
+        for (const auto transition_index : m.active_transitions_n) {
+          resume(m.net.store.at(transition_index));
         }
       }
     }
@@ -377,9 +391,9 @@ Result PetriNet::cancel() const noexcept {
   return {getEventLog(), State::UserExit};
 }
 
-void PetriNet::pause() const noexcept { impl->pause(); }
+void PetriNet::pause() const noexcept { impl->pause_(); }
 
-void PetriNet::resume() const noexcept { impl->resume(); }
+void PetriNet::resume() const noexcept { impl->resume_(); }
 
 bool PetriNet::reuseApplication(const std::string &new_case_id) {
   return impl->reset(new_case_id);

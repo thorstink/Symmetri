@@ -38,11 +38,11 @@ target_link_libraries(${PROJECT_NAME}_parser_test PRIVATE Catch2::Catch2WithMain
 add_test(${PROJECT_NAME}_parser_test ${PROJECT_NAME}_parser_test)
 
 add_executable(${PROJECT_NAME}_model_test test_model.cc)
-target_link_libraries(${PROJECT_NAME}_model_test PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue)
+target_link_libraries(${PROJECT_NAME}_model_test PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue spdlog::spdlog)
 add_test(${PROJECT_NAME}_model_test ${PROJECT_NAME}_model_test)
 
 add_executable(${PROJECT_NAME}_symmetri_test test_symmetri.cc)
-target_link_libraries(${PROJECT_NAME}_symmetri_test PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue)
+target_link_libraries(${PROJECT_NAME}_symmetri_test PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue spdlog::spdlog)
 add_test(${PROJECT_NAME}_symmetri_test ${PROJECT_NAME}_symmetri_test)
 
 add_executable(${PROJECT_NAME}_maxplus_test maxplus.cc)

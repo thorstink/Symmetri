@@ -42,17 +42,16 @@ int main(int, char *argv[]) {
   };
 
   auto t = std::thread([&] {
-    std::this_thread::sleep_for(std::chrono::seconds(6));
-    spdlog::info("pause");
+    std::this_thread::sleep_for(std::chrono::seconds(3));
     pause(bignet);
-    const auto el = bignet.getEventLog();
-    for (const auto &[caseid, t, s, c] : el) {
-      spdlog::info("EventLog: {0}, {1}, {2}, {3}", caseid, t, printState(s),
-                   c.time_since_epoch().count());
-    }
     std::this_thread::sleep_for(std::chrono::seconds(6));
-    spdlog::info("resume");
-    bignet.resume();
+    resume(bignet);
+
+    //     const auto el = bignet.getEventLog();
+    // for (const auto &[caseid, t, s, c] : el) {
+    //   spdlog::info("EventLog: {0}, {1}, {2}, {3}", caseid, t, printState(s),
+    //                c.time_since_epoch().count());
+    // }
   });
 
   auto [el, result] = fire(bignet);  // infinite loop

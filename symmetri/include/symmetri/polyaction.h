@@ -1,4 +1,6 @@
 #pragma once
+#include <spdlog/spdlog.h>
+
 #include <memory>
 
 #include "symmetri/types.h"
@@ -31,10 +33,14 @@ Result cancel(const T &) {
 }
 
 template <typename T>
-void pause(const T &) {}
+void pause(const T &) {
+  spdlog::info("default pause");
+}
 
 template <typename T>
-void resume(const T &) {}
+void resume(const T &) {
+  spdlog::info("default resume");
+}
 
 /**
  * @brief Generates a Result based on what kind of information the

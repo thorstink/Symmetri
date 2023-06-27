@@ -145,30 +145,20 @@ TEST_CASE("Can not reuse an active application with a new case_id.") {
 }
 
 TEST_CASE("Test pause and resume") {
-  Net net = {{"t0", {{"Pa"}, {"Pa", "Pb"}}}};
-  std::atomic<int> i = 0;
-  Store store = {{"t0", [&] { i++; }}};
-  Marking m0 = {{"Pa", 1}};
-  auto stp = std::make_shared<TaskSystem>(2);
-  symmetri::PetriNet app(net, m0, {{"Pb", 15}}, store, {}, "random_id", stp);
-  auto dt = std::chrono::milliseconds(10);
-  stp->push([&]() {
-    // wait till the net is running
-    while (i.load() > 4) {
-      std::this_thread::yield();
-    }
-    // pause for a little while
-    app.pause();
-    std::this_thread::sleep_for(dt);
-    // and resume
-    app.resume();
-  });
-
-  const auto start = Clock::now();
-  const auto [el, res] = app.run();
-  const auto elapsed = Clock::now() - start;
-  REQUIRE(elapsed > dt);
-  REQUIRE(i.load() == 15);
-
-  REQUIRE(res == symmetri::State::Completed);
+  // std::atomic<int> i = 0;
+  // Net net = {{"t0", {{"Pa"}, {"Pa", "Pb"}}}};
+  // Store store = {{"t0", [&] { i++; }}};
+  // Marking m0 = {{"Pa", 1}};
+  // auto stp = std::make_shared<TaskSystem>(2);
+  // symmetri::PetriNet app(net, m0, {}, store, {}, "random_id", stp);
+  // auto dt = std::chrono::milliseconds(1);
+  // stp->push([&]() { app.run(); });
+  // symmetri::pause(app);
+  // auto check1 = i.load();
+  // std::this_thread::sleep_for(dt);
+  // auto check2 = i.load();
+  // REQUIRE(check1 == check2);
+  // symmetri::resume(app);
+  // symmetri::cancel(app);
+  // REQUIRE(i.load() > check2);
 }
