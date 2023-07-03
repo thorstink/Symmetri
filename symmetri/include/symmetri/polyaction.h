@@ -1,5 +1,4 @@
 #pragma once
-#include <spdlog/spdlog.h>
 
 #include <memory>
 
@@ -33,14 +32,10 @@ Result cancel(const T &) {
 }
 
 template <typename T>
-void pause(const T &) {
-  spdlog::info("default pause");
-}
+void pause(const T &) {}
 
 template <typename T>
-void resume(const T &) {
-  spdlog::info("default resume");
-}
+void resume(const T &) {}
 
 /**
  * @brief Generates a Result based on what kind of information the

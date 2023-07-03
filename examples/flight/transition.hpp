@@ -4,9 +4,12 @@
 #include <atomic>
 #include <chrono>
 
-#include "symmetri/polyaction.h"
-#include "symmetri/types.h"
-
+/**
+ * @brief example of a class that has success/fail options and pause/resume
+ * functionalities. The custom copy constructor is because atomic<bool> is not
+ * default copyable.
+ *
+ */
 class Foo {
  private:
   const std::string name;
@@ -25,7 +28,7 @@ class Foo {
         cancel_(false),
         is_paused_(false) {}
 
-  symmetri::State run() const {
+  bool run() const {
     cancel_.store(false);
     is_paused_.store(false);
     spdlog::info("Running {0}", name);
@@ -38,14 +41,11 @@ class Foo {
       }
       std::this_thread::sleep_for(interval);
     } while (counter < count && !cancel_.load());
-
-    return cancel_.load() ? symmetri::State::UserExit
-                          : symmetri::State::Completed;
+    return cancel_.load();
   }
-  symmetri::Result cancel() const {
-    cancel_.store(true);
+  void cancel() const {
     spdlog::info("cancel {0}!", name);
-    return {{}, symmetri::State::UserExit};
+    cancel_.store(true);
   }
 
   void pause() const {
@@ -57,27 +57,3 @@ class Foo {
     is_paused_.store(false);
   }
 };
-
-namespace symmetri {
-template <>
-Result fire<Foo>(const Foo &f) {
-  return {{}, f.run()};
-}
-template <>
-Result cancel<Foo>(const Foo &f) {
-  return f.cancel();
-}
-template <>
-bool isDirect<Foo>(const Foo &) {
-  return false;
-}
-template <>
-void pause<Foo>(const Foo &f) {
-  f.pause();
-}
-template <>
-void resume<Foo>(const Foo &f) {
-  f.resume();
-}
-
-}  // namespace symmetri

@@ -9,7 +9,6 @@
 #include "symmetri/types.h"
 
 namespace symmetri {
-
 /**
  * @brief A Store is a mapping from Transitions, represented by a string that is
  * also used for their identification in the petri-net, to a PolyTask. A

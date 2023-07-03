@@ -5,6 +5,31 @@
 #include "symmetri/symmetri.h"
 #include "transition.hpp"
 
+namespace symmetri {
+template <>
+Result fire(const Foo &f) {
+  return f.run() ? Result{{}, symmetri::State::UserExit}
+                 : Result{{}, symmetri::State::Completed};
+}
+template <>
+Result cancel(const Foo &f) {
+  f.cancel();
+  return {{}, symmetri::State::UserExit};
+}
+template <>
+bool isDirect(const Foo &) {
+  return false;
+}
+template <>
+void pause(const Foo &f) {
+  f.pause();
+}
+template <>
+void resume(const Foo &f) {
+  f.resume();
+}
+}  // namespace symmetri
+
 void printLog(const symmetri::Eventlog &el) {
   for (const auto &[caseid, t, s, c] : el) {
     spdlog::info("EventLog: {0}, {1}, {2}, {3}", caseid, t, printState(s),
