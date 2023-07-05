@@ -31,9 +31,20 @@ Result cancel(const T &) {
   return {{}, State::UserExit};
 }
 
+/**
+ * @brief Implments a pause action for a transition. By default it does nothing.
+ *
+ * @tparam T
+ */
 template <typename T>
 void pause(const T &) {}
 
+/**
+ * @brief Templates a resume action for a transition. By default it does
+ * nothing.
+ *
+ * @tparam T
+ */
 template <typename T>
 void resume(const T &) {}
 
@@ -75,8 +86,7 @@ Result fire(const T &transition) {
 class PolyTransition {
  public:
   template <typename T>
-  PolyTransition(T x) : self_(std::make_shared<model<T>>(std::move(x))) {}
-
+  PolyTransition(T x) : self_(std::make_shared<transition<T>>(std::move(x))) {}
   friend Result fire(const PolyTransition &x) { return x.self_->run_(); }
   friend bool isDirect(const PolyTransition &x) {
     return x.self_->is_direct_();
@@ -94,9 +104,17 @@ class PolyTransition {
     virtual void resume_() const = 0;
     virtual bool is_direct_() const = 0;
   };
+
+  /**
+   * @brief A transition is defined by the concept that it is runnable,
+   * cancellable, pauseable and resumable. It can also be direct, meaning there
+   * is no associated side-effects but it is only a instant marking mutation.
+   *
+   * @tparam T the actual transition contain business logic
+   */
   template <typename T>
-  struct model final : concept_t {
-    model(T x) : transition_(std::move(x)) {}
+  struct transition final : concept_t {
+    transition(T x) : transition_(std::move(x)) {}
     Result run_() const override { return fire(transition_); }
     Result cancel_() const override { return cancel(transition_); }
     bool is_direct_() const override { return isDirect(transition_); }

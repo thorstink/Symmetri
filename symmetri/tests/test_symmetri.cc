@@ -26,7 +26,7 @@ TEST_CASE("Create a using the net constructor without end condition.") {
   symmetri::PetriNet app(net, m0, {}, store, priority, "test_net_without_end",
                          stp);
   // we can run the net
-  auto [ev, res] = app.run();
+  auto [ev, res] = app.fire();
 
   // because there's no final marking, but the net is finite, it deadlocks.
   REQUIRE(res == State::Deadlock);
@@ -41,7 +41,7 @@ TEST_CASE("Create a using the net constructor with end condition.") {
   symmetri::PetriNet app(net, m0, final_marking, store, priority,
                          "test_net_with_end", stp);
   // we can run the net
-  auto [ev, res] = app.run();
+  auto [ev, res] = app.fire();
 
   // now there is an end conition.
   REQUIRE(res == State::Completed);
@@ -59,7 +59,7 @@ TEST_CASE("Create a using pnml constructor.") {
     PriorityTable priority;
     symmetri::PetriNet app({pnml_file}, {}, store, priority, "fail", stp);
     // however, we can try running it,
-    auto [ev, res] = app.run();
+    auto [ev, res] = app.fire();
 
     // but the result is an error.
     REQUIRE(res == State::Error);
@@ -75,7 +75,7 @@ TEST_CASE("Create a using pnml constructor.") {
     symmetri::PetriNet app({pnml_file}, final_marking, store, priority,
                            "success", stp);
     // so we can run it,
-    auto [ev, res] = app.run();
+    auto [ev, res] = app.fire();
     // and the result is properly completed.
     REQUIRE(res == State::Completed);
     REQUIRE(!ev.empty());
@@ -122,7 +122,7 @@ TEST_CASE("Reuse an application with a new case_id.") {
   REQUIRE(!app.reuseApplication(initial_id));
   REQUIRE(app.reuseApplication(new_id));
   // fire a transition so that there's an entry in the eventlog
-  auto eventlog = app.run().first;
+  auto eventlog = app.fire().first;
   // double check that the eventlog is not empty
   REQUIRE(!eventlog.empty());
   // the eventlog should have a different case id.
@@ -141,7 +141,7 @@ TEST_CASE("Can not reuse an active application with a new case_id.") {
     // this should fail because we can not do this while everything is active.
     REQUIRE(!app.reuseApplication(new_id));
   });
-  auto [ev, res] = app.run();
+  auto [ev, res] = app.fire();
 }
 
 TEST_CASE("Test pause and resume") {
@@ -152,7 +152,7 @@ TEST_CASE("Test pause and resume") {
   // auto stp = std::make_shared<TaskSystem>(2);
   // symmetri::PetriNet app(net, m0, {}, store, {}, "random_id", stp);
   // auto dt = std::chrono::milliseconds(1);
-  // stp->push([&]() { app.run(); });
+  // stp->push([&]() { app.fire(); });
   // symmetri::pause(app);
   // auto check1 = i.load();
   // std::this_thread::sleep_for(dt);

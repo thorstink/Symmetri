@@ -49,7 +49,7 @@ bool areAllTransitionsInStore(const Store &store, const Net &net) noexcept {
 
 /**
  * @brief Petri is the class that holds the implementation of the Petri net. It
- * holds pointers to the reducer queue and that thread pool. Calling `run()` on
+ * holds pointers to the reducer queue and that thread pool. Calling `fire()` on
  * this class will do the *actual* execution of the Petri net.
  *
  */
@@ -184,7 +184,7 @@ struct Petri {
    *
    * @return Result
    */
-  Result run() {
+  Result fire() {
     // we are running!
     thread_id_.store(getThreadId());
     early_exit.store(false);
@@ -332,7 +332,7 @@ bool PetriNet::tryFireTransition(const Transition &t) const noexcept {
   return impl->m.fire(t, impl->reducers, impl->stp, "manual");
 };
 
-Result PetriNet::run() const noexcept {
+Result PetriNet::fire() const noexcept {
   if (impl == nullptr) {
     spdlog::error("Something went seriously wrong. Please send a bug report.");
     return {{}, State::Error};
@@ -343,7 +343,7 @@ Result PetriNet::run() const noexcept {
         impl->case_id);
     return {{}, State::Error};
   } else {
-    return impl->run();
+    return impl->fire();
   }
 }
 

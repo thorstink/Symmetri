@@ -15,16 +15,54 @@ namespace symmetri {
 using SmallVector = gch::small_vector<size_t, 4>;
 using Store = std::unordered_map<Transition, PolyTransition>;
 
+/**
+ * @brief a small helper function to get the index representation of a place or
+ * transition.
+ *
+ * @param m
+ * @param s
+ * @return size_t
+ */
 size_t toIndex(const std::vector<std::string> &m, const std::string &s);
+
+/**
+ * @brief calculates a list of possible transitions given the current
+ * token-distribution. It returns a list of transitions sorted by priority. The
+ * first element being the high priority.
+ *
+ * @param tokens
+ * @param p_to_ts_n
+ * @param priorities
+ * @return gch::small_vector<uint8_t, 32>
+ */
 gch::small_vector<uint8_t, 32> possibleTransitions(
     const std::vector<size_t> &tokens,
     const std::vector<SmallVector> &p_to_ts_n,
     const std::vector<int8_t> &priorities);
+
+/**
+ * @brief Takes a vector of input places (pre-conditions) and the current token
+ * distribution to determine whether the pre-conditions are met.
+ *
+ * @param pre
+ * @param tokens
+ * @return true if the pre-conditions are met
+ * @return false otherwise
+ */
 bool canFire(const SmallVector &pre, const std::vector<size_t> &tokens);
 
 struct Model;
 using Reducer = std::function<Model &(Model &&)>;
 
+/**
+ * @brief Create a Reducer For Transition object
+ *
+ * @param T_i
+ * @param task
+ * @param case_id
+ * @param reducers
+ * @return Reducer
+ */
 Reducer createReducerForTransition(
     size_t T_i, const PolyTransition &task, const std::string &case_id,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>

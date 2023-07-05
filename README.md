@@ -31,17 +31,17 @@ Net net = {{"foo", {{"B", "C"}, {"Z", "B"}}},
 Store store = {{"foo", &foo}, {"bar", &bar}};
 PriorityTable priority = {};
 Marking m0 = {{"Z", 1}, {"B", 0}, {"C", 0}};
-StoppablePool stp(1);
+auto pool = std::make_shared<symmetri::TaskSystem>(4);
 symmetri::PetriNet app(net, m0, {}, store, priority,
-                          "test_net_without_end", stp);
-auto [eventlog, res] = app.run(); // run until done.
+                          "test_net_without_end", pool);
+auto [eventlog, res] = app.fire(); // run until done.
 ```
 
 - `net` is a multiset description of a Petri net
 - `store` is a lookup table that links the *symbolic* transitions to actual functions
 - `priority` can be used if some transitions are more equal than others ([Wiki on prioritized Petri nets](https://en.wikipedia.org/wiki/Prioritised_Petri_net))
 - `m0` is the initial token distribution (also known as _initial marking_)
-- `stp` is a simple lockfree-queue based threadpool
+- `pool` is a simple task based threadpool
 - `app` is all the ingredients put together - creating something that can be executed! it outputs a result (`res`) and a log (`eventlog`)
 
 ## Build
@@ -64,8 +64,8 @@ make && make test
 ```bash
 # assumed you build the examples
 # finishes with a deadlock
-./build/examples/hello_world/symmetri_hello_world nets/pa ssive_n1.pnml nets/T50startP0.pnml
-# finishes by reaching the final marking (e.g. completed)
+./build/examples/hello_world/symmetri_hello_world nets/passive_n1.pnml nets/T50startP0.pnml
+# finishes by reaching the final marking (e.g. completed). Use keyboard to interact pause/resume/cancel/print log
 ./build/examples/flight/symmetri_flight nets/PT1.pnml nets/PT2.pnml nets/PT3.pnml
 ```
 

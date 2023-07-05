@@ -31,15 +31,6 @@ struct Petri;
  *
  */
 class PetriNet final {
- private:
-  std::shared_ptr<Petri> impl;  ///< Pointer to the implementation, all
-                                ///< information is stored in Petri
-  std::function<void(const std::string &)>
-      register_functor;  ///< At PetriNet construction this function is
-                         ///< created. It can be used to assign a trigger to
-                         ///< transitions - allowing the user to invoke a
-                         ///< transition without meeting the pre-conditions.
-
  public:
   /**
    * @brief Construct a new PetriNet object from a set of paths to pnml-files
@@ -84,14 +75,6 @@ class PetriNet final {
   PetriNet(const Net &net, const Marking &m0, const Marking &final_marking,
            const Store &store, const PriorityTable &priority,
            const std::string &case_id, std::shared_ptr<TaskSystem> stp);
-
-  /**
-   * @brief This executes the net, like a transition, it returns a result.
-   * This is equal to calling `fire(app)`.
-   *
-   * @return Result
-   */
-  Result run() const noexcept;
 
   /**
    * @brief register transition gives a handle to manually force a transition to
@@ -148,13 +131,6 @@ class PetriNet final {
   std::vector<Transition> getFireableTransitions() const noexcept;
 
   /**
-   * @brief cancel breaks the Petri net loop and recursively tries to cancel all
-   * parent transitions
-   *
-   */
-  Result cancel() const noexcept;
-
-  /**
    * @brief reuseApplication resets the application such that the same net can
    * be used again after an cancel call. You do need to supply a new case_id
    * which must be different.
@@ -163,28 +139,55 @@ class PetriNet final {
   bool reuseApplication(const std::string &case_id);
 
   /**
-   * @brief pause prevents new transitions from being queued, even if their
-   * marking requirement has been met. Reducers that still come in are
-   * processed.
+   * @brief Fire for a PetriNet means that it executes the Petri net until it
+   * reaches a final marking, deadlocks or is preempted by a user.
    *
+   * @return Result
+   */
+  Result fire() const noexcept;
+
+  /**
+   * @brief cancel interrupts and stops the Petri net execution and
+   * calls cancel on all child transitions that are active. If transitions do
+   * not have a cancel functionality implemented, they will not be cancelled.
+   * Their reducers however will not be processed.
+   *
+   * @return Result
+   */
+  Result cancel() const noexcept;
+
+  /**
+   * @brief pause interrupts and pauses the Petri net execution and
+   * calls pause on all child transitions that are active. The Petri net will
+   * still consume reducers produced by finished transitions but it will not
+   * queue new transitions for execution. This mostly happens when active
+   * transitions do not have a pause-functionality implemented.
+   *
+   * @param app
    */
   void pause() const noexcept;
 
   /**
-   * @brief resumes the petri net by allowing traditions to be fired again.
+   * @brief resume breaks the pause and immediately will try to fire all
+   * possible transitions. It will also call resume on all active transitions.
    *
    */
   void resume() const noexcept;
+
+ private:
+  std::shared_ptr<Petri> impl;  ///< Pointer to the implementation, all
+                                ///< information is stored in Petri
+  std::function<void(const std::string &)>
+      register_functor;  ///< At PetriNet construction this function is
+                         ///< created. It can be used to assign a trigger to
+                         ///< transitions - allowing the user to invoke a
+                         ///< transition without meeting the pre-conditions.
 };
 
-Result fire(const PetriNet &app) { return app.run(); };
-
+Result fire(const PetriNet &app) { return app.fire(); };
 Result cancel(const PetriNet &app) { return app.cancel(); }
-
-bool isDirect(const PetriNet &) { return false; };
-
 void pause(const PetriNet &app) { return app.pause(); };
-
 void resume(const PetriNet &app) { return app.resume(); };
+bool isDirect(const PetriNet &) { return false; };
 
 }  // namespace symmetri
