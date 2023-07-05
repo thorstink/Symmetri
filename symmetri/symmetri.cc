@@ -220,6 +220,7 @@ struct Petri {
         for (const auto transition_index : m.active_transitions_n) {
           resume(m.net.store.at(transition_index));
         }
+        m.fireTransitions(reducers, stp, true, case_id);
       }
     }
 

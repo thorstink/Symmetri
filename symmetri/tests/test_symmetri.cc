@@ -43,7 +43,7 @@ TEST_CASE("Create a using the net constructor with end condition.") {
   // we can run the net
   auto [ev, res] = app.fire();
 
-  // now there is an end conition.
+  // now there is an end condition.
   REQUIRE(res == State::Completed);
   REQUIRE(!ev.empty());
 }
@@ -145,20 +145,27 @@ TEST_CASE("Can not reuse an active application with a new case_id.") {
 }
 
 TEST_CASE("Test pause and resume") {
-  // std::atomic<int> i = 0;
-  // Net net = {{"t0", {{"Pa"}, {"Pa", "Pb"}}}};
-  // Store store = {{"t0", [&] { i++; }}};
-  // Marking m0 = {{"Pa", 1}};
-  // auto stp = std::make_shared<TaskSystem>(2);
-  // symmetri::PetriNet app(net, m0, {}, store, {}, "random_id", stp);
-  // auto dt = std::chrono::milliseconds(1);
-  // stp->push([&]() { app.fire(); });
-  // symmetri::pause(app);
-  // auto check1 = i.load();
-  // std::this_thread::sleep_for(dt);
-  // auto check2 = i.load();
-  // REQUIRE(check1 == check2);
-  // symmetri::resume(app);
-  // symmetri::cancel(app);
-  // REQUIRE(i.load() > check2);
+  std::atomic<int> i = 0;
+  Net net = {{"t0", {{"Pa"}, {"Pa"}}}, {"t1", {{}, {"Pb"}}}};
+  Store store = {{"t0", [&] { i++; }}, {"t1", std::nullopt}};
+  Marking m0 = {{"Pa", 1}};
+  auto stp = std::make_shared<TaskSystem>(2);
+  symmetri::PetriNet app(net, m0, {{"Pb", 1}}, store, {}, "random_id", stp);
+  int check1, check2;
+  std::thread t([&, app, t1 = app.registerTransitionCallback("t1")]() {
+    auto dt = std::chrono::milliseconds(5);
+    std::this_thread::sleep_for(dt);
+    symmetri::pause(app);
+    std::this_thread::sleep_for(dt);
+    check1 = i.load();
+    std::this_thread::sleep_for(dt);
+    check2 = i.load();
+    symmetri::resume(app);
+    std::this_thread::sleep_for(dt);
+    t1();
+  });
+  app.fire();
+  t.join();
+  REQUIRE(check1 == check2);
+  REQUIRE(i.load() > check2);
 }
