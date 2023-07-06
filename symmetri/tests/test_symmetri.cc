@@ -147,13 +147,13 @@ TEST_CASE("Can not reuse an active application with a new case_id.") {
 TEST_CASE("Test pause and resume") {
   std::atomic<int> i = 0;
   Net net = {{"t0", {{"Pa"}, {"Pa"}}}, {"t1", {{}, {"Pb"}}}};
-  Store store = {{"t0", [&] { i++; }}, {"t1", std::nullopt}};
+  Store store = {{"t0", [&] { i++; }}, {"t1", [] {}}};
   Marking m0 = {{"Pa", 1}};
   auto stp = std::make_shared<TaskSystem>(2);
   symmetri::PetriNet app(net, m0, {{"Pb", 1}}, store, {}, "random_id", stp);
   int check1, check2;
-  std::thread t([&, app, t1 = app.registerTransitionCallback("t1")]() {
-    auto dt = std::chrono::milliseconds(5);
+  stp->push([&, app, t1 = app.registerTransitionCallback("t1")]() {
+    const auto dt = std::chrono::milliseconds(5);
     std::this_thread::sleep_for(dt);
     symmetri::pause(app);
     std::this_thread::sleep_for(dt);
@@ -165,7 +165,7 @@ TEST_CASE("Test pause and resume") {
     t1();
   });
   app.fire();
-  t.join();
   REQUIRE(check1 == check2);
   REQUIRE(i.load() > check2);
+  REQUIRE(i.load() > 20);
 }

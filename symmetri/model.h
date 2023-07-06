@@ -6,7 +6,7 @@
 #include <memory>
 
 #include "small_vector.hpp"
-#include "symmetri/polyaction.h"
+#include "symmetri/polytransition.h"
 #include "symmetri/tasks.h"
 #include "symmetri/types.h"
 

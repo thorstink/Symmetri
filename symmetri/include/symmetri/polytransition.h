@@ -85,8 +85,9 @@ Result fire(const T &transition) {
  */
 class PolyTransition {
  public:
-  template <typename T>
-  PolyTransition(T x) : self_(std::make_shared<transition<T>>(std::move(x))) {}
+  template <typename Transition>
+  PolyTransition(Transition x)
+      : self_(std::make_shared<model<Transition>>(std::move(x))) {}
   friend Result fire(const PolyTransition &x) { return x.self_->run_(); }
   friend bool isDirect(const PolyTransition &x) {
     return x.self_->is_direct_();
@@ -112,15 +113,15 @@ class PolyTransition {
    *
    * @tparam T the actual transition contain business logic
    */
-  template <typename T>
-  struct transition final : concept_t {
-    transition(T x) : transition_(std::move(x)) {}
+  template <typename Transition>
+  struct model final : concept_t {
+    model(Transition &&x) : transition_(std::move(x)) {}
     Result run_() const override { return fire(transition_); }
     Result cancel_() const override { return cancel(transition_); }
     bool is_direct_() const override { return isDirect(transition_); }
     void pause_() const override { return pause(transition_); }
     void resume_() const override { return resume(transition_); }
-    T transition_;
+    Transition transition_;
   };
 
   std::shared_ptr<const concept_t> self_;
