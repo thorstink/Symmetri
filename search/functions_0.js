@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['application_0',['Application',['../classsymmetri_1_1Application.html#a71c458b5a695caa121b14cff3f28ba34',1,'symmetri::Application::Application(const std::set&lt; std::string &gt; &amp;path_to_pnml, const Marking &amp;final_marking, const Store &amp;store, const PriorityTable &amp;priority, const std::string &amp;case_id, std::shared_ptr&lt; TaskSystem &gt; stp)'],['../classsymmetri_1_1Application.html#abd85b57e953767764a9d5e96a554f3b3',1,'symmetri::Application::Application(const std::set&lt; std::string &gt; &amp;path_to_grml, const Marking &amp;final_marking, const Store &amp;store, const std::string &amp;case_id, std::shared_ptr&lt; TaskSystem &gt; stp)'],['../classsymmetri_1_1Application.html#ac73fff04f8d292b9bc83a0f1212b29a2',1,'symmetri::Application::Application(const Net &amp;net, const Marking &amp;m0, const Marking &amp;final_marking, const Store &amp;store, const PriorityTable &amp;priority, const std::string &amp;case_id, std::shared_ptr&lt; TaskSystem &gt; stp)']]]
+  ['cancel_0',['cancel',['../classsymmetri_1_1PetriNet.html#aba18a0bb3585c98e7a22731995eb8ff4',1,'symmetri::PetriNet']]]
 ];

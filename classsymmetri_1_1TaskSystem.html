@@ -69,7 +69,7 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="namespacesymmetri.html">symmetri</a></li><li class="navelem"><a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a></li>  </ul>
+<li class="navelem"><b>symmetri</b></li><li class="navelem"><a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
@@ -81,7 +81,7 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 
-<p>The task system has a task queue for each thread. It is suggested to have one <a class="el" href="classsymmetri_1_1TaskSystem.html" title="The task system has a task queue for each thread. It is suggested to have one TaskSystem per executab...">TaskSystem</a> per executable and share it along the classes that use it. It uses a simply work-stealing mechanism for performance improvement.  
+<p>Create a <a class="el" href="classsymmetri_1_1TaskSystem.html" title="Create a TaskSystem object. The only way to create a TaskSystem is through this factory....">TaskSystem</a> object. The only way to create a <a class="el" href="classsymmetri_1_1TaskSystem.html" title="Create a TaskSystem object. The only way to create a TaskSystem is through this factory....">TaskSystem</a> is through this factory. We enforce the use of a smart pointer to make sure the pool stays alive until both the original scope of the pool and net is exited.  
  <a href="classsymmetri_1_1TaskSystem.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="tasks_8h_source.html">tasks.h</a>&gt;</code></p>
@@ -94,9 +94,9 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>Task</b> = std::func
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a8e20746bbc80706ed957945656de3f3f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1TaskSystem.html#a8e20746bbc80706ed957945656de3f3f">TaskSystem</a> (size_t n_threads=0)</td></tr>
-<tr class="memdesc:a8e20746bbc80706ed957945656de3f3f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new Task System object with n threads.  <br /></td></tr>
-<tr class="separator:a8e20746bbc80706ed957945656de3f3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7c91e814539081318e533290dc55cb61"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1TaskSystem.html#a7c91e814539081318e533290dc55cb61">TaskSystem</a> (size_t n_threads=std::thread::hardware_concurrency())</td></tr>
+<tr class="memdesc:a7c91e814539081318e533290dc55cb61"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new Task System object with n threads.  <br /></td></tr>
+<tr class="separator:a7c91e814539081318e533290dc55cb61"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a46dae4fdf18ad7e5caa65504b974bf20"><td class="memItemLeft" align="right" valign="top"><a id="a46dae4fdf18ad7e5caa65504b974bf20" name="a46dae4fdf18ad7e5caa65504b974bf20"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>TaskSystem</b> (<a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> const &amp;)=delete</td></tr>
 <tr class="separator:a46dae4fdf18ad7e5caa65504b974bf20"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -109,15 +109,22 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a95dc99063bb1c853b9740ef5ac8a7f08"><td class="memItemLeft" align="right" valign="top"><a id="a95dc99063bb1c853b9740ef5ac8a7f08" name="a95dc99063bb1c853b9740ef5ac8a7f08"></a>
 <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> &amp;&amp;) noexcept=delete</td></tr>
 <tr class="separator:a95dc99063bb1c853b9740ef5ac8a7f08"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a49acebb985f57aa61ad382102cce2818"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1TaskSystem.html#a49acebb985f57aa61ad382102cce2818">push</a> (Task &amp;&amp;task)</td></tr>
-<tr class="memdesc:a49acebb985f57aa61ad382102cce2818"><td class="mdescLeft">&#160;</td><td class="mdescRight">Push allows tasks to be put in one of the TaskQueues.  <br /></td></tr>
-<tr class="separator:a49acebb985f57aa61ad382102cce2818"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a166ef7026a8c0f07e37aa7df9a0cc5a3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1TaskSystem.html#a166ef7026a8c0f07e37aa7df9a0cc5a3">push</a> (Task &amp;&amp;p) const</td></tr>
+<tr class="memdesc:a166ef7026a8c0f07e37aa7df9a0cc5a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">push allows to put almost anything as "payload" for a transition.  <br /></td></tr>
+<tr class="separator:a166ef7026a8c0f07e37aa7df9a0cc5a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>The task system has a task queue for each thread. It is suggested to have one <a class="el" href="classsymmetri_1_1TaskSystem.html" title="The task system has a task queue for each thread. It is suggested to have one TaskSystem per executab...">TaskSystem</a> per executable and share it along the classes that use it. It uses a simply work-stealing mechanism for performance improvement. </p>
+<div class="textblock"><p>Create a <a class="el" href="classsymmetri_1_1TaskSystem.html" title="Create a TaskSystem object. The only way to create a TaskSystem is through this factory....">TaskSystem</a> object. The only way to create a <a class="el" href="classsymmetri_1_1TaskSystem.html" title="Create a TaskSystem object. The only way to create a TaskSystem is through this factory....">TaskSystem</a> is through this factory. We enforce the use of a smart pointer to make sure the pool stays alive until both the original scope of the pool and net is exited. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">thread_count</td><td>the amount of threads in the pool. The simplest way to avoid deadlocks in the net is to make sure thread_count is at least the maximum amount of transitions in the net. are ran in parallel. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>std::shared_ptr&lt;const TaskSystem&gt; </dd></dl>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a8e20746bbc80706ed957945656de3f3f" name="a8e20746bbc80706ed957945656de3f3f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8e20746bbc80706ed957945656de3f3f">&#9670;&#160;</a></span>TaskSystem()</h2>
+<a id="a7c91e814539081318e533290dc55cb61" name="a7c91e814539081318e533290dc55cb61"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7c91e814539081318e533290dc55cb61">&#9670;&#160;</a></span>TaskSystem()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -129,7 +136,7 @@ Public Member Functions</h2></td></tr>
           <td class="memname">symmetri::TaskSystem::TaskSystem </td>
           <td>(</td>
           <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>n_threads</em> = <code>0</code></td><td>)</td>
+          <td class="paramname"><em>n_threads</em> = <code>std::thread::hardware_concurrency()</code></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -151,8 +158,8 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a49acebb985f57aa61ad382102cce2818" name="a49acebb985f57aa61ad382102cce2818"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a49acebb985f57aa61ad382102cce2818">&#9670;&#160;</a></span>push()</h2>
+<a id="a166ef7026a8c0f07e37aa7df9a0cc5a3" name="a166ef7026a8c0f07e37aa7df9a0cc5a3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a166ef7026a8c0f07e37aa7df9a0cc5a3">&#9670;&#160;</a></span>push()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -161,16 +168,16 @@ Public Member Functions</h2></td></tr>
           <td class="memname">void symmetri::TaskSystem::push </td>
           <td>(</td>
           <td class="paramtype">Task &amp;&amp;&#160;</td>
-          <td class="paramname"><em>task</em></td><td>)</td>
-          <td></td>
+          <td class="paramname"><em>p</em></td><td>)</td>
+          <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Push allows tasks to be put in one of the TaskQueues. </p>
+<p>push allows to put almost anything as "payload" for a transition. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">task</td><td></td></tr>
+    <tr><td class="paramname">p</td><td></td></tr>
   </table>
   </dd>
 </dl>

@@ -80,36 +80,37 @@ $(function() {
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &lt;atomic&gt;</span></div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;functional&gt;</span></div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &lt;thread&gt;</span></div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;vector&gt;</span></div>
-<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacesymmetri.html">symmetri</a> {</div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span> </div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="keyword">class </span>TaskQueue;</div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno"><a class="line" href="classsymmetri_1_1TaskSystem.html">   20</a></span><span class="keyword">class </span><a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> {</div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span> <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>  <span class="keyword">using </span>Task = std::function&lt;void()&gt;;</div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>  <span class="keyword">explicit</span> <a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a>(<span class="keywordtype">size_t</span> n_threads = 0);</div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>  <a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">~TaskSystem</a>() <span class="keyword">noexcept</span>;</div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>  <a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a>(<a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> <span class="keyword">const</span>&amp;) = <span class="keyword">delete</span>;</div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>  <a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a>(<a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a>&amp;&amp;) <span class="keyword">noexcept</span> = <span class="keyword">delete</span>;</div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>  <a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a>&amp; operator=(<a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> <span class="keyword">const</span>&amp;) = <span class="keyword">delete</span>;</div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>  <a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a>&amp; operator=(<a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a>&amp;&amp;) <span class="keyword">noexcept</span> = <span class="keyword">delete</span>;</div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>  <span class="keywordtype">void</span> <a class="code hl_function" href="classsymmetri_1_1TaskSystem.html#a49acebb985f57aa61ad382102cce2818">push</a>(Task&amp;&amp; task);</div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span> </div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span> <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>  std::vector&lt;std::thread&gt; threads_;</div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>  std::vector&lt;TaskQueue&gt; queues_;</div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>  std::atomic_size_t counter_;</div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span> </div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>  <span class="keywordtype">void</span> run_(<span class="keywordtype">size_t</span> thread_index);</div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>};</div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span> </div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>}  <span class="comment">// namespace symmetri</span></div>
-<div class="ttc" id="aclasssymmetri_1_1TaskSystem_html"><div class="ttname"><a href="classsymmetri_1_1TaskSystem.html">symmetri::TaskSystem</a></div><div class="ttdoc">The task system has a task queue for each thread. It is suggested to have one TaskSystem per executab...</div><div class="ttdef"><b>Definition</b> tasks.h:20</div></div>
-<div class="ttc" id="aclasssymmetri_1_1TaskSystem_html_a49acebb985f57aa61ad382102cce2818"><div class="ttname"><a href="classsymmetri_1_1TaskSystem.html#a49acebb985f57aa61ad382102cce2818">symmetri::TaskSystem::push</a></div><div class="ttdeci">void push(Task &amp;&amp;task)</div><div class="ttdoc">Push allows tasks to be put in one of the TaskQueues.</div><div class="ttdef"><b>Definition</b> tasks.cpp:45</div></div>
-<div class="ttc" id="anamespacesymmetri_html"><div class="ttname"><a href="namespacesymmetri.html">symmetri</a></div><div class="ttdef"><b>Definition</b> grml_parser.cc:8</div></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &lt;memory&gt;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;thread&gt;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="keyword">namespace </span>symmetri {</div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="keyword">class </span>TaskQueue;</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span> </div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno"><a class="line" href="classsymmetri_1_1TaskSystem.html">   28</a></span><span class="keyword">class </span><a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> {</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>  <span class="keyword">using </span>Task = std::function&lt;void()&gt;;</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span> </div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>  <span class="keyword">explicit</span> <a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a>(<span class="keywordtype">size_t</span> n_threads = std::thread::hardware_concurrency());</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>  <a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">~TaskSystem</a>() <span class="keyword">noexcept</span>;</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>  <a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a>(<a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> <span class="keyword">const</span>&amp;) = <span class="keyword">delete</span>;</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>  <a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a>(<a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a>&amp;&amp;) <span class="keyword">noexcept</span> = <span class="keyword">delete</span>;</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>  <a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a>&amp; operator=(<a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> <span class="keyword">const</span>&amp;) = <span class="keyword">delete</span>;</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>  <a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a>&amp; operator=(<a class="code hl_class" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a>&amp;&amp;) <span class="keyword">noexcept</span> = <span class="keyword">delete</span>;</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>  <span class="keywordtype">void</span> <a class="code hl_function" href="classsymmetri_1_1TaskSystem.html#a166ef7026a8c0f07e37aa7df9a0cc5a3">push</a>(Task&amp;&amp; p) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span> </div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span> <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>  <span class="keywordtype">void</span> loop();</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>  std::vector&lt;std::thread&gt; pool_;</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>  std::atomic&lt;bool&gt; is_running_;</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>  std::unique_ptr&lt;TaskQueue&gt; queue_;</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>};</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span> </div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>}  <span class="comment">// namespace symmetri</span></div>
+<div class="ttc" id="aclasssymmetri_1_1TaskSystem_html"><div class="ttname"><a href="classsymmetri_1_1TaskSystem.html">symmetri::TaskSystem</a></div><div class="ttdoc">Create a TaskSystem object. The only way to create a TaskSystem is through this factory....</div><div class="ttdef"><b>Definition</b> tasks.h:28</div></div>
+<div class="ttc" id="aclasssymmetri_1_1TaskSystem_html_a166ef7026a8c0f07e37aa7df9a0cc5a3"><div class="ttname"><a href="classsymmetri_1_1TaskSystem.html#a166ef7026a8c0f07e37aa7df9a0cc5a3">symmetri::TaskSystem::push</a></div><div class="ttdeci">void push(Task &amp;&amp;p) const</div><div class="ttdoc">push allows to put almost anything as &quot;payload&quot; for a transition.</div><div class="ttdef"><b>Definition</b> tasks.cpp:44</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

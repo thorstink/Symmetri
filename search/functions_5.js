@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['isdirecttransition_0',['isDirectTransition',['../namespacesymmetri.html#ae2d32143fe0006093a26a831bb23b631',1,'symmetri::isDirectTransition(const T &amp;)'],['../namespacesymmetri.html#a0b12ab84f3390d6eb4d9788362ef6a8a',1,'symmetri::isDirectTransition(const Application &amp;)']]]
+  ['registertransitioncallback_0',['registerTransitionCallback',['../classsymmetri_1_1PetriNet.html#a14105c25716d16cbca924397eeb79008',1,'symmetri::PetriNet']]],
+  ['resume_1',['resume',['../classsymmetri_1_1PetriNet.html#a3cb1c279447fb6ccf5bf177eb1b58cd4',1,'symmetri::PetriNet']]],
+  ['reuseapplication_2',['reuseApplication',['../classsymmetri_1_1PetriNet.html#a89bff80f100132e350caf932c06bbda3',1,'symmetri::PetriNet']]]
 ];

@@ -1,6 +1,8 @@
 var searchData=
 [
-  ['final_5fmarking_0',['final_marking',['../structsymmetri_1_1Petri.html#a7b1ad2f7fd4f50d017fbecce19c82387',1,'symmetri::Petri']]],
-  ['firetransition_1',['fireTransition',['../classsymmetri_1_1PolyAction.html#aeb2766685569f2325e358d785673b546',1,'symmetri::PolyAction::fireTransition'],['../structsymmetri_1_1Model.html#a4c56a226e4909ccc8fa3b2430dbc5684',1,'symmetri::Model::fireTransition()'],['../namespacesymmetri.html#ada47a258e8ae2ad89b78acd911a0cd42',1,'symmetri::fireTransition(const T &amp;transition)'],['../namespacesymmetri.html#a05989fac099a4cff8ca53560929c6762',1,'symmetri::fireTransition(const Application &amp;app)']]],
-  ['firetransitions_2',['fireTransitions',['../structsymmetri_1_1Model.html#a78d7cf475e49ab1fbdd5b59af80cd5fb',1,'symmetri::Model']]]
+  ['getactivetransitions_0',['getActiveTransitions',['../structsymmetri_1_1Model.html#a61ba9b1c5725647721fe227cb1192e83',1,'symmetri::Model']]],
+  ['geteventlog_1',['getEventLog',['../classsymmetri_1_1PetriNet.html#a91e1082977e1213282e26ebda74fda23',1,'symmetri::PetriNet::getEventLog()'],['../structsymmetri_1_1Petri.html#a1be0e97a3e376c84d084519a3d53ea7a',1,'symmetri::Petri::getEventLog()']]],
+  ['getfireabletransitions_2',['getFireableTransitions',['../classsymmetri_1_1PetriNet.html#ad072b494fa34ad87cf76cf2319609803',1,'symmetri::PetriNet::getFireableTransitions()'],['../structsymmetri_1_1Model.html#ad2ecd4725c2c7cd3352d342dc113ce57',1,'symmetri::Model::getFireableTransitions() const']]],
+  ['getmarking_3',['getMarking',['../structsymmetri_1_1Model.html#a23f845511ba78d816c27b94765b3ae35',1,'symmetri::Model']]],
+  ['getstate_4',['getState',['../classsymmetri_1_1PetriNet.html#af45f29db37a4c583ad739333ef542842',1,'symmetri::PetriNet::getState()'],['../structsymmetri_1_1Model.html#a8be85bc07dc6cc175fc0a743b48a398a',1,'symmetri::Model::getState()']]]
 ];

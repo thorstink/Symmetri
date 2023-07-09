@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['calculatetrace_0',['calculateTrace',['../namespacesymmetri.html#a6fab87c1ec65a55db8fb5b2126a8c14a',1,'symmetri']]],
-  ['canceltransition_1',['cancelTransition',['../namespacesymmetri.html#a467d3ae6e0d6478a9a59579e08f16e1c',1,'symmetri::cancelTransition(const T &amp;)'],['../namespacesymmetri.html#a226022f612dc84b7faaa4d394e374742',1,'symmetri::cancelTransition(const Application &amp;app)']]],
-  ['create_2',['create',['../namespacesymmetri.html#a491cb1edad4b611d2d1f7e968e6478f1',1,'symmetri']]]
+  ['fire_0',['fire',['../classsymmetri_1_1PetriNet.html#ac6461bc296bdfc6fb82aedc90b48cf9f',1,'symmetri::PetriNet::fire()'],['../structsymmetri_1_1Model.html#ab60ca0662c19c2078a9af7c6cfb96abd',1,'symmetri::Model::fire()'],['../structsymmetri_1_1Petri.html#a6eefca65b594c008e3854fc66a822897',1,'symmetri::Petri::fire()']]],
+  ['firetransitions_1',['fireTransitions',['../structsymmetri_1_1Model.html#a78d7cf475e49ab1fbdd5b59af80cd5fb',1,'symmetri::Model']]]
 ];

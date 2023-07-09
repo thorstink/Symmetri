@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['application_0',['Application',['../classsymmetri_1_1Application.html',1,'symmetri']]]
+  ['event_0',['Event',['../structsymmetri_1_1Event.html',1,'symmetri']]]
 ];
