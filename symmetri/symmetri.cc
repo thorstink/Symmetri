@@ -49,7 +49,7 @@ bool areAllTransitionsInStore(const Store &store, const Net &net) noexcept {
 
 /**
  * @brief Petri is the class that holds the implementation of the Petri net. It
- * holds pointers to the reducer queue and that thread pool. Calling `run()` on
+ * holds pointers to the reducer queue and that thread pool. Calling `fire()` on
  * this class will do the *actual* execution of the Petri net.
  *
  */
@@ -163,6 +163,20 @@ struct Petri {
     }
   };
 
+  void pause_() const noexcept {
+    reducers->enqueue([&](Model &&model) {
+      model.is_paused = true;
+      return std::ref(model);
+    });
+  };
+
+  void resume_() const noexcept {
+    reducers->enqueue([&](Model &&model) {
+      model.is_paused = false;
+      return std::ref(model);
+    });
+  };
+
   /**
    * @brief run the petri net. This initializes the net with the initial
    * marking and blocks until it a) reached the final marking, b) deadlocked
@@ -170,25 +184,42 @@ struct Petri {
    *
    * @return Result
    */
-  Result run() {
+  Result fire() {
     // we are running!
     thread_id_.store(getThreadId());
     early_exit.store(false);
     m.event_log.clear();
     m.tokens_n = m.initial_tokens;
 
+    bool waiting_for_resume = false;
     Reducer f;
     // start!
     m.fireTransitions(reducers, stp, true, case_id);
     // get a reducer. Immediately, or wait a bit
-    while (m.active_transitions_n.size() > 0 &&
+    while ((m.active_transitions_n.size() > 0 || m.is_paused) &&
            reducers->wait_dequeue_timed(f, -1)) {
       do {
         m = f(std::move(m));
       } while (!early_exit.load() && reducers->try_dequeue(f));
+
       if (MarkingReached(m.tokens_n, final_marking) || early_exit.load()) {
+        // we're done
         break;
-      } else {
+      } else if (!m.is_paused && !waiting_for_resume) {
+        // we're firing
+        m.fireTransitions(reducers, stp, true, case_id);
+      } else if (m.is_paused && !waiting_for_resume) {
+        // we've been asked to pause
+        waiting_for_resume = true;
+        for (const auto transition_index : m.active_transitions_n) {
+          pause(m.net.store.at(transition_index));
+        }
+      } else if (!m.is_paused && waiting_for_resume) {
+        // we've been asked to resume
+        waiting_for_resume = false;
+        for (const auto transition_index : m.active_transitions_n) {
+          resume(m.net.store.at(transition_index));
+        }
         m.fireTransitions(reducers, stp, true, case_id);
       }
     }
@@ -199,7 +230,7 @@ struct Petri {
       {
         // populate that eventlog with child eventlog and possible cancelations.
         for (const auto transition_index : m.active_transitions_n) {
-          auto [el, state] = cancelTransition(m.net.store.at(transition_index));
+          auto [el, state] = cancel(m.net.store.at(transition_index));
           if (!el.empty()) {
             m.event_log.insert(m.event_log.end(), el.begin(), el.end());
           }
@@ -259,11 +290,10 @@ create(const Net &net, const Marking &m0, const Marking &final_marking,
       }};
 }
 
-Application::Application(const std::set<std::string> &files,
-                         const Marking &final_marking, const Store &store,
-                         const PriorityTable &priorities,
-                         const std::string &case_id,
-                         std::shared_ptr<TaskSystem> stp) {
+PetriNet::PetriNet(const std::set<std::string> &files,
+                   const Marking &final_marking, const Store &store,
+                   const PriorityTable &priorities, const std::string &case_id,
+                   std::shared_ptr<TaskSystem> stp) {
   const auto [net, m0] = readPnml(files);
   if (areAllTransitionsInStore(store, net)) {
     std::tie(impl, register_functor) =
@@ -271,10 +301,10 @@ Application::Application(const std::set<std::string> &files,
   }
 }
 
-Application::Application(const std::set<std::string> &files,
-                         const Marking &final_marking, const Store &store,
-                         const std::string &case_id,
-                         std::shared_ptr<TaskSystem> stp) {
+PetriNet::PetriNet(const std::set<std::string> &files,
+                   const Marking &final_marking, const Store &store,
+                   const std::string &case_id,
+                   std::shared_ptr<TaskSystem> stp) {
   const auto [net, m0, priorities] = readGrml(files);
   if (areAllTransitionsInStore(store, net)) {
     std::tie(impl, register_functor) =
@@ -282,18 +312,17 @@ Application::Application(const std::set<std::string> &files,
   }
 }
 
-Application::Application(const Net &net, const Marking &m0,
-                         const Marking &final_marking, const Store &store,
-                         const PriorityTable &priorities,
-                         const std::string &case_id,
-                         std::shared_ptr<TaskSystem> stp) {
+PetriNet::PetriNet(const Net &net, const Marking &m0,
+                   const Marking &final_marking, const Store &store,
+                   const PriorityTable &priorities, const std::string &case_id,
+                   std::shared_ptr<TaskSystem> stp) {
   if (areAllTransitionsInStore(store, net)) {
     std::tie(impl, register_functor) =
         create(net, m0, final_marking, store, priorities, case_id, stp);
   }
 }
 
-bool Application::tryFireTransition(const Transition &t) const noexcept {
+bool PetriNet::tryFireTransition(const Transition &t) const noexcept {
   if (impl == nullptr) {
     return false;
   }
@@ -301,10 +330,10 @@ bool Application::tryFireTransition(const Transition &t) const noexcept {
   while (impl->reducers->try_dequeue(f)) {
     impl->m = f(std::move(impl->m));
   }
-  return impl->m.fireTransition(t, impl->reducers, impl->stp, "manual");
+  return impl->m.fire(t, impl->reducers, impl->stp, "manual");
 };
 
-Result Application::run() const noexcept {
+Result PetriNet::fire() const noexcept {
   if (impl == nullptr) {
     spdlog::error("Something went seriously wrong. Please send a bug report.");
     return {{}, State::Error};
@@ -315,29 +344,27 @@ Result Application::run() const noexcept {
         impl->case_id);
     return {{}, State::Error};
   } else {
-    return impl->run();
+    return impl->fire();
   }
 }
 
-Eventlog Application::getEventLog() const noexcept {
-  return impl->getEventLog();
-};
+Eventlog PetriNet::getEventLog() const noexcept { return impl->getEventLog(); };
 
-std::pair<std::vector<Transition>, std::vector<Place>> Application::getState()
+std::pair<std::vector<Transition>, std::vector<Place>> PetriNet::getState()
     const noexcept {
   return impl->getState();
 }
 
-std::vector<Transition> Application::getFireableTransitions() const noexcept {
+std::vector<Transition> PetriNet::getFireableTransitions() const noexcept {
   return impl->getFireableTransitions();
 };
 
-std::function<void()> Application::registerTransitionCallback(
+std::function<void()> PetriNet::registerTransitionCallback(
     const Transition &transition) const noexcept {
   return [transition, this] { register_functor(transition); };
 }
 
-Result Application::exitEarly() const noexcept {
+Result PetriNet::cancel() const noexcept {
   const auto maybe_thread_id = impl->thread_id_.load();
   if (maybe_thread_id && maybe_thread_id.value() != getThreadId() &&
       !impl->early_exit.load()) {
@@ -365,7 +392,11 @@ Result Application::exitEarly() const noexcept {
   return {getEventLog(), State::UserExit};
 }
 
-bool Application::reuseApplication(const std::string &new_case_id) {
+void PetriNet::pause() const noexcept { impl->pause_(); }
+
+void PetriNet::resume() const noexcept { impl->resume_(); }
+
+bool PetriNet::reuseApplication(const std::string &new_case_id) {
   return impl->reset(new_case_id);
 }
 

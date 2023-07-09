@@ -2,55 +2,58 @@
 
 #include <atomic>
 #include <functional>
+#include <memory>
 #include <thread>
 #include <vector>
 
-/// The implementation is based on Sean Parent's task system, described in,
-/// Better Code: Concurrency.
 namespace symmetri {
 
+/**
+ * @brief forward deceleration of the internal TaskQueue
+ *
+ */
 class TaskQueue;
 
 /**
- * @brief The task system has a task queue for each thread. It is suggested to
- * have one TaskSystem per executable and share it along the classes that use
- * it. It uses a simply work-stealing mechanism for performance improvement.
+ * @brief Create a TaskSystem object. The only way to create a TaskSystem
+ * is through this factory. We enforce the use of a smart pointer to make sure
+ * the pool stays alive until both the original scope of the pool and net is
+ * exited.
  *
+ * @param thread_count the amount of threads in the pool. The simplest way to
+ * avoid deadlocks in the net is to make sure thread_count is at least the
+ * maximum amount of transitions in the net. are ran in parallel.
+ * @return std::shared_ptr<const TaskSystem>
  */
 class TaskSystem {
  public:
   using Task = std::function<void()>;
+
   /**
    * @brief Construct a new Task System object with n threads
    *
    * @param n_threads if less then 1, it defaults to
    * std::thread::hardware_concurrency()
    */
-  explicit TaskSystem(size_t n_threads = 0);
+  explicit TaskSystem(size_t n_threads = std::thread::hardware_concurrency());
   ~TaskSystem() noexcept;
   TaskSystem(TaskSystem const&) = delete;
   TaskSystem(TaskSystem&&) noexcept = delete;
   TaskSystem& operator=(TaskSystem const&) = delete;
   TaskSystem& operator=(TaskSystem&&) noexcept = delete;
+
   /**
-   * @brief Push allows tasks to be put in one of the TaskQueues
+   * @brief push allows to put almost anything as "payload" for a transition.
    *
-   * @param task
+   * @param p
    */
-  void push(Task&& task);
+  void push(Task&& p) const;
 
  private:
-  std::vector<std::thread> threads_;
-  std::vector<TaskQueue> queues_;
-  std::atomic_size_t counter_;
-
-  /**
-   * @brief Run is the loop that runs in each thread. It has the logic to clear
-   * a TaskQueue.
-   *
-   * @param thread_index
-   */
-  void run_(size_t thread_index);
+  void loop();
+  std::vector<std::thread> pool_;
+  std::atomic<bool> is_running_;
+  std::unique_ptr<TaskQueue> queue_;
 };
 
 }  // namespace symmetri

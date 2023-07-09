@@ -55,8 +55,8 @@ int main(int, char *argv[]) {
   // store based on the petri net. You can specifiy a final marking, the amount
   // of threads it can use (maximum amount of stuff it can do in parallel) and a
   // name so the net is easy to identifiy in a log.
-  symmetri::Application net({pnml_path_start, pnml_path_passive}, {}, store, {},
-                            "CASE_X", pool);
+  symmetri::PetriNet net({pnml_path_start, pnml_path_passive}, {}, store, {},
+                         "CASE_X", pool);
 
   // We use a simple boolean flag to terminate the threads once the net
   // finishes. Without it, these threads would prevent the program from cleanly
@@ -84,8 +84,8 @@ int main(int, char *argv[]) {
                                    // becomes false.
       });
 
-  auto [el, result] = net.run();  // This function blocks until either the
-                                  // net completes, deadlocks
+  auto [el, result] = net.fire();  // This function blocks until either the
+                                   // net completes, deadlocks
   // or user requests exit (ctrl-c)
   running.store(false);  // We set this to false so the thread that we launched
                          // gets interrupted.

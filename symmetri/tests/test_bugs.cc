@@ -1,5 +1,3 @@
-#include <spdlog/spdlog.h>
-
 #include <catch2/catch_test_macros.hpp>
 #include <condition_variable>
 
@@ -17,10 +15,8 @@ void t() {
   std::unique_lock<std::mutex> lk(cv_m);
   cv.wait(lk, [] {
     if ((is_ready1 && !is_ready2)) {
-      spdlog::info("case 1 ({0},{1})", is_ready1, is_ready2);
       return true;
     } else if ((is_ready1 && is_ready2)) {
-      spdlog::info("case 2 ({0},{1})", is_ready1, is_ready2);
       return true;
     } else
       return false;

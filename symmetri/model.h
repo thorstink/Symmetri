@@ -6,27 +6,65 @@
 #include <memory>
 
 #include "small_vector.hpp"
-#include "symmetri/polyaction.h"
+#include "symmetri/polytransition.h"
 #include "symmetri/tasks.h"
 #include "symmetri/types.h"
 
 namespace symmetri {
 
 using SmallVector = gch::small_vector<size_t, 4>;
-using Store = std::unordered_map<Transition, PolyAction>;
+using Store = std::unordered_map<Transition, PolyTransition>;
 
+/**
+ * @brief a small helper function to get the index representation of a place or
+ * transition.
+ *
+ * @param m
+ * @param s
+ * @return size_t
+ */
 size_t toIndex(const std::vector<std::string> &m, const std::string &s);
+
+/**
+ * @brief calculates a list of possible transitions given the current
+ * token-distribution. It returns a list of transitions sorted by priority. The
+ * first element being the high priority.
+ *
+ * @param tokens
+ * @param p_to_ts_n
+ * @param priorities
+ * @return gch::small_vector<uint8_t, 32>
+ */
 gch::small_vector<uint8_t, 32> possibleTransitions(
     const std::vector<size_t> &tokens,
     const std::vector<SmallVector> &p_to_ts_n,
     const std::vector<int8_t> &priorities);
+
+/**
+ * @brief Takes a vector of input places (pre-conditions) and the current token
+ * distribution to determine whether the pre-conditions are met.
+ *
+ * @param pre
+ * @param tokens
+ * @return true if the pre-conditions are met
+ * @return false otherwise
+ */
 bool canFire(const SmallVector &pre, const std::vector<size_t> &tokens);
 
 struct Model;
 using Reducer = std::function<Model &(Model &&)>;
 
+/**
+ * @brief Create a Reducer For Transition object
+ *
+ * @param T_i
+ * @param task
+ * @param case_id
+ * @param reducers
+ * @return Reducer
+ */
 Reducer createReducerForTransition(
-    size_t T_i, const PolyAction &task, const std::string &case_id,
+    size_t T_i, const PolyTransition &task, const std::string &case_id,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers);
 
@@ -106,12 +144,11 @@ struct Model {
    * @return true If the transition was fireable, it was queued
    * @return false If the transition was not fireable, nothing happenend.
    */
-  bool fireTransition(
-      const Transition &t,
-      const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
-          &reducers,
-      std::shared_ptr<TaskSystem> polymorphic_actions,
-      const std::string &case_id = "undefined_case_id");
+  bool fire(const Transition &t,
+            const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
+                &reducers,
+            std::shared_ptr<TaskSystem> polymorphic_actions,
+            const std::string &case_id = "undefined_case_id");
 
   /**
    * @brief Tries to run a transition (or all) until it 'deadlocks'. The list
@@ -146,7 +183,7 @@ struct Model {
     std::vector<int8_t>
         priority;  ///< This vector holds priorities for all transitions. This
                    ///< vector is index like `transition`.
-    std::vector<PolyAction>
+    std::vector<PolyTransition>
         store;  ///< This is the same 'lookup table', only index using
                 ///< `transition` so it is compatible with index lookup.
   } net;        ///< Is a data-oriented design of a Petri net
@@ -155,18 +192,19 @@ struct Model {
   std::vector<size_t> tokens_n;              ///< The current marking
   std::vector<size_t> active_transitions_n;  ///< List of active transitions
   Clock::time_point timestamp;  ///< Timestamp of latest marking mutation
-  Eventlog event_log;           ///< The most actual event_log
+  bool is_paused;
+  Eventlog event_log;  ///< The most actual event_log
 
  private:
   /**
-   * @brief Tries to fire a transition.
+   * @brief fires a transition.
    *
    * @param t
    * @param reducers
    * @param polymorphic_actions
    * @param case_id
-   * @return true if the transition fired.
-   * @return false if it did not fire.
+   * @return true if the transition is direct.
+   * @return false if it is only dispatched.
    */
   bool Fire(const size_t t,
             const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>

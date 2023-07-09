@@ -6,9 +6,13 @@
 
 namespace symmetri {
 
-using Place = std::string;
-using Transition = std::string;
-using Clock = std::chrono::steady_clock;
+using Place = std::string;       ///< The string representation of the place the
+                                 ///< Petri net definition
+using Transition = std::string;  ///< The string representation of the
+                                 ///< transition the Petri net definition
+using Clock =
+    std::chrono::steady_clock;  ///< The clock definition in Symmetri is the
+                                ///< steady clock for monotonic reasons
 
 /**
  * @brief The difference kinds of results a transition can have.
@@ -18,7 +22,7 @@ enum class State {
   Scheduled,  ///< The transition is put into the task system
   Started,    ///< The transition started
   Completed,  ///< The transition completed as expected
-  Deadlock,   ///< The transition deadlocked (applies to  petri nets)
+  Deadlock,   ///< The transition deadlocked
   UserExit,   ///< The transition or interrupted and possibly stopped
   Error       ///< None of the above
 };
@@ -36,13 +40,24 @@ struct Event {
                             ///< event was processed
 };
 
-using Eventlog = std::vector<Event>;
-using Result = std::pair<Eventlog, State>;
-using Net =
-    std::unordered_map<Transition,
-                       std::pair<std::vector<Place>, std::vector<Place>>>;
-using Marking = std::unordered_map<Place, uint16_t>;
-using PriorityTable = std::vector<std::pair<Transition, int8_t>>;
+using Eventlog = std::vector<Event>;  ///< The eventlog is simply a log of
+                                      ///< events, sorted by their stamp
+using Result =
+    std::pair<Eventlog, State>;  ///< The result of a transition is described by
+                                 ///< its Eventlog and State
+using Net = std::unordered_map<
+    Transition,
+    std::pair<std::vector<Place>,
+              std::vector<Place>>>;  ///< This is the class multiset definition
+                                     ///< of a Petri net. For each transition
+                                     ///< there is a pair of sets for input and
+                                     ///< output transitions
+using Marking =
+    std::unordered_map<Place,
+                       uint16_t>;  ///< The marking is limited from 0 to 65535
+using PriorityTable =
+    std::vector<std::pair<Transition, int8_t>>;  ///< Priority is limited from
+                                                 ///< -128 to 127
 
 /**
  * @brief Checks if the markings are exactly the same. Note that this uses a

@@ -80,7 +80,7 @@ Reducer processTransition(size_t t_i, const Eventlog &new_events,
 }
 
 Reducer createReducerForTransition(
-    size_t t_i, const PolyAction &task, const std::string &case_id,
+    size_t t_i, const PolyTransition &task, const std::string &case_id,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers) {
   const auto start_time = Clock::now();
@@ -90,7 +90,7 @@ Reducer createReducerForTransition(
     return std::ref(model);
   });
 
-  const auto [ev, res] = fireTransition(task);
+  const auto [ev, res] = fire(task);
   const auto end_time = Clock::now();
 
   return ev.empty() ? processTransition(t_i, case_id, res, end_time)

@@ -104,7 +104,7 @@ TEST_CASE("Run until net dies") {
   auto stp = std::make_shared<TaskSystem>(1);
 
   Reducer r;
-  PolyAction a([] {});
+  PolyTransition a([] {});
   // we need to enqueue one 'no-operation' to start the live net.
   reducers->enqueue([](Model&& m) { return std::ref(m); });
   do {
@@ -133,7 +133,7 @@ TEST_CASE("Run until net dies with nullptr") {
   auto stp = std::make_shared<TaskSystem>(1);
 
   Reducer r;
-  PolyAction a([] {});
+  PolyTransition a([] {});
   // we need to enqueue one 'no-operation' to start the live net.
   reducers->enqueue([](Model&& m) { return std::ref(m); });
   do {
@@ -195,11 +195,11 @@ TEST_CASE("Step through transitions") {
     Marking m0 = {{"Pa", 4}};
     Model m(net, store, {}, m0);
     REQUIRE(m.getFireableTransitions().size() == 4);  // abcd
-    m.fireTransition("e", reducers, stp);
-    m.fireTransition("b", reducers, stp);
-    m.fireTransition("b", reducers, stp);
-    m.fireTransition("c", reducers, stp);
-    m.fireTransition("b", reducers, stp);
+    m.fire("e", reducers, stp);
+    m.fire("b", reducers, stp);
+    m.fire("b", reducers, stp);
+    m.fire("c", reducers, stp);
+    m.fire("b", reducers, stp);
     // there are no reducers ran, so this doesn't update.
     REQUIRE(m.getActiveTransitions().size() == 4);
     // there should be no markers left.

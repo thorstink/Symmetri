@@ -1,4 +1,5 @@
 #pragma once
+
 #include <memory>
 
 #include "symmetri/types.h"
@@ -13,7 +14,7 @@ namespace symmetri {
  * post-marking-mutation should only happen after the transition is invoked.
  */
 template <typename T>
-bool isDirectTransition(const T &) {
+bool isDirect(const T &) {
   return !std::is_invocable_v<T>;
 }
 
@@ -26,9 +27,26 @@ bool isDirectTransition(const T &) {
  * @return Result
  */
 template <typename T>
-Result cancelTransition(const T &) {
+Result cancel(const T &) {
   return {{}, State::UserExit};
 }
+
+/**
+ * @brief Implments a pause action for a transition. By default it does nothing.
+ *
+ * @tparam T
+ */
+template <typename T>
+void pause(const T &) {}
+
+/**
+ * @brief Templates a resume action for a transition. By default it does
+ * nothing.
+ *
+ * @tparam T
+ */
+template <typename T>
+void resume(const T &) {}
 
 /**
  * @brief Generates a Result based on what kind of information the
@@ -40,7 +58,7 @@ Result cancelTransition(const T &) {
  * possible eventlog of the transition.
  */
 template <typename T>
-Result fireTransition(const T &transition) {
+Result fire(const T &transition) {
   if constexpr (!std::is_invocable_v<T>) {
     return {{}, State::Completed};
   } else if constexpr (std::is_same_v<State, decltype(transition())>) {
@@ -54,69 +72,56 @@ Result fireTransition(const T &transition) {
 }
 
 /**
- * @brief PolyAction is a wrapper around any type that you want to tie to a
+ * @brief PolyTransition is a wrapper around any type that you want to tie to a
  * transition. Typically this is an invokable object, such as a function, that
  * executes some side-effects. The output of the invokable object can be used to
  * communicate success or failure to the petri-net executor. You can create
- * custom behavior by defining a tailored "fireTransition(const A&)" for your
+ * custom behavior by defining a tailored "fire(const A&)" for your
  * transition payload.
  *
  * Random note, this class is inspired/taken by Sean Parents' talk "inheritance
  * is the base class of evil".
  *
  */
-class PolyAction {
+class PolyTransition {
  public:
-  template <typename T>
-  PolyAction(T x) : self_(std::make_shared<model<T>>(std::move(x))) {}
-
-  /**
-   * @brief You can define your own specialized fireTransition function for your
-   * transition type. This allows you to control what should happen when your
-   * transition is fired. If you do not define it, Symmetri will try to invoke
-   * it, and otherwise handle it as direct transition.
-   *
-   * @param x
-   * @return Result
-   */
-  friend Result fireTransition(const PolyAction &x) { return x.self_->run_(); }
-
-  /**
-   * @brief You can define a transition payload to be simple by creating a
-   * specialized isDirectTransition for your type.
-   *
-   * @param x
-   * @return true
-   * @return false
-   */
-  friend bool isDirectTransition(const PolyAction &x) {
-    return x.self_->simple_();
+  template <typename Transition>
+  PolyTransition(Transition x)
+      : self_(std::make_shared<model<Transition>>(std::move(x))) {}
+  friend Result fire(const PolyTransition &x) { return x.self_->run_(); }
+  friend bool isDirect(const PolyTransition &x) {
+    return x.self_->is_direct_();
   }
-
-  /**
-   * @brief
-   *
-   * @param x
-   * @return Result
-   */
-  friend Result cancelTransition(const PolyAction &x) {
-    return x.self_->cancel_();
-  }
+  friend Result cancel(const PolyTransition &x) { return x.self_->cancel_(); }
+  friend void pause(const PolyTransition &x) { return x.self_->pause_(); }
+  friend void resume(const PolyTransition &x) { return x.self_->resume_(); }
 
  private:
   struct concept_t {
     virtual ~concept_t() = default;
     virtual Result run_() const = 0;
     virtual Result cancel_() const = 0;
-    virtual bool simple_() const = 0;
+    virtual void pause_() const = 0;
+    virtual void resume_() const = 0;
+    virtual bool is_direct_() const = 0;
   };
-  template <typename T>
+
+  /**
+   * @brief A transition is defined by the concept that it is runnable,
+   * cancellable, pauseable and resumable. It can also be direct, meaning there
+   * is no associated side-effects but it is only a instant marking mutation.
+   *
+   * @tparam T the actual transition contain business logic
+   */
+  template <typename Transition>
   struct model final : concept_t {
-    model(T x) : payload_(std::move(x)) {}
-    Result run_() const override { return fireTransition(payload_); }
-    Result cancel_() const override { return cancelTransition(payload_); }
-    bool simple_() const override { return isDirectTransition(payload_); }
-    T payload_;
+    model(Transition &&x) : transition_(std::move(x)) {}
+    Result run_() const override { return fire(transition_); }
+    Result cancel_() const override { return cancel(transition_); }
+    bool is_direct_() const override { return isDirect(transition_); }
+    void pause_() const override { return pause(transition_); }
+    void resume_() const override { return resume(transition_); }
+    Transition transition_;
   };
 
   std::shared_ptr<const concept_t> self_;

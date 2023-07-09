@@ -23,10 +23,10 @@ TEST_CASE("Create a using the net constructor without end condition.") {
   auto [net, store, priority, m0] = testNet();
   auto stp = std::make_shared<TaskSystem>(1);
 
-  symmetri::Application app(net, m0, {}, store, priority,
-                            "test_net_without_end", stp);
+  symmetri::PetriNet app(net, m0, {}, store, priority, "test_net_without_end",
+                         stp);
   // we can run the net
-  auto [ev, res] = app.run();
+  auto [ev, res] = app.fire();
 
   // because there's no final marking, but the net is finite, it deadlocks.
   REQUIRE(res == State::Deadlock);
@@ -38,12 +38,12 @@ TEST_CASE("Create a using the net constructor with end condition.") {
 
   Marking final_marking({{"Pa", 0}, {"Pb", 2}, {"Pc", 0}, {"Pd", 2}});
   auto [net, store, priority, m0] = testNet();
-  symmetri::Application app(net, m0, final_marking, store, priority,
-                            "test_net_with_end", stp);
+  symmetri::PetriNet app(net, m0, final_marking, store, priority,
+                         "test_net_with_end", stp);
   // we can run the net
-  auto [ev, res] = app.run();
+  auto [ev, res] = app.fire();
 
-  // now there is an end conition.
+  // now there is an end condition.
   REQUIRE(res == State::Completed);
   REQUIRE(!ev.empty());
 }
@@ -57,9 +57,9 @@ TEST_CASE("Create a using pnml constructor.") {
     // This store is not appropriate for this net,
     Store store = {{"wrong_id", &t0}};
     PriorityTable priority;
-    symmetri::Application app({pnml_file}, {}, store, priority, "fail", stp);
+    symmetri::PetriNet app({pnml_file}, {}, store, priority, "fail", stp);
     // however, we can try running it,
-    auto [ev, res] = app.run();
+    auto [ev, res] = app.fire();
 
     // but the result is an error.
     REQUIRE(res == State::Error);
@@ -72,10 +72,10 @@ TEST_CASE("Create a using pnml constructor.") {
     Store store = symmetri::Store{{"T0", &t0}};
     PriorityTable priority;
     Marking final_marking({{"P1", 1}});
-    symmetri::Application app({pnml_file}, final_marking, store, priority,
-                              "success", stp);
+    symmetri::PetriNet app({pnml_file}, final_marking, store, priority,
+                           "success", stp);
     // so we can run it,
-    auto [ev, res] = app.run();
+    auto [ev, res] = app.fire();
     // and the result is properly completed.
     REQUIRE(res == State::Completed);
     REQUIRE(!ev.empty());
@@ -85,35 +85,32 @@ TEST_CASE("Create a using pnml constructor.") {
 TEST_CASE("Run transition manually.") {
   auto [net, store, priority, m0] = testNet();
   auto stp = std::make_shared<TaskSystem>(1);
-  symmetri::Application app(net, m0, {}, store, priority, "single_run_net1",
-                            stp);
+  symmetri::PetriNet app(net, m0, {}, store, priority, "single_run_net1", stp);
 
   REQUIRE(app.tryFireTransition("t0"));
-  app.exitEarly();
+  app.cancel();
 }
 
 TEST_CASE("Run transition that does not exist manually.") {
   auto [net, store, priority, m0] = testNet();
   auto stp = std::make_shared<TaskSystem>(1);
-  symmetri::Application app(net, m0, {}, store, priority, "single_run_net2",
-                            stp);
+  symmetri::PetriNet app(net, m0, {}, store, priority, "single_run_net2", stp);
 
   REQUIRE(!app.tryFireTransition("t0dgdsg"));
-  app.exitEarly();
+  app.cancel();
 }
 
 TEST_CASE("Run transition for which the preconditions are not met manually.") {
   auto [net, store, priority, m0] = testNet();
   auto stp = std::make_shared<TaskSystem>(1);
-  symmetri::Application app(net, m0, {}, store, priority, "single_run_net3",
-                            stp);
+  symmetri::PetriNet app(net, m0, {}, store, priority, "single_run_net3", stp);
 
   auto l = app.getFireableTransitions();
   for (auto t : l) {
     REQUIRE(t != "t1");
   }
   REQUIRE(!app.tryFireTransition("t1"));
-  app.exitEarly();
+  app.cancel();
 }
 
 TEST_CASE("Reuse an application with a new case_id.") {
@@ -121,11 +118,11 @@ TEST_CASE("Reuse an application with a new case_id.") {
   const auto initial_id = "initial0";
   const auto new_id = "something_different0";
   auto stp = std::make_shared<TaskSystem>(1);
-  symmetri::Application app(net, m0, {}, store, priority, initial_id, stp);
+  symmetri::PetriNet app(net, m0, {}, store, priority, initial_id, stp);
   REQUIRE(!app.reuseApplication(initial_id));
   REQUIRE(app.reuseApplication(new_id));
   // fire a transition so that there's an entry in the eventlog
-  auto eventlog = app.run().first;
+  auto eventlog = app.fire().first;
   // double check that the eventlog is not empty
   REQUIRE(!eventlog.empty());
   // the eventlog should have a different case id.
@@ -139,10 +136,36 @@ TEST_CASE("Can not reuse an active application with a new case_id.") {
   const auto initial_id = "initial1";
   const auto new_id = "something_different1";
   auto stp = std::make_shared<TaskSystem>(1);
-  symmetri::Application app(net, m0, {}, store, priority, initial_id, stp);
+  symmetri::PetriNet app(net, m0, {}, store, priority, initial_id, stp);
   stp->push([&]() mutable {
     // this should fail because we can not do this while everything is active.
     REQUIRE(!app.reuseApplication(new_id));
   });
-  auto [ev, res] = app.run();
+  auto [ev, res] = app.fire();
+}
+
+TEST_CASE("Test pause and resume") {
+  std::atomic<int> i = 0;
+  Net net = {{"t0", {{"Pa"}, {"Pa"}}}, {"t1", {{}, {"Pb"}}}};
+  Store store = {{"t0", [&] { i++; }}, {"t1", [] {}}};
+  Marking m0 = {{"Pa", 1}};
+  auto stp = std::make_shared<TaskSystem>(2);
+  symmetri::PetriNet app(net, m0, {{"Pb", 1}}, store, {}, "random_id", stp);
+  int check1, check2;
+  stp->push([&, app, t1 = app.registerTransitionCallback("t1")]() {
+    const auto dt = std::chrono::milliseconds(5);
+    std::this_thread::sleep_for(dt);
+    symmetri::pause(app);
+    std::this_thread::sleep_for(dt);
+    check1 = i.load();
+    std::this_thread::sleep_for(dt);
+    check2 = i.load();
+    symmetri::resume(app);
+    std::this_thread::sleep_for(dt);
+    t1();
+  });
+  app.fire();
+  REQUIRE(check1 == check2);
+  REQUIRE(i.load() > check2);
+  REQUIRE(i.load() > 20);
 }
