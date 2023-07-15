@@ -56,10 +56,9 @@ bool areAllTransitionsInStore(const Store &store, const Net &net) noexcept {
 struct Petri {
   Model m;  ///< The Petri net model
   std::atomic<std::optional<unsigned int>>
-      thread_id_;       ///< The id of the thread from which run is called.
-  const Marking m0_;    ///< The initial marking for this instance
-  const Net net_;       ///< The net
-  const Store &store_;  ///< Reference to the store
+      thread_id_;     ///< The id of the thread from which run is called.
+  const Marking m0_;  ///< The initial marking for this instance
+  const Net net_;     ///< The net
   const PriorityTable priorities_;  ///< The priority table for this instance
   const std::vector<size_t>
       final_marking;  ///< The net will stop queueing reducers
@@ -90,7 +89,6 @@ struct Petri {
         thread_id_(std::nullopt),
         m0_(m0),
         net_(net),
-        store_(store),
         priorities_(priorities),
         final_marking(m.toTokens(final_marking)),
         stp(stp),
@@ -276,18 +274,18 @@ create(const Net &net, const Marking &m0, const Marking &final_marking,
        const std::string &case_id, std::shared_ptr<TaskSystem> stp) {
   auto impl = std::make_shared<Petri>(net, m0, stp, final_marking, store,
                                       priority, case_id);
-  return {
-      impl, [=](const Transition &t) {
-        if (impl->thread_id_.load()) {
-          impl->reducers->enqueue([=](Model &&m) {
-            const auto t_index = toIndex(m.net.transition, t);
-            m.active_transitions_n.push_back(t_index);
-            impl->reducers->enqueue(createReducerForTransition(
-                t_index, m.net.store[t_index], impl->case_id, impl->reducers));
-            return std::ref(m);
-          });
-        }
-      }};
+  return {impl, [=](const Transition &t) {
+            if (impl->thread_id_.load()) {
+              impl->reducers->enqueue([=](Model &&m) {
+                const auto t_index = toIndex(m.net.transition, t);
+                m.active_transitions_n.push_back(t_index);
+                impl->reducers->enqueue(createReducerForTransition(
+                    t_index, m.net.transition[t_index], m.net.store[t_index],
+                    impl->case_id, impl->reducers));
+                return std::ref(m);
+              });
+            }
+          }};
 }
 
 PetriNet::PetriNet(const std::set<std::string> &files,

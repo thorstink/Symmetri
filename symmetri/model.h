@@ -64,7 +64,8 @@ using Reducer = std::function<Model &(Model &&)>;
  * @return Reducer
  */
 Reducer createReducerForTransition(
-    size_t T_i, const PolyTransition &task, const std::string &case_id,
+    size_t T_i, const std::string &transition, const PolyTransition &task,
+    const std::string &case_id,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers);
 
@@ -191,9 +192,8 @@ struct Model {
   std::vector<size_t> initial_tokens;        ///< The intial marking
   std::vector<size_t> tokens_n;              ///< The current marking
   std::vector<size_t> active_transitions_n;  ///< List of active transitions
-  Clock::time_point timestamp;  ///< Timestamp of latest marking mutation
+  Eventlog event_log;                        ///< The most actual event_log
   bool is_paused;
-  Eventlog event_log;  ///< The most actual event_log
 
  private:
   /**

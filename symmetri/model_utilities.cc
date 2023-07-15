@@ -1,5 +1,5 @@
-#include "model.h"
 
+#include "model.h"
 namespace symmetri {
 
 size_t toIndex(const std::vector<std::string> &m, const std::string &s) {
@@ -37,8 +37,7 @@ gch::small_vector<uint8_t, 32> possibleTransitions(
   return possible_transition_list_n;
 }
 
-Reducer processTransition(size_t t_i, const std::string &case_id, State result,
-                          Clock::time_point end_time) {
+Reducer processTransition(size_t t_i, const Eventlog &ev, State result) {
   return [=](Model &&model) {
     if (result == State::Completed) {
       const auto &place_list = model.net.output_n;
@@ -46,55 +45,32 @@ Reducer processTransition(size_t t_i, const std::string &case_id, State result,
                             place_list[t_i].end());
     }
 
-    model.event_log.push_back(
-        {case_id, model.net.transition[t_i],
-         result == State::Completed ? State::Completed : State::Error,
-         end_time});
-
-    // we know for sure this transition is active because otherwise it wouldn't
-    // produce a reducer.
-    model.active_transitions_n.erase(
-        std::find(model.active_transitions_n.begin(),
-                  model.active_transitions_n.end(), t_i));
-    return std::ref(model);
-  };
-}
-
-Reducer processTransition(size_t t_i, const Eventlog &new_events,
-                          State result) {
-  return [=, ev = std::move(new_events)](Model &&model) mutable {
-    if (result == State::Completed) {
-      const auto &place_list = model.net.output_n;
-      model.tokens_n.insert(model.tokens_n.begin(), place_list[t_i].begin(),
-                            place_list[t_i].end());
-    }
     model.event_log.insert(model.event_log.end(), ev.begin(), ev.end());
+
     // we know for sure this transition is active because otherwise it wouldn't
     // produce a reducer.
     model.active_transitions_n.erase(
         std::find(model.active_transitions_n.begin(),
                   model.active_transitions_n.end(), t_i));
-
     return std::ref(model);
   };
 }
 
 Reducer createReducerForTransition(
-    size_t t_i, const PolyTransition &task, const std::string &case_id,
+    size_t t_i, const std::string &transition, const PolyTransition &task,
+    const std::string &case_id,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers) {
   const auto start_time = Clock::now();
   reducers->enqueue([=](Model &&model) {
     model.event_log.push_back(
-        {case_id, model.net.transition[t_i], State::Started, start_time});
+        {case_id, transition, State::Started, start_time});
     return std::ref(model);
   });
 
-  const auto [ev, res] = fire(task);
-  const auto end_time = Clock::now();
-
-  return ev.empty() ? processTransition(t_i, case_id, res, end_time)
-                    : processTransition(t_i, ev, res);
+  auto [ev, res] = fire(task);
+  ev.push_back({case_id, transition, res, Clock::now()});
+  return processTransition(t_i, ev, res);
 }
 
 }  // namespace symmetri

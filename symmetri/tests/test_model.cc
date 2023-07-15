@@ -46,15 +46,6 @@ TEST_CASE("Test equaliy of nets") {
   REQUIRE(!stateNetEquality(net, net3));
 }
 
-TEST_CASE("Create a model") {
-  auto [net, store, priority, m0] = testNet();
-  auto before_model_creation = Clock::now();
-  Model m(net, store, priority, m0);
-  auto after_model_creation = Clock::now();
-  REQUIRE(before_model_creation <= m.timestamp);
-  REQUIRE(after_model_creation > m.timestamp);
-}
-
 TEST_CASE("Run one transition iteration in a petri net") {
   auto [net, store, priority, m0] = testNet();
 
