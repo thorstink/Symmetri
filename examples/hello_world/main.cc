@@ -84,8 +84,8 @@ int main(int, char *argv[]) {
                                    // becomes false.
       });
 
-  auto [el, result] = net.fire();  // This function blocks until either the
-                                   // net completes, deadlocks
+  auto [el, result] = symmetri::fire(net);  // This function blocks until either
+                                            // the net completes, deadlocks
   // or user requests exit (ctrl-c)
   running.store(false);  // We set this to false so the thread that we launched
                          // gets interrupted.

@@ -144,7 +144,7 @@ class PetriNet final {
    *
    * @return Result
    */
-  Result fire() const noexcept;
+  friend Result fire(const PetriNet &app);
 
   /**
    * @brief cancel interrupts and stops the Petri net execution and
@@ -154,7 +154,7 @@ class PetriNet final {
    *
    * @return Result
    */
-  Result cancel() const noexcept;
+  friend Result cancel(const PetriNet &app);
 
   /**
    * @brief pause interrupts and pauses the Petri net execution and
@@ -165,14 +165,14 @@ class PetriNet final {
    *
    * @param app
    */
-  void pause() const noexcept;
+  friend void pause(const PetriNet &app);
 
   /**
    * @brief resume breaks the pause and immediately will try to fire all
    * possible transitions. It will also call resume on all active transitions.
    *
    */
-  void resume() const noexcept;
+  friend void resume(const PetriNet &app);
 
  private:
   std::shared_ptr<Petri> impl;  ///< Pointer to the implementation, all
@@ -184,10 +184,9 @@ class PetriNet final {
                          ///< transition without meeting the pre-conditions.
 };
 
-Result fire(const PetriNet &app) { return app.fire(); };
-Result cancel(const PetriNet &app) { return app.cancel(); }
-void pause(const PetriNet &app) { return app.pause(); };
-void resume(const PetriNet &app) { return app.resume(); };
-bool isDirect(const PetriNet &) { return false; };
-
+Result fire(const PetriNet &);
+Result cancel(const PetriNet &);
+void pause(const PetriNet &);
+void resume(const PetriNet &);
+bool isDirect(const PetriNet &);
 }  // namespace symmetri
