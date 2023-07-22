@@ -322,10 +322,10 @@ Result fire(const PetriNet &app) {
     } else if (!m.is_paused && waiting_for_resume) {
       // we've been asked to resume
       waiting_for_resume = false;
+      m.fireTransitions(active_reducers, petri.stp, true, petri.case_id);
       for (const auto transition_index : m.active_transitions_n) {
         resume(m.net.store.at(transition_index));
       }
-      m.fireTransitions(active_reducers, petri.stp, true, petri.case_id);
     }
   }
 

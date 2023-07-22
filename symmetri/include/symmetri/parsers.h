@@ -30,4 +30,13 @@ std::tuple<symmetri::Net, symmetri::Marking, symmetri::PriorityTable> readGrml(
  */
 std::tuple<symmetri::Net, symmetri::Marking> readPnml(
     const std::set<std::string> &files);
+
+/**
+ * @brief a function to generate a Mermaid gantt-chart from an eventlog.
+ *
+ * @param el
+ * @return std::string
+ */
+std::string mermaidFromEventlog(symmetri::Eventlog el);
+
 }  // namespace symmetri
