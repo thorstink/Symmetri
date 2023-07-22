@@ -2,7 +2,6 @@
 
 #include <fstream>
 #include <iostream>
-#include <sstream>
 
 #include "symmetri/parsers.h"
 #include "symmetri/symmetri.h"
