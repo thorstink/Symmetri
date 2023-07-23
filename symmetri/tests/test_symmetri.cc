@@ -103,12 +103,12 @@ TEST_CASE("Reuse an application with a new case_id.") {
 TEST_CASE("Can not reuse an active application with a new case_id.") {
   auto [net, store, priority, m0] = testNet();
   const auto initial_id = "initial1";
-  // const auto new_id = "something_different1";
+  const auto new_id = "something_different1";
   auto stp = std::make_shared<TaskSystem>(1);
   symmetri::PetriNet app(net, m0, {}, store, priority, initial_id, stp);
   stp->push([&]() mutable {
     // this should fail because we can not do this while everything is active.
-    // REQUIRE(!app.reuseApplication(new_id));
+    REQUIRE(!app.reuseApplication(new_id));
   });
   auto [ev, res] = symmetri::fire(app);
 }
