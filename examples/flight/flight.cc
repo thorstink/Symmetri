@@ -7,33 +7,37 @@
 #include "transition.hpp"
 
 /**
- * @brief We want to use the Foo class with Symmetri; Foo has nice functionality
- * such as Pause and Resume, and it can also get preempted/cancelled. We need to
- * define functions to let Symmetri use these functionalities. It is as simple
- * by creating specialized version of the fire/cancel/isDirect/pause/resume
- * functions. One does not need to implement all - if nothing is defined, a
- * default version is used.
+ * @brief We want to use the Foo class with Symmetri; Foo has nice
+ * functionalities such as Pause and Resume and it can also get
+ * preempted/cancelled. We need to define functions to let Symmetri use these
+ * functionalities. It is as simple by creating specialized version of the
+ * fire/cancel/isDirect/pause/resume functions. One does not need to implement
+ * all - if nothing is defined, a default version is used.
  *
  */
 namespace symmetri {
+
 template <>
 Result fire(const Foo &f) {
-  return f.fire() ? Result{{}, symmetri::State::Error}
-                  : Result{{}, symmetri::State::Completed};
+  return f.fire() ? Result{{}, State::Error} : Result{{}, State::Completed};
 }
+
 template <>
 Result cancel(const Foo &f) {
   f.cancel();
-  return {{}, symmetri::State::UserExit};
+  return {{}, State::UserExit};
 }
+
 template <>
 bool isDirect(const Foo &) {
   return false;
 }
+
 template <>
 void pause(const Foo &f) {
   f.pause();
 }
+
 template <>
 void resume(const Foo &f) {
   f.resume();
@@ -97,7 +101,9 @@ int main(int, char *argv[]) {
           resume(bignet);
           break;
         case 'l': {
-          printLog(bignet.getEventLog());
+          auto el = bignet.getEventLog();
+          printLog(el);
+          spdlog::info(symmetri::mermaidFromEventlog(el));
           break;
         }
         case 'x': {

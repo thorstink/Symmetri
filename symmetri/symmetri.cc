@@ -119,7 +119,15 @@ struct Petri {
       std::promise<Eventlog> el;
       std::future<Eventlog> el_getter = el.get_future();
       reducers[reducer_selector]->enqueue([&](Model &&model) {
-        el.set_value(model.event_log);
+        auto eventlog = model.event_log;
+        // get event log from parent nets:
+        for (size_t pt_idx : model.active_transitions_n) {
+          auto sub_el = getLog(model.net.store[pt_idx]);
+          if (!sub_el.empty()) {
+            eventlog.insert(eventlog.end(), sub_el.begin(), sub_el.end());
+          }
+        }
+        el.set_value(std::move(eventlog));
         return std::ref(model);
       });
       return el_getter.get();
@@ -311,7 +319,6 @@ Result fire(const PetriNet &app) {
       break;
     } else if (!m.is_paused && !waiting_for_resume) {
       // we're firing
-
       m.fireTransitions(active_reducers, petri.stp, true, petri.case_id);
     } else if (m.is_paused && !waiting_for_resume) {
       // we've been asked to pause
@@ -408,5 +415,7 @@ void resume(const PetriNet &app) {
 };
 
 bool isDirect(const PetriNet &) { return false; };
+
+Eventlog getLog(const PetriNet &app) { return app.getEventLog(); }
 
 }  // namespace symmetri

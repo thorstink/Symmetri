@@ -6,6 +6,7 @@
 namespace symmetri {
 
 std::string mermaidFromEventlog(symmetri::Eventlog el) {
+  auto now_timestamp = Clock::now();
   el.erase(std::remove_if(el.begin(), el.end(),
                           [](const auto &x) {
                             return x.state == symmetri::State::Scheduled;
@@ -33,7 +34,7 @@ std::string mermaidFromEventlog(symmetri::Eventlog el) {
     const auto &end = *std::next(it);
     auto id1 = start.case_id + start.transition;
     auto id2 = end.case_id + end.transition;
-    if (id1 == id2 && start.state == symmetri::State::Started) {
+    if (start.state == symmetri::State::Started) {
       if (current_section != start.case_id) {
         current_section = start.case_id;
         mermaid << "section " << start.case_id << "\n";
@@ -45,16 +46,34 @@ std::string mermaidFromEventlog(symmetri::Eventlog el) {
                                ? "active"
                                : "done");  // Completed
 
-      mermaid << start.transition << " :" << result << ", "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(
-                     start.stamp.time_since_epoch())
-                     .count()
-              << ','
-              << std::chrono::duration_cast<std::chrono::milliseconds>(
-                     end.stamp.time_since_epoch())
-                     .count()
-              << '\n';
+      mermaid
+          << start.transition << " :" << (id1 == id2 ? result : "active")
+          << ", "
+          << std::chrono::duration_cast<std::chrono::milliseconds>(
+                 start.stamp.time_since_epoch())
+                 .count()
+          << ','
+          << std::chrono::duration_cast<std::chrono::milliseconds>(
+                 (id1 == id2 ? end.stamp : now_timestamp).time_since_epoch())
+                 .count()
+          << '\n';
     }
+  }
+
+  // and check if the latest is an active transition
+  const auto &start = el.back();
+  if (start.state == symmetri::State::Started) {
+    mermaid << start.transition << " :"
+            << "active"
+            << ", "
+            << std::chrono::duration_cast<std::chrono::milliseconds>(
+                   start.stamp.time_since_epoch())
+                   .count()
+            << ','
+            << std::chrono::duration_cast<std::chrono::milliseconds>(
+                   now_timestamp.time_since_epoch())
+                   .count()
+            << '\n';
   }
 
   return mermaid.str();

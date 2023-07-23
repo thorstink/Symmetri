@@ -71,6 +71,11 @@ Result fire(const T &transition) {
   }
 }
 
+template <typename T>
+Eventlog getLog(const T &) {
+  return {};
+}
+
 /**
  * @brief PolyTransition is a wrapper around any type that you want to tie to a
  * transition. Typically this is an invokable object, such as a function, that
@@ -88,7 +93,10 @@ class PolyTransition {
   template <typename Transition>
   PolyTransition(Transition x)
       : self_(std::make_shared<model<Transition>>(std::move(x))) {}
-  friend Result fire(const PolyTransition &x) { return x.self_->run_(); }
+  friend Result fire(const PolyTransition &x) { return x.self_->fire_(); }
+  friend Eventlog getLog(const PolyTransition &x) {
+    return x.self_->get_log_();
+  }
   friend bool isDirect(const PolyTransition &x) {
     return x.self_->is_direct_();
   }
@@ -99,7 +107,8 @@ class PolyTransition {
  private:
   struct concept_t {
     virtual ~concept_t() = default;
-    virtual Result run_() const = 0;
+    virtual Result fire_() const = 0;
+    virtual Eventlog get_log_() const = 0;
     virtual Result cancel_() const = 0;
     virtual void pause_() const = 0;
     virtual void resume_() const = 0;
@@ -116,7 +125,8 @@ class PolyTransition {
   template <typename Transition>
   struct model final : concept_t {
     model(Transition &&x) : transition_(std::move(x)) {}
-    Result run_() const override { return fire(transition_); }
+    Result fire_() const override { return fire(transition_); }
+    Eventlog get_log_() const override { return getLog(transition_); }
     Result cancel_() const override { return cancel(transition_); }
     bool is_direct_() const override { return isDirect(transition_); }
     void pause_() const override { return pause(transition_); }

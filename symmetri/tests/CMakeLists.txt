@@ -64,3 +64,7 @@ add_test(${PROJECT_NAME}_symmetri_bugs ${PROJECT_NAME}_symmetri_bugs)
 add_executable(${PROJECT_NAME}_types test_types.cc)
 target_link_libraries(${PROJECT_NAME}_types PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue )
 add_test(${PROJECT_NAME}_types ${PROJECT_NAME}_types)
+
+add_executable(${PROJECT_NAME}_polytransition test_polytransition.cc)
+target_link_libraries(${PROJECT_NAME}_polytransition PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue )
+add_test(${PROJECT_NAME}_polytransition ${PROJECT_NAME}_polytransition)

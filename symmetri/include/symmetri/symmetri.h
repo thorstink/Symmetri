@@ -174,6 +174,8 @@ class PetriNet final {
    */
   friend void resume(const PetriNet &app);
 
+  friend Eventlog getLog(const PetriNet &app);
+
  private:
   std::shared_ptr<Petri> impl;  ///< Pointer to the implementation, all
                                 ///< information is stored in Petri
@@ -189,4 +191,6 @@ Result cancel(const PetriNet &);
 void pause(const PetriNet &);
 void resume(const PetriNet &);
 bool isDirect(const PetriNet &);
+Eventlog getLog(const PetriNet &);
+
 }  // namespace symmetri
