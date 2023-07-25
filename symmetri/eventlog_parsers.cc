@@ -25,6 +25,10 @@ std::string mermaidFromEventlog(symmetri::Eventlog el) {
     return false;
   });
 
+  if (el.empty()) {
+    return "";
+  }
+
   std::stringstream mermaid;
   mermaid << "\n---\ndisplayMode : compact\n---\ngantt\ntitle A Gantt "
              "Diagram\ndateFormat x\naxisFormat \%H:\%M:\%S\n";

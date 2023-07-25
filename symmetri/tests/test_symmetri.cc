@@ -167,5 +167,5 @@ TEST_CASE("Test pause and resume") {
   symmetri::fire(app);
   REQUIRE(check1 == check2);
   REQUIRE(i.load() > check2);
-  REQUIRE(i.load() > 20);
+  REQUIRE(i.load() > check2 + 1);
 }

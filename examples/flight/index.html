@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+</head>
+<body>
+    <div id="gantt">
+    </div>
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        $("#gantt").load("mermaid.html", function () {
+            mermaid.initialize({
+                mermaid: {
+                    startOnLoad: false
+                }
+            });
+            window.mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+        });
+    </script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 #include <spdlog/spdlog.h>
 
+#include <fstream>
 #include <iostream>
 
 #include "symmetri/parsers.h"
@@ -56,6 +57,15 @@ void printLog(const symmetri::Eventlog &eventlog) {
   }
 }
 
+void writeMermaidHtmlToFile(const std::string &mermaid) {
+  std::ofstream mermaid_file;
+  mermaid_file.open("install/share/mermaid.html");
+  mermaid_file << "<div class=\"mermaid\">" + mermaid + "</div>";
+  mermaid_file.close();
+
+  return;
+}
+
 int main(int, char *argv[]) {
   spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] %v");
 
@@ -77,20 +87,32 @@ int main(int, char *argv[]) {
                             "SubNet", pool);
 
   // We create another PetriNet by flatly composing all three petri nets.
-  // Again we have 2 Foo-transitions, and the third transition is the subnet.
-  // This show how you can also nest PetriNets.
+  // Again we have 2 Foo-transitions, and the first transition (T0) is the
+  // subnet. This show how you can also nest PetriNets.
   symmetri::PetriNet bignet(
       {pnml1, pnml2, pnml3}, {{"P3", 5}},
       {{"T0", subnet}, {"T1", Foo("Bar")}, {"T2", Foo("Foo")}}, {}, "RootNet",
       pool);
 
-  // Parallel to the PetriNet execution, we run a thread through which we can
-  // get some keyboard input for interaction
-  auto t = std::thread([bignet] {
-    bool is_running = true;
-    while (is_running) {
+  // a flag to check if we are running
+  std::atomic<bool> running(true);
+
+  // a thread that polls the eventlog and writes it to a file
+  auto gantt = std::thread([&] {
+    while (running) {
+      writeMermaidHtmlToFile(
+          symmetri::mermaidFromEventlog(bignet.getEventLog()));
+      std::this_thread::sleep_for(std::chrono::seconds(3));
+    }
+    writeMermaidHtmlToFile(symmetri::mermaidFromEventlog(bignet.getEventLog()));
+  });
+
+  // Parallel to the PetriNet execution, we run a thread through which we
+  // can get some keyboard input for interaction
+  auto t = std::thread([&] {
+    while (running) {
       std::cout << "input options: \n [p] - pause\n [r] - resume\n [x] - "
-                   "exit\n [l] - print log\n";
+                   "exit\n";
       char input;
       std::cin >> input;
       switch (input) {
@@ -100,15 +122,9 @@ int main(int, char *argv[]) {
         case 'r':
           resume(bignet);
           break;
-        case 'l': {
-          auto el = bignet.getEventLog();
-          printLog(el);
-          spdlog::info(symmetri::mermaidFromEventlog(el));
-          break;
-        }
         case 'x': {
           cancel(bignet);
-          is_running = false;
+          running = false;
           break;
         }
         default:
@@ -121,11 +137,11 @@ int main(int, char *argv[]) {
   // this is where we call the blocking fire-function that executes the petri
   // net
   auto [el, result] = fire(bignet);
-
+  running = false;
   // print the results and eventlog
   spdlog::info("Result of this net: {0}", printState(result));
   printLog(el);
-  spdlog::info(symmetri::mermaidFromEventlog(el));
-  t.join();  // clean up
-  return result == symmetri::State::Completed ? 0 : -1;
+  t.join();      // clean up
+  gantt.join();  // clean up
+  return 0;
 }
