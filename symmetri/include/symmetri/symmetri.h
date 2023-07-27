@@ -90,16 +90,6 @@ class PetriNet final {
       const std::string &transition) const noexcept;
 
   /**
-   * @brief Tries to fire the transition.
-   *
-   * @param transition
-   * @return true if it fired the transition
-   * @return false if the preconditions were not met, the transition was not
-   * fired
-   */
-  bool tryFireTransition(const std::string &transition) const noexcept;
-
-  /**
    * @brief Get the Event Log object. If the Petri net is running, this call is
    * blocking as it is executed on the Petri net execution loop. Otherwise it
    * directly returns the log.
@@ -120,15 +110,6 @@ class PetriNet final {
    */
   std::pair<std::vector<Transition>, std::vector<Place>> getState()
       const noexcept;
-
-  /**
-   * @brief Get a vector of Fireable Transitions. If the Petri net is running,
-   * this call is blocking as it is executed on the Petri net execution loop.
-   * Otherwise it directly returns the vector of fireable transitions.
-   *
-   * @return std::vector<Transition>
-   */
-  std::vector<Transition> getFireableTransitions() const noexcept;
 
   /**
    * @brief reuseApplication resets the application such that the same net can

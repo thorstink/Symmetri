@@ -39,19 +39,19 @@ gch::small_vector<uint8_t, 32> possibleTransitions(
 
 Reducer processTransition(size_t t_i, const Eventlog &ev, State result) {
   return [=](Model &&model) {
-    if (result == State::Completed) {
-      const auto &place_list = model.net.output_n;
-      model.tokens_n.insert(model.tokens_n.begin(), place_list[t_i].begin(),
-                            place_list[t_i].end());
-    }
-
-    model.event_log.insert(model.event_log.end(), ev.begin(), ev.end());
-
-    // we know for sure this transition is active because otherwise it wouldn't
-    // produce a reducer.
-    model.active_transitions_n.erase(
-        std::find(model.active_transitions_n.begin(),
-                  model.active_transitions_n.end(), t_i));
+    // if it is in the active transition set it means it is finished and we
+    // should process it.
+    auto it = std::find(model.active_transitions_n.begin(),
+                        model.active_transitions_n.end(), t_i);
+    if (it != model.active_transitions_n.end()) {
+      model.active_transitions_n.erase(it);
+      if (result == State::Completed) {
+        const auto &place_list = model.net.output_n;
+        model.tokens_n.insert(model.tokens_n.begin(), place_list[t_i].begin(),
+                              place_list[t_i].end());
+      }
+      model.event_log.insert(model.event_log.end(), ev.begin(), ev.end());
+    };
     return std::ref(model);
   };
 }

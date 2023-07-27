@@ -82,37 +82,6 @@ TEST_CASE("Create a using pnml constructor.") {
   }
 }
 
-TEST_CASE("Run transition manually.") {
-  auto [net, store, priority, m0] = testNet();
-  auto stp = std::make_shared<TaskSystem>(1);
-  symmetri::PetriNet app(net, m0, {}, store, priority, "single_run_net1", stp);
-
-  REQUIRE(app.tryFireTransition("t0"));
-  symmetri::cancel(app);
-}
-
-TEST_CASE("Run transition that does not exist manually.") {
-  auto [net, store, priority, m0] = testNet();
-  auto stp = std::make_shared<TaskSystem>(1);
-  symmetri::PetriNet app(net, m0, {}, store, priority, "single_run_net2", stp);
-
-  REQUIRE(!app.tryFireTransition("t0dgdsg"));
-  symmetri::cancel(app);
-}
-
-TEST_CASE("Run transition for which the preconditions are not met manually.") {
-  auto [net, store, priority, m0] = testNet();
-  auto stp = std::make_shared<TaskSystem>(1);
-  symmetri::PetriNet app(net, m0, {}, store, priority, "single_run_net3", stp);
-
-  auto l = app.getFireableTransitions();
-  for (auto t : l) {
-    REQUIRE(t != "t1");
-  }
-  REQUIRE(!app.tryFireTransition("t1"));
-  symmetri::cancel(app);
-}
-
 TEST_CASE("Reuse an application with a new case_id.") {
   auto [net, store, priority, m0] = testNet();
   const auto initial_id = "initial0";

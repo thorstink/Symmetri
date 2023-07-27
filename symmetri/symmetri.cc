@@ -237,28 +237,12 @@ PetriNet::PetriNet(const Net &net, const Marking &m0,
   }
 }
 
-bool PetriNet::tryFireTransition(const Transition &t) const noexcept {
-  if (impl == nullptr) {
-    return false;
-  }
-  Reducer f;
-  while (impl->reducers[impl->reducer_selector]->try_dequeue(f)) {
-    impl->m = f(std::move(impl->m));
-  }
-  return impl->m.fire(t, impl->reducers[impl->reducer_selector], impl->stp,
-                      "manual");
-};
-
 Eventlog PetriNet::getEventLog() const noexcept { return impl->getEventLog(); };
 
 std::pair<std::vector<Transition>, std::vector<Place>> PetriNet::getState()
     const noexcept {
   return impl->getState();
 }
-
-std::vector<Transition> PetriNet::getFireableTransitions() const noexcept {
-  return impl->getFireableTransitions();
-};
 
 std::function<void()> PetriNet::registerTransitionCallback(
     const Transition &transition) const noexcept {
@@ -360,7 +344,8 @@ Result fire(const PetriNet &app) {
     result = State::Error;
   }
 
-  Result res = {m.event_log, result};
+  // empty reducers
+  m.active_transitions_n.clear();
   while (active_reducers->try_dequeue(f)) {
     m = f(std::move(m));
   }
@@ -368,7 +353,7 @@ Result fire(const PetriNet &app) {
   petri.thread_id_.store(std::nullopt);
   petri.setFreshQueue();
 
-  return res;
+  return {m.event_log, result};
 };
 
 Result cancel(const PetriNet &app) {
