@@ -59,7 +59,7 @@ void printLog(const symmetri::Eventlog &eventlog) {
 
 void writeMermaidHtmlToFile(const std::string &mermaid) {
   std::ofstream mermaid_file;
-  mermaid_file.open("install/share/mermaid.html");
+  mermaid_file.open("examples/flight/mermaid.html");
   mermaid_file << "<div class=\"mermaid\">" + mermaid + "</div>";
   mermaid_file.close();
 
