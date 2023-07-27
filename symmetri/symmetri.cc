@@ -205,6 +205,9 @@ create(const Net &net, const Marking &m0, const Marking &final_marking,
           }};
 }
 
+}  // namespace symmetri
+using namespace symmetri;
+
 PetriNet::PetriNet(const std::set<std::string> &files,
                    const Marking &final_marking, const Store &store,
                    const PriorityTable &priorities, const std::string &case_id,
@@ -263,9 +266,7 @@ bool PetriNet::reuseApplication(const std::string &new_case_id) {
   }
 }
 
-}  // namespace symmetri
-
-symmetri::Result fire(const symmetri::PetriNet &app) {
+symmetri::Result fire(const PetriNet &app) {
   if (app.impl == nullptr) {
     spdlog::error("Something went seriously wrong. Please send a bug report.");
     return {{}, symmetri::State::Error};
@@ -358,7 +359,7 @@ symmetri::Result fire(const symmetri::PetriNet &app) {
   return {m.event_log, result};
 };
 
-symmetri::Result cancel(const symmetri::PetriNet &app) {
+symmetri::Result cancel(const PetriNet &app) {
   const auto maybe_thread_id = app.impl->thread_id_.load();
   if (maybe_thread_id && maybe_thread_id.value() != symmetri::getThreadId() &&
       !app.impl->early_exit.load()) {
@@ -388,7 +389,7 @@ symmetri::Result cancel(const symmetri::PetriNet &app) {
   return {app.getEventLog(), symmetri::State::UserExit};
 }
 
-void pause(const symmetri::PetriNet &app) {
+void pause(const PetriNet &app) {
   app.impl->reducers[app.impl->reducer_selector]->enqueue(
       [&](symmetri::Model &&model) {
         model.is_paused = true;
@@ -396,7 +397,7 @@ void pause(const symmetri::PetriNet &app) {
       });
 };
 
-void resume(const symmetri::PetriNet &app) {
+void resume(const PetriNet &app) {
   app.impl->reducers[app.impl->reducer_selector]->enqueue(
       [&](symmetri::Model &&model) {
         model.is_paused = false;
@@ -404,8 +405,6 @@ void resume(const symmetri::PetriNet &app) {
       });
 };
 
-bool isDirect(const symmetri::PetriNet &) { return false; };
+bool isDirect(const PetriNet &) { return false; };
 
-symmetri::Eventlog getLog(const symmetri::PetriNet &app) {
-  return app.getEventLog();
-}
+symmetri::Eventlog getLog(const PetriNet &app) { return app.getEventLog(); }

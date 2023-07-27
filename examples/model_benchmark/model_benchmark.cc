@@ -20,7 +20,7 @@ int main(int, char *argv[]) {
     }
   }
 
-  symmetri::PetriNet bignet(net, m0, {}, store, {}, "pluto", pool);
+  PetriNet bignet(net, m0, {}, store, {}, "pluto", pool);
   spdlog::info("start!");
   const auto start_time = symmetri::Clock::now();
   auto [el, result] = fire(bignet);  // infinite loop

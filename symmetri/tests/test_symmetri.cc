@@ -23,8 +23,7 @@ TEST_CASE("Create a using the net constructor without end condition.") {
   auto [net, store, priority, m0] = testNet();
   auto stp = std::make_shared<TaskSystem>(1);
 
-  symmetri::PetriNet app(net, m0, {}, store, priority, "test_net_without_end",
-                         stp);
+  PetriNet app(net, m0, {}, store, priority, "test_net_without_end", stp);
   // we can run the net
   auto [ev, res] = fire(app);
 
@@ -38,8 +37,8 @@ TEST_CASE("Create a using the net constructor with end condition.") {
 
   Marking final_marking({{"Pa", 0}, {"Pb", 2}, {"Pc", 0}, {"Pd", 2}});
   auto [net, store, priority, m0] = testNet();
-  symmetri::PetriNet app(net, m0, final_marking, store, priority,
-                         "test_net_with_end", stp);
+  PetriNet app(net, m0, final_marking, store, priority, "test_net_with_end",
+               stp);
   // we can run the net
   auto [ev, res] = fire(app);
 
@@ -57,7 +56,7 @@ TEST_CASE("Create a using pnml constructor.") {
     // This store is not appropriate for this net,
     Store store = {{"wrong_id", &t0}};
     PriorityTable priority;
-    symmetri::PetriNet app({pnml_file}, {}, store, priority, "fail", stp);
+    PetriNet app({pnml_file}, {}, store, priority, "fail", stp);
     // however, we can try running it,
     auto [ev, res] = fire(app);
 
@@ -72,8 +71,7 @@ TEST_CASE("Create a using pnml constructor.") {
     Store store = symmetri::Store{{"T0", &t0}};
     PriorityTable priority;
     Marking final_marking({{"P1", 1}});
-    symmetri::PetriNet app({pnml_file}, final_marking, store, priority,
-                           "success", stp);
+    PetriNet app({pnml_file}, final_marking, store, priority, "success", stp);
     // so we can run it,
     auto [ev, res] = fire(app);
     // and the result is properly completed.
@@ -87,7 +85,7 @@ TEST_CASE("Reuse an application with a new case_id.") {
   const auto initial_id = "initial0";
   const auto new_id = "something_different0";
   auto stp = std::make_shared<TaskSystem>(1);
-  symmetri::PetriNet app(net, m0, {}, store, priority, initial_id, stp);
+  PetriNet app(net, m0, {}, store, priority, initial_id, stp);
   REQUIRE(!app.reuseApplication(initial_id));
   REQUIRE(app.reuseApplication(new_id));
   // fire a transition so that there's an entry in the eventlog
@@ -105,7 +103,7 @@ TEST_CASE("Can not reuse an active application with a new case_id.") {
   const auto initial_id = "initial1";
   const auto new_id = "something_different1";
   auto stp = std::make_shared<TaskSystem>(1);
-  symmetri::PetriNet app(net, m0, {}, store, priority, initial_id, stp);
+  PetriNet app(net, m0, {}, store, priority, initial_id, stp);
   stp->push([&]() mutable {
     // this should fail because we can not do this while everything is active.
     REQUIRE(!app.reuseApplication(new_id));
@@ -119,7 +117,7 @@ TEST_CASE("Test pause and resume") {
   Store store = {{"t0", [&] { i++; }}, {"t1", [] {}}};
   Marking m0 = {{"Pa", 1}};
   auto stp = std::make_shared<TaskSystem>(2);
-  symmetri::PetriNet app(net, m0, {{"Pb", 1}}, store, {}, "random_id", stp);
+  PetriNet app(net, m0, {{"Pb", 1}}, store, {}, "random_id", stp);
   int check1, check2;
   stp->push([&, app, t1 = app.registerTransitionCallback("t1")]() {
     const auto dt = std::chrono::milliseconds(5);
