@@ -3,7 +3,6 @@
 #include <memory>
 
 #include "symmetri/types.h"
-namespace symmetri {
 
 /**
  * @brief Checks if the transition-function can be invoked.
@@ -27,8 +26,8 @@ bool isDirect(const T &) {
  * @return Result
  */
 template <typename T>
-Result cancel(const T &) {
-  return {{}, State::UserExit};
+symmetri::Result cancel(const T &) {
+  return {{}, symmetri::State::UserExit};
 }
 
 /**
@@ -58,23 +57,28 @@ void resume(const T &) {}
  * possible eventlog of the transition.
  */
 template <typename T>
-Result fire(const T &transition) {
+symmetri::Result fire(const T &transition) {
+  return fire(transition);
   if constexpr (!std::is_invocable_v<T>) {
-    return {{}, State::Completed};
-  } else if constexpr (std::is_same_v<State, decltype(transition())>) {
+    return {{}, symmetri::State::Completed};
+  } else if constexpr (std::is_same_v<symmetri::State,
+                                      decltype(transition())>) {
     return {{}, transition()};
-  } else if constexpr (std::is_same_v<Result, decltype(transition())>) {
+  } else if constexpr (std::is_same_v<symmetri::Result,
+                                      decltype(transition())>) {
     return transition();
   } else {
     transition();
-    return {{}, State::Completed};
+    return {{}, symmetri::State::Completed};
   }
 }
 
 template <typename T>
-Eventlog getLog(const T &) {
+symmetri::Eventlog getLog(const T &) {
   return {};
 }
+
+namespace symmetri {
 
 /**
  * @brief PolyTransition is a wrapper around any type that you want to tie to a

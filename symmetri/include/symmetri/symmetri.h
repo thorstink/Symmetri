@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <iostream>
 #include <set>
 #include <unordered_map>
 
@@ -119,47 +120,16 @@ class PetriNet final {
    */
   bool reuseApplication(const std::string &case_id);
 
-  /**
-   * @brief Fire for a PetriNet means that it executes the Petri net until it
-   * reaches a final marking, deadlocks or is preempted by a user.
-   *
-   * @return Result
-   */
-  friend Result fire(const PetriNet &app);
+  //   friend symmetri::Result(::fire)(const symmetri::PetriNet &);
+  //   friend symmetri::Result(::cancel)(const symmetri::PetriNet &);
+  //   friend void(::pause)(const symmetri::PetriNet &);
+  //   friend void(::resume)(const symmetri::PetriNet &);
+  //   friend bool(::isDirect)(const symmetri::PetriNet &);
+  //   friend symmetri::Eventlog(::getLog)(const symmetri::PetriNet &);
 
-  /**
-   * @brief cancel interrupts and stops the Petri net execution and
-   * calls cancel on all child transitions that are active. If transitions do
-   * not have a cancel functionality implemented, they will not be cancelled.
-   * Their reducers however will not be processed.
-   *
-   * @return Result
-   */
-  friend Result cancel(const PetriNet &app);
-
-  /**
-   * @brief pause interrupts and pauses the Petri net execution and
-   * calls pause on all child transitions that are active. The Petri net will
-   * still consume reducers produced by finished transitions but it will not
-   * queue new transitions for execution. This mostly happens when active
-   * transitions do not have a pause-functionality implemented.
-   *
-   * @param app
-   */
-  friend void pause(const PetriNet &app);
-
-  /**
-   * @brief resume breaks the pause and immediately will try to fire all
-   * possible transitions. It will also call resume on all active transitions.
-   *
-   */
-  friend void resume(const PetriNet &app);
-
-  friend Eventlog getLog(const PetriNet &app);
-
- private:
   std::shared_ptr<Petri> impl;  ///< Pointer to the implementation, all
                                 ///< information is stored in Petri
+ private:
   std::function<void(const std::string &)>
       register_functor;  ///< At PetriNet construction this function is
                          ///< created. It can be used to assign a trigger to
@@ -167,11 +137,11 @@ class PetriNet final {
                          ///< transition without meeting the pre-conditions.
 };
 
-Result fire(const PetriNet &);
-Result cancel(const PetriNet &);
-void pause(const PetriNet &);
-void resume(const PetriNet &);
-bool isDirect(const PetriNet &);
-Eventlog getLog(const PetriNet &);
-
 }  // namespace symmetri
+
+symmetri::Result fire(const symmetri::PetriNet &);
+symmetri::Result cancel(const symmetri::PetriNet &);
+void pause(const symmetri::PetriNet &);
+void resume(const symmetri::PetriNet &);
+bool isDirect(const symmetri::PetriNet &);
+symmetri::Eventlog getLog(const symmetri::PetriNet &);

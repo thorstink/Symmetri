@@ -7,6 +7,7 @@
 #include "symmetri/symmetri.h"
 #include "transition.hpp"
 
+using namespace symmetri;
 /**
  * @brief We want to use the Foo class with Symmetri; Foo has nice
  * functionalities such as Pause and Resume and it can also get
@@ -16,34 +17,21 @@
  * all - if nothing is defined, a default version is used.
  *
  */
-namespace symmetri {
 
-template <>
 Result fire(const Foo &f) {
   return f.fire() ? Result{{}, State::Error} : Result{{}, State::Completed};
 }
 
-template <>
 Result cancel(const Foo &f) {
   f.cancel();
   return {{}, State::UserExit};
 }
 
-template <>
-bool isDirect(const Foo &) {
-  return false;
-}
+bool isDirect(const Foo &) { return false; }
 
-template <>
-void pause(const Foo &f) {
-  f.pause();
-}
+void pause(const Foo &f) { f.pause(); }
 
-template <>
-void resume(const Foo &f) {
-  f.resume();
-}
-}  // namespace symmetri
+void resume(const Foo &f) { f.resume(); }
 
 /**
  * @brief A simple printer for the eventlog

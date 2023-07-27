@@ -263,10 +263,12 @@ bool PetriNet::reuseApplication(const std::string &new_case_id) {
   }
 }
 
-Result fire(const PetriNet &app) {
+}  // namespace symmetri
+
+symmetri::Result fire(const symmetri::PetriNet &app) {
   if (app.impl == nullptr) {
     spdlog::error("Something went seriously wrong. Please send a bug report.");
-    return {{}, State::Error};
+    return {{}, symmetri::State::Error};
   }
 
   auto &petri = *app.impl;
@@ -276,18 +278,18 @@ Result fire(const PetriNet &app) {
         "[{0}] is already active, it can not run it again before it is "
         "finished.",
         app.impl->case_id);
-    return {{}, State::Error};
+    return {{}, symmetri::State::Error};
   }
 
   // we are running!
   auto &active_reducers = petri.reducers[petri.reducer_selector];
-  petri.thread_id_.store(getThreadId());
+  petri.thread_id_.store(symmetri::getThreadId());
   petri.early_exit.store(false);
   m.event_log.clear();
   m.tokens_n = m.initial_tokens;
 
   bool waiting_for_resume = false;
-  Reducer f;
+  symmetri::Reducer f;
   // start!
   m.fireTransitions(active_reducers, petri.stp, true, petri.case_id);
   // get a reducer. Immediately, or wait a bit
@@ -297,7 +299,7 @@ Result fire(const PetriNet &app) {
       m = f(std::move(m));
     } while (!petri.early_exit.load() && active_reducers->try_dequeue(f));
 
-    if (MarkingReached(m.tokens_n, petri.final_marking) ||
+    if (symmetri::MarkingReached(m.tokens_n, petri.final_marking) ||
         petri.early_exit.load()) {
       // we're done
       break;
@@ -321,7 +323,7 @@ Result fire(const PetriNet &app) {
   }
 
   // determine what was the reason we terminated.
-  State result;
+  symmetri::State result;
   if (petri.early_exit.load()) {
     {
       // populate that eventlog with child eventlog and possible cancelations.
@@ -332,16 +334,16 @@ Result fire(const PetriNet &app) {
         }
         m.event_log.push_back({petri.case_id,
                                m.net.transition[transition_index], state,
-                               Clock::now()});
+                               symmetri::Clock::now()});
       }
-      result = State::UserExit;
+      result = symmetri::State::UserExit;
     }
-  } else if (MarkingReached(m.tokens_n, petri.final_marking)) {
-    result = State::Completed;
+  } else if (symmetri::MarkingReached(m.tokens_n, petri.final_marking)) {
+    result = symmetri::State::Completed;
   } else if (m.active_transitions_n.empty()) {
-    result = State::Deadlock;
+    result = symmetri::State::Deadlock;
   } else {
-    result = State::Error;
+    result = symmetri::State::Error;
   }
 
   // empty reducers
@@ -356,15 +358,15 @@ Result fire(const PetriNet &app) {
   return {m.event_log, result};
 };
 
-Result cancel(const PetriNet &app) {
+symmetri::Result cancel(const symmetri::PetriNet &app) {
   const auto maybe_thread_id = app.impl->thread_id_.load();
-  if (maybe_thread_id && maybe_thread_id.value() != getThreadId() &&
+  if (maybe_thread_id && maybe_thread_id.value() != symmetri::getThreadId() &&
       !app.impl->early_exit.load()) {
     std::mutex m;
     std::condition_variable cv;
     bool ready = false;
     app.impl->reducers[app.impl->reducer_selector]->enqueue(
-        [=, &m, &cv, &ready](Model &&model) {
+        [=, &m, &cv, &ready](symmetri::Model &&model) {
           app.impl->early_exit.store(true);
           {
             std::lock_guard lk(m);
@@ -376,31 +378,34 @@ Result cancel(const PetriNet &app) {
     std::unique_lock lk(m);
     cv.wait(lk, [&] { return ready; });
   } else {
-    app.impl->reducers[app.impl->reducer_selector]->enqueue([=](Model &&model) {
-      app.impl->early_exit.store(true);
-      return std::ref(model);
-    });
+    app.impl->reducers[app.impl->reducer_selector]->enqueue(
+        [=](symmetri::Model &&model) {
+          app.impl->early_exit.store(true);
+          return std::ref(model);
+        });
   }
 
-  return {app.getEventLog(), State::UserExit};
+  return {app.getEventLog(), symmetri::State::UserExit};
 }
 
-void pause(const PetriNet &app) {
-  app.impl->reducers[app.impl->reducer_selector]->enqueue([&](Model &&model) {
-    model.is_paused = true;
-    return std::ref(model);
-  });
+void pause(const symmetri::PetriNet &app) {
+  app.impl->reducers[app.impl->reducer_selector]->enqueue(
+      [&](symmetri::Model &&model) {
+        model.is_paused = true;
+        return std::ref(model);
+      });
 };
 
-void resume(const PetriNet &app) {
-  app.impl->reducers[app.impl->reducer_selector]->enqueue([&](Model &&model) {
-    model.is_paused = false;
-    return std::ref(model);
-  });
+void resume(const symmetri::PetriNet &app) {
+  app.impl->reducers[app.impl->reducer_selector]->enqueue(
+      [&](symmetri::Model &&model) {
+        model.is_paused = false;
+        return std::ref(model);
+      });
 };
 
-bool isDirect(const PetriNet &) { return false; };
+bool isDirect(const symmetri::PetriNet &) { return false; };
 
-Eventlog getLog(const PetriNet &app) { return app.getEventLog(); }
-
-}  // namespace symmetri
+symmetri::Eventlog getLog(const symmetri::PetriNet &app) {
+  return app.getEventLog();
+}
