@@ -26,7 +26,7 @@ TEST_CASE("Create a using the net constructor without end condition.") {
   symmetri::PetriNet app(net, m0, {}, store, priority, "test_net_without_end",
                          stp);
   // we can run the net
-  auto [ev, res] = app.fire();
+  auto [ev, res] = symmetri::fire(app);
 
   // because there's no final marking, but the net is finite, it deadlocks.
   REQUIRE(res == State::Deadlock);
@@ -41,7 +41,7 @@ TEST_CASE("Create a using the net constructor with end condition.") {
   symmetri::PetriNet app(net, m0, final_marking, store, priority,
                          "test_net_with_end", stp);
   // we can run the net
-  auto [ev, res] = app.fire();
+  auto [ev, res] = symmetri::fire(app);
 
   // now there is an end condition.
   REQUIRE(res == State::Completed);
@@ -59,7 +59,7 @@ TEST_CASE("Create a using pnml constructor.") {
     PriorityTable priority;
     symmetri::PetriNet app({pnml_file}, {}, store, priority, "fail", stp);
     // however, we can try running it,
-    auto [ev, res] = app.fire();
+    auto [ev, res] = symmetri::fire(app);
 
     // but the result is an error.
     REQUIRE(res == State::Error);
@@ -75,42 +75,11 @@ TEST_CASE("Create a using pnml constructor.") {
     symmetri::PetriNet app({pnml_file}, final_marking, store, priority,
                            "success", stp);
     // so we can run it,
-    auto [ev, res] = app.fire();
+    auto [ev, res] = symmetri::fire(app);
     // and the result is properly completed.
     REQUIRE(res == State::Completed);
     REQUIRE(!ev.empty());
   }
-}
-
-TEST_CASE("Run transition manually.") {
-  auto [net, store, priority, m0] = testNet();
-  auto stp = std::make_shared<TaskSystem>(1);
-  symmetri::PetriNet app(net, m0, {}, store, priority, "single_run_net1", stp);
-
-  REQUIRE(app.tryFireTransition("t0"));
-  app.cancel();
-}
-
-TEST_CASE("Run transition that does not exist manually.") {
-  auto [net, store, priority, m0] = testNet();
-  auto stp = std::make_shared<TaskSystem>(1);
-  symmetri::PetriNet app(net, m0, {}, store, priority, "single_run_net2", stp);
-
-  REQUIRE(!app.tryFireTransition("t0dgdsg"));
-  app.cancel();
-}
-
-TEST_CASE("Run transition for which the preconditions are not met manually.") {
-  auto [net, store, priority, m0] = testNet();
-  auto stp = std::make_shared<TaskSystem>(1);
-  symmetri::PetriNet app(net, m0, {}, store, priority, "single_run_net3", stp);
-
-  auto l = app.getFireableTransitions();
-  for (auto t : l) {
-    REQUIRE(t != "t1");
-  }
-  REQUIRE(!app.tryFireTransition("t1"));
-  app.cancel();
 }
 
 TEST_CASE("Reuse an application with a new case_id.") {
@@ -122,7 +91,7 @@ TEST_CASE("Reuse an application with a new case_id.") {
   REQUIRE(!app.reuseApplication(initial_id));
   REQUIRE(app.reuseApplication(new_id));
   // fire a transition so that there's an entry in the eventlog
-  auto eventlog = app.fire().first;
+  auto eventlog = symmetri::fire(app).first;
   // double check that the eventlog is not empty
   REQUIRE(!eventlog.empty());
   // the eventlog should have a different case id.
@@ -141,7 +110,7 @@ TEST_CASE("Can not reuse an active application with a new case_id.") {
     // this should fail because we can not do this while everything is active.
     REQUIRE(!app.reuseApplication(new_id));
   });
-  auto [ev, res] = app.fire();
+  auto [ev, res] = symmetri::fire(app);
 }
 
 TEST_CASE("Test pause and resume") {
@@ -164,8 +133,8 @@ TEST_CASE("Test pause and resume") {
     std::this_thread::sleep_for(dt);
     t1();
   });
-  app.fire();
+  symmetri::fire(app);
   REQUIRE(check1 == check2);
   REQUIRE(i.load() > check2);
-  REQUIRE(i.load() > 20);
+  REQUIRE(i.load() > check2 + 1);
 }

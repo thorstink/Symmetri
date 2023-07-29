@@ -90,16 +90,6 @@ class PetriNet final {
       const std::string &transition) const noexcept;
 
   /**
-   * @brief Tries to fire the transition.
-   *
-   * @param transition
-   * @return true if it fired the transition
-   * @return false if the preconditions were not met, the transition was not
-   * fired
-   */
-  bool tryFireTransition(const std::string &transition) const noexcept;
-
-  /**
    * @brief Get the Event Log object. If the Petri net is running, this call is
    * blocking as it is executed on the Petri net execution loop. Otherwise it
    * directly returns the log.
@@ -122,15 +112,6 @@ class PetriNet final {
       const noexcept;
 
   /**
-   * @brief Get a vector of Fireable Transitions. If the Petri net is running,
-   * this call is blocking as it is executed on the Petri net execution loop.
-   * Otherwise it directly returns the vector of fireable transitions.
-   *
-   * @return std::vector<Transition>
-   */
-  std::vector<Transition> getFireableTransitions() const noexcept;
-
-  /**
    * @brief reuseApplication resets the application such that the same net can
    * be used again after an cancel call. You do need to supply a new case_id
    * which must be different.
@@ -144,7 +125,7 @@ class PetriNet final {
    *
    * @return Result
    */
-  Result fire() const noexcept;
+  friend Result fire(const PetriNet &app);
 
   /**
    * @brief cancel interrupts and stops the Petri net execution and
@@ -154,7 +135,7 @@ class PetriNet final {
    *
    * @return Result
    */
-  Result cancel() const noexcept;
+  friend Result cancel(const PetriNet &app);
 
   /**
    * @brief pause interrupts and pauses the Petri net execution and
@@ -165,14 +146,16 @@ class PetriNet final {
    *
    * @param app
    */
-  void pause() const noexcept;
+  friend void pause(const PetriNet &app);
 
   /**
    * @brief resume breaks the pause and immediately will try to fire all
    * possible transitions. It will also call resume on all active transitions.
    *
    */
-  void resume() const noexcept;
+  friend void resume(const PetriNet &app);
+
+  friend Eventlog getLog(const PetriNet &app);
 
  private:
   std::shared_ptr<Petri> impl;  ///< Pointer to the implementation, all
@@ -184,10 +167,11 @@ class PetriNet final {
                          ///< transition without meeting the pre-conditions.
 };
 
-Result fire(const PetriNet &app) { return app.fire(); };
-Result cancel(const PetriNet &app) { return app.cancel(); }
-void pause(const PetriNet &app) { return app.pause(); };
-void resume(const PetriNet &app) { return app.resume(); };
-bool isDirect(const PetriNet &) { return false; };
+Result fire(const PetriNet &);
+Result cancel(const PetriNet &);
+void pause(const PetriNet &);
+void resume(const PetriNet &);
+bool isDirect(const PetriNet &);
+Eventlog getLog(const PetriNet &);
 
 }  // namespace symmetri

@@ -3,6 +3,7 @@ build
 install
 docs/html
 .vscode
+examples/flight/mermaid.html
 
 # Prerequisites
 *.d

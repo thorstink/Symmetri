@@ -78,7 +78,7 @@ std::vector<int8_t> createPriorityLookup(
 
 Model::Model(const Net &_net, const Store &store,
              const PriorityTable &_priority, const Marking &M0)
-    : timestamp(Clock::now()), is_paused(false), event_log({}) {
+    : event_log({}), is_paused(false) {
   event_log.reserve(1000);
   std::tie(net.transition, net.place, net.store) = convert(_net, store);
   std::tie(net.input_n, net.output_n) = populateIoLookups(_net, net.place);
@@ -118,11 +118,9 @@ bool Model::Fire(
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers,
     std::shared_ptr<TaskSystem> pool, const std::string &case_id) {
-  const auto &pre = net.input_n[t];
-
-  timestamp = Clock::now();
+  auto timestamp = Clock::now();
   // deduct the marking
-  for (const size_t place : pre) {
+  for (const size_t place : net.input_n[t]) {
     // erase one by one. using std::remove_if would remove all tokens at
     // a particular place.
     tokens_n.erase(std::find(tokens_n.begin(), tokens_n.end(), place));
@@ -132,20 +130,19 @@ bool Model::Fire(
 
   // if the transition is direct, we short-circuit the
   // marking mutation and do it immediately.
+  const auto &transition = net.transition[t];
+  const auto &lookup_t = net.output_n[t];
   if (isDirect(task)) {
-    tokens_n.insert(tokens_n.begin(), net.output_n[t].begin(),
-                    net.output_n[t].end());
-    event_log.push_back(
-        {case_id, net.transition[t], State::Started, timestamp});
-    event_log.push_back(
-        {case_id, net.transition[t], State::Completed, timestamp});
+    tokens_n.insert(tokens_n.begin(), lookup_t.begin(), lookup_t.end());
+    event_log.push_back({case_id, transition, State::Started, timestamp});
+    event_log.push_back({case_id, transition, State::Completed, timestamp});
     return true;
   } else {
     active_transitions_n.push_back(t);
-    event_log.push_back(
-        {case_id, net.transition[t], State::Scheduled, timestamp});
+    event_log.push_back({case_id, transition, State::Scheduled, timestamp});
     pool->push([=] {
-      reducers->enqueue(createReducerForTransition(t, task, case_id, reducers));
+      reducers->enqueue(
+          createReducerForTransition(t, transition, task, case_id, reducers));
     });
     return false;
   }

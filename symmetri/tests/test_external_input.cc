@@ -31,7 +31,7 @@ TEST_CASE("Test external input.") {
   });
 
   // run the net
-  auto [ev, res] = app.fire();
+  auto [ev, res] = symmetri::fire(app);
 
   REQUIRE(res == State::Completed);
   REQUIRE(i_ran);
