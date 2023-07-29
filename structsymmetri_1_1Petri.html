@@ -81,7 +81,7 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 
-<p><a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> is the class that holds the implementation of the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net. It holds pointers to the reducer queue and that thread pool. Calling <code><a class="el" href="structsymmetri_1_1Petri.html#a6eefca65b594c008e3854fc66a822897" title="run the petri net. This initializes the net with the initial marking and blocks until it a) reached t...">fire()</a></code> on this class will do the <em>actual</em> execution of the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net.  
+<p><a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> is the class that holds the implementation of the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net. It holds pointers to the reducer queue and that thread pool. Calling <code>fire()</code> on this class will do the <em>actual</em> execution of the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net.  
  <a href="structsymmetri_1_1Petri.html#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
@@ -89,9 +89,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a79f2974405af1eb63a5d2cc7c60a910a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a79f2974405af1eb63a5d2cc7c60a910a">Petri</a> (const Net &amp;net, const Marking &amp;m0, std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> &gt; stp, const Marking &amp;<a class="el" href="structsymmetri_1_1Petri.html#a7b1ad2f7fd4f50d017fbecce19c82387">final_marking</a>, const Store &amp;store, const PriorityTable &amp;priorities, const std::string &amp;<a class="el" href="structsymmetri_1_1Petri.html#aa2acc8bf32bcd39c86f5eb029586c34b">case_id</a>)</td></tr>
 <tr class="memdesc:a79f2974405af1eb63a5d2cc7c60a910a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> object. Most importantly, it also creates the reducer queue and exposes the <code>run</code> function to actually run the petri net.  <br /></td></tr>
 <tr class="separator:a79f2974405af1eb63a5d2cc7c60a910a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5e7d8fa25b0319f75d55f145e4b0ca84"><td class="memItemLeft" align="right" valign="top"><a id="a5e7d8fa25b0319f75d55f145e4b0ca84" name="a5e7d8fa25b0319f75d55f145e4b0ca84"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>reset</b> (const std::string &amp;new_case_id)</td></tr>
-<tr class="separator:a5e7d8fa25b0319f75d55f145e4b0ca84"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03679dc64ce36344a767ef6758111c2b"><td class="memItemLeft" align="right" valign="top"><a id="a03679dc64ce36344a767ef6758111c2b" name="a03679dc64ce36344a767ef6758111c2b"></a>
+const std::shared_ptr&lt; BlockingConcurrentQueue&lt; Reducer &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>setFreshQueue</b> ()</td></tr>
+<tr class="separator:a03679dc64ce36344a767ef6758111c2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1be0e97a3e376c84d084519a3d53ea7a"><td class="memItemLeft" align="right" valign="top">Eventlog&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a1be0e97a3e376c84d084519a3d53ea7a">getEventLog</a> () const noexcept</td></tr>
 <tr class="memdesc:a1be0e97a3e376c84d084519a3d53ea7a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the <a class="el" href="structsymmetri_1_1Event.html" title="This struct defines a subset of data that we associate with the result of firing a transition.">Event</a> Log object.  <br /></td></tr>
 <tr class="separator:a1be0e97a3e376c84d084519a3d53ea7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -101,15 +101,6 @@ std::pair&lt; std::vector&lt; Transition &gt;, std::vector&lt; Place &gt; &gt;&#
 <tr class="memitem:a315636dcca0deeec1c84f685d98089ed"><td class="memItemLeft" align="right" valign="top"><a id="a315636dcca0deeec1c84f685d98089ed" name="a315636dcca0deeec1c84f685d98089ed"></a>
 std::vector&lt; Transition &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>getFireableTransitions</b> () const noexcept</td></tr>
 <tr class="separator:a315636dcca0deeec1c84f685d98089ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab38fa1fa75fc4e0f59fa4ee367001aa4"><td class="memItemLeft" align="right" valign="top"><a id="ab38fa1fa75fc4e0f59fa4ee367001aa4" name="ab38fa1fa75fc4e0f59fa4ee367001aa4"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>pause_</b> () const noexcept</td></tr>
-<tr class="separator:ab38fa1fa75fc4e0f59fa4ee367001aa4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a28d9095f0873549ee3d0074f1d31c4bc"><td class="memItemLeft" align="right" valign="top"><a id="a28d9095f0873549ee3d0074f1d31c4bc" name="a28d9095f0873549ee3d0074f1d31c4bc"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>resume_</b> () const noexcept</td></tr>
-<tr class="separator:a28d9095f0873549ee3d0074f1d31c4bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6eefca65b594c008e3854fc66a822897"><td class="memItemLeft" align="right" valign="top">Result&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a6eefca65b594c008e3854fc66a822897">fire</a> ()</td></tr>
-<tr class="memdesc:a6eefca65b594c008e3854fc66a822897"><td class="mdescLeft">&#160;</td><td class="mdescRight">run the petri net. This initializes the net with the initial marking and blocks until it a) reached the final marking, b) deadlocked or c) exited early.  <br /></td></tr>
-<tr class="separator:a6eefca65b594c008e3854fc66a822897"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -129,10 +120,6 @@ const Marking&#160;</td><td class="memItemRight" valign="bottom"><b>m0_</b></td>
 const Net&#160;</td><td class="memItemRight" valign="bottom"><b>net_</b></td></tr>
 <tr class="memdesc:a2f61460a41344181e9b0274451666c6d"><td class="mdescLeft">&#160;</td><td class="mdescRight">The net. <br /></td></tr>
 <tr class="separator:a2f61460a41344181e9b0274451666c6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a194c9abf5887a7be2986e8be1c2a9256"><td class="memItemLeft" align="right" valign="top"><a id="a194c9abf5887a7be2986e8be1c2a9256" name="a194c9abf5887a7be2986e8be1c2a9256"></a>
-const Store &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>store_</b></td></tr>
-<tr class="memdesc:a194c9abf5887a7be2986e8be1c2a9256"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reference to the store. <br /></td></tr>
-<tr class="separator:a194c9abf5887a7be2986e8be1c2a9256"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0699f5e70f4b43763d0e74073042346e"><td class="memItemLeft" align="right" valign="top"><a id="a0699f5e70f4b43763d0e74073042346e" name="a0699f5e70f4b43763d0e74073042346e"></a>
 const PriorityTable&#160;</td><td class="memItemRight" valign="bottom"><b>priorities_</b></td></tr>
 <tr class="memdesc:a0699f5e70f4b43763d0e74073042346e"><td class="mdescLeft">&#160;</td><td class="mdescRight">The priority table for this instance. <br /></td></tr>
@@ -142,9 +129,12 @@ const PriorityTable&#160;</td><td class="memItemRight" valign="bottom"><b>priori
 <tr class="memitem:a018495f33d879cce171fa4dd14c08c4b"><td class="memItemLeft" align="right" valign="top"><a id="a018495f33d879cce171fa4dd14c08c4b" name="a018495f33d879cce171fa4dd14c08c4b"></a>
 const std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>stp</b></td></tr>
 <tr class="separator:a018495f33d879cce171fa4dd14c08c4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac5c15fc5b1aa94e3858e30fe735fb6a5"><td class="memItemLeft" align="right" valign="top"><a id="ac5c15fc5b1aa94e3858e30fe735fb6a5" name="ac5c15fc5b1aa94e3858e30fe735fb6a5"></a>
-std::shared_ptr&lt; BlockingConcurrentQueue&lt; Reducer &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>reducers</b></td></tr>
-<tr class="separator:ac5c15fc5b1aa94e3858e30fe735fb6a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2401ee3a840c141737a9863fbae6df5a"><td class="memItemLeft" align="right" valign="top"><a id="a2401ee3a840c141737a9863fbae6df5a" name="a2401ee3a840c141737a9863fbae6df5a"></a>
+std::array&lt; std::shared_ptr&lt; BlockingConcurrentQueue&lt; Reducer &gt; &gt;, 2 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>reducers</b></td></tr>
+<tr class="separator:a2401ee3a840c141737a9863fbae6df5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf468109b7179f796df142d2c7507e99"><td class="memItemLeft" align="right" valign="top"><a id="acf468109b7179f796df142d2c7507e99" name="acf468109b7179f796df142d2c7507e99"></a>
+unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>reducer_selector</b></td></tr>
+<tr class="separator:acf468109b7179f796df142d2c7507e99"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa2acc8bf32bcd39c86f5eb029586c34b"><td class="memItemLeft" align="right" valign="top"><a id="aa2acc8bf32bcd39c86f5eb029586c34b" name="aa2acc8bf32bcd39c86f5eb029586c34b"></a>
 std::string&#160;</td><td class="memItemRight" valign="bottom"><b>case_id</b></td></tr>
 <tr class="memdesc:aa2acc8bf32bcd39c86f5eb029586c34b"><td class="mdescLeft">&#160;</td><td class="mdescRight">The case id of this particular <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> instance. <br /></td></tr>
@@ -153,7 +143,7 @@ std::string&#160;</td><td class="memItemRight" valign="bottom"><b>case_id</b></t
 <tr class="separator:a8d4a269a1ae77d20d319dc7bf27b2524"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p><a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> is the class that holds the implementation of the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net. It holds pointers to the reducer queue and that thread pool. Calling <code><a class="el" href="structsymmetri_1_1Petri.html#a6eefca65b594c008e3854fc66a822897" title="run the petri net. This initializes the net with the initial marking and blocks until it a) reached t...">fire()</a></code> on this class will do the <em>actual</em> execution of the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net. </p>
+<div class="textblock"><p><a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> is the class that holds the implementation of the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net. It holds pointers to the reducer queue and that thread pool. Calling <code>fire()</code> on this class will do the <em>actual</em> execution of the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a79f2974405af1eb63a5d2cc7c60a910a" name="a79f2974405af1eb63a5d2cc7c60a910a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a79f2974405af1eb63a5d2cc7c60a910a">&#9670;&#160;</a></span>Petri()</h2>
@@ -236,34 +226,6 @@ std::string&#160;</td><td class="memItemRight" valign="bottom"><b>case_id</b></t
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a6eefca65b594c008e3854fc66a822897" name="a6eefca65b594c008e3854fc66a822897"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6eefca65b594c008e3854fc66a822897">&#9670;&#160;</a></span>fire()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">Result symmetri::Petri::fire </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>run the petri net. This initializes the net with the initial marking and blocks until it a) reached the final marking, b) deadlocked or c) exited early. </p>
-<dl class="section return"><dt>Returns</dt><dd>Result </dd></dl>
-
-</div>
-</div>
 <a id="a1be0e97a3e376c84d084519a3d53ea7a" name="a1be0e97a3e376c84d084519a3d53ea7a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1be0e97a3e376c84d084519a3d53ea7a">&#9670;&#160;</a></span>getEventLog()</h2>
 

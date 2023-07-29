@@ -75,6 +75,7 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#friends">Friends</a> &#124;
 <a href="classsymmetri_1_1PetriNet-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">symmetri::PetriNet Class Reference<span class="mlabels"><span class="mlabel">final</span></span></div></div>
 </div><!--header-->
@@ -99,33 +100,33 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a14105c25716d16cbca924397eeb79008"><td class="memItemLeft" align="right" valign="top">std::function&lt; void()&gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1PetriNet.html#a14105c25716d16cbca924397eeb79008">registerTransitionCallback</a> (const std::string &amp;transition) const noexcept</td></tr>
 <tr class="memdesc:a14105c25716d16cbca924397eeb79008"><td class="mdescLeft">&#160;</td><td class="mdescRight">register transition gives a handle to manually force a transition to fire. This is usefull if you want to trigger a transition that has no input places. It is not recommended to use this for transitions with input places! This violates the mathematics of petri nets.  <br /></td></tr>
 <tr class="separator:a14105c25716d16cbca924397eeb79008"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a521657a1eeafa3d9fa797982452ccba8"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1PetriNet.html#a521657a1eeafa3d9fa797982452ccba8">tryFireTransition</a> (const std::string &amp;transition) const noexcept</td></tr>
-<tr class="memdesc:a521657a1eeafa3d9fa797982452ccba8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tries to fire the transition.  <br /></td></tr>
-<tr class="separator:a521657a1eeafa3d9fa797982452ccba8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a91e1082977e1213282e26ebda74fda23"><td class="memItemLeft" align="right" valign="top">Eventlog&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1PetriNet.html#a91e1082977e1213282e26ebda74fda23">getEventLog</a> () const noexcept</td></tr>
 <tr class="memdesc:a91e1082977e1213282e26ebda74fda23"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the <a class="el" href="structsymmetri_1_1Event.html" title="This struct defines a subset of data that we associate with the result of firing a transition.">Event</a> Log object. If the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net is running, this call is blocking as it is executed on the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net execution loop. Otherwise it directly returns the log.  <br /></td></tr>
 <tr class="separator:a91e1082977e1213282e26ebda74fda23"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af45f29db37a4c583ad739333ef542842"><td class="memItemLeft" align="right" valign="top">std::pair&lt; std::vector&lt; Transition &gt;, std::vector&lt; Place &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1PetriNet.html#af45f29db37a4c583ad739333ef542842">getState</a> () const noexcept</td></tr>
 <tr class="memdesc:af45f29db37a4c583ad739333ef542842"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the State, represented by a vector of <em>active</em> transitions (who can still produce reducers and hence marking mutations) and the <em>current marking</em>. If the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net is running, this call is blocking as it is executed on the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net execution loop. Otherwise it directly returns the state.  <br /></td></tr>
 <tr class="separator:af45f29db37a4c583ad739333ef542842"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad072b494fa34ad87cf76cf2319609803"><td class="memItemLeft" align="right" valign="top">std::vector&lt; Transition &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1PetriNet.html#ad072b494fa34ad87cf76cf2319609803">getFireableTransitions</a> () const noexcept</td></tr>
-<tr class="memdesc:ad072b494fa34ad87cf76cf2319609803"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a vector of Fireable Transitions. If the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net is running, this call is blocking as it is executed on the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net execution loop. Otherwise it directly returns the vector of fireable transitions.  <br /></td></tr>
-<tr class="separator:ad072b494fa34ad87cf76cf2319609803"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a89bff80f100132e350caf932c06bbda3"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1PetriNet.html#a89bff80f100132e350caf932c06bbda3">reuseApplication</a> (const std::string &amp;case_id)</td></tr>
 <tr class="memdesc:a89bff80f100132e350caf932c06bbda3"><td class="mdescLeft">&#160;</td><td class="mdescRight">reuseApplication resets the application such that the same net can be used again after an cancel call. You do need to supply a new case_id which must be different.  <br /></td></tr>
 <tr class="separator:a89bff80f100132e350caf932c06bbda3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac6461bc296bdfc6fb82aedc90b48cf9f"><td class="memItemLeft" align="right" valign="top">Result&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1PetriNet.html#ac6461bc296bdfc6fb82aedc90b48cf9f">fire</a> () const noexcept</td></tr>
-<tr class="memdesc:ac6461bc296bdfc6fb82aedc90b48cf9f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fire for a <a class="el" href="classsymmetri_1_1PetriNet.html" title="The PetriNet class is a class that can create, configure and run a Petri net.">PetriNet</a> means that it executes the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net until it reaches a final marking, deadlocks or is preempted by a user.  <br /></td></tr>
-<tr class="separator:ac6461bc296bdfc6fb82aedc90b48cf9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aba18a0bb3585c98e7a22731995eb8ff4"><td class="memItemLeft" align="right" valign="top">Result&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1PetriNet.html#aba18a0bb3585c98e7a22731995eb8ff4">cancel</a> () const noexcept</td></tr>
-<tr class="memdesc:aba18a0bb3585c98e7a22731995eb8ff4"><td class="mdescLeft">&#160;</td><td class="mdescRight">cancel interrupts and stops the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net execution and calls cancel on all child transitions that are active. If transitions do not have a cancel functionality implemented, they will not be cancelled. Their reducers however will not be processed.  <br /></td></tr>
-<tr class="separator:aba18a0bb3585c98e7a22731995eb8ff4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaf7cceb88fda518239a8d58b6dbad443"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1PetriNet.html#aaf7cceb88fda518239a8d58b6dbad443">pause</a> () const noexcept</td></tr>
-<tr class="memdesc:aaf7cceb88fda518239a8d58b6dbad443"><td class="mdescLeft">&#160;</td><td class="mdescRight">pause interrupts and pauses the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net execution and calls pause on all child transitions that are active. The <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net will still consume reducers produced by finished transitions but it will not queue new transitions for execution. This mostly happens when active transitions do not have a pause-functionality implemented.  <br /></td></tr>
-<tr class="separator:aaf7cceb88fda518239a8d58b6dbad443"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3cb1c279447fb6ccf5bf177eb1b58cd4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1PetriNet.html#a3cb1c279447fb6ccf5bf177eb1b58cd4">resume</a> () const noexcept</td></tr>
-<tr class="memdesc:a3cb1c279447fb6ccf5bf177eb1b58cd4"><td class="mdescLeft">&#160;</td><td class="mdescRight">resume breaks the pause and immediately will try to fire all possible transitions. It will also call resume on all active transitions.  <br /></td></tr>
-<tr class="separator:a3cb1c279447fb6ccf5bf177eb1b58cd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="friends" name="friends"></a>
+Friends</h2></td></tr>
+<tr class="memitem:ab545b0be670dd0630da7ee6302043703"><td class="memItemLeft" align="right" valign="top">Result&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1PetriNet.html#ab545b0be670dd0630da7ee6302043703">fire</a> (const <a class="el" href="classsymmetri_1_1PetriNet.html">PetriNet</a> &amp;app)</td></tr>
+<tr class="memdesc:ab545b0be670dd0630da7ee6302043703"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fire for a <a class="el" href="classsymmetri_1_1PetriNet.html" title="The PetriNet class is a class that can create, configure and run a Petri net.">PetriNet</a> means that it executes the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net until it reaches a final marking, deadlocks or is preempted by a user.  <br /></td></tr>
+<tr class="separator:ab545b0be670dd0630da7ee6302043703"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a18da0f53b5a386c3bb2267a7165e71f4"><td class="memItemLeft" align="right" valign="top">Result&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1PetriNet.html#a18da0f53b5a386c3bb2267a7165e71f4">cancel</a> (const <a class="el" href="classsymmetri_1_1PetriNet.html">PetriNet</a> &amp;app)</td></tr>
+<tr class="memdesc:a18da0f53b5a386c3bb2267a7165e71f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">cancel interrupts and stops the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net execution and calls cancel on all child transitions that are active. If transitions do not have a cancel functionality implemented, they will not be cancelled. Their reducers however will not be processed.  <br /></td></tr>
+<tr class="separator:a18da0f53b5a386c3bb2267a7165e71f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a10c1238859263e871f04bff1b3960e8c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1PetriNet.html#a10c1238859263e871f04bff1b3960e8c">pause</a> (const <a class="el" href="classsymmetri_1_1PetriNet.html">PetriNet</a> &amp;app)</td></tr>
+<tr class="memdesc:a10c1238859263e871f04bff1b3960e8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">pause interrupts and pauses the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net execution and calls pause on all child transitions that are active. The <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net will still consume reducers produced by finished transitions but it will not queue new transitions for execution. This mostly happens when active transitions do not have a pause-functionality implemented.  <br /></td></tr>
+<tr class="separator:a10c1238859263e871f04bff1b3960e8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec86c02e674a16af8c4fe91fffa929f5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1PetriNet.html#aec86c02e674a16af8c4fe91fffa929f5">resume</a> (const <a class="el" href="classsymmetri_1_1PetriNet.html">PetriNet</a> &amp;app)</td></tr>
+<tr class="memdesc:aec86c02e674a16af8c4fe91fffa929f5"><td class="mdescLeft">&#160;</td><td class="mdescRight">resume breaks the pause and immediately will try to fire all possible transitions. It will also call resume on all active transitions.  <br /></td></tr>
+<tr class="separator:aec86c02e674a16af8c4fe91fffa929f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5cdf76322a2f62e807bd08792cddcc58"><td class="memItemLeft" align="right" valign="top"><a id="a5cdf76322a2f62e807bd08792cddcc58" name="a5cdf76322a2f62e807bd08792cddcc58"></a>
+Eventlog&#160;</td><td class="memItemRight" valign="bottom"><b>getLog</b> (const <a class="el" href="classsymmetri_1_1PetriNet.html">PetriNet</a> &amp;app)</td></tr>
+<tr class="separator:a5cdf76322a2f62e807bd08792cddcc58"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The <a class="el" href="classsymmetri_1_1PetriNet.html" title="The PetriNet class is a class that can create, configure and run a Petri net.">PetriNet</a> class is a class that can create, configure and run a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net. </p>
@@ -326,62 +327,6 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="aba18a0bb3585c98e7a22731995eb8ff4" name="aba18a0bb3585c98e7a22731995eb8ff4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aba18a0bb3585c98e7a22731995eb8ff4">&#9670;&#160;</a></span>cancel()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">Result symmetri::PetriNet::cancel </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>cancel interrupts and stops the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net execution and calls cancel on all child transitions that are active. If transitions do not have a cancel functionality implemented, they will not be cancelled. Their reducers however will not be processed. </p>
-<dl class="section return"><dt>Returns</dt><dd>Result </dd></dl>
-
-</div>
-</div>
-<a id="ac6461bc296bdfc6fb82aedc90b48cf9f" name="ac6461bc296bdfc6fb82aedc90b48cf9f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac6461bc296bdfc6fb82aedc90b48cf9f">&#9670;&#160;</a></span>fire()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">Result symmetri::PetriNet::fire </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Fire for a <a class="el" href="classsymmetri_1_1PetriNet.html" title="The PetriNet class is a class that can create, configure and run a Petri net.">PetriNet</a> means that it executes the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net until it reaches a final marking, deadlocks or is preempted by a user. </p>
-<dl class="section return"><dt>Returns</dt><dd>Result </dd></dl>
-
-</div>
-</div>
 <a id="a91e1082977e1213282e26ebda74fda23" name="a91e1082977e1213282e26ebda74fda23"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a91e1082977e1213282e26ebda74fda23">&#9670;&#160;</a></span>getEventLog()</h2>
 
@@ -410,34 +355,6 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ad072b494fa34ad87cf76cf2319609803" name="ad072b494fa34ad87cf76cf2319609803"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad072b494fa34ad87cf76cf2319609803">&#9670;&#160;</a></span>getFireableTransitions()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::vector&lt; Transition &gt; symmetri::PetriNet::getFireableTransitions </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Get a vector of Fireable Transitions. If the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net is running, this call is blocking as it is executed on the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net execution loop. Otherwise it directly returns the vector of fireable transitions. </p>
-<dl class="section return"><dt>Returns</dt><dd>std::vector&lt;Transition&gt; </dd></dl>
-
-</div>
-</div>
 <a id="af45f29db37a4c583ad739333ef542842" name="af45f29db37a4c583ad739333ef542842"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af45f29db37a4c583ad739333ef542842">&#9670;&#160;</a></span>getState()</h2>
 
@@ -463,39 +380,6 @@ Public Member Functions</h2></td></tr>
 
 <p>Get the State, represented by a vector of <em>active</em> transitions (who can still produce reducers and hence marking mutations) and the <em>current marking</em>. If the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net is running, this call is blocking as it is executed on the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net execution loop. Otherwise it directly returns the state. </p>
 <dl class="section return"><dt>Returns</dt><dd>std::pair&lt;std::vector&lt;Transition&gt;, std::vector&lt;Place&gt;&gt; </dd></dl>
-
-</div>
-</div>
-<a id="aaf7cceb88fda518239a8d58b6dbad443" name="aaf7cceb88fda518239a8d58b6dbad443"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaf7cceb88fda518239a8d58b6dbad443">&#9670;&#160;</a></span>pause()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void symmetri::PetriNet::pause </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>pause interrupts and pauses the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net execution and calls pause on all child transitions that are active. The <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net will still consume reducers produced by finished transitions but it will not queue new transitions for execution. This mostly happens when active transitions do not have a pause-functionality implemented. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">app</td><td></td></tr>
-  </table>
-  </dd>
-</dl>
 
 </div>
 </div>
@@ -534,33 +418,6 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a3cb1c279447fb6ccf5bf177eb1b58cd4" name="a3cb1c279447fb6ccf5bf177eb1b58cd4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3cb1c279447fb6ccf5bf177eb1b58cd4">&#9670;&#160;</a></span>resume()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void symmetri::PetriNet::resume </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>resume breaks the pause and immediately will try to fire all possible transitions. It will also call resume on all active transitions. </p>
-
-</div>
-</div>
 <a id="a89bff80f100132e350caf932c06bbda3" name="a89bff80f100132e350caf932c06bbda3"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a89bff80f100132e350caf932c06bbda3">&#9670;&#160;</a></span>reuseApplication()</h2>
 
@@ -581,8 +438,9 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a521657a1eeafa3d9fa797982452ccba8" name="a521657a1eeafa3d9fa797982452ccba8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a521657a1eeafa3d9fa797982452ccba8">&#9670;&#160;</a></span>tryFireTransition()</h2>
+<h2 class="groupheader">Friends And Related Symbol Documentation</h2>
+<a id="a18da0f53b5a386c3bb2267a7165e71f4" name="a18da0f53b5a386c3bb2267a7165e71f4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a18da0f53b5a386c3bb2267a7165e71f4">&#9670;&#160;</a></span>cancel</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -591,30 +449,113 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool symmetri::PetriNet::tryFireTransition </td>
+          <td class="memname">Result cancel </td>
           <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>transition</em></td><td>)</td>
-          <td> const</td>
+          <td class="paramtype">const <a class="el" href="classsymmetri_1_1PetriNet.html">PetriNet</a> &amp;&#160;</td>
+          <td class="paramname"><em>app</em></td><td>)</td>
+          <td></td>
         </tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
+<span class="mlabels"><span class="mlabel">friend</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Tries to fire the transition. </p>
+<p>cancel interrupts and stops the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net execution and calls cancel on all child transitions that are active. If transitions do not have a cancel functionality implemented, they will not be cancelled. Their reducers however will not be processed. </p>
+<dl class="section return"><dt>Returns</dt><dd>Result </dd></dl>
+
+</div>
+</div>
+<a id="ab545b0be670dd0630da7ee6302043703" name="ab545b0be670dd0630da7ee6302043703"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab545b0be670dd0630da7ee6302043703">&#9670;&#160;</a></span>fire</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">Result fire </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classsymmetri_1_1PetriNet.html">PetriNet</a> &amp;&#160;</td>
+          <td class="paramname"><em>app</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Fire for a <a class="el" href="classsymmetri_1_1PetriNet.html" title="The PetriNet class is a class that can create, configure and run a Petri net.">PetriNet</a> means that it executes the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net until it reaches a final marking, deadlocks or is preempted by a user. </p>
+<dl class="section return"><dt>Returns</dt><dd>Result </dd></dl>
+
+</div>
+</div>
+<a id="a10c1238859263e871f04bff1b3960e8c" name="a10c1238859263e871f04bff1b3960e8c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a10c1238859263e871f04bff1b3960e8c">&#9670;&#160;</a></span>pause</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void pause </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classsymmetri_1_1PetriNet.html">PetriNet</a> &amp;&#160;</td>
+          <td class="paramname"><em>app</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>pause interrupts and pauses the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net execution and calls pause on all child transitions that are active. The <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net will still consume reducers produced by finished transitions but it will not queue new transitions for execution. This mostly happens when active transitions do not have a pause-functionality implemented. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">transition</td><td></td></tr>
+    <tr><td class="paramname">app</td><td></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>true if it fired the transition </dd>
-<dd>
-false if the preconditions were not met, the transition was not fired </dd></dl>
+
+</div>
+</div>
+<a id="aec86c02e674a16af8c4fe91fffa929f5" name="aec86c02e674a16af8c4fe91fffa929f5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aec86c02e674a16af8c4fe91fffa929f5">&#9670;&#160;</a></span>resume</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void resume </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classsymmetri_1_1PetriNet.html">PetriNet</a> &amp;&#160;</td>
+          <td class="paramname"><em>app</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>resume breaks the pause and immediately will try to fire all possible transitions. It will also call resume on all active transitions. </p>
 
 </div>
 </div>
