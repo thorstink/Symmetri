@@ -53,12 +53,14 @@ bool areAllTransitionsInStore(const Store &store, const Net &net) noexcept {
  *
  */
 struct Petri {
+  Petri(Petri const &) = delete;
+  Petri(Petri &&) noexcept = delete;
+  Petri &operator=(Petri const &) = delete;
+  Petri &operator=(Petri &&) noexcept = delete;
+
   Model m;  ///< The Petri net model
   std::atomic<std::optional<unsigned int>>
-      thread_id_;     ///< The id of the thread from which run is called.
-  const Marking m0_;  ///< The initial marking for this instance
-  const Net net_;     ///< The net
-  const PriorityTable priorities_;  ///< The priority table for this instance
+      thread_id_;  ///< The id of the thread from which run is called.
   const std::vector<size_t>
       final_marking;  ///< The net will stop queueing reducers
                       ///< once the marking has been reached
@@ -87,9 +89,6 @@ struct Petri {
         const PriorityTable &priorities, const std::string &case_id)
       : m(net, store, priorities, m0),
         thread_id_(std::nullopt),
-        m0_(m0),
-        net_(net),
-        priorities_(priorities),
         final_marking(m.toTokens(final_marking)),
         stp(stp),
         reducers({std::make_shared<BlockingConcurrentQueue<Reducer>>(32),
@@ -146,17 +145,15 @@ create(const Net &net, const Marking &m0, const Marking &final_marking,
   auto impl = std::make_shared<Petri>(net, m0, stp, final_marking, store,
                                       priority, case_id);
   return {impl, [=](const Transition &t) {
-            if (impl->thread_id_.load()) {
-              const auto &reducer = impl->reducers[impl->reducer_selector];
-              reducer->enqueue([=](Model &&m) {
-                const auto t_index = toIndex(m.net.transition, t);
-                m.active_transitions_n.push_back(t_index);
-                reducer->enqueue(fireTransition(
-                    t_index, m.net.transition[t_index], m.net.store[t_index],
-                    impl->case_id, reducer));
-                return std::ref(m);
-              });
-            }
+            const auto &reducer = impl->reducers[impl->reducer_selector];
+            reducer->enqueue([=](Model &&m) {
+              const auto t_index = toIndex(m.net.transition, t);
+              m.active_transitions_n.push_back(t_index);
+              reducer->enqueue(
+                  fireTransition(t_index, m.net.transition[t_index],
+                                 m.net.store[t_index], impl->case_id, reducer));
+              return std::ref(m);
+            });
           }};
 }
 

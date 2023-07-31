@@ -191,7 +191,7 @@ struct Model {
                 ///< `transition` so it is compatible with index lookup.
   } net;        ///< Is a data-oriented design of a Petri net
 
-  std::vector<size_t> initial_tokens;        ///< The intial marking
+  std::vector<size_t> initial_tokens;        ///< The initial marking
   std::vector<size_t> tokens_n;              ///< The current marking
   std::vector<size_t> active_transitions_n;  ///< List of active transitions
   Eventlog event_log;                        ///< The most actual event_log
