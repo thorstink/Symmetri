@@ -38,7 +38,6 @@ symmetri::Result fire(const PetriNet &);
 symmetri::Result cancel(const PetriNet &);
 void pause(const PetriNet &);
 void resume(const PetriNet &);
-bool isDirect(const PetriNet &);
 symmetri::Eventlog getLog(const PetriNet &);
 
 class PetriNet final {
@@ -136,7 +135,6 @@ class PetriNet final {
   friend symmetri::Result(::cancel)(const PetriNet &);
   friend void(::pause)(const PetriNet &);
   friend void(::resume)(const PetriNet &);
-  friend bool(::isDirect)(const PetriNet &);
   friend symmetri::Eventlog(::getLog)(const PetriNet &);
 
  private:

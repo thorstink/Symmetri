@@ -13,7 +13,7 @@ using namespace symmetri;
  * functionalities such as Pause and Resume and it can also get
  * preempted/cancelled. We need to define functions to let Symmetri use these
  * functionalities. It is as simple by creating specialized version of the
- * fire/cancel/isDirect/pause/resume functions. One does not need to implement
+ * fire/cancel/pause/resume functions. One does not need to implement
  * all - if nothing is defined, a default version is used.
  *
  */
@@ -26,8 +26,6 @@ Result cancel(const Foo &f) {
   f.cancel();
   return {{}, State::UserExit};
 }
-
-bool isDirect(const Foo &) { return false; }
 
 void pause(const Foo &f) { f.pause(); }
 

@@ -11,7 +11,7 @@ void t() { i_ran.store(true); }
 TEST_CASE("Test external input.") {
   Net net = {
       {"t0", {{}, {"Pa"}}}, {"t1", {{"Pa"}, {"Pb"}}}, {"t2", {{"Pc"}, {"Pb"}}}};
-  Store store = {{"t0", nullptr},
+  Store store = {{"t0", DirectMutation{}},
                  {"t1", &t},
                  {"t2", []() {
                     std::this_thread::sleep_for(std::chrono::milliseconds(15));

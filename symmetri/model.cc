@@ -1,7 +1,12 @@
 #include "model.h"
 
-namespace symmetri {
+bool isDirect(const DirectMutation &) { return true; }
 
+symmetri::Result fire(const DirectMutation &) {
+  return {{}, symmetri::State::Completed};
+}
+
+namespace symmetri {
 std::tuple<std::vector<Transition>, std::vector<Place>,
            std::vector<PolyTransition>>
 convert(const Net &_net, const Store &_store) {

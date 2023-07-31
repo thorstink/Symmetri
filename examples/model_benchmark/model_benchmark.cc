@@ -16,7 +16,7 @@ int main(int, char *argv[]) {
     if (bolus) {
       store.insert({t, []() {}});
     } else {
-      store.insert({t, nullptr});
+      store.insert({t, DirectMutation{}});
     }
   }
 

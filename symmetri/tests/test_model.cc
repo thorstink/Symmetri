@@ -117,7 +117,7 @@ TEST_CASE("Run until net dies with nullptr") {
   using namespace moodycamel;
 
   auto [net, store, priority, m0] = testNet();
-  store = {{"t0", nullptr}, {"t1", nullptr}};
+  store = {{"t0", DirectMutation{}}, {"t1", DirectMutation{}}};
   Model m(net, store, priority, m0);
 
   auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
@@ -150,7 +150,7 @@ TEST_CASE(
 
   Store store;
   for (auto [t, dm] : net) {
-    store.insert({t, nullptr});
+    store.insert({t, DirectMutation{}});
   }
   // with this initial marking, all but transition e are possible.
   Marking m0 = {{"Pa", 1}};

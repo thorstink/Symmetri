@@ -4,6 +4,8 @@
 
 #include "symmetri/types.h"
 
+struct DirectMutation {};
+
 /**
  * @brief Checks if the transition-function can be invoked.
  *
@@ -14,7 +16,7 @@
  */
 template <typename T>
 bool isDirect(const T &) {
-  return !std::is_invocable_v<T>;
+  return false;
 }
 
 /**
@@ -58,8 +60,7 @@ void resume(const T &) {}
  */
 template <typename T>
 symmetri::Result fire(const T &transition) {
-  return fire(transition);
-  if constexpr (!std::is_invocable_v<T>) {
+  if constexpr (std::is_same_v<DirectMutation, T>) {
     return {{}, symmetri::State::Completed};
   } else if constexpr (std::is_same_v<symmetri::State,
                                       decltype(transition())>) {

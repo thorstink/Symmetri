@@ -49,7 +49,7 @@ TEST_CASE("Using nullptr does not queue reducers.") {
   for (auto priority : priorities) {
     auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
     Net net = {{"t0", {{"Pa"}, {"Pb"}}}, {"t1", {{"Pa"}, {"Pc"}}}};
-    Store store = {{"t0", nullptr}, {"t1", nullptr}};
+    Store store = {{"t0", DirectMutation{}}, {"t1", DirectMutation{}}};
 
     Marking m0 = {{"Pa", 1}, {"Pb", 0}, {"Pc", 0}};
     auto stp = std::make_shared<TaskSystem>(1);
