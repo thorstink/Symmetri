@@ -68,8 +68,6 @@ struct Petri {
   std::array<std::shared_ptr<BlockingConcurrentQueue<Reducer>>, 2> reducers;
   unsigned int reducer_selector;
   std::string case_id;  ///< The case id of this particular Petri instance
-  std::atomic<bool> early_exit;  ///< once it is true, no more new transitions
-                                 ///< will be queued and the run will exit.
 
   /**
    * @brief Construct a new Petri object. Most importantly, it also creates the
@@ -94,8 +92,7 @@ struct Petri {
         reducers({std::make_shared<BlockingConcurrentQueue<Reducer>>(32),
                   std::make_shared<BlockingConcurrentQueue<Reducer>>(32)}),
         reducer_selector(0),
-        case_id(case_id),
-        early_exit(false) {}
+        case_id(case_id) {}
 
   const std::shared_ptr<BlockingConcurrentQueue<Reducer>> &setFreshQueue() {
     // increment index to get the already prepared queue.
@@ -230,7 +227,6 @@ symmetri::Result fire(const PetriNet &app) {
   // we are running!
   auto &active_reducers = petri.reducers[petri.reducer_selector];
   petri.thread_id_.store(symmetri::getThreadId());
-  petri.early_exit.store(false);
   m.event_log.clear();
   m.tokens_n = m.initial_tokens;
 
@@ -239,26 +235,29 @@ symmetri::Result fire(const PetriNet &app) {
   // start!
   m.fireTransitions(active_reducers, petri.stp, true, petri.case_id);
   // get a reducer. Immediately, or wait a bit
-  while ((m.active_transitions_n.size() > 0 || m.is_paused) &&
+  while ((m.active_transitions_n.size() > 0 || m.state == State::Paused) &&
          active_reducers->wait_dequeue_timed(f, -1)) {
     do {
       m = f(std::move(m));
-    } while (!petri.early_exit.load() && active_reducers->try_dequeue(f));
+    } while (m.state != State::UserExit && active_reducers->try_dequeue(f));
 
-    if (symmetri::MarkingReached(m.tokens_n, petri.final_marking) ||
-        petri.early_exit.load()) {
+    m.state = symmetri::MarkingReached(m.tokens_n, petri.final_marking)
+                  ? State::Completed
+                  : m.state;
+
+    if (m.state == State::Completed || m.state == State::UserExit) {
       // we're done
       break;
-    } else if (!m.is_paused && !waiting_for_resume) {
+    } else if (m.state != State::Paused && !waiting_for_resume) {
       // we're firing
       m.fireTransitions(active_reducers, petri.stp, true, petri.case_id);
-    } else if (m.is_paused && !waiting_for_resume) {
+    } else if (m.state == State::Paused && !waiting_for_resume) {
       // we've been asked to pause
       waiting_for_resume = true;
       for (const auto transition_index : m.active_transitions_n) {
         pause(m.net.store.at(transition_index));
       }
-    } else if (!m.is_paused && waiting_for_resume) {
+    } else if (m.state != State::Paused && waiting_for_resume) {
       // we've been asked to resume
       waiting_for_resume = false;
       m.fireTransitions(active_reducers, petri.stp, true, petri.case_id);
@@ -270,7 +269,7 @@ symmetri::Result fire(const PetriNet &app) {
 
   // determine what was the reason we terminated.
   symmetri::State result;
-  if (petri.early_exit.load()) {
+  if (m.state == State::UserExit) {
     {
       // populate that eventlog with child eventlog and possible cancelations.
       for (const auto transition_index : m.active_transitions_n) {
@@ -307,14 +306,13 @@ symmetri::Result fire(const PetriNet &app) {
 symmetri::Result cancel(const PetriNet &app) {
   const auto &impl = *app.impl;
   const auto maybe_thread_id = impl.thread_id_.load();
-  if (maybe_thread_id && maybe_thread_id.value() != symmetri::getThreadId() &&
-      !impl.early_exit.load()) {
+  if (maybe_thread_id && maybe_thread_id.value() != symmetri::getThreadId()) {
     std::mutex m;
     std::condition_variable cv;
     bool ready = false;
     impl.reducers[impl.reducer_selector]->enqueue(
         [=, &m, &cv, &ready](symmetri::Model &&model) {
-          app.impl->early_exit.store(true);
+          app.impl->m.state = symmetri::State::UserExit;
           {
             std::lock_guard lk(m);
             ready = true;
@@ -326,7 +324,7 @@ symmetri::Result cancel(const PetriNet &app) {
     cv.wait(lk, [&] { return ready; });
   } else {
     impl.reducers[impl.reducer_selector]->enqueue([=](symmetri::Model &&model) {
-      app.impl->early_exit.store(true);
+      app.impl->m.state = symmetri::State::UserExit;
       return std::ref(model);
     });
   }
@@ -337,7 +335,7 @@ symmetri::Result cancel(const PetriNet &app) {
 void pause(const PetriNet &app) {
   app.impl->reducers[app.impl->reducer_selector]->enqueue(
       [&](symmetri::Model &&model) {
-        model.is_paused = true;
+        model.state = State::Paused;
         return std::ref(model);
       });
 };
@@ -345,7 +343,7 @@ void pause(const PetriNet &app) {
 void resume(const PetriNet &app) {
   app.impl->reducers[app.impl->reducer_selector]->enqueue(
       [&](symmetri::Model &&model) {
-        model.is_paused = false;
+        model.state = State::Started;
         return std::ref(model);
       });
 };

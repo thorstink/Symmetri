@@ -121,6 +121,9 @@ std::string printState(symmetri::State s) noexcept {
     case State::UserExit:
       ret = "UserExit";
       break;
+    case State::Paused:
+      ret = "Paused";
+      break;
     case State::Error:
       ret = "Error";
       break;

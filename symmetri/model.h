@@ -195,7 +195,7 @@ struct Model {
   std::vector<size_t> tokens_n;              ///< The current marking
   std::vector<size_t> active_transitions_n;  ///< List of active transitions
   Eventlog event_log;                        ///< The most actual event_log
-  bool is_paused;
+  State state;
 
  private:
   /**

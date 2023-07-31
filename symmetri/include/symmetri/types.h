@@ -24,6 +24,7 @@ enum class State {
   Completed,  ///< The transition completed as expected
   Deadlock,   ///< The transition deadlocked
   UserExit,   ///< The transition or interrupted and possibly stopped
+  Paused,     ///< The transition is paused
   Error       ///< None of the above
 };
 

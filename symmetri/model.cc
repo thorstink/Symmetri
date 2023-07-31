@@ -83,7 +83,7 @@ std::vector<int8_t> createPriorityLookup(
 
 Model::Model(const Net &_net, const Store &store,
              const PriorityTable &_priority, const Marking &M0)
-    : event_log({}), is_paused(false) {
+    : event_log({}), state(State::Scheduled) {
   event_log.reserve(1000);
   std::tie(net.transition, net.place, net.store) = convert(_net, store);
   std::tie(net.input_n, net.output_n) = populateIoLookups(_net, net.place);
