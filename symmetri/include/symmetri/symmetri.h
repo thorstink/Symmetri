@@ -1,7 +1,6 @@
 #pragma once
 
 #include <functional>
-#include <iostream>
 #include <set>
 #include <unordered_map>
 
@@ -100,16 +99,6 @@ class PetriNet final {
    */
   std::function<void()> registerTransitionCallback(
       const std::string &transition) const noexcept;
-
-  /**
-   * @brief Get the Event Log object. If the Petri net is running, this call is
-   * blocking as it is executed on the Petri net execution loop. Otherwise it
-   * directly returns the log.
-   *
-   *
-   * @return Eventlog
-   */
-  symmetri::Eventlog getEventLog() const noexcept;
 
   /**
    * @brief Get the State, represented by a vector of *active* transitions (who

@@ -85,11 +85,10 @@ int main(int, char *argv[]) {
   // a thread that polls the eventlog and writes it to a file
   auto gantt = std::thread([&] {
     while (running) {
-      writeMermaidHtmlToFile(
-          symmetri::mermaidFromEventlog(bignet.getEventLog()));
+      writeMermaidHtmlToFile(symmetri::mermaidFromEventlog(getLog(bignet)));
       std::this_thread::sleep_for(std::chrono::seconds(3));
     }
-    writeMermaidHtmlToFile(symmetri::mermaidFromEventlog(bignet.getEventLog()));
+    writeMermaidHtmlToFile(symmetri::mermaidFromEventlog(getLog(bignet)));
   });
 
   // Parallel to the PetriNet execution, we run a thread through which we

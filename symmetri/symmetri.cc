@@ -108,34 +108,6 @@ struct Petri {
     return reducers[reducer_selector];
   }
 
-  /**
-   * @brief Get the Event Log object
-   *
-   * @return Eventlog
-   */
-  Eventlog getEventLog() const noexcept {
-    const auto maybe_thread_id = thread_id_.load();
-    if (maybe_thread_id && maybe_thread_id.value() != getThreadId()) {
-      std::promise<Eventlog> el;
-      std::future<Eventlog> el_getter = el.get_future();
-      reducers[reducer_selector]->enqueue([&](Model &&model) {
-        auto eventlog = model.event_log;
-        // get event log from parent nets:
-        for (size_t pt_idx : model.active_transitions_n) {
-          auto sub_el = getLog(model.net.store[pt_idx]);
-          if (!sub_el.empty()) {
-            eventlog.insert(eventlog.end(), sub_el.begin(), sub_el.end());
-          }
-        }
-        el.set_value(std::move(eventlog));
-        return std::ref(model);
-      });
-      return el_getter.get();
-    } else {
-      return m.event_log;
-    }
-  }
-
   std::pair<std::vector<Transition>, std::vector<Place>> getState()
       const noexcept {
     const auto maybe_thread_id = thread_id_.load();
@@ -239,8 +211,6 @@ PetriNet::PetriNet(const Net &net, const Marking &m0,
         create(net, m0, final_marking, store, priorities, case_id, stp);
   }
 }
-
-Eventlog PetriNet::getEventLog() const noexcept { return impl->getEventLog(); };
 
 std::pair<std::vector<Transition>, std::vector<Place>> PetriNet::getState()
     const noexcept {
@@ -360,13 +330,14 @@ symmetri::Result fire(const PetriNet &app) {
 };
 
 symmetri::Result cancel(const PetriNet &app) {
-  const auto maybe_thread_id = app.impl->thread_id_.load();
+  const auto &impl = *app.impl;
+  const auto maybe_thread_id = impl.thread_id_.load();
   if (maybe_thread_id && maybe_thread_id.value() != symmetri::getThreadId() &&
-      !app.impl->early_exit.load()) {
+      !impl.early_exit.load()) {
     std::mutex m;
     std::condition_variable cv;
     bool ready = false;
-    app.impl->reducers[app.impl->reducer_selector]->enqueue(
+    impl.reducers[impl.reducer_selector]->enqueue(
         [=, &m, &cv, &ready](symmetri::Model &&model) {
           app.impl->early_exit.store(true);
           {
@@ -379,14 +350,13 @@ symmetri::Result cancel(const PetriNet &app) {
     std::unique_lock lk(m);
     cv.wait(lk, [&] { return ready; });
   } else {
-    app.impl->reducers[app.impl->reducer_selector]->enqueue(
-        [=](symmetri::Model &&model) {
-          app.impl->early_exit.store(true);
-          return std::ref(model);
-        });
+    impl.reducers[impl.reducer_selector]->enqueue([=](symmetri::Model &&model) {
+      app.impl->early_exit.store(true);
+      return std::ref(model);
+    });
   }
 
-  return {app.getEventLog(), symmetri::State::UserExit};
+  return {getLog(app), symmetri::State::UserExit};
 }
 
 void pause(const PetriNet &app) {
@@ -405,6 +375,27 @@ void resume(const PetriNet &app) {
       });
 };
 
-bool isDirect(const PetriNet &) { return false; };
-
-symmetri::Eventlog getLog(const PetriNet &app) { return app.getEventLog(); }
+symmetri::Eventlog getLog(const PetriNet &app) {
+  const auto &impl = *app.impl;
+  const auto maybe_thread_id = impl.thread_id_.load();
+  if (maybe_thread_id && maybe_thread_id.value() != getThreadId()) {
+    std::promise<Eventlog> el;
+    std::future<Eventlog> el_getter = el.get_future();
+    impl.reducers[impl.reducer_selector]->enqueue([&](Model &&model) {
+      auto eventlog = model.event_log;
+      // get event log from parent nets:
+      for (size_t pt_idx : model.active_transitions_n) {
+        auto sub_el = getLog(model.net.store[pt_idx]);
+        if (!sub_el.empty()) {
+          eventlog.insert(eventlog.end(), sub_el.begin(), sub_el.end());
+        }
+      }
+      el.set_value(std::move(eventlog));
+      return std::ref(model);
+    });
+    return el_getter.get();
+  } else {
+    return impl.m.event_log;
+  }
+  getLog(app);
+}
