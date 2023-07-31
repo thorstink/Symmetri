@@ -108,23 +108,6 @@ struct Petri {
     return reducers[reducer_selector];
   }
 
-  std::pair<std::vector<Transition>, std::vector<Place>> getState()
-      const noexcept {
-    const auto maybe_thread_id = thread_id_.load();
-    if (maybe_thread_id && maybe_thread_id.value() != getThreadId()) {
-      std::promise<std::pair<std::vector<Transition>, std::vector<Place>>>
-          state;
-      auto getter = state.get_future();
-      reducers[reducer_selector]->enqueue([&](Model &&model) {
-        state.set_value(model.getState());
-        return std::ref(model);
-      });
-      return getter.get();
-    } else {
-      return m.getState();
-    }
-  }
-
   std::vector<Transition> getFireableTransitions() const noexcept {
     const auto maybe_thread_id = thread_id_.load();
     if (maybe_thread_id && maybe_thread_id.value() != getThreadId()) {
@@ -168,7 +151,7 @@ create(const Net &net, const Marking &m0, const Marking &final_marking,
               reducer->enqueue([=](Model &&m) {
                 const auto t_index = toIndex(m.net.transition, t);
                 m.active_transitions_n.push_back(t_index);
-                reducer->enqueue(createReducerForTransition(
+                reducer->enqueue(fireTransition(
                     t_index, m.net.transition[t_index], m.net.store[t_index],
                     impl->case_id, reducer));
                 return std::ref(m);
@@ -210,11 +193,6 @@ PetriNet::PetriNet(const Net &net, const Marking &m0,
     std::tie(impl, register_functor) =
         create(net, m0, final_marking, store, priorities, case_id, stp);
   }
-}
-
-std::pair<std::vector<Transition>, std::vector<Place>> PetriNet::getState()
-    const noexcept {
-  return impl->getState();
 }
 
 std::function<void()> PetriNet::registerTransitionCallback(

@@ -66,7 +66,7 @@ using Reducer = std::function<Model &(Model &&)>;
  * @param reducers
  * @return Reducer
  */
-Reducer createReducerForTransition(
+Reducer fireTransition(
     size_t T_i, const std::string &transition, const PolyTransition &task,
     const std::string &case_id,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
@@ -98,6 +98,13 @@ struct Model {
   Model &operator=(Model const &) = default;
   Model &operator=(Model &&) noexcept = default;
 
+  /**
+   * @brief outputs the marking as a vector of tokens; e.g. [1 1 1 0 5] means 3
+   * tokens in place 1, 1 token in place 0 and 1 token in place 5.
+   *
+   * @param marking
+   * @return std::vector<size_t>
+   */
   std::vector<size_t> toTokens(const Marking &marking) const noexcept;
 
   /**
@@ -130,14 +137,6 @@ struct Model {
   std::vector<Transition> getFireableTransitions() const;
 
   /**
-   * @brief Get the State; this is a pair of active transitions *and* the
-   * current marking.
-   *
-   * @return std::pair<std::vector<Transition>, std::vector<Place>>
-   */
-  std::pair<std::vector<Transition>, std::vector<Place>> getState() const;
-
-  /**
    * @brief Try to fire a single transition.
    *
    * @param t string representation of the transition
@@ -151,7 +150,7 @@ struct Model {
   bool fire(const Transition &t,
             const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
                 &reducers,
-            std::shared_ptr<TaskSystem> polymorphic_actions,
+            const std::shared_ptr<TaskSystem> &polymorphic_actions,
             const std::string &case_id = "undefined_case_id");
 
   /**
@@ -167,8 +166,8 @@ struct Model {
   void fireTransitions(
       const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
           &reducers,
-      std::shared_ptr<TaskSystem> polymorphic_actions, bool run_all = true,
-      const std::string &case_id = "undefined_case_id");
+      const std::shared_ptr<TaskSystem> &polymorphic_actions,
+      bool run_all = true, const std::string &case_id = "undefined_case_id");
 
   struct {
     std::vector<Transition>
@@ -202,7 +201,7 @@ struct Model {
   /**
    * @brief fires a transition.
    *
-   * @param t
+   * @param t transition as index in transition vector
    * @param reducers
    * @param polymorphic_actions
    * @param case_id
@@ -212,7 +211,7 @@ struct Model {
   bool Fire(const size_t t,
             const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
                 &reducers,
-            std::shared_ptr<TaskSystem> polymorphic_actions,
+            const std::shared_ptr<TaskSystem> &polymorphic_actions,
             const std::string &case_id);
 };
 

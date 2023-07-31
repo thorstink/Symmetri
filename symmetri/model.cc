@@ -122,7 +122,7 @@ bool Model::Fire(
     const size_t t,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers,
-    std::shared_ptr<TaskSystem> pool, const std::string &case_id) {
+    const std::shared_ptr<TaskSystem> &pool, const std::string &case_id) {
   auto timestamp = Clock::now();
   // deduct the marking
   for (const size_t place : net.input_n[t]) {
@@ -146,8 +146,7 @@ bool Model::Fire(
     active_transitions_n.push_back(t);
     event_log.push_back({case_id, transition, State::Scheduled, timestamp});
     pool->push([=] {
-      reducers->enqueue(
-          createReducerForTransition(t, transition, task, case_id, reducers));
+      reducers->enqueue(fireTransition(t, transition, task, case_id, reducers));
     });
     return false;
   }
@@ -157,7 +156,7 @@ bool Model::fire(
     const Transition &t,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers,
-    std::shared_ptr<TaskSystem> pool, const std::string &case_id) {
+    const std::shared_ptr<TaskSystem> &pool, const std::string &case_id) {
   auto it = std::find(net.transition.begin(), net.transition.end(), t);
   return it != net.transition.end() &&
          canFire(net.input_n[std::distance(net.transition.begin(), it)],
@@ -169,7 +168,7 @@ bool Model::fire(
 void Model::fireTransitions(
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers,
-    std::shared_ptr<TaskSystem> pool, bool run_all,
+    const std::shared_ptr<TaskSystem> &pool, bool run_all,
     const std::string &case_id) {
   // find possible transitions
   auto possible_transition_list_n =
@@ -201,10 +200,6 @@ void Model::fireTransitions(
   } while (run_all && !possible_transition_list_n.empty());
 
   return;
-}
-
-std::pair<std::vector<Transition>, std::vector<Place>> Model::getState() const {
-  return {getActiveTransitions(), getMarking()};
 }
 
 std::vector<Place> Model::getMarking() const {

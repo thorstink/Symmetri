@@ -37,7 +37,8 @@ gch::small_vector<uint8_t, 32> possibleTransitions(
   return possible_transition_list_n;
 }
 
-Reducer processTransition(size_t t_i, const Eventlog &ev, State result) {
+Reducer createReducerForTransition(size_t t_i, const Eventlog &ev,
+                                   State result) {
   return [=](Model &&model) {
     // if it is in the active transition set it means it is finished and we
     // should process it.
@@ -56,7 +57,7 @@ Reducer processTransition(size_t t_i, const Eventlog &ev, State result) {
   };
 }
 
-Reducer createReducerForTransition(
+Reducer fireTransition(
     size_t t_i, const std::string &transition, const PolyTransition &task,
     const std::string &case_id,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
@@ -70,7 +71,7 @@ Reducer createReducerForTransition(
 
   auto [ev, res] = fire(task);
   ev.push_back({case_id, transition, res, Clock::now()});
-  return processTransition(t_i, ev, res);
+  return createReducerForTransition(t_i, ev, res);
 }
 
 }  // namespace symmetri
