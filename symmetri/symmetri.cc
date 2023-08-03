@@ -112,19 +112,15 @@ std::function<void()> PetriNet::registerTransitionCallback(
 }
 
 bool PetriNet::reuseApplication(const std::string &new_case_id) {
-  if (impl) {
-    if (impl->thread_id_.load().has_value() || new_case_id == impl->case_id) {
-      return false;
-    }
+  if (!impl->thread_id_.load().has_value() && new_case_id != impl->case_id) {
     impl->case_id = new_case_id;
     return true;
-  } else {
-    return false;
   }
+  return false;
 }
 
 symmetri::Result fire(const PetriNet &app) {
-  if (app.impl == nullptr || app.impl->thread_id_.load().has_value()) {
+  if (app.impl->thread_id_.load().has_value()) {
     return {{}, symmetri::State::Error};
   }
 
@@ -174,7 +170,8 @@ symmetri::Result cancel(const PetriNet &app) {
   app.impl->reducers[app.impl->reducer_selector]->enqueue(
       [=](symmetri::Petri &model) {
         model.state = symmetri::State::UserExit;
-        // populate that eventlog with child eventlog and possible cancelations.
+        // populate that eventlog with child eventlog and possible
+        // cancelations.
         for (const auto transition_index : model.active_transitions_n) {
           auto [el, state] = cancel(model.net.store.at(transition_index));
           if (!el.empty()) {

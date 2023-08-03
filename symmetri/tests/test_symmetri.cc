@@ -50,7 +50,6 @@ TEST_CASE("Create a using the net constructor with end condition.") {
 TEST_CASE("Create a using pnml constructor.") {
   const std::string pnml_file = std::filesystem::current_path().append(
       "../../../symmetri/tests/assets/PT1.pnml");
-
   {
     auto stp = std::make_shared<TaskSystem>(1);
     // This store is not appropriate for this net,
