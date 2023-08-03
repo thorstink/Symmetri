@@ -83,8 +83,16 @@ std::vector<int8_t> createPriorityLookup(
 
 Model::Model(const Net &_net, const Store &store,
              const PriorityTable &_priority, const Marking &M0,
-             const Marking &final_marking, const std::string &case_id)
-    : event_log({}), state(State::Scheduled), case_id(case_id) {
+             const Marking &final_marking, const std::string &case_id,
+             std::shared_ptr<TaskSystem> stp)
+    : event_log({}),
+      state(State::Scheduled),
+      case_id(case_id),
+      reducers(
+          {std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(32),
+           std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(32)}),
+      reducer_selector(0),
+      pool(stp) {
   event_log.reserve(1000);
   std::tie(net.transition, net.place, net.store) = convert(_net, store);
   std::tie(net.input_n, net.output_n) = populateIoLookups(_net, net.place);
@@ -124,7 +132,7 @@ bool Model::Fire(
     const size_t t,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers,
-    const std::shared_ptr<TaskSystem> &pool, const std::string &case_id) {
+    const std::string &case_id) {
   auto timestamp = Clock::now();
   // deduct the marking
   for (const size_t place : net.input_n[t]) {
@@ -158,20 +166,18 @@ bool Model::fire(
     const Transition &t,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers,
-    const std::shared_ptr<TaskSystem> &pool, const std::string &case_id) {
+    const std::string &case_id) {
   auto it = std::find(net.transition.begin(), net.transition.end(), t);
   return it != net.transition.end() &&
          canFire(net.input_n[std::distance(net.transition.begin(), it)],
                  tokens_n) &&
-         !Fire(std::distance(net.transition.begin(), it), reducers, pool,
-               case_id);
+         !Fire(std::distance(net.transition.begin(), it), reducers, case_id);
 }
 
 void Model::fireTransitions(
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers,
-    const std::shared_ptr<TaskSystem> &pool, bool run_all,
-    const std::string &case_id) {
+    bool run_all, const std::string &case_id) {
   // find possible transitions
   auto possible_transition_list_n =
       possibleTransitions(tokens_n, net.p_to_ts_n, net.priority);
@@ -193,7 +199,7 @@ void Model::fireTransitions(
 
   do {
     // if Fire returns true, update the possible transition list
-    if (Fire(possible_transition_list_n.front(), reducers, pool, case_id)) {
+    if (Fire(possible_transition_list_n.front(), reducers, case_id)) {
       possible_transition_list_n =
           possibleTransitions(tokens_n, net.p_to_ts_n, net.priority);
     }
@@ -223,6 +229,17 @@ std::vector<Transition> Model::getActiveTransitions() const {
                    });
   }
   return transition_list;
+}
+
+const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
+    &Model::setFreshQueue() {
+  // increment index to get the already prepared queue.
+  reducer_selector = reducer_selector > 0 ? 0 : 1;
+  // create a new queue for later use at the next index.
+  pool->push([reducer = reducers[reducer_selector > 0 ? 0 : 1]]() mutable {
+    reducer.reset(new moodycamel::BlockingConcurrentQueue<Reducer>{32});
+  });
+  return reducers[reducer_selector];
 }
 
 }  // namespace symmetri

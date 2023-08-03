@@ -49,12 +49,12 @@ TEST_CASE("Test equaliy of nets") {
 TEST_CASE("Run one transition iteration in a petri net") {
   auto [net, store, priority, m0] = testNet();
 
-  Model m(net, store, priority, m0, {}, "s");
   auto stp = std::make_shared<TaskSystem>(1);
+  Model m(net, store, priority, m0, {}, "s", stp);
   auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
 
   // t0 is enabled.
-  m.fireTransitions(reducers, stp, true, "");
+  m.fireTransitions(reducers, true, "");
   // t0 is dispatched but it's reducer has not yet run, so pre-conditions are
   // processed but post are not:
   REQUIRE(m.getActiveTransitions() ==
@@ -88,11 +88,10 @@ TEST_CASE("Run until net dies") {
   using namespace moodycamel;
 
   auto [net, store, priority, m0] = testNet();
-  Model m(net, store, priority, m0, {}, "s");
+  auto stp = std::make_shared<TaskSystem>(1);
+  Model m(net, store, priority, m0, {}, "s", stp);
 
   auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
-
-  auto stp = std::make_shared<TaskSystem>(1);
 
   Reducer r;
   PolyTransition a([] {});
@@ -101,7 +100,7 @@ TEST_CASE("Run until net dies") {
   do {
     if (reducers->try_dequeue(r)) {
       m = r(std::move(m));
-      m.fireTransitions(reducers, stp, true);
+      m.fireTransitions(reducers, true);
     }
   } while (m.active_transitions_n.size() > 0);
 
@@ -118,10 +117,10 @@ TEST_CASE("Run until net dies with nullptr") {
 
   auto [net, store, priority, m0] = testNet();
   store = {{"t0", DirectMutation{}}, {"t1", DirectMutation{}}};
-  Model m(net, store, priority, m0, {}, "s");
+  auto stp = std::make_shared<TaskSystem>(1);
+  Model m(net, store, priority, m0, {}, "s", stp);
 
   auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
-  auto stp = std::make_shared<TaskSystem>(1);
 
   Reducer r;
   PolyTransition a([] {});
@@ -130,7 +129,7 @@ TEST_CASE("Run until net dies with nullptr") {
   do {
     if (reducers->try_dequeue(r)) {
       m = r(std::move(m));
-      m.fireTransitions(reducers, stp, true);
+      m.fireTransitions(reducers, true);
     }
   } while (m.active_transitions_n.size() > 0);
 
@@ -154,7 +153,9 @@ TEST_CASE(
   }
   // with this initial marking, all but transition e are possible.
   Marking m0 = {{"Pa", 1}};
-  Model m(net, store, {}, m0, {}, "s");
+  auto stp = std::make_shared<TaskSystem>(1);
+
+  Model m(net, store, {}, m0, {}, "s", stp);
   auto fireable_transitions = m.getFireableTransitions();
   auto find = [&](auto a) {
     return std::find(fireable_transitions.begin(), fireable_transitions.end(),
@@ -184,13 +185,13 @@ TEST_CASE("Step through transitions") {
     auto stp = std::make_shared<TaskSystem>(1);
     // with this initial marking, all but transition e are possible.
     Marking m0 = {{"Pa", 4}};
-    Model m(net, store, {}, m0, {}, "s");
+    Model m(net, store, {}, m0, {}, "s", stp);
     REQUIRE(m.getFireableTransitions().size() == 4);  // abcd
-    m.fire("e", reducers, stp);
-    m.fire("b", reducers, stp);
-    m.fire("b", reducers, stp);
-    m.fire("c", reducers, stp);
-    m.fire("b", reducers, stp);
+    m.fire("e", reducers);
+    m.fire("b", reducers);
+    m.fire("b", reducers);
+    m.fire("c", reducers);
+    m.fire("b", reducers);
     // there are no reducers ran, so this doesn't update.
     REQUIRE(m.getActiveTransitions().size() == 4);
     // there should be no markers left.

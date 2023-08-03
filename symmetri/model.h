@@ -92,7 +92,8 @@ struct Model {
    */
   explicit Model(const Net &net, const Store &store,
                  const PriorityTable &priority, const Marking &M0,
-                 const Marking &final_marking, const std::string &case_id);
+                 const Marking &final_marking, const std::string &case_id,
+                 std::shared_ptr<TaskSystem> stp);
   ~Model() noexcept = default;
   Model(Model const &) = delete;
   Model(Model &&) noexcept = delete;
@@ -151,7 +152,6 @@ struct Model {
   bool fire(const Transition &t,
             const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
                 &reducers,
-            const std::shared_ptr<TaskSystem> &polymorphic_actions,
             const std::string &case_id = "undefined_case_id");
 
   /**
@@ -167,7 +167,6 @@ struct Model {
   void fireTransitions(
       const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
           &reducers,
-      const std::shared_ptr<TaskSystem> &polymorphic_actions,
       bool run_all = true, const std::string &case_id = "undefined_case_id");
 
   struct {
@@ -200,6 +199,14 @@ struct Model {
   State state;
   std::string case_id;
 
+  std::array<std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>, 2>
+      reducers;
+  unsigned int reducer_selector;
+  std::shared_ptr<TaskSystem> pool;
+
+  const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
+      &setFreshQueue();
+
  private:
   /**
    * @brief fires a transition.
@@ -214,7 +221,6 @@ struct Model {
   bool Fire(const size_t t,
             const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
                 &reducers,
-            const std::shared_ptr<TaskSystem> &polymorphic_actions,
             const std::string &case_id);
 };
 
