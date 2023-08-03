@@ -88,10 +88,10 @@ Petri::Petri(const Net &_net, const Store &store,
     : event_log({}),
       state(State::Scheduled),
       case_id(case_id),
+      thread_id_(std::nullopt),
       active_reducers(
           std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(32)),
-      pool(stp),
-      thread_id_(std::nullopt) {
+      pool(stp) {
   event_log.reserve(1000);
   std::tie(net.transition, net.place, net.store) = convert(_net, store);
   std::tie(net.input_n, net.output_n) = populateIoLookups(_net, net.place);

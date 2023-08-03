@@ -36,37 +36,6 @@ void areAllTransitionsInStore(const Store &store, const Net &net) {
   }
 }
 
-/**
- * @brief A factory function that creates a Petri and a handler that allows to
- * register triggers to functions.
- *
- * @param net
- * @param m0
- * @param final_marking
- * @param store
- * @param priority
- * @param case_id
- * @param stp
- * @return std::tuple<std::shared_ptr<Petri>, std::function<void(const
- * Transition &)>>
- */
-std::tuple<std::shared_ptr<Petri>, std::function<void(const Transition &)>>
-create(const Net &net, const Marking &m0, const Marking &final_marking,
-       const Store &store, const PriorityTable &priority,
-       const std::string &case_id, std::shared_ptr<TaskSystem> stp) {
-  auto impl = std::make_shared<Petri>(net, store, priority, m0, final_marking,
-                                      case_id, stp);
-  return {impl, [=](const Transition &t) {
-            impl->active_reducers->enqueue([=](Petri &m) {
-              const auto t_index = toIndex(m.net.transition, t);
-              m.active_transitions_n.push_back(t_index);
-              m.active_reducers->enqueue(fireTransition(
-                  t_index, m.net.transition[t_index], m.net.store[t_index],
-                  m.case_id, m.active_reducers));
-            });
-          }};
-}
-
 }  // namespace symmetri
 
 using namespace symmetri;
@@ -77,8 +46,8 @@ PetriNet::PetriNet(const std::set<std::string> &files,
                    std::shared_ptr<TaskSystem> stp) {
   const auto [net, m0] = readPnml(files);
   areAllTransitionsInStore(store, net);
-  std::tie(impl, register_functor) =
-      create(net, m0, final_marking, store, priorities, case_id, stp);
+  impl = std::make_shared<Petri>(net, store, priorities, m0, final_marking,
+                                 case_id, stp);
 }
 
 PetriNet::PetriNet(const std::set<std::string> &files,
@@ -87,22 +56,30 @@ PetriNet::PetriNet(const std::set<std::string> &files,
                    std::shared_ptr<TaskSystem> stp) {
   const auto [net, m0, priorities] = readGrml(files);
   areAllTransitionsInStore(store, net);
-  std::tie(impl, register_functor) =
-      create(net, m0, final_marking, store, priorities, case_id, stp);
+  impl = std::make_shared<Petri>(net, store, priorities, m0, final_marking,
+                                 case_id, stp);
 }
 
 PetriNet::PetriNet(const Net &net, const Marking &m0,
                    const Marking &final_marking, const Store &store,
                    const PriorityTable &priorities, const std::string &case_id,
-                   std::shared_ptr<TaskSystem> stp) {
+                   std::shared_ptr<TaskSystem> stp)
+    : impl(std::make_shared<Petri>(net, store, priorities, m0, final_marking,
+                                   case_id, stp)) {
   areAllTransitionsInStore(store, net);
-  std::tie(impl, register_functor) =
-      create(net, m0, final_marking, store, priorities, case_id, stp);
 }
 
 std::function<void()> PetriNet::registerTransitionCallback(
     const Transition &transition) const noexcept {
-  return [transition, this] { register_functor(transition); };
+  return [transition, this] {
+    impl->active_reducers->enqueue([=](Petri &m) {
+      const auto t_index = toIndex(m.net.transition, transition);
+      m.active_transitions_n.push_back(t_index);
+      m.active_reducers->enqueue(
+          fireTransition(t_index, m.net.transition[t_index],
+                         m.net.store[t_index], m.case_id, m.active_reducers));
+    });
+  };
 }
 
 bool PetriNet::reuseApplication(const std::string &new_case_id) {

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <atomic>
-#include <functional>
 #include <set>
 #include <unordered_map>
 
@@ -119,9 +117,4 @@ class PetriNet final {
   std::shared_ptr<symmetri::Petri>
       impl;  ///< Pointer to the implementation, all
              ///< information is stored in Petri
-  std::function<void(const std::string &)>
-      register_functor;  ///< At PetriNet construction this function is
-                         ///< created. It can be used to assign a trigger to
-                         ///< transitions - allowing the user to invoke a
-                         ///< transition without meeting the pre-conditions.
 };

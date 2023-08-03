@@ -1,7 +1,6 @@
 #pragma once
 #include <blockingconcurrentqueue.h>
 
-#include <chrono>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -199,11 +198,11 @@ struct Petri {
   Eventlog event_log;                        ///< The most actual event_log
   State state;
   std::string case_id;
+  std::atomic<std::optional<unsigned int>>
+      thread_id_;  ///< The id of the thread from which run is called.
 
   std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>> active_reducers;
   std::shared_ptr<TaskSystem> pool;
-  std::atomic<std::optional<unsigned int>>
-      thread_id_;  ///< The id of the thread from which run is called.
 
  private:
   /**
