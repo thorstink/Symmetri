@@ -92,7 +92,8 @@ Petri::Petri(const Net &_net, const Store &store,
           {std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(32),
            std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(32)}),
       reducer_selector(0),
-      pool(stp) {
+      pool(stp),
+      thread_id_(std::nullopt) {
   event_log.reserve(1000);
   std::tie(net.transition, net.place, net.store) = convert(_net, store);
   std::tie(net.input_n, net.output_n) = populateIoLookups(_net, net.place);

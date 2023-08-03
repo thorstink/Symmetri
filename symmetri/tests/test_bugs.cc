@@ -46,7 +46,7 @@ TEST_CASE("Firing the same transition before it can complete should work") {
 
   Reducer r;
   while (reducers->wait_dequeue_timed(r, std::chrono::milliseconds(250))) {
-    m = r(std::move(m));
+    r(m);
   }
 
   {
@@ -57,7 +57,7 @@ TEST_CASE("Firing the same transition before it can complete should work") {
   cv.notify_one();
 
   reducers->wait_dequeue_timed(r, std::chrono::milliseconds(250));
-  m = r(std::move(m));
+  r(m);
   REQUIRE(MarkingEquality(m.getMarking(), {"Pb"}));
 
   // offending test, but fixed :-)
@@ -69,7 +69,7 @@ TEST_CASE("Firing the same transition before it can complete should work") {
   }
   cv.notify_one();
   reducers->wait_dequeue_timed(r, std::chrono::milliseconds(250));
-  m = r(std::move(m));
+  r(m);
 
   REQUIRE(MarkingEquality(m.getMarking(), {"Pb", "Pb"}));
 

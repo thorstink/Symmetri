@@ -76,8 +76,8 @@ TEST_CASE("Run one transition iteration in a petri net") {
         std::vector<symmetri::Transition>{"t0", "t0"});
 
   // process the reducers
-  m = r1(std::move(m));
-  m = r2(std::move(m));
+  r1(m);
+  r2(m);
   // and now the post-conditions are processed:
   REQUIRE(m.active_transitions_n.empty());
   REQUIRE(MarkingEquality(
@@ -96,10 +96,10 @@ TEST_CASE("Run until net dies") {
   Reducer r;
   PolyTransition a([] {});
   // we need to enqueue one 'no-operation' to start the live net.
-  reducers->enqueue([](Petri&& m) { return std::ref(m); });
+  reducers->enqueue([](Petri&) {});
   do {
     if (reducers->try_dequeue(r)) {
-      m = r(std::move(m));
+      r(m);
       m.fireTransitions(reducers, true);
     }
   } while (m.active_transitions_n.size() > 0);
@@ -125,10 +125,10 @@ TEST_CASE("Run until net dies with nullptr") {
   Reducer r;
   PolyTransition a([] {});
   // we need to enqueue one 'no-operation' to start the live net.
-  reducers->enqueue([](Petri&& m) { return std::ref(m); });
+  reducers->enqueue([](Petri&) {});
   do {
     if (reducers->try_dequeue(r)) {
-      m = r(std::move(m));
+      r(m);
       m.fireTransitions(reducers, true);
     }
   } while (m.active_transitions_n.size() > 0);
@@ -203,7 +203,7 @@ TEST_CASE("Step through transitions") {
     while (j < 2 * 4 &&
            reducers->wait_dequeue_timed(r, std::chrono::seconds(1))) {
       j++;
-      m = r(std::move(m));
+      r(m);
     }
     // reducers update, there should be active transitions left.
     REQUIRE(m.getActiveTransitions().size() == 0);

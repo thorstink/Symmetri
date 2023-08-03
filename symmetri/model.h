@@ -4,6 +4,7 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <optional>
 
 #include "small_vector.hpp"
 #include "symmetri/polytransition.h"
@@ -55,7 +56,7 @@ gch::small_vector<uint8_t, 32> possibleTransitions(
 bool canFire(const SmallVector &pre, const std::vector<size_t> &tokens);
 
 struct Petri;
-using Reducer = std::function<Petri &(Petri &&)>;
+using Reducer = std::function<void(Petri &)>;
 
 /**
  * @brief Create a Reducer For Transition object
@@ -97,8 +98,8 @@ struct Petri {
   ~Petri() noexcept = default;
   Petri(Petri const &) = delete;
   Petri(Petri &&) noexcept = delete;
-  Petri &operator=(Petri const &) = default;
-  Petri &operator=(Petri &&) noexcept = default;
+  Petri &operator=(Petri const &) = delete;
+  Petri &operator=(Petri &&) noexcept = delete;
 
   /**
    * @brief outputs the marking as a vector of tokens; e.g. [1 1 1 0 5] means 3
@@ -203,6 +204,8 @@ struct Petri {
       reducers;
   unsigned int reducer_selector;
   std::shared_ptr<TaskSystem> pool;
+  std::atomic<std::optional<unsigned int>>
+      thread_id_;  ///< The id of the thread from which run is called.
 
   const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
       &setFreshQueue();
