@@ -55,13 +55,8 @@ TEST_CASE("Create a using pnml constructor.") {
     // This store is not appropriate for this net,
     Store store = {{"wrong_id", &t0}};
     PriorityTable priority;
-    PetriNet app({pnml_file}, {}, store, priority, "fail", stp);
-    // however, we can try running it,
-    auto [ev, res] = fire(app);
-
-    // but the result is an error.
-    REQUIRE(res == State::Error);
-    REQUIRE(ev.empty());
+    // it should throw
+    REQUIRE_THROWS(PetriNet({pnml_file}, {}, store, priority, "fail", stp));
   }
 
   {

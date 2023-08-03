@@ -3,6 +3,7 @@
 #include <functional>
 #include <future>
 #include <memory>
+#include <stdexcept>
 #include <thread>
 
 #include "model.h"
@@ -22,20 +23,17 @@ unsigned int getThreadId() {
       std::hash<std::thread::id>()(std::this_thread::get_id()));
 }
 
-using namespace moodycamel;
-
-bool areAllTransitionsInStore(const Store &store, const Net &net) noexcept {
-  return std::all_of(net.cbegin(), net.cend(), [&store](const auto &p) {
-    const auto &t = std::get<0>(p);
+void areAllTransitionsInStore(const Store &store, const Net &net) {
+  for (const auto &pair : net) {
     bool store_has_transition =
         std::find_if(store.begin(), store.end(), [&](const auto &e) {
-          return e.first == t;
+          return e.first == pair.first;
         }) != store.end();
     if (!store_has_transition) {
-      // error seriously here or default?
+      std::string err = "transition " + pair.first + " is not in store";
+      throw std::runtime_error(err);
     }
-    return store_has_transition;
-  });
+  }
 }
 
 /**
@@ -79,10 +77,9 @@ PetriNet::PetriNet(const std::set<std::string> &files,
                    const PriorityTable &priorities, const std::string &case_id,
                    std::shared_ptr<TaskSystem> stp) {
   const auto [net, m0] = readPnml(files);
-  if (areAllTransitionsInStore(store, net)) {
-    std::tie(impl, register_functor) =
-        create(net, m0, final_marking, store, priorities, case_id, stp);
-  }
+  areAllTransitionsInStore(store, net);
+  std::tie(impl, register_functor) =
+      create(net, m0, final_marking, store, priorities, case_id, stp);
 }
 
 PetriNet::PetriNet(const std::set<std::string> &files,
@@ -90,20 +87,18 @@ PetriNet::PetriNet(const std::set<std::string> &files,
                    const std::string &case_id,
                    std::shared_ptr<TaskSystem> stp) {
   const auto [net, m0, priorities] = readGrml(files);
-  if (areAllTransitionsInStore(store, net)) {
-    std::tie(impl, register_functor) =
-        create(net, m0, final_marking, store, priorities, case_id, stp);
-  }
+  areAllTransitionsInStore(store, net);
+  std::tie(impl, register_functor) =
+      create(net, m0, final_marking, store, priorities, case_id, stp);
 }
 
 PetriNet::PetriNet(const Net &net, const Marking &m0,
                    const Marking &final_marking, const Store &store,
                    const PriorityTable &priorities, const std::string &case_id,
                    std::shared_ptr<TaskSystem> stp) {
-  if (areAllTransitionsInStore(store, net)) {
-    std::tie(impl, register_functor) =
-        create(net, m0, final_marking, store, priorities, case_id, stp);
-  }
+  areAllTransitionsInStore(store, net);
+  std::tie(impl, register_functor) =
+      create(net, m0, final_marking, store, priorities, case_id, stp);
 }
 
 std::function<void()> PetriNet::registerTransitionCallback(
