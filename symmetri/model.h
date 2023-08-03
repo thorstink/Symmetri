@@ -91,7 +91,8 @@ struct Model {
    * @param M0
    */
   explicit Model(const Net &net, const Store &store,
-                 const PriorityTable &priority, const Marking &M0);
+                 const PriorityTable &priority, const Marking &M0,
+                 const Marking &final_marking, const std::string &case_id);
   ~Model() noexcept = default;
   Model(Model const &) = delete;
   Model(Model &&) noexcept = delete;
@@ -193,9 +194,11 @@ struct Model {
 
   std::vector<size_t> initial_tokens;        ///< The initial marking
   std::vector<size_t> tokens_n;              ///< The current marking
+  std::vector<size_t> final_marking_n;       ///< The final marking
   std::vector<size_t> active_transitions_n;  ///< List of active transitions
   Eventlog event_log;                        ///< The most actual event_log
   State state;
+  std::string case_id;
 
  private:
   /**

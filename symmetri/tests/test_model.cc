@@ -49,7 +49,7 @@ TEST_CASE("Test equaliy of nets") {
 TEST_CASE("Run one transition iteration in a petri net") {
   auto [net, store, priority, m0] = testNet();
 
-  Model m(net, store, priority, m0);
+  Model m(net, store, priority, m0, {}, "s");
   auto stp = std::make_shared<TaskSystem>(1);
   auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
 
@@ -88,7 +88,7 @@ TEST_CASE("Run until net dies") {
   using namespace moodycamel;
 
   auto [net, store, priority, m0] = testNet();
-  Model m(net, store, priority, m0);
+  Model m(net, store, priority, m0, {}, "s");
 
   auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
 
@@ -118,7 +118,7 @@ TEST_CASE("Run until net dies with nullptr") {
 
   auto [net, store, priority, m0] = testNet();
   store = {{"t0", DirectMutation{}}, {"t1", DirectMutation{}}};
-  Model m(net, store, priority, m0);
+  Model m(net, store, priority, m0, {}, "s");
 
   auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
   auto stp = std::make_shared<TaskSystem>(1);
@@ -154,7 +154,7 @@ TEST_CASE(
   }
   // with this initial marking, all but transition e are possible.
   Marking m0 = {{"Pa", 1}};
-  Model m(net, store, {}, m0);
+  Model m(net, store, {}, m0, {}, "s");
   auto fireable_transitions = m.getFireableTransitions();
   auto find = [&](auto a) {
     return std::find(fireable_transitions.begin(), fireable_transitions.end(),
@@ -184,7 +184,7 @@ TEST_CASE("Step through transitions") {
     auto stp = std::make_shared<TaskSystem>(1);
     // with this initial marking, all but transition e are possible.
     Marking m0 = {{"Pa", 4}};
-    Model m(net, store, {}, m0);
+    Model m(net, store, {}, m0, {}, "s");
     REQUIRE(m.getFireableTransitions().size() == 4);  // abcd
     m.fire("e", reducers, stp);
     m.fire("b", reducers, stp);

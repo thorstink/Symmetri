@@ -82,8 +82,9 @@ std::vector<int8_t> createPriorityLookup(
 }
 
 Model::Model(const Net &_net, const Store &store,
-             const PriorityTable &_priority, const Marking &M0)
-    : event_log({}), state(State::Scheduled) {
+             const PriorityTable &_priority, const Marking &M0,
+             const Marking &final_marking, const std::string &case_id)
+    : event_log({}), state(State::Scheduled), case_id(case_id) {
   event_log.reserve(1000);
   std::tie(net.transition, net.place, net.store) = convert(_net, store);
   std::tie(net.input_n, net.output_n) = populateIoLookups(_net, net.place);
@@ -92,6 +93,7 @@ Model::Model(const Net &_net, const Store &store,
   net.priority = createPriorityLookup(net.transition, _priority);
   initial_tokens = toTokens(M0);
   tokens_n = initial_tokens;
+  final_marking_n = toTokens(final_marking);
 }
 
 std::vector<size_t> Model::toTokens(const Marking &marking) const noexcept {

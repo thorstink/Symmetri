@@ -33,7 +33,7 @@ std::tuple<Net, Store, PriorityTable, Marking> testNet() {
 
 TEST_CASE("Firing the same transition before it can complete should work") {
   auto [net, store, priority, m0] = testNet();
-  Model m(net, store, priority, m0);
+  Model m(net, store, priority, m0, {}, "s");
 
   auto reducers =
       std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(4);
