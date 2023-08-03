@@ -81,7 +81,7 @@ std::vector<int8_t> createPriorityLookup(
   return priority;
 }
 
-Model::Model(const Net &_net, const Store &store,
+Petri::Petri(const Net &_net, const Store &store,
              const PriorityTable &_priority, const Marking &M0,
              const Marking &final_marking, const std::string &case_id,
              std::shared_ptr<TaskSystem> stp)
@@ -104,7 +104,7 @@ Model::Model(const Net &_net, const Store &store,
   final_marking_n = toTokens(final_marking);
 }
 
-std::vector<size_t> Model::toTokens(const Marking &marking) const noexcept {
+std::vector<size_t> Petri::toTokens(const Marking &marking) const noexcept {
   std::vector<size_t> tokens;
   for (const auto &[p, c] : marking) {
     for (int i = 0; i < c; i++) {
@@ -114,7 +114,7 @@ std::vector<size_t> Model::toTokens(const Marking &marking) const noexcept {
   return tokens;
 }
 
-std::vector<Transition> Model::getFireableTransitions() const {
+std::vector<Transition> Petri::getFireableTransitions() const {
   auto possible_transition_list_n =
       possibleTransitions(tokens_n, net.p_to_ts_n, net.priority);
   std::vector<Transition> fireable_transitions;
@@ -128,7 +128,7 @@ std::vector<Transition> Model::getFireableTransitions() const {
   return fireable_transitions;
 }
 
-bool Model::Fire(
+bool Petri::Fire(
     const size_t t,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers,
@@ -162,7 +162,7 @@ bool Model::Fire(
   }
 }
 
-bool Model::fire(
+bool Petri::fire(
     const Transition &t,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers,
@@ -174,7 +174,7 @@ bool Model::fire(
          !Fire(std::distance(net.transition.begin(), it), reducers, case_id);
 }
 
-void Model::fireTransitions(
+void Petri::fireTransitions(
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers,
     bool run_all, const std::string &case_id) {
@@ -210,7 +210,7 @@ void Model::fireTransitions(
   return;
 }
 
-std::vector<Place> Model::getMarking() const {
+std::vector<Place> Petri::getMarking() const {
   std::vector<Place> marking;
   marking.reserve(tokens_n.size());
   std::transform(tokens_n.cbegin(), tokens_n.cend(),
@@ -219,7 +219,7 @@ std::vector<Place> Model::getMarking() const {
   return marking;
 }
 
-std::vector<Transition> Model::getActiveTransitions() const {
+std::vector<Transition> Petri::getActiveTransitions() const {
   std::vector<Transition> transition_list;
   if (active_transitions_n.size() > 0) {
     transition_list.reserve(active_transitions_n.size());
@@ -232,7 +232,7 @@ std::vector<Transition> Model::getActiveTransitions() const {
 }
 
 const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
-    &Model::setFreshQueue() {
+    &Petri::setFreshQueue() {
   // increment index to get the already prepared queue.
   reducer_selector = reducer_selector > 0 ? 0 : 1;
   // create a new queue for later use at the next index.

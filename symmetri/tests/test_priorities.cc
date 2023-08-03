@@ -21,7 +21,7 @@ TEST_CASE(
     Marking m0 = {{"Pa", 1}, {"Pb", 0}, {"Pc", 0}};
     auto stp = std::make_shared<TaskSystem>(1);
 
-    auto m = Model(net, store, priority, m0, {}, "s", stp);
+    auto m = Petri(net, store, priority, m0, {}, "s", stp);
     m.fireTransitions(reducers, true);
     Reducer r;
 
@@ -54,7 +54,7 @@ TEST_CASE("Using nullptr does not queue reducers.") {
     Marking m0 = {{"Pa", 1}, {"Pb", 0}, {"Pc", 0}};
     auto stp = std::make_shared<TaskSystem>(1);
 
-    auto m = Model(net, store, priority, m0, {}, "s", stp);
+    auto m = Petri(net, store, priority, m0, {}, "s", stp);
     m.fireTransitions(reducers, true);
     // no reducers needed, as simple transitions are handled within run all.
     auto prio_t0 = std::find_if(priority.begin(), priority.end(), [](auto e) {

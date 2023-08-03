@@ -54,8 +54,8 @@ gch::small_vector<uint8_t, 32> possibleTransitions(
  */
 bool canFire(const SmallVector &pre, const std::vector<size_t> &tokens);
 
-struct Model;
-using Reducer = std::function<Model &(Model &&)>;
+struct Petri;
+using Reducer = std::function<Petri &(Petri &&)>;
 
 /**
  * @brief Create a Reducer For Transition object
@@ -73,14 +73,14 @@ Reducer fireTransition(
         &reducers);
 
 /**
- * @brief Model is a different data structure to encode the Petri net. It is
+ * @brief Petri is a different data structure to encode the Petri net. It is
  * optimized for calculating the fireable transitions and quick lookups in
  * ordered vectors.
  *
  */
-struct Model {
+struct Petri {
   /**
-   * @brief Construct a new Model from a multiset description of a Petri
+   * @brief Construct a new Petri from a multiset description of a Petri
    * net, a lookup table for the transitions, optional priorities and an initial
    * marking. A lot of conversion work is done in the constructor, so you should
    * avoid creating Models during the run-time of a Petri application.
@@ -90,15 +90,15 @@ struct Model {
    * @param priority
    * @param M0
    */
-  explicit Model(const Net &net, const Store &store,
+  explicit Petri(const Net &net, const Store &store,
                  const PriorityTable &priority, const Marking &M0,
                  const Marking &final_marking, const std::string &case_id,
                  std::shared_ptr<TaskSystem> stp);
-  ~Model() noexcept = default;
-  Model(Model const &) = delete;
-  Model(Model &&) noexcept = delete;
-  Model &operator=(Model const &) = default;
-  Model &operator=(Model &&) noexcept = default;
+  ~Petri() noexcept = default;
+  Petri(Petri const &) = delete;
+  Petri(Petri &&) noexcept = delete;
+  Petri &operator=(Petri const &) = default;
+  Petri &operator=(Petri &&) noexcept = default;
 
   /**
    * @brief outputs the marking as a vector of tokens; e.g. [1 1 1 0 5] means 3

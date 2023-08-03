@@ -39,7 +39,7 @@ gch::small_vector<uint8_t, 32> possibleTransitions(
 
 Reducer createReducerForTransition(size_t t_i, const Eventlog &ev,
                                    State result) {
-  return [=](Model &&model) {
+  return [=](Petri &&model) {
     // if it is in the active transition set it means it is finished and we
     // should process it.
     auto it = std::find(model.active_transitions_n.begin(),
@@ -63,7 +63,7 @@ Reducer fireTransition(
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers) {
   const auto start_time = Clock::now();
-  reducers->enqueue([=](Model &&model) {
+  reducers->enqueue([=](Petri &&model) {
     model.event_log.push_back(
         {case_id, transition, State::Started, start_time});
     return std::ref(model);

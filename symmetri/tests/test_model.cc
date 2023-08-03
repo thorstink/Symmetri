@@ -50,7 +50,7 @@ TEST_CASE("Run one transition iteration in a petri net") {
   auto [net, store, priority, m0] = testNet();
 
   auto stp = std::make_shared<TaskSystem>(1);
-  Model m(net, store, priority, m0, {}, "s", stp);
+  Petri m(net, store, priority, m0, {}, "s", stp);
   auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
 
   // t0 is enabled.
@@ -89,14 +89,14 @@ TEST_CASE("Run until net dies") {
 
   auto [net, store, priority, m0] = testNet();
   auto stp = std::make_shared<TaskSystem>(1);
-  Model m(net, store, priority, m0, {}, "s", stp);
+  Petri m(net, store, priority, m0, {}, "s", stp);
 
   auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
 
   Reducer r;
   PolyTransition a([] {});
   // we need to enqueue one 'no-operation' to start the live net.
-  reducers->enqueue([](Model&& m) { return std::ref(m); });
+  reducers->enqueue([](Petri&& m) { return std::ref(m); });
   do {
     if (reducers->try_dequeue(r)) {
       m = r(std::move(m));
@@ -118,14 +118,14 @@ TEST_CASE("Run until net dies with nullptr") {
   auto [net, store, priority, m0] = testNet();
   store = {{"t0", DirectMutation{}}, {"t1", DirectMutation{}}};
   auto stp = std::make_shared<TaskSystem>(1);
-  Model m(net, store, priority, m0, {}, "s", stp);
+  Petri m(net, store, priority, m0, {}, "s", stp);
 
   auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
 
   Reducer r;
   PolyTransition a([] {});
   // we need to enqueue one 'no-operation' to start the live net.
-  reducers->enqueue([](Model&& m) { return std::ref(m); });
+  reducers->enqueue([](Petri&& m) { return std::ref(m); });
   do {
     if (reducers->try_dequeue(r)) {
       m = r(std::move(m));
@@ -155,7 +155,7 @@ TEST_CASE(
   Marking m0 = {{"Pa", 1}};
   auto stp = std::make_shared<TaskSystem>(1);
 
-  Model m(net, store, {}, m0, {}, "s", stp);
+  Petri m(net, store, {}, m0, {}, "s", stp);
   auto fireable_transitions = m.getFireableTransitions();
   auto find = [&](auto a) {
     return std::find(fireable_transitions.begin(), fireable_transitions.end(),
@@ -185,7 +185,7 @@ TEST_CASE("Step through transitions") {
     auto stp = std::make_shared<TaskSystem>(1);
     // with this initial marking, all but transition e are possible.
     Marking m0 = {{"Pa", 4}};
-    Model m(net, store, {}, m0, {}, "s", stp);
+    Petri m(net, store, {}, m0, {}, "s", stp);
     REQUIRE(m.getFireableTransitions().size() == 4);  // abcd
     m.fire("e", reducers);
     m.fire("b", reducers);
