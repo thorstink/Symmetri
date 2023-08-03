@@ -43,22 +43,23 @@ using namespace symmetri;
 PetriNet::PetriNet(const std::set<std::string> &files,
                    const Marking &final_marking, const Store &store,
                    const PriorityTable &priorities, const std::string &case_id,
-                   std::shared_ptr<TaskSystem> stp) {
-  const auto [net, m0] = readPnml(files);
-  areAllTransitionsInStore(store, net);
-  impl = std::make_shared<Petri>(net, store, priorities, m0, final_marking,
-                                 case_id, stp);
-}
+                   std::shared_ptr<TaskSystem> stp)
+    : impl([&] {
+        const auto [net, m0] = readPnml(files);
+        areAllTransitionsInStore(store, net);
+        return std::make_shared<Petri>(net, store, priorities, m0,
+                                       final_marking, case_id, stp);
+      }()) {}
 
 PetriNet::PetriNet(const std::set<std::string> &files,
                    const Marking &final_marking, const Store &store,
-                   const std::string &case_id,
-                   std::shared_ptr<TaskSystem> stp) {
-  const auto [net, m0, priorities] = readGrml(files);
-  areAllTransitionsInStore(store, net);
-  impl = std::make_shared<Petri>(net, store, priorities, m0, final_marking,
-                                 case_id, stp);
-}
+                   const std::string &case_id, std::shared_ptr<TaskSystem> stp)
+    : impl([&] {
+        const auto [net, m0, priorities] = readGrml(files);
+        areAllTransitionsInStore(store, net);
+        return std::make_shared<Petri>(net, store, priorities, m0,
+                                       final_marking, case_id, stp);
+      }()) {}
 
 PetriNet::PetriNet(const Net &net, const Marking &m0,
                    const Marking &final_marking, const Store &store,
@@ -148,6 +149,7 @@ symmetri::Result cancel(const PetriNet &app) {
                                  model.net.transition[transition_index], state,
                                  symmetri::Clock::now()});
     }
+    model.active_transitions_n.clear();
   });
 
   return {getLog(app), symmetri::State::UserExit};
@@ -172,8 +174,7 @@ void resume(const PetriNet &app) {
 };
 
 symmetri::Eventlog getLog(const PetriNet &app) {
-  if (app.impl->thread_id_.load() &&
-      app.impl->thread_id_.load().value() != getThreadId()) {
+  if (app.impl->thread_id_.load()) {
     std::promise<Eventlog> el;
     std::future<Eventlog> el_getter = el.get_future();
     app.impl->active_reducers->enqueue([&](Petri &model) {

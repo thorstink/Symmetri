@@ -86,10 +86,11 @@ int main(int, char *argv[]) {
   auto gantt = std::thread([&] {
     while (running) {
       std::this_thread::sleep_for(std::chrono::seconds(3));
+      if (!running) {
+        break;
+      }
       writeMermaidHtmlToFile(symmetri::mermaidFromEventlog(getLog(bignet)));
     }
-    writeMermaidHtmlToFile(symmetri::mermaidFromEventlog(getLog(bignet)));
-    std::cout << "gannt blocked" << std::endl;
   });
 
   // Parallel to the PetriNet execution, we run a thread through which we
@@ -117,7 +118,6 @@ int main(int, char *argv[]) {
       }
       std::cin.get();
     };
-    std::cout << "cin blocked" << std::endl;
   });
 
   // this is where we call the blocking fire-function that executes the petri
@@ -127,7 +127,8 @@ int main(int, char *argv[]) {
   // print the results and eventlog
   spdlog::info("Result of this net: {0}", printState(result));
   printLog(el);
-  t.join();      // clean up
   gantt.join();  // clean up
+  t.join();      // clean up
+  writeMermaidHtmlToFile(symmetri::mermaidFromEventlog(el));
   return 0;
 }

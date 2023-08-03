@@ -7,6 +7,18 @@
 #include "symmetri/tasks.h"
 #include "symmetri/types.h"
 
+/**
+ * @brief The PetriNet class is a class that can create, configure and
+ * run a Petri net.
+ *
+ */
+class PetriNet;
+symmetri::Result fire(const PetriNet &);
+symmetri::Result cancel(const PetriNet &);
+void pause(const PetriNet &);
+void resume(const PetriNet &);
+symmetri::Eventlog getLog(const PetriNet &);
+
 namespace symmetri {
 /**
  * @brief A Store is a mapping from Transitions, represented by a string that is
@@ -25,18 +37,6 @@ using Store = std::unordered_map<Transition, PolyTransition>;
 struct Petri;
 
 }  // namespace symmetri
-
-/**
- * @brief The PetriNet class is a class that can create, configure and
- * run a Petri net.
- *
- */
-class PetriNet;
-symmetri::Result fire(const PetriNet &);
-symmetri::Result cancel(const PetriNet &);
-void pause(const PetriNet &);
-void resume(const PetriNet &);
-symmetri::Eventlog getLog(const PetriNet &);
 
 class PetriNet final {
  public:
@@ -114,7 +114,7 @@ class PetriNet final {
   friend symmetri::Eventlog(::getLog)(const PetriNet &);
 
  private:
-  std::shared_ptr<symmetri::Petri>
+  const std::shared_ptr<symmetri::Petri>
       impl;  ///< Pointer to the implementation, all
              ///< information is stored in Petri
 };
