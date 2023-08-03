@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <functional>
 #include <set>
 #include <unordered_map>
@@ -87,6 +88,10 @@ class PetriNet final {
            const symmetri::PriorityTable &priority, const std::string &case_id,
            std::shared_ptr<symmetri::TaskSystem> stp);
 
+  PetriNet(const PetriNet &o)
+      : impl(o.impl),
+        thread_id_(o.thread_id_.load()),
+        register_functor(o.register_functor) {}
   /**
    * @brief register transition gives a handle to manually force a transition to
    * fire. This is usefull if you want to trigger a transition that has no input
@@ -130,6 +135,8 @@ class PetriNet final {
   std::shared_ptr<symmetri::Petri>
       impl;  ///< Pointer to the implementation, all
              ///< information is stored in Petri
+  mutable std::atomic<std::optional<unsigned int>>
+      thread_id_;  ///< The id of the thread from which run is called.
   std::function<void(const std::string &)>
       register_functor;  ///< At PetriNet construction this function is
                          ///< created. It can be used to assign a trigger to

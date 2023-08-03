@@ -52,8 +52,6 @@ struct Petri {
   Petri &operator=(Petri &&) noexcept = delete;
 
   Model m;  ///< The Petri net model
-  std::atomic<std::optional<unsigned int>>
-      thread_id_;  ///< The id of the thread from which run is called.
 
   /**
    * @brief Construct a new Petri object. Most importantly, it also creates the
@@ -71,8 +69,7 @@ struct Petri {
   Petri(const Net &net, const Marking &m0, std::shared_ptr<TaskSystem> stp,
         const Marking &final_marking, const Store &store,
         const PriorityTable &priorities, const std::string &case_id)
-      : m(net, store, priorities, m0, final_marking, case_id, stp),
-        thread_id_(std::nullopt) {}
+      : m(net, store, priorities, m0, final_marking, case_id, stp) {}
 };
 
 /**
@@ -115,7 +112,8 @@ using namespace symmetri;
 PetriNet::PetriNet(const std::set<std::string> &files,
                    const Marking &final_marking, const Store &store,
                    const PriorityTable &priorities, const std::string &case_id,
-                   std::shared_ptr<TaskSystem> stp) {
+                   std::shared_ptr<TaskSystem> stp)
+    : thread_id_(std::nullopt) {
   const auto [net, m0] = readPnml(files);
   if (areAllTransitionsInStore(store, net)) {
     std::tie(impl, register_functor) =
@@ -125,8 +123,8 @@ PetriNet::PetriNet(const std::set<std::string> &files,
 
 PetriNet::PetriNet(const std::set<std::string> &files,
                    const Marking &final_marking, const Store &store,
-                   const std::string &case_id,
-                   std::shared_ptr<TaskSystem> stp) {
+                   const std::string &case_id, std::shared_ptr<TaskSystem> stp)
+    : thread_id_(std::nullopt) {
   const auto [net, m0, priorities] = readGrml(files);
   if (areAllTransitionsInStore(store, net)) {
     std::tie(impl, register_functor) =
@@ -137,7 +135,8 @@ PetriNet::PetriNet(const std::set<std::string> &files,
 PetriNet::PetriNet(const Net &net, const Marking &m0,
                    const Marking &final_marking, const Store &store,
                    const PriorityTable &priorities, const std::string &case_id,
-                   std::shared_ptr<TaskSystem> stp) {
+                   std::shared_ptr<TaskSystem> stp)
+    : thread_id_(std::nullopt) {
   if (areAllTransitionsInStore(store, net)) {
     std::tie(impl, register_functor) =
         create(net, m0, final_marking, store, priorities, case_id, stp);
@@ -152,11 +151,11 @@ std::function<void()> PetriNet::registerTransitionCallback(
 bool PetriNet::reuseApplication(const std::string &new_case_id) {
   if (impl) {
     auto &petri = *impl;
-    if (petri.thread_id_.load().has_value() || new_case_id == petri.m.case_id) {
+    if (thread_id_.load().has_value() || new_case_id == petri.m.case_id) {
       return false;
     }
     petri.m.case_id = new_case_id;
-    petri.thread_id_.store(std::nullopt);
+    thread_id_.store(std::nullopt);
     return true;
   } else {
     return false;
@@ -164,16 +163,16 @@ bool PetriNet::reuseApplication(const std::string &new_case_id) {
 }
 
 symmetri::Result fire(const PetriNet &app) {
-  if (app.impl == nullptr || app.impl->thread_id_.load()) {
+  if (app.impl == nullptr || app.thread_id_.load().has_value()) {
     return {{}, symmetri::State::Error};
   }
+  app.thread_id_.store(symmetri::getThreadId());
 
   auto &petri = *app.impl;
   auto &m = petri.m;
 
   // we are running!
   auto &active_reducers = petri.m.reducers[petri.m.reducer_selector];
-  petri.thread_id_.store(symmetri::getThreadId());
   m.event_log.clear();
   m.tokens_n = m.initial_tokens;
   m.state = State::Started;
@@ -204,9 +203,8 @@ symmetri::Result fire(const PetriNet &app) {
     m = f(std::move(m));
   }
 
-  petri.thread_id_.store(std::nullopt);
   petri.m.setFreshQueue();
-
+  app.thread_id_.store(std::nullopt);
   return {m.event_log, m.state};
 };
 
@@ -254,8 +252,7 @@ void resume(const PetriNet &app) {
 };
 
 symmetri::Eventlog getLog(const PetriNet &app) {
-  const auto maybe_thread_id = app.impl->thread_id_.load();
-  if (maybe_thread_id && app.impl->thread_id_.load().value() != getThreadId()) {
+  if (app.thread_id_.load() && app.thread_id_.load().value() != getThreadId()) {
     const auto &impl = *app.impl;
     std::promise<Eventlog> el;
     std::future<Eventlog> el_getter = el.get_future();
