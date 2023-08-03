@@ -88,10 +88,8 @@ Petri::Petri(const Net &_net, const Store &store,
     : event_log({}),
       state(State::Scheduled),
       case_id(case_id),
-      reducers(
-          {std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(32),
-           std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(32)}),
-      reducer_selector(0),
+      active_reducers(
+          std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(32)),
       pool(stp),
       thread_id_(std::nullopt) {
   event_log.reserve(1000);
@@ -230,17 +228,6 @@ std::vector<Transition> Petri::getActiveTransitions() const {
                    });
   }
   return transition_list;
-}
-
-const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
-    &Petri::setFreshQueue() {
-  // increment index to get the already prepared queue.
-  reducer_selector = reducer_selector > 0 ? 0 : 1;
-  // create a new queue for later use at the next index.
-  pool->push([reducer = reducers[reducer_selector > 0 ? 0 : 1]]() mutable {
-    reducer.reset(new moodycamel::BlockingConcurrentQueue<Reducer>{32});
-  });
-  return reducers[reducer_selector];
 }
 
 }  // namespace symmetri

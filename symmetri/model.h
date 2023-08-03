@@ -200,15 +200,10 @@ struct Petri {
   State state;
   std::string case_id;
 
-  std::array<std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>, 2>
-      reducers;
-  unsigned int reducer_selector;
+  std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>> active_reducers;
   std::shared_ptr<TaskSystem> pool;
   std::atomic<std::optional<unsigned int>>
       thread_id_;  ///< The id of the thread from which run is called.
-
-  const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
-      &setFreshQueue();
 
  private:
   /**
