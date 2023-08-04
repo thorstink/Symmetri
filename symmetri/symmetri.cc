@@ -87,6 +87,18 @@ std::function<void()> PetriNet::registerTransitionCallback(
   };
 }
 
+std::vector<Place> PetriNet::getMarking() const noexcept {
+  if (impl->thread_id_.load()) {
+    std::promise<std::vector<Place>> el;
+    std::future<std::vector<Place>> el_getter = el.get_future();
+    impl->active_reducers->enqueue(
+        [&](Petri &model) { el.set_value(model.getMarking()); });
+    return el_getter.get();
+  } else {
+    return impl->getMarking();
+  }
+}
+
 bool PetriNet::reuseApplication(const std::string &new_case_id) {
   if (!impl->thread_id_.load().has_value() && new_case_id != impl->case_id) {
     impl->case_id = new_case_id;
@@ -180,19 +192,10 @@ symmetri::Eventlog getLog(const PetriNet &app) {
   if (app.impl->thread_id_.load()) {
     std::promise<Eventlog> el;
     std::future<Eventlog> el_getter = el.get_future();
-    app.impl->active_reducers->enqueue([&](Petri &model) {
-      auto eventlog = model.event_log;
-      // get event log from parent nets:
-      for (size_t pt_idx : model.active_transitions_n) {
-        auto sub_el = getLog(model.net.store[pt_idx]);
-        if (!sub_el.empty()) {
-          eventlog.insert(eventlog.end(), sub_el.begin(), sub_el.end());
-        }
-      }
-      el.set_value(std::move(eventlog));
-    });
+    app.impl->active_reducers->enqueue(
+        [&](Petri &model) { el.set_value(model.getLog()); });
     return el_getter.get();
   } else {
-    return app.impl->event_log;
+    return app.impl->getLog();
   }
 }

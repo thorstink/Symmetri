@@ -120,6 +120,14 @@ struct Petri {
   std::vector<Place> getMarking() const;
 
   /**
+   * @brief get the current eventlog, also copies in all child eventlogs of
+   * active petri nets.
+   *
+   * @return Eventlog
+   */
+  Eventlog getLog() const;
+
+  /**
    * @brief Get a vector of transitions that are *active*. Active means that
    * they are either in the transition queue or its transition has been fired.
    * In all cases in the future it will produce a reducer which will be

@@ -218,6 +218,18 @@ std::vector<Place> Petri::getMarking() const {
   return marking;
 }
 
+Eventlog Petri::getLog() const {
+  Eventlog eventlog = event_log;
+  // get event log from parent nets:
+  for (size_t pt_idx : active_transitions_n) {
+    auto sub_el = ::getLog(net.store[pt_idx]);
+    if (!sub_el.empty()) {
+      eventlog.insert(eventlog.end(), sub_el.begin(), sub_el.end());
+    }
+  }
+  return eventlog;
+}
+
 std::vector<Transition> Petri::getActiveTransitions() const {
   std::vector<Transition> transition_list;
   if (active_transitions_n.size() > 0) {

@@ -99,6 +99,8 @@ class PetriNet final {
   std::function<void()> registerTransitionCallback(
       const std::string &transition) const noexcept;
 
+  std::vector<symmetri::Place> getMarking() const noexcept;
+
   /**
    * @brief reuseApplication resets the application such that the same net can
    * be used again after an cancel call. You do need to supply a new case_id
