@@ -17,7 +17,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -pedantic")
 
 if(BUILD_TESTING)
   enable_testing()
-
   if(ASAN_BUILD AND NOT TSAN_BUILD)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address,undefined -fno-omit-frame-pointer -O0")
   elseif(TSAN_BUILD AND NOT ASAN_BUILD)

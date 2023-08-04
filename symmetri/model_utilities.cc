@@ -12,7 +12,7 @@ bool canFire(const SmallVector &pre, const std::vector<size_t> &tokens) {
     return std::count(tokens.begin(), tokens.end(), m_p) >=
            std::count(pre.begin(), pre.end(), m_p);
   });
-};
+}
 
 gch::small_vector<uint8_t, 32> possibleTransitions(
     const std::vector<size_t> &tokens,

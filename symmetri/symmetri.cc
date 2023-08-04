@@ -73,13 +73,17 @@ PetriNet::PetriNet(const Net &net, const Marking &m0,
 std::function<void()> PetriNet::registerTransitionCallback(
     const Transition &transition) const noexcept {
   return [transition, this] {
-    impl->active_reducers->enqueue([=](Petri &m) {
-      const auto t_index = toIndex(m.net.transition, transition);
-      m.active_transitions_n.push_back(t_index);
-      m.active_reducers->enqueue(
-          fireTransition(t_index, m.net.transition[t_index],
-                         m.net.store[t_index], m.case_id, m.active_reducers));
-    });
+    if (impl->thread_id_.load()) {
+      impl->active_reducers->enqueue([=](Petri &m) {
+        if (m.thread_id_.load()) {
+          const auto t_index = toIndex(m.net.transition, transition);
+          m.active_transitions_n.push_back(t_index);
+          m.active_reducers->enqueue(fireTransition(
+              t_index, m.net.transition[t_index], m.net.store[t_index],
+              m.case_id, m.active_reducers));
+        }
+      });
+    }
   };
 }
 
@@ -124,16 +128,15 @@ symmetri::Result fire(const PetriNet &app) {
       m.state = m.active_transitions_n.size() == 0 ? State::Deadlock : m.state;
     }
   }
-
+  m.thread_id_.store(std::nullopt);
   // empty reducers
   m.active_transitions_n.clear();
   while (m.active_reducers->try_dequeue(f)) {
     f(m);
   }
 
-  m.thread_id_.store(std::nullopt);
   return {m.event_log, m.state};
-};
+}
 
 symmetri::Result cancel(const PetriNet &app) {
   app.impl->active_reducers->enqueue([=](symmetri::Petri &model) {
@@ -162,7 +165,7 @@ void pause(const PetriNet &app) {
       pause(model.net.store.at(transition_index));
     }
   });
-};
+}
 
 void resume(const PetriNet &app) {
   app.impl->active_reducers->enqueue([](symmetri::Petri &model) {
@@ -171,7 +174,7 @@ void resume(const PetriNet &app) {
       resume(model.net.store.at(transition_index));
     }
   });
-};
+}
 
 symmetri::Eventlog getLog(const PetriNet &app) {
   if (app.impl->thread_id_.load()) {
