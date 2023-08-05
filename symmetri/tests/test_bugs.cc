@@ -2,6 +2,7 @@
 #include <condition_variable>
 
 #include "model.h"
+#include "symmetri/utilities.hpp"
 
 using namespace symmetri;
 

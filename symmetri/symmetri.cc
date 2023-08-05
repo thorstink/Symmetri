@@ -8,6 +8,7 @@
 
 #include "model.h"
 #include "symmetri/parsers.h"
+#include "symmetri/utilities.hpp"
 
 namespace symmetri {
 

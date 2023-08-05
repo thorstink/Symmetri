@@ -9,6 +9,7 @@
 #include <thread>
 
 #include "symmetri/symmetri.h"
+#include "symmetri/utilities.hpp"
 
 // Before main, we define a bunch of functions that can be bound to
 // transitions in the petri net.

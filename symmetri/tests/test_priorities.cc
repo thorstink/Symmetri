@@ -3,6 +3,8 @@
 #include <list>
 
 #include "model.h"
+#include "symmetri/utilities.hpp"
+
 using namespace symmetri;
 using namespace moodycamel;
 

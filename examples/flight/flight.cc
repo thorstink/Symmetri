@@ -5,6 +5,7 @@
 
 #include "symmetri/parsers.h"
 #include "symmetri/symmetri.h"
+#include "symmetri/utilities.hpp"
 #include "transition.hpp"
 
 using namespace symmetri;

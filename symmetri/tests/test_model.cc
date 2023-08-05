@@ -2,6 +2,8 @@
 #include <map>
 
 #include "model.h"
+#include "symmetri/utilities.hpp"
+
 using namespace symmetri;
 using namespace moodycamel;
 

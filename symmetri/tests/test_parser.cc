@@ -3,6 +3,8 @@
 #include <iostream>
 
 #include "symmetri/parsers.h"
+#include "symmetri/utilities.hpp"
+
 using namespace symmetri;
 
 TEST_CASE("Load p1.pnml net") {

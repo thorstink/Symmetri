@@ -2,6 +2,7 @@
 
 #include "symmetri/parsers.h"
 #include "symmetri/symmetri.h"
+#include "symmetri/utilities.hpp"
 
 int main(int, char *argv[]) {
   spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] %v");
