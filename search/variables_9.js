@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['stamp_0',['stamp',['../structsymmetri_1_1Event.html#a51e5b4b01acd062d8f09eb9c335017d3',1,'symmetri::Event']]],
-  ['state_1',['state',['../structsymmetri_1_1Event.html#a640691cd84a1d64758c731d3815379e6',1,'symmetri::Event']]],
-  ['store_2',['store',['../structsymmetri_1_1Model.html#a3c9297254a7ffc2b93d9dc73e8f54d46',1,'symmetri::Model']]]
+  ['thread_5fid_5f_0',['thread_id_',['../structsymmetri_1_1Petri.html#a864a4c4579ab08691e5e62ec0c254586',1,'symmetri::Petri']]],
+  ['tokens_5fn_1',['tokens_n',['../structsymmetri_1_1Petri.html#ab38fb23d28dfa55d1aaccaa0a62dafa3',1,'symmetri::Petri']]],
+  ['transition_2',['transition',['../structsymmetri_1_1Event.html#a2fa4203222f063102f9799229f966b29',1,'symmetri::Event::transition'],['../structsymmetri_1_1Petri.html#a8ab79ef100c981de899e14b3908d4742',1,'symmetri::Petri::transition']]]
 ];

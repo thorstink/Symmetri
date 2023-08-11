@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['output_5fn_0',['output_n',['../structsymmetri_1_1Model.html#af4fe91162705dfb70e10ed42f8051cba',1,'symmetri::Model']]]
+  ['output_5fn_0',['output_n',['../structsymmetri_1_1Petri.html#a83b3dd8d3659e2467726568152f73ac9',1,'symmetri::Petri']]]
 ];

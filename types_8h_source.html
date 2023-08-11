@@ -95,48 +95,36 @@ $(function() {
 <div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>  Completed,  </div>
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>  Deadlock,   </div>
 <div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>  UserExit,   </div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>  Error       </div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>};</div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno"><a class="line" href="structsymmetri_1_1Event.html">   35</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structsymmetri_1_1Event.html">Event</a> {</div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno"><a class="line" href="structsymmetri_1_1Event.html#ab103e727752222c9b86b3baea03b6840">   36</a></span>  std::string <a class="code hl_variable" href="structsymmetri_1_1Event.html#ab103e727752222c9b86b3baea03b6840">case_id</a>;      </div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno"><a class="line" href="structsymmetri_1_1Event.html#a2fa4203222f063102f9799229f966b29">   37</a></span>  std::string <a class="code hl_variable" href="structsymmetri_1_1Event.html#a2fa4203222f063102f9799229f966b29">transition</a>;   </div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno"><a class="line" href="structsymmetri_1_1Event.html#a640691cd84a1d64758c731d3815379e6">   38</a></span>  State <a class="code hl_variable" href="structsymmetri_1_1Event.html#a640691cd84a1d64758c731d3815379e6">state</a>;              </div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno"><a class="line" href="structsymmetri_1_1Event.html#a51e5b4b01acd062d8f09eb9c335017d3">   39</a></span>  Clock::time_point <a class="code hl_variable" href="structsymmetri_1_1Event.html#a51e5b4b01acd062d8f09eb9c335017d3">stamp</a>;  </div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>};</div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span> </div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span><span class="keyword">using </span>Eventlog = std::vector&lt;Event&gt;;  </div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="keyword">using </span>Result =</div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    std::pair&lt;Eventlog, State&gt;;  </div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="keyword">using </span>Net = std::unordered_map&lt;</div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    Transition,</div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    std::pair&lt;std::vector&lt;Place&gt;,</div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>              std::vector&lt;Place&gt;&gt;&gt;;  </div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span><span class="keyword">using </span>Marking =</div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    std::unordered_map&lt;Place,</div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>                       uint16_t&gt;;  </div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span><span class="keyword">using </span>PriorityTable =</div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    std::vector&lt;std::pair&lt;Transition, int8_t&gt;&gt;;  </div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span><span class="keywordtype">bool</span> MarkingEquality(<span class="keyword">const</span> std::vector&lt;T&gt;&amp; m1, <span class="keyword">const</span> std::vector&lt;T&gt;&amp; m2);</div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span> </div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="keywordtype">bool</span> MarkingReached(<span class="keyword">const</span> std::vector&lt;T&gt;&amp; marking,</div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>                    <span class="keyword">const</span> std::vector&lt;T&gt;&amp; final_marking);</div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span> </div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span><span class="keywordtype">bool</span> stateNetEquality(<span class="keyword">const</span> Net&amp; net1, <span class="keyword">const</span> Net&amp; net2);</div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span> </div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span><span class="keywordtype">size_t</span> calculateTrace(<span class="keyword">const</span> Eventlog&amp; event_log) <span class="keyword">noexcept</span>;</div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span> </div>
-<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>std::string printState(State s) <span class="keyword">noexcept</span>;</div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span> </div>
-<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>}  <span class="comment">// namespace symmetri</span></div>
-<div class="ttc" id="astructsymmetri_1_1Event_html"><div class="ttname"><a href="structsymmetri_1_1Event.html">symmetri::Event</a></div><div class="ttdoc">This struct defines a subset of data that we associate with the result of firing a transition.</div><div class="ttdef"><b>Definition</b> types.h:35</div></div>
-<div class="ttc" id="astructsymmetri_1_1Event_html_a2fa4203222f063102f9799229f966b29"><div class="ttname"><a href="structsymmetri_1_1Event.html#a2fa4203222f063102f9799229f966b29">symmetri::Event::transition</a></div><div class="ttdeci">std::string transition</div><div class="ttdoc">The transition that generated the event.</div><div class="ttdef"><b>Definition</b> types.h:37</div></div>
-<div class="ttc" id="astructsymmetri_1_1Event_html_a51e5b4b01acd062d8f09eb9c335017d3"><div class="ttname"><a href="structsymmetri_1_1Event.html#a51e5b4b01acd062d8f09eb9c335017d3">symmetri::Event::stamp</a></div><div class="ttdeci">Clock::time_point stamp</div><div class="ttdef"><b>Definition</b> types.h:39</div></div>
-<div class="ttc" id="astructsymmetri_1_1Event_html_a640691cd84a1d64758c731d3815379e6"><div class="ttname"><a href="structsymmetri_1_1Event.html#a640691cd84a1d64758c731d3815379e6">symmetri::Event::state</a></div><div class="ttdeci">State state</div><div class="ttdoc">The resulting state of the event.</div><div class="ttdef"><b>Definition</b> types.h:38</div></div>
-<div class="ttc" id="astructsymmetri_1_1Event_html_ab103e727752222c9b86b3baea03b6840"><div class="ttname"><a href="structsymmetri_1_1Event.html#ab103e727752222c9b86b3baea03b6840">symmetri::Event::case_id</a></div><div class="ttdeci">std::string case_id</div><div class="ttdoc">The case_id of this event.</div><div class="ttdef"><b>Definition</b> types.h:36</div></div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>  Paused,     </div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>  Error       </div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>};</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span> </div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno"><a class="line" href="structsymmetri_1_1Event.html">   36</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structsymmetri_1_1Event.html">Event</a> {</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno"><a class="line" href="structsymmetri_1_1Event.html#ab103e727752222c9b86b3baea03b6840">   37</a></span>  std::string <a class="code hl_variable" href="structsymmetri_1_1Event.html#ab103e727752222c9b86b3baea03b6840">case_id</a>;      </div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno"><a class="line" href="structsymmetri_1_1Event.html#a2fa4203222f063102f9799229f966b29">   38</a></span>  std::string <a class="code hl_variable" href="structsymmetri_1_1Event.html#a2fa4203222f063102f9799229f966b29">transition</a>;   </div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno"><a class="line" href="structsymmetri_1_1Event.html#a640691cd84a1d64758c731d3815379e6">   39</a></span>  State <a class="code hl_variable" href="structsymmetri_1_1Event.html#a640691cd84a1d64758c731d3815379e6">state</a>;              </div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno"><a class="line" href="structsymmetri_1_1Event.html#a51e5b4b01acd062d8f09eb9c335017d3">   40</a></span>  Clock::time_point <a class="code hl_variable" href="structsymmetri_1_1Event.html#a51e5b4b01acd062d8f09eb9c335017d3">stamp</a>;  </div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>};</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="keyword">using </span>Eventlog = std::vector&lt;Event&gt;;  </div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span><span class="keyword">using </span>Result =</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    std::pair&lt;Eventlog, State&gt;;  </div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span><span class="keyword">using </span>Net = std::unordered_map&lt;</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    Transition,</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    std::pair&lt;std::vector&lt;Place&gt;,</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>              std::vector&lt;Place&gt;&gt;&gt;;  </div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span><span class="keyword">using </span>Marking =</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    std::unordered_map&lt;Place,</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>                       uint16_t&gt;;  </div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span><span class="keyword">using </span>PriorityTable =</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>    std::vector&lt;std::pair&lt;Transition, int8_t&gt;&gt;;  </div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span> </div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>}  <span class="comment">// namespace symmetri</span></div>
+<div class="ttc" id="astructsymmetri_1_1Event_html"><div class="ttname"><a href="structsymmetri_1_1Event.html">symmetri::Event</a></div><div class="ttdoc">This struct defines a subset of data that we associate with the result of firing a transition.</div><div class="ttdef"><b>Definition</b> types.h:36</div></div>
+<div class="ttc" id="astructsymmetri_1_1Event_html_a2fa4203222f063102f9799229f966b29"><div class="ttname"><a href="structsymmetri_1_1Event.html#a2fa4203222f063102f9799229f966b29">symmetri::Event::transition</a></div><div class="ttdeci">std::string transition</div><div class="ttdoc">The transition that generated the event.</div><div class="ttdef"><b>Definition</b> types.h:38</div></div>
+<div class="ttc" id="astructsymmetri_1_1Event_html_a51e5b4b01acd062d8f09eb9c335017d3"><div class="ttname"><a href="structsymmetri_1_1Event.html#a51e5b4b01acd062d8f09eb9c335017d3">symmetri::Event::stamp</a></div><div class="ttdeci">Clock::time_point stamp</div><div class="ttdef"><b>Definition</b> types.h:40</div></div>
+<div class="ttc" id="astructsymmetri_1_1Event_html_a640691cd84a1d64758c731d3815379e6"><div class="ttname"><a href="structsymmetri_1_1Event.html#a640691cd84a1d64758c731d3815379e6">symmetri::Event::state</a></div><div class="ttdeci">State state</div><div class="ttdoc">The resulting state of the event.</div><div class="ttdef"><b>Definition</b> types.h:39</div></div>
+<div class="ttc" id="astructsymmetri_1_1Event_html_ab103e727752222c9b86b3baea03b6840"><div class="ttname"><a href="structsymmetri_1_1Event.html#ab103e727752222c9b86b3baea03b6840">symmetri::Event::case_id</a></div><div class="ttdeci">std::string case_id</div><div class="ttdoc">The case_id of this event.</div><div class="ttdef"><b>Definition</b> types.h:37</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

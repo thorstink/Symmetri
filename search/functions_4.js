@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['registertransitioncallback_0',['registerTransitionCallback',['../classsymmetri_1_1PetriNet.html#a14105c25716d16cbca924397eeb79008',1,'symmetri::PetriNet']]],
-  ['reuseapplication_1',['reuseApplication',['../classsymmetri_1_1PetriNet.html#a89bff80f100132e350caf932c06bbda3',1,'symmetri::PetriNet']]]
+  ['tasksystem_0',['TaskSystem',['../classsymmetri_1_1TaskSystem.html#a7c91e814539081318e533290dc55cb61',1,'symmetri::TaskSystem']]],
+  ['totokens_1',['toTokens',['../structsymmetri_1_1Petri.html#a70d476d1cb8cdc7658aff4ccbdfdc2ce',1,'symmetri::Petri']]]
 ];

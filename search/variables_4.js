@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['initial_5ftokens_0',['initial_tokens',['../structsymmetri_1_1Model.html#a108f7454ea88a673402657d52982a92e',1,'symmetri::Model']]],
-  ['input_5fn_1',['input_n',['../structsymmetri_1_1Model.html#aa8a7660d2ec50dfd3c35594af8b09c33',1,'symmetri::Model']]]
+  ['initial_5ftokens_0',['initial_tokens',['../structsymmetri_1_1Petri.html#aac13a2908be24860708dc89e5f88a538',1,'symmetri::Petri']]],
+  ['input_5fn_1',['input_n',['../structsymmetri_1_1Petri.html#a713328ff322d02dd00e196dffb44a84c',1,'symmetri::Petri']]]
 ];

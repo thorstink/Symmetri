@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['fire_0',['fire',['../structsymmetri_1_1Model.html#ab60ca0662c19c2078a9af7c6cfb96abd',1,'symmetri::Model']]],
-  ['firetransitions_1',['fireTransitions',['../structsymmetri_1_1Model.html#a78d7cf475e49ab1fbdd5b59af80cd5fb',1,'symmetri::Model']]]
+  ['fire_0',['fire',['../structsymmetri_1_1Petri.html#a715baaf410b54acae2baefe277d55a1a',1,'symmetri::Petri']]],
+  ['firetransitions_1',['fireTransitions',['../structsymmetri_1_1Petri.html#ae2260061afcba65684e034f545ef6374',1,'symmetri::Petri']]]
 ];

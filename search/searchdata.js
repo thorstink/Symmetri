@@ -1,10 +1,9 @@
 var indexSectionsWithContent =
 {
-  0: "acefgimnoprst",
-  1: "empt",
-  2: "fgmprt",
-  3: "acefimnopst",
-  4: "cfpr"
+  0: "acdefginoprst",
+  1: "dept",
+  2: "fgprt",
+  3: "acefinopst"
 };
 
 var indexSectionNames =
@@ -12,8 +11,7 @@ var indexSectionNames =
   0: "all",
   1: "classes",
   2: "functions",
-  3: "variables",
-  4: "related"
+  3: "variables"
 };
 
 var indexSectionLabels =
@@ -21,7 +19,6 @@ var indexSectionLabels =
   0: "All",
   1: "Classes",
   2: "Functions",
-  3: "Variables",
-  4: "Friends"
+  3: "Variables"
 };
 

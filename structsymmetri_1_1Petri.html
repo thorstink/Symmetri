@@ -81,72 +81,118 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 
-<p><a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> is the class that holds the implementation of the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net. It holds pointers to the reducer queue and that thread pool. Calling <code>fire()</code> on this class will do the <em>actual</em> execution of the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net.  
+<p><a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a different data structure to encode the Petri net. It is optimized for calculating the fire...">Petri</a> is a different data structure to encode the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a different data structure to encode the Petri net. It is optimized for calculating the fire...">Petri</a> net. It is optimized for calculating the fireable transitions and quick lookups in ordered vectors.  
  <a href="structsymmetri_1_1Petri.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="model_8h_source.html">model.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a79f2974405af1eb63a5d2cc7c60a910a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a79f2974405af1eb63a5d2cc7c60a910a">Petri</a> (const Net &amp;net, const Marking &amp;m0, std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> &gt; stp, const Marking &amp;<a class="el" href="structsymmetri_1_1Petri.html#a7b1ad2f7fd4f50d017fbecce19c82387">final_marking</a>, const Store &amp;store, const PriorityTable &amp;priorities, const std::string &amp;<a class="el" href="structsymmetri_1_1Petri.html#aa2acc8bf32bcd39c86f5eb029586c34b">case_id</a>)</td></tr>
-<tr class="memdesc:a79f2974405af1eb63a5d2cc7c60a910a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> object. Most importantly, it also creates the reducer queue and exposes the <code>run</code> function to actually run the petri net.  <br /></td></tr>
-<tr class="separator:a79f2974405af1eb63a5d2cc7c60a910a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a03679dc64ce36344a767ef6758111c2b"><td class="memItemLeft" align="right" valign="top"><a id="a03679dc64ce36344a767ef6758111c2b" name="a03679dc64ce36344a767ef6758111c2b"></a>
-const std::shared_ptr&lt; BlockingConcurrentQueue&lt; Reducer &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>setFreshQueue</b> ()</td></tr>
-<tr class="separator:a03679dc64ce36344a767ef6758111c2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1be0e97a3e376c84d084519a3d53ea7a"><td class="memItemLeft" align="right" valign="top">Eventlog&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a1be0e97a3e376c84d084519a3d53ea7a">getEventLog</a> () const noexcept</td></tr>
-<tr class="memdesc:a1be0e97a3e376c84d084519a3d53ea7a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the <a class="el" href="structsymmetri_1_1Event.html" title="This struct defines a subset of data that we associate with the result of firing a transition.">Event</a> Log object.  <br /></td></tr>
-<tr class="separator:a1be0e97a3e376c84d084519a3d53ea7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a51d867a86fa62e4ca82f47951d0aa4b5"><td class="memItemLeft" align="right" valign="top"><a id="a51d867a86fa62e4ca82f47951d0aa4b5" name="a51d867a86fa62e4ca82f47951d0aa4b5"></a>
-std::pair&lt; std::vector&lt; Transition &gt;, std::vector&lt; Place &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>getState</b> () const noexcept</td></tr>
-<tr class="separator:a51d867a86fa62e4ca82f47951d0aa4b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a315636dcca0deeec1c84f685d98089ed"><td class="memItemLeft" align="right" valign="top"><a id="a315636dcca0deeec1c84f685d98089ed" name="a315636dcca0deeec1c84f685d98089ed"></a>
-std::vector&lt; Transition &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>getFireableTransitions</b> () const noexcept</td></tr>
-<tr class="separator:a315636dcca0deeec1c84f685d98089ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3406efcade088b702c2e6caea8ffe183"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a3406efcade088b702c2e6caea8ffe183">Petri</a> (const Net &amp;<a class="el" href="structsymmetri_1_1Petri.html#ac53b15cfc29df54238168bf9ff62a6b7">net</a>, const Store &amp;<a class="el" href="structsymmetri_1_1Petri.html#a22dea240b5642ac60e86be5c9435f29f">store</a>, const PriorityTable &amp;<a class="el" href="structsymmetri_1_1Petri.html#a2e33926169e42620cb062b341dbab51d">priority</a>, const Marking &amp;M0, const Marking &amp;final_marking, const std::string &amp;case_id, std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> &gt; stp)</td></tr>
+<tr class="memdesc:a3406efcade088b702c2e6caea8ffe183"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a different data structure to encode the Petri net. It is optimized for calculating the fire...">Petri</a> from a multiset description of a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a different data structure to encode the Petri net. It is optimized for calculating the fire...">Petri</a> net, a lookup table for the transitions, optional priorities and an initial marking. A lot of conversion work is done in the constructor, so you should avoid creating Models during the run-time of a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a different data structure to encode the Petri net. It is optimized for calculating the fire...">Petri</a> application.  <br /></td></tr>
+<tr class="separator:a3406efcade088b702c2e6caea8ffe183"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af06c0fd2c25ea0610c98ece6e2652ff4"><td class="memItemLeft" align="right" valign="top"><a id="af06c0fd2c25ea0610c98ece6e2652ff4" name="af06c0fd2c25ea0610c98ece6e2652ff4"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Petri</b> (<a class="el" href="structsymmetri_1_1Petri.html">Petri</a> const &amp;)=delete</td></tr>
+<tr class="separator:af06c0fd2c25ea0610c98ece6e2652ff4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac25958118ca8c2594c1f9bd14bfef602"><td class="memItemLeft" align="right" valign="top"><a id="ac25958118ca8c2594c1f9bd14bfef602" name="ac25958118ca8c2594c1f9bd14bfef602"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Petri</b> (<a class="el" href="structsymmetri_1_1Petri.html">Petri</a> &amp;&amp;) noexcept=delete</td></tr>
+<tr class="separator:ac25958118ca8c2594c1f9bd14bfef602"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a31e64a3bde25a1ca0fcf27c325e6f37d"><td class="memItemLeft" align="right" valign="top"><a id="a31e64a3bde25a1ca0fcf27c325e6f37d" name="a31e64a3bde25a1ca0fcf27c325e6f37d"></a>
+<a class="el" href="structsymmetri_1_1Petri.html">Petri</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="structsymmetri_1_1Petri.html">Petri</a> const &amp;)=delete</td></tr>
+<tr class="separator:a31e64a3bde25a1ca0fcf27c325e6f37d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae6128893f9d546e56191ac54edd14385"><td class="memItemLeft" align="right" valign="top"><a id="ae6128893f9d546e56191ac54edd14385" name="ae6128893f9d546e56191ac54edd14385"></a>
+<a class="el" href="structsymmetri_1_1Petri.html">Petri</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="structsymmetri_1_1Petri.html">Petri</a> &amp;&amp;) noexcept=delete</td></tr>
+<tr class="separator:ae6128893f9d546e56191ac54edd14385"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a70d476d1cb8cdc7658aff4ccbdfdc2ce"><td class="memItemLeft" align="right" valign="top">std::vector&lt; size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a70d476d1cb8cdc7658aff4ccbdfdc2ce">toTokens</a> (const Marking &amp;marking) const noexcept</td></tr>
+<tr class="memdesc:a70d476d1cb8cdc7658aff4ccbdfdc2ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">outputs the marking as a vector of tokens; e.g. [1 1 1 0 5] means 3 tokens in place 1, 1 token in place 0 and 1 token in place 5.  <br /></td></tr>
+<tr class="separator:a70d476d1cb8cdc7658aff4ccbdfdc2ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ba02d0dd15f81c7f3ebcad102907865"><td class="memItemLeft" align="right" valign="top">std::vector&lt; Place &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a6ba02d0dd15f81c7f3ebcad102907865">getMarking</a> () const</td></tr>
+<tr class="memdesc:a6ba02d0dd15f81c7f3ebcad102907865"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current marking. It is represented by a vector of places: every occurance of a place in this vectors implies a token in that place. This representation does not show the empty places explicitly; if a place is not in this vector you can assume it has no token.  <br /></td></tr>
+<tr class="separator:a6ba02d0dd15f81c7f3ebcad102907865"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d1bf8dce13f9200dbb31d859838713c"><td class="memItemLeft" align="right" valign="top">Eventlog&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a4d1bf8dce13f9200dbb31d859838713c">getLog</a> () const</td></tr>
+<tr class="memdesc:a4d1bf8dce13f9200dbb31d859838713c"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the current eventlog, also copies in all child eventlogs of active petri nets.  <br /></td></tr>
+<tr class="separator:a4d1bf8dce13f9200dbb31d859838713c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad5f7f6f28d1a6c6162c40ed2825e3315"><td class="memItemLeft" align="right" valign="top">std::vector&lt; Transition &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#ad5f7f6f28d1a6c6162c40ed2825e3315">getActiveTransitions</a> () const</td></tr>
+<tr class="memdesc:ad5f7f6f28d1a6c6162c40ed2825e3315"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a vector of transitions that are <em>active</em>. Active means that they are either in the transition queue or its transition has been fired. In all cases in the future it will produce a reducer which will be processed if the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a different data structure to encode the Petri net. It is optimized for calculating the fire...">Petri</a> net is not halted before the reducer is pop'd from the reducer queue.  <br /></td></tr>
+<tr class="separator:ad5f7f6f28d1a6c6162c40ed2825e3315"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af52ae8dd4a3d3d7a458cae5898c919c7"><td class="memItemLeft" align="right" valign="top">std::vector&lt; Transition &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#af52ae8dd4a3d3d7a458cae5898c919c7">getFireableTransitions</a> () const</td></tr>
+<tr class="memdesc:af52ae8dd4a3d3d7a458cae5898c919c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gives a list of unique transitions that are fireable given the marking at the time of calling this function, sorted by priority.  <br /></td></tr>
+<tr class="separator:af52ae8dd4a3d3d7a458cae5898c919c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a715baaf410b54acae2baefe277d55a1a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a715baaf410b54acae2baefe277d55a1a">fire</a> (const Transition &amp;t, const std::shared_ptr&lt; moodycamel::BlockingConcurrentQueue&lt; Reducer &gt; &gt; &amp;reducers, const std::string &amp;case_id=&quot;undefined_case_id&quot;)</td></tr>
+<tr class="memdesc:a715baaf410b54acae2baefe277d55a1a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Try to fire a single transition.  <br /></td></tr>
+<tr class="separator:a715baaf410b54acae2baefe277d55a1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae2260061afcba65684e034f545ef6374"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#ae2260061afcba65684e034f545ef6374">fireTransitions</a> (const std::shared_ptr&lt; moodycamel::BlockingConcurrentQueue&lt; Reducer &gt; &gt; &amp;reducers, bool run_all=true, const std::string &amp;case_id=&quot;undefined_case_id&quot;)</td></tr>
+<tr class="memdesc:ae2260061afcba65684e034f545ef6374"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tries to run a transition (or all) until it 'deadlocks'. The list of actions is queued and the function returns.  <br /></td></tr>
+<tr class="separator:ae2260061afcba65684e034f545ef6374"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:ae5897effb033277b9f8a8b8b65ac7f5a"><td class="memItemLeft" align="right" valign="top"><a id="ae5897effb033277b9f8a8b8b65ac7f5a" name="ae5897effb033277b9f8a8b8b65ac7f5a"></a>
-<a class="el" href="structsymmetri_1_1Model.html">Model</a>&#160;</td><td class="memItemRight" valign="bottom"><b>m</b></td></tr>
-<tr class="memdesc:ae5897effb033277b9f8a8b8b65ac7f5a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net model. <br /></td></tr>
-<tr class="separator:ae5897effb033277b9f8a8b8b65ac7f5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac53b15cfc29df54238168bf9ff62a6b7"><td class="memItemLeft" ><a id="ac53b15cfc29df54238168bf9ff62a6b7" name="ac53b15cfc29df54238168bf9ff62a6b7"></a>
+struct {&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1c6118bd3f9bff209cfc08eb304f3ed4"><td class="memItemLeft" >
+&#160;&#160;&#160;std::vector&lt; Transition &gt;&#160;&#160;&#160;<b>transition</b>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+<tr class="memdesc:a1c6118bd3f9bff209cfc08eb304f3ed4"><td class="mdescLeft">&#160;</td><td class="mdescRight">(ordered) list of string representation of transitions <br /></td></tr>
+<tr class="separator:a1c6118bd3f9bff209cfc08eb304f3ed4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a253bb67c8f6d1ee1455b758767da9f90"><td class="memItemLeft" >
+&#160;&#160;&#160;std::vector&lt; Place &gt;&#160;&#160;&#160;<b>place</b>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+<tr class="memdesc:a253bb67c8f6d1ee1455b758767da9f90"><td class="mdescLeft">&#160;</td><td class="mdescRight">(ordered) list of string representation of places <br /></td></tr>
+<tr class="separator:a253bb67c8f6d1ee1455b758767da9f90"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa74c88d535e255f4f59338722446209e"><td class="memItemLeft" >&#160;&#160;&#160;std::vector&lt; SmallVector &gt;&#160;&#160;&#160;<a class="el" href="structsymmetri_1_1Petri.html#a713328ff322d02dd00e196dffb44a84c">input_n</a>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+<tr class="separator:aa74c88d535e255f4f59338722446209e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9540e548624d09846a61e6da5539b7f0"><td class="memItemLeft" >&#160;&#160;&#160;std::vector&lt; SmallVector &gt;&#160;&#160;&#160;<a class="el" href="structsymmetri_1_1Petri.html#a83b3dd8d3659e2467726568152f73ac9">output_n</a>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+<tr class="separator:a9540e548624d09846a61e6da5539b7f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a89d479778269f1f7d7a18aa84633b5e2"><td class="memItemLeft" >&#160;&#160;&#160;std::vector&lt; SmallVector &gt;&#160;&#160;&#160;<a class="el" href="structsymmetri_1_1Petri.html#acce08a024318e75c10a3fb49781acb19">p_to_ts_n</a>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+<tr class="separator:a89d479778269f1f7d7a18aa84633b5e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a14ee21a4027857fa4e92205f0d0b2d81"><td class="memItemLeft" >&#160;&#160;&#160;std::vector&lt; int8_t &gt;&#160;&#160;&#160;<a class="el" href="structsymmetri_1_1Petri.html#a2e33926169e42620cb062b341dbab51d">priority</a>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+<tr class="separator:a14ee21a4027857fa4e92205f0d0b2d81"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd8877b3faf0c60241e0a1e3a9bb5c21"><td class="memItemLeft" >&#160;&#160;&#160;std::vector&lt; <a class="el" href="classsymmetri_1_1PolyTransition.html">PolyTransition</a> &gt;&#160;&#160;&#160;<a class="el" href="structsymmetri_1_1Petri.html#a22dea240b5642ac60e86be5c9435f29f">store</a>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+<tr class="separator:abd8877b3faf0c60241e0a1e3a9bb5c21"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac53b15cfc29df54238168bf9ff62a6b7"><td class="memItemLeft" valign="top">}&#160;</td><td class="memItemRight" valign="bottom"><b>net</b>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+<tr class="memdesc:ac53b15cfc29df54238168bf9ff62a6b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Is a data-oriented design of a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a different data structure to encode the Petri net. It is optimized for calculating the fire...">Petri</a> net. <br /></td></tr>
+<tr class="separator:ac53b15cfc29df54238168bf9ff62a6b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aac13a2908be24860708dc89e5f88a538"><td class="memItemLeft" align="right" valign="top"><a id="aac13a2908be24860708dc89e5f88a538" name="aac13a2908be24860708dc89e5f88a538"></a>
+std::vector&lt; size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>initial_tokens</b></td></tr>
+<tr class="memdesc:aac13a2908be24860708dc89e5f88a538"><td class="mdescLeft">&#160;</td><td class="mdescRight">The initial marking. <br /></td></tr>
+<tr class="separator:aac13a2908be24860708dc89e5f88a538"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab38fb23d28dfa55d1aaccaa0a62dafa3"><td class="memItemLeft" align="right" valign="top"><a id="ab38fb23d28dfa55d1aaccaa0a62dafa3" name="ab38fb23d28dfa55d1aaccaa0a62dafa3"></a>
+std::vector&lt; size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>tokens_n</b></td></tr>
+<tr class="memdesc:ab38fb23d28dfa55d1aaccaa0a62dafa3"><td class="mdescLeft">&#160;</td><td class="mdescRight">The current marking. <br /></td></tr>
+<tr class="separator:ab38fb23d28dfa55d1aaccaa0a62dafa3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95ed0aaa355481f4b1ef2eba8db17cc0"><td class="memItemLeft" align="right" valign="top"><a id="a95ed0aaa355481f4b1ef2eba8db17cc0" name="a95ed0aaa355481f4b1ef2eba8db17cc0"></a>
+std::vector&lt; size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>final_marking_n</b></td></tr>
+<tr class="memdesc:a95ed0aaa355481f4b1ef2eba8db17cc0"><td class="mdescLeft">&#160;</td><td class="mdescRight">The final marking. <br /></td></tr>
+<tr class="separator:a95ed0aaa355481f4b1ef2eba8db17cc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac2626323e1fa937a19aa9959c21a17c4"><td class="memItemLeft" align="right" valign="top"><a id="ac2626323e1fa937a19aa9959c21a17c4" name="ac2626323e1fa937a19aa9959c21a17c4"></a>
+std::vector&lt; size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>active_transitions_n</b></td></tr>
+<tr class="memdesc:ac2626323e1fa937a19aa9959c21a17c4"><td class="mdescLeft">&#160;</td><td class="mdescRight">List of active transitions. <br /></td></tr>
+<tr class="separator:ac2626323e1fa937a19aa9959c21a17c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a974c0807e4ada7be5fc8f228bab2a8"><td class="memItemLeft" align="right" valign="top"><a id="a7a974c0807e4ada7be5fc8f228bab2a8" name="a7a974c0807e4ada7be5fc8f228bab2a8"></a>
+Eventlog&#160;</td><td class="memItemRight" valign="bottom"><b>event_log</b></td></tr>
+<tr class="memdesc:a7a974c0807e4ada7be5fc8f228bab2a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">The most actual event_log. <br /></td></tr>
+<tr class="separator:a7a974c0807e4ada7be5fc8f228bab2a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6bf4d943c14eb8a748e9ac08447cc6cb"><td class="memItemLeft" align="right" valign="top"><a id="a6bf4d943c14eb8a748e9ac08447cc6cb" name="a6bf4d943c14eb8a748e9ac08447cc6cb"></a>
+State&#160;</td><td class="memItemRight" valign="bottom"><b>state</b></td></tr>
+<tr class="separator:a6bf4d943c14eb8a748e9ac08447cc6cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa2acc8bf32bcd39c86f5eb029586c34b"><td class="memItemLeft" align="right" valign="top"><a id="aa2acc8bf32bcd39c86f5eb029586c34b" name="aa2acc8bf32bcd39c86f5eb029586c34b"></a>
+std::string&#160;</td><td class="memItemRight" valign="bottom"><b>case_id</b></td></tr>
+<tr class="separator:aa2acc8bf32bcd39c86f5eb029586c34b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a864a4c4579ab08691e5e62ec0c254586"><td class="memItemLeft" align="right" valign="top"><a id="a864a4c4579ab08691e5e62ec0c254586" name="a864a4c4579ab08691e5e62ec0c254586"></a>
 std::atomic&lt; std::optional&lt; unsigned int &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>thread_id_</b></td></tr>
 <tr class="memdesc:a864a4c4579ab08691e5e62ec0c254586"><td class="mdescLeft">&#160;</td><td class="mdescRight">The id of the thread from which run is called. <br /></td></tr>
 <tr class="separator:a864a4c4579ab08691e5e62ec0c254586"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab6a18be9021fd1af10ea1711a62840b9"><td class="memItemLeft" align="right" valign="top"><a id="ab6a18be9021fd1af10ea1711a62840b9" name="ab6a18be9021fd1af10ea1711a62840b9"></a>
-const Marking&#160;</td><td class="memItemRight" valign="bottom"><b>m0_</b></td></tr>
-<tr class="memdesc:ab6a18be9021fd1af10ea1711a62840b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">The initial marking for this instance. <br /></td></tr>
-<tr class="separator:ab6a18be9021fd1af10ea1711a62840b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2f61460a41344181e9b0274451666c6d"><td class="memItemLeft" align="right" valign="top"><a id="a2f61460a41344181e9b0274451666c6d" name="a2f61460a41344181e9b0274451666c6d"></a>
-const Net&#160;</td><td class="memItemRight" valign="bottom"><b>net_</b></td></tr>
-<tr class="memdesc:a2f61460a41344181e9b0274451666c6d"><td class="mdescLeft">&#160;</td><td class="mdescRight">The net. <br /></td></tr>
-<tr class="separator:a2f61460a41344181e9b0274451666c6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0699f5e70f4b43763d0e74073042346e"><td class="memItemLeft" align="right" valign="top"><a id="a0699f5e70f4b43763d0e74073042346e" name="a0699f5e70f4b43763d0e74073042346e"></a>
-const PriorityTable&#160;</td><td class="memItemRight" valign="bottom"><b>priorities_</b></td></tr>
-<tr class="memdesc:a0699f5e70f4b43763d0e74073042346e"><td class="mdescLeft">&#160;</td><td class="mdescRight">The priority table for this instance. <br /></td></tr>
-<tr class="separator:a0699f5e70f4b43763d0e74073042346e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7b1ad2f7fd4f50d017fbecce19c82387"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a7b1ad2f7fd4f50d017fbecce19c82387">final_marking</a></td></tr>
-<tr class="separator:a7b1ad2f7fd4f50d017fbecce19c82387"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a018495f33d879cce171fa4dd14c08c4b"><td class="memItemLeft" align="right" valign="top"><a id="a018495f33d879cce171fa4dd14c08c4b" name="a018495f33d879cce171fa4dd14c08c4b"></a>
-const std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>stp</b></td></tr>
-<tr class="separator:a018495f33d879cce171fa4dd14c08c4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2401ee3a840c141737a9863fbae6df5a"><td class="memItemLeft" align="right" valign="top"><a id="a2401ee3a840c141737a9863fbae6df5a" name="a2401ee3a840c141737a9863fbae6df5a"></a>
-std::array&lt; std::shared_ptr&lt; BlockingConcurrentQueue&lt; Reducer &gt; &gt;, 2 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>reducers</b></td></tr>
-<tr class="separator:a2401ee3a840c141737a9863fbae6df5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf468109b7179f796df142d2c7507e99"><td class="memItemLeft" align="right" valign="top"><a id="acf468109b7179f796df142d2c7507e99" name="acf468109b7179f796df142d2c7507e99"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>reducer_selector</b></td></tr>
-<tr class="separator:acf468109b7179f796df142d2c7507e99"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa2acc8bf32bcd39c86f5eb029586c34b"><td class="memItemLeft" align="right" valign="top"><a id="aa2acc8bf32bcd39c86f5eb029586c34b" name="aa2acc8bf32bcd39c86f5eb029586c34b"></a>
-std::string&#160;</td><td class="memItemRight" valign="bottom"><b>case_id</b></td></tr>
-<tr class="memdesc:aa2acc8bf32bcd39c86f5eb029586c34b"><td class="mdescLeft">&#160;</td><td class="mdescRight">The case id of this particular <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> instance. <br /></td></tr>
-<tr class="separator:aa2acc8bf32bcd39c86f5eb029586c34b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8d4a269a1ae77d20d319dc7bf27b2524"><td class="memItemLeft" align="right" valign="top">std::atomic&lt; bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a8d4a269a1ae77d20d319dc7bf27b2524">early_exit</a></td></tr>
-<tr class="separator:a8d4a269a1ae77d20d319dc7bf27b2524"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a12b103f7574b9a47872faee53cb232b9"><td class="memItemLeft" align="right" valign="top"><a id="a12b103f7574b9a47872faee53cb232b9" name="a12b103f7574b9a47872faee53cb232b9"></a>
+std::shared_ptr&lt; moodycamel::BlockingConcurrentQueue&lt; Reducer &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>active_reducers</b></td></tr>
+<tr class="separator:a12b103f7574b9a47872faee53cb232b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0bb51fc485b5813c4a66f234952c9e86"><td class="memItemLeft" align="right" valign="top"><a id="a0bb51fc485b5813c4a66f234952c9e86" name="a0bb51fc485b5813c4a66f234952c9e86"></a>
+std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pool</b></td></tr>
+<tr class="separator:a0bb51fc485b5813c4a66f234952c9e86"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p><a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> is the class that holds the implementation of the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net. It holds pointers to the reducer queue and that thread pool. Calling <code>fire()</code> on this class will do the <em>actual</em> execution of the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> net. </p>
+<div class="textblock"><p><a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a different data structure to encode the Petri net. It is optimized for calculating the fire...">Petri</a> is a different data structure to encode the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a different data structure to encode the Petri net. It is optimized for calculating the fire...">Petri</a> net. It is optimized for calculating the fireable transitions and quick lookups in ordered vectors. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a79f2974405af1eb63a5d2cc7c60a910a" name="a79f2974405af1eb63a5d2cc7c60a910a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a79f2974405af1eb63a5d2cc7c60a910a">&#9670;&#160;</a></span>Petri()</h2>
+<a id="a3406efcade088b702c2e6caea8ffe183" name="a3406efcade088b702c2e6caea8ffe183"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3406efcade088b702c2e6caea8ffe183">&#9670;&#160;</a></span>Petri()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -163,14 +209,20 @@ std::string&#160;</td><td class="memItemRight" valign="bottom"><b>case_id</b></t
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const Marking &amp;&#160;</td>
-          <td class="paramname"><em>m0</em>, </td>
+          <td class="paramtype">const Store &amp;&#160;</td>
+          <td class="paramname"><em>store</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> &gt;&#160;</td>
-          <td class="paramname"><em>stp</em>, </td>
+          <td class="paramtype">const PriorityTable &amp;&#160;</td>
+          <td class="paramname"><em>priority</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const Marking &amp;&#160;</td>
+          <td class="paramname"><em>M0</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -181,20 +233,14 @@ std::string&#160;</td><td class="memItemRight" valign="bottom"><b>case_id</b></t
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const Store &amp;&#160;</td>
-          <td class="paramname"><em>store</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const PriorityTable &amp;&#160;</td>
-          <td class="paramname"><em>priorities</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>case_id</em>&#160;</td>
+          <td class="paramname"><em>case_id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> &gt;&#160;</td>
+          <td class="paramname"><em>stp</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -204,21 +250,18 @@ std::string&#160;</td><td class="memItemRight" valign="bottom"><b>case_id</b></t
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+<span class="mlabels"><span class="mlabel">explicit</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Construct a new <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is the class that holds the implementation of the Petri net. It holds pointers to the reducer q...">Petri</a> object. Most importantly, it also creates the reducer queue and exposes the <code>run</code> function to actually run the petri net. </p>
+<p>Construct a new <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a different data structure to encode the Petri net. It is optimized for calculating the fire...">Petri</a> from a multiset description of a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a different data structure to encode the Petri net. It is optimized for calculating the fire...">Petri</a> net, a lookup table for the transitions, optional priorities and an initial marking. A lot of conversion work is done in the constructor, so you should avoid creating Models during the run-time of a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a different data structure to encode the Petri net. It is optimized for calculating the fire...">Petri</a> application. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">net</td><td></td></tr>
-    <tr><td class="paramname">m0</td><td></td></tr>
-    <tr><td class="paramname">stp</td><td></td></tr>
-    <tr><td class="paramname">final_marking</td><td></td></tr>
     <tr><td class="paramname">store</td><td></td></tr>
     <tr><td class="paramname">priority</td><td></td></tr>
-    <tr><td class="paramname">case_id</td><td></td></tr>
+    <tr><td class="paramname">M0</td><td></td></tr>
   </table>
   </dd>
 </dl>
@@ -226,8 +269,181 @@ std::string&#160;</td><td class="memItemRight" valign="bottom"><b>case_id</b></t
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a1be0e97a3e376c84d084519a3d53ea7a" name="a1be0e97a3e376c84d084519a3d53ea7a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1be0e97a3e376c84d084519a3d53ea7a">&#9670;&#160;</a></span>getEventLog()</h2>
+<a id="a715baaf410b54acae2baefe277d55a1a" name="a715baaf410b54acae2baefe277d55a1a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a715baaf410b54acae2baefe277d55a1a">&#9670;&#160;</a></span>fire()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool symmetri::Petri::fire </td>
+          <td>(</td>
+          <td class="paramtype">const Transition &amp;&#160;</td>
+          <td class="paramname"><em>t</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::shared_ptr&lt; moodycamel::BlockingConcurrentQueue&lt; Reducer &gt; &gt; &amp;&#160;</td>
+          <td class="paramname"><em>reducers</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>case_id</em> = <code>&quot;undefined_case_id&quot;</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Try to fire a single transition. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">t</td><td>string representation of the transition </td></tr>
+    <tr><td class="paramname">reducers</td><td>pointer reducer queue, needed to construct a reducer </td></tr>
+    <tr><td class="paramname">polymorphic_actions</td><td>pointer to the threadpool, needed to dispatch the transition payload </td></tr>
+    <tr><td class="paramname">case_id</td><td>the case id of the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a different data structure to encode the Petri net. It is optimized for calculating the fire...">Petri</a> instance </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true If the transition was fireable, it was queued </dd>
+<dd>
+false If the transition was not fireable, nothing happenend. </dd></dl>
+
+</div>
+</div>
+<a id="ae2260061afcba65684e034f545ef6374" name="ae2260061afcba65684e034f545ef6374"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae2260061afcba65684e034f545ef6374">&#9670;&#160;</a></span>fireTransitions()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void symmetri::Petri::fireTransitions </td>
+          <td>(</td>
+          <td class="paramtype">const std::shared_ptr&lt; moodycamel::BlockingConcurrentQueue&lt; Reducer &gt; &gt; &amp;&#160;</td>
+          <td class="paramname"><em>reducers</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>run_all</em> = <code>true</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>case_id</em> = <code>&quot;undefined_case_id&quot;</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Tries to run a transition (or all) until it 'deadlocks'. The list of actions is queued and the function returns. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">reducers</td><td>pointer reducer queue, needed to construct the reducer(s) </td></tr>
+    <tr><td class="paramname">polymorphic_actions</td><td>pointer to the threadpool, needed to dispatch the transition payload(s) </td></tr>
+    <tr><td class="paramname">run_all</td><td>if true, potentially queues multiple transitions </td></tr>
+    <tr><td class="paramname">case_id</td><td>the case id of the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a different data structure to encode the Petri net. It is optimized for calculating the fire...">Petri</a> instance </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ad5f7f6f28d1a6c6162c40ed2825e3315" name="ad5f7f6f28d1a6c6162c40ed2825e3315"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad5f7f6f28d1a6c6162c40ed2825e3315">&#9670;&#160;</a></span>getActiveTransitions()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; Transition &gt; symmetri::Petri::getActiveTransitions </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get a vector of transitions that are <em>active</em>. Active means that they are either in the transition queue or its transition has been fired. In all cases in the future it will produce a reducer which will be processed if the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a different data structure to encode the Petri net. It is optimized for calculating the fire...">Petri</a> net is not halted before the reducer is pop'd from the reducer queue. </p>
+<dl class="section return"><dt>Returns</dt><dd>std::vector&lt;Transition&gt; </dd></dl>
+
+</div>
+</div>
+<a id="af52ae8dd4a3d3d7a458cae5898c919c7" name="af52ae8dd4a3d3d7a458cae5898c919c7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af52ae8dd4a3d3d7a458cae5898c919c7">&#9670;&#160;</a></span>getFireableTransitions()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; Transition &gt; symmetri::Petri::getFireableTransitions </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Gives a list of unique transitions that are fireable given the marking at the time of calling this function, sorted by priority. </p>
+<dl class="section return"><dt>Returns</dt><dd>std::vector&lt;Transition&gt; </dd></dl>
+
+</div>
+</div>
+<a id="a4d1bf8dce13f9200dbb31d859838713c" name="a4d1bf8dce13f9200dbb31d859838713c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4d1bf8dce13f9200dbb31d859838713c">&#9670;&#160;</a></span>getLog()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Eventlog symmetri::Petri::getLog </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>get the current eventlog, also copies in all child eventlogs of active petri nets. </p>
+<dl class="section return"><dt>Returns</dt><dd>Eventlog </dd></dl>
+
+</div>
+</div>
+<a id="a6ba02d0dd15f81c7f3ebcad102907865" name="a6ba02d0dd15f81c7f3ebcad102907865"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6ba02d0dd15f81c7f3ebcad102907865">&#9670;&#160;</a></span>getMarking()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; Place &gt; symmetri::Petri::getMarking </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get the current marking. It is represented by a vector of places: every occurance of a place in this vectors implies a token in that place. This representation does not show the empty places explicitly; if a place is not in this vector you can assume it has no token. </p>
+<dl class="section return"><dt>Returns</dt><dd>std::vector&lt;Place&gt; </dd></dl>
+
+</div>
+</div>
+<a id="a70d476d1cb8cdc7658aff4ccbdfdc2ce" name="a70d476d1cb8cdc7658aff4ccbdfdc2ce"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a70d476d1cb8cdc7658aff4ccbdfdc2ce">&#9670;&#160;</a></span>toTokens()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -236,57 +452,110 @@ std::string&#160;</td><td class="memItemRight" valign="bottom"><b>case_id</b></t
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">Eventlog symmetri::Petri::getEventLog </td>
+          <td class="memname">std::vector&lt; size_t &gt; symmetri::Petri::toTokens </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype">const Marking &amp;&#160;</td>
+          <td class="paramname"><em>marking</em></td><td>)</td>
           <td> const</td>
         </tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
+<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Get the <a class="el" href="structsymmetri_1_1Event.html" title="This struct defines a subset of data that we associate with the result of firing a transition.">Event</a> Log object. </p>
-<dl class="section return"><dt>Returns</dt><dd>Eventlog </dd></dl>
+<p>outputs the marking as a vector of tokens; e.g. [1 1 1 0 5] means 3 tokens in place 1, 1 token in place 0 and 1 token in place 5. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">marking</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>std::vector&lt;size_t&gt; </dd></dl>
 
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
-<a id="a8d4a269a1ae77d20d319dc7bf27b2524" name="a8d4a269a1ae77d20d319dc7bf27b2524"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8d4a269a1ae77d20d319dc7bf27b2524">&#9670;&#160;</a></span>early_exit</h2>
+<a id="a713328ff322d02dd00e196dffb44a84c" name="a713328ff322d02dd00e196dffb44a84c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a713328ff322d02dd00e196dffb44a84c">&#9670;&#160;</a></span>input_n</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::atomic&lt;bool&gt; symmetri::Petri::early_exit</td>
+          <td class="memname">std::vector&lt;SmallVector&gt; symmetri::Petri::input_n</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>once it is true, no more new transitions will be queued and the run will exit. </p>
+<p>list of list of inputs to transitions. This vector is indexed like <code>transition</code>. </p>
 
 </div>
 </div>
-<a id="a7b1ad2f7fd4f50d017fbecce19c82387" name="a7b1ad2f7fd4f50d017fbecce19c82387"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7b1ad2f7fd4f50d017fbecce19c82387">&#9670;&#160;</a></span>final_marking</h2>
+<a id="a83b3dd8d3659e2467726568152f73ac9" name="a83b3dd8d3659e2467726568152f73ac9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a83b3dd8d3659e2467726568152f73ac9">&#9670;&#160;</a></span>output_n</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const std::vector&lt;size_t&gt; symmetri::Petri::final_marking</td>
+          <td class="memname">std::vector&lt;SmallVector&gt; symmetri::Petri::output_n</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>The net will stop queueing reducers once the marking has been reached </p>
+<p>list of list of outputs of transitions. This vector is indexed like <code>transition</code>. </p>
 
 </div>
 </div>
-<hr/>The documentation for this struct was generated from the following file:<ul>
-<li>symmetri/symmetri.cc</li>
+<a id="acce08a024318e75c10a3fb49781acb19" name="acce08a024318e75c10a3fb49781acb19"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acce08a024318e75c10a3fb49781acb19">&#9670;&#160;</a></span>p_to_ts_n</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;SmallVector&gt; symmetri::Petri::p_to_ts_n</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>list of list of transitions that have places as inputs. This vector is index like <code>place</code> </p>
+
+</div>
+</div>
+<a id="a2e33926169e42620cb062b341dbab51d" name="a2e33926169e42620cb062b341dbab51d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2e33926169e42620cb062b341dbab51d">&#9670;&#160;</a></span>priority</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;int8_t&gt; symmetri::Petri::priority</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>This vector holds priorities for all transitions. This vector is index like <code>transition</code>. </p>
+
+</div>
+</div>
+<a id="a22dea240b5642ac60e86be5c9435f29f" name="a22dea240b5642ac60e86be5c9435f29f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a22dea240b5642ac60e86be5c9435f29f">&#9670;&#160;</a></span>store</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;<a class="el" href="classsymmetri_1_1PolyTransition.html">PolyTransition</a>&gt; symmetri::Petri::store</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>This is the same 'lookup table', only index using <code>transition</code> so it is compatible with index lookup. </p>
+
+</div>
+</div>
+<hr/>The documentation for this struct was generated from the following files:<ul>
+<li>symmetri/<a class="el" href="model_8h_source.html">model.h</a></li>
+<li>symmetri/model.cc</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
