@@ -3,6 +3,8 @@
 #include <list>
 
 #include "model.h"
+#include "symmetri/utilities.hpp"
+
 using namespace symmetri;
 using namespace moodycamel;
 
@@ -21,12 +23,12 @@ TEST_CASE(
     Marking m0 = {{"Pa", 1}, {"Pb", 0}, {"Pc", 0}};
     auto stp = std::make_shared<TaskSystem>(1);
 
-    auto m = Model(net, store, priority, m0);
-    m.fireTransitions(reducers, stp, true);
+    auto m = Petri(net, store, priority, m0, {}, "s", stp);
+    m.fireTransitions(reducers, true);
     Reducer r;
 
     while (reducers->wait_dequeue_timed(r, std::chrono::milliseconds(1))) {
-      m = r(std::move(m));
+      r(m);
     }
 
     auto prio_t0 = std::find_if(priority.begin(), priority.end(), [](auto e) {
@@ -49,13 +51,13 @@ TEST_CASE("Using nullptr does not queue reducers.") {
   for (auto priority : priorities) {
     auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
     Net net = {{"t0", {{"Pa"}, {"Pb"}}}, {"t1", {{"Pa"}, {"Pc"}}}};
-    Store store = {{"t0", nullptr}, {"t1", nullptr}};
+    Store store = {{"t0", DirectMutation{}}, {"t1", DirectMutation{}}};
 
     Marking m0 = {{"Pa", 1}, {"Pb", 0}, {"Pc", 0}};
     auto stp = std::make_shared<TaskSystem>(1);
 
-    auto m = Model(net, store, priority, m0);
-    m.fireTransitions(reducers, stp, true);
+    auto m = Petri(net, store, priority, m0, {}, "s", stp);
+    m.fireTransitions(reducers, true);
     // no reducers needed, as simple transitions are handled within run all.
     auto prio_t0 = std::find_if(priority.begin(), priority.end(), [](auto e) {
                      return e.first == "t0";

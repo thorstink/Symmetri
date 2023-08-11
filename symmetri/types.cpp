@@ -4,59 +4,6 @@
 #include <numeric>
 namespace symmetri {
 
-template <>
-bool MarkingEquality<size_t>(const std::vector<size_t>& m1,
-                             const std::vector<size_t>& m2) {
-  auto m1_sorted = m1;
-  auto m2_sorted = m2;
-  std::sort(m1_sorted.begin(), m1_sorted.end());
-  std::sort(m2_sorted.begin(), m2_sorted.end());
-  return m1_sorted == m2_sorted;
-}
-template <>
-bool MarkingReached<size_t>(const std::vector<size_t>& marking,
-                            const std::vector<size_t>& final_marking) {
-  if (final_marking.empty()) {
-    return false;
-  }
-  auto unique = final_marking;
-  std::sort(unique.begin(), unique.end());
-  auto last = std::unique(unique.begin(), unique.end());
-  unique.erase(last, unique.end());
-
-  return std::all_of(std::begin(unique), std::end(unique), [&](const auto& p) {
-    return std::count(marking.begin(), marking.end(), p) ==
-           std::count(final_marking.begin(), final_marking.end(), p);
-  });
-}
-
-template <>
-bool MarkingEquality<std::string>(const std::vector<std::string>& m1,
-                                  const std::vector<std::string>& m2) {
-  auto m1_sorted = m1;
-  auto m2_sorted = m2;
-  std::sort(m1_sorted.begin(), m1_sorted.end());
-  std::sort(m2_sorted.begin(), m2_sorted.end());
-  return m1_sorted == m2_sorted;
-}
-template <>
-bool MarkingReached<std::string>(
-    const std::vector<std::string>& marking,
-    const std::vector<std::string>& final_marking) {
-  if (final_marking.empty()) {
-    return false;
-  }
-  auto unique = final_marking;
-  std::sort(unique.begin(), unique.end());
-  auto last = std::unique(unique.begin(), unique.end());
-  unique.erase(last, unique.end());
-
-  return std::all_of(std::begin(unique), std::end(unique), [&](const auto& p) {
-    return std::count(marking.begin(), marking.end(), p) ==
-           std::count(final_marking.begin(), final_marking.end(), p);
-  });
-}
-
 bool stateNetEquality(const Net& net1, const Net& net2) {
   if (net1.size() != net2.size()) {
     return false;
@@ -120,6 +67,9 @@ std::string printState(symmetri::State s) noexcept {
       break;
     case State::UserExit:
       ret = "UserExit";
+      break;
+    case State::Paused:
+      ret = "Paused";
       break;
     case State::Error:
       ret = "Error";

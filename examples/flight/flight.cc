@@ -5,45 +5,32 @@
 
 #include "symmetri/parsers.h"
 #include "symmetri/symmetri.h"
+#include "symmetri/utilities.hpp"
 #include "transition.hpp"
 
+using namespace symmetri;
 /**
  * @brief We want to use the Foo class with Symmetri; Foo has nice
  * functionalities such as Pause and Resume and it can also get
  * preempted/cancelled. We need to define functions to let Symmetri use these
  * functionalities. It is as simple by creating specialized version of the
- * fire/cancel/isDirect/pause/resume functions. One does not need to implement
+ * fire/cancel/pause/resume functions. One does not need to implement
  * all - if nothing is defined, a default version is used.
  *
  */
-namespace symmetri {
 
-template <>
 Result fire(const Foo &f) {
   return f.fire() ? Result{{}, State::Error} : Result{{}, State::Completed};
 }
 
-template <>
 Result cancel(const Foo &f) {
   f.cancel();
   return {{}, State::UserExit};
 }
 
-template <>
-bool isDirect(const Foo &) {
-  return false;
-}
+void pause(const Foo &f) { f.pause(); }
 
-template <>
-void pause(const Foo &f) {
-  f.pause();
-}
-
-template <>
-void resume(const Foo &f) {
-  f.resume();
-}
-}  // namespace symmetri
+void resume(const Foo &f) { f.resume(); }
 
 /**
  * @brief A simple printer for the eventlog
@@ -82,17 +69,16 @@ int main(int, char *argv[]) {
   // Here we create the first PetriNet based on composing pnml1 and pnml2
   // using flat composition. The associated transitions are two instance of
   // the Foo-class.
-  symmetri::PetriNet subnet({pnml1, pnml2}, {{"P2", 1}},
-                            {{"T0", Foo("SubFoo")}, {"T1", Foo("SubBar")}}, {},
-                            "SubNet", pool);
+  PetriNet subnet({pnml1, pnml2}, {{"P2", 1}},
+                  {{"T0", Foo("SubFoo")}, {"T1", Foo("SubBar")}}, {}, "SubNet",
+                  pool);
 
   // We create another PetriNet by flatly composing all three petri nets.
   // Again we have 2 Foo-transitions, and the first transition (T0) is the
   // subnet. This show how you can also nest PetriNets.
-  symmetri::PetriNet bignet(
-      {pnml1, pnml2, pnml3}, {{"P3", 5}},
-      {{"T0", subnet}, {"T1", Foo("Bar")}, {"T2", Foo("Foo")}}, {}, "RootNet",
-      pool);
+  PetriNet bignet({pnml1, pnml2, pnml3}, {{"P3", 5}},
+                  {{"T0", subnet}, {"T1", Foo("Bar")}, {"T2", Foo("Foo")}}, {},
+                  "RootNet", pool);
 
   // a flag to check if we are running
   std::atomic<bool> running(true);
@@ -100,11 +86,12 @@ int main(int, char *argv[]) {
   // a thread that polls the eventlog and writes it to a file
   auto gantt = std::thread([&] {
     while (running) {
-      writeMermaidHtmlToFile(
-          symmetri::mermaidFromEventlog(bignet.getEventLog()));
       std::this_thread::sleep_for(std::chrono::seconds(3));
+      if (!running) {
+        break;
+      }
+      writeMermaidHtmlToFile(symmetri::mermaidFromEventlog(getLog(bignet)));
     }
-    writeMermaidHtmlToFile(symmetri::mermaidFromEventlog(bignet.getEventLog()));
   });
 
   // Parallel to the PetriNet execution, we run a thread through which we
@@ -141,7 +128,8 @@ int main(int, char *argv[]) {
   // print the results and eventlog
   spdlog::info("Result of this net: {0}", printState(result));
   printLog(el);
-  t.join();      // clean up
   gantt.join();  // clean up
+  t.join();      // clean up
+  writeMermaidHtmlToFile(symmetri::mermaidFromEventlog(el));
   return 0;
 }

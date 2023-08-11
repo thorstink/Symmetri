@@ -1,14 +1,17 @@
 #pragma once
 #include <blockingconcurrentqueue.h>
 
-#include <chrono>
 #include <functional>
 #include <memory>
+#include <optional>
 
 #include "small_vector.hpp"
 #include "symmetri/polytransition.h"
 #include "symmetri/tasks.h"
 #include "symmetri/types.h"
+
+bool isDirect(const DirectMutation &);
+symmetri::Result fire(const DirectMutation &);
 
 namespace symmetri {
 
@@ -51,8 +54,8 @@ gch::small_vector<uint8_t, 32> possibleTransitions(
  */
 bool canFire(const SmallVector &pre, const std::vector<size_t> &tokens);
 
-struct Model;
-using Reducer = std::function<Model &(Model &&)>;
+struct Petri;
+using Reducer = std::function<void(Petri &)>;
 
 /**
  * @brief Create a Reducer For Transition object
@@ -63,21 +66,21 @@ using Reducer = std::function<Model &(Model &&)>;
  * @param reducers
  * @return Reducer
  */
-Reducer createReducerForTransition(
+Reducer fireTransition(
     size_t T_i, const std::string &transition, const PolyTransition &task,
     const std::string &case_id,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers);
 
 /**
- * @brief Model is a different data structure to encode the Petri net. It is
+ * @brief Petri is a different data structure to encode the Petri net. It is
  * optimized for calculating the fireable transitions and quick lookups in
  * ordered vectors.
  *
  */
-struct Model {
+struct Petri {
   /**
-   * @brief Construct a new Model from a multiset description of a Petri
+   * @brief Construct a new Petri from a multiset description of a Petri
    * net, a lookup table for the transitions, optional priorities and an initial
    * marking. A lot of conversion work is done in the constructor, so you should
    * avoid creating Models during the run-time of a Petri application.
@@ -87,14 +90,23 @@ struct Model {
    * @param priority
    * @param M0
    */
-  explicit Model(const Net &net, const Store &store,
-                 const PriorityTable &priority, const Marking &M0);
-  ~Model() noexcept = default;
-  Model(Model const &) = delete;
-  Model(Model &&) noexcept = delete;
-  Model &operator=(Model const &) = default;
-  Model &operator=(Model &&) noexcept = default;
+  explicit Petri(const Net &net, const Store &store,
+                 const PriorityTable &priority, const Marking &M0,
+                 const Marking &final_marking, const std::string &case_id,
+                 std::shared_ptr<TaskSystem> stp);
+  ~Petri() noexcept = default;
+  Petri(Petri const &) = delete;
+  Petri(Petri &&) noexcept = delete;
+  Petri &operator=(Petri const &) = delete;
+  Petri &operator=(Petri &&) noexcept = delete;
 
+  /**
+   * @brief outputs the marking as a vector of tokens; e.g. [1 1 1 0 5] means 3
+   * tokens in place 1, 1 token in place 0 and 1 token in place 5.
+   *
+   * @param marking
+   * @return std::vector<size_t>
+   */
   std::vector<size_t> toTokens(const Marking &marking) const noexcept;
 
   /**
@@ -106,6 +118,14 @@ struct Model {
    * @return std::vector<Place>
    */
   std::vector<Place> getMarking() const;
+
+  /**
+   * @brief get the current eventlog, also copies in all child eventlogs of
+   * active petri nets.
+   *
+   * @return Eventlog
+   */
+  Eventlog getLog() const;
 
   /**
    * @brief Get a vector of transitions that are *active*. Active means that
@@ -127,14 +147,6 @@ struct Model {
   std::vector<Transition> getFireableTransitions() const;
 
   /**
-   * @brief Get the State; this is a pair of active transitions *and* the
-   * current marking.
-   *
-   * @return std::pair<std::vector<Transition>, std::vector<Place>>
-   */
-  std::pair<std::vector<Transition>, std::vector<Place>> getState() const;
-
-  /**
    * @brief Try to fire a single transition.
    *
    * @param t string representation of the transition
@@ -148,7 +160,6 @@ struct Model {
   bool fire(const Transition &t,
             const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
                 &reducers,
-            std::shared_ptr<TaskSystem> polymorphic_actions,
             const std::string &case_id = "undefined_case_id");
 
   /**
@@ -164,8 +175,7 @@ struct Model {
   void fireTransitions(
       const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
           &reducers,
-      std::shared_ptr<TaskSystem> polymorphic_actions, bool run_all = true,
-      const std::string &case_id = "undefined_case_id");
+      bool run_all = true, const std::string &case_id = "undefined_case_id");
 
   struct {
     std::vector<Transition>
@@ -189,17 +199,24 @@ struct Model {
                 ///< `transition` so it is compatible with index lookup.
   } net;        ///< Is a data-oriented design of a Petri net
 
-  std::vector<size_t> initial_tokens;        ///< The intial marking
+  std::vector<size_t> initial_tokens;        ///< The initial marking
   std::vector<size_t> tokens_n;              ///< The current marking
+  std::vector<size_t> final_marking_n;       ///< The final marking
   std::vector<size_t> active_transitions_n;  ///< List of active transitions
   Eventlog event_log;                        ///< The most actual event_log
-  bool is_paused;
+  State state;
+  std::string case_id;
+  std::atomic<std::optional<unsigned int>>
+      thread_id_;  ///< The id of the thread from which run is called.
+
+  std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>> active_reducers;
+  std::shared_ptr<TaskSystem> pool;
 
  private:
   /**
    * @brief fires a transition.
    *
-   * @param t
+   * @param t transition as index in transition vector
    * @param reducers
    * @param polymorphic_actions
    * @param case_id
@@ -209,7 +226,6 @@ struct Model {
   bool Fire(const size_t t,
             const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
                 &reducers,
-            std::shared_ptr<TaskSystem> polymorphic_actions,
             const std::string &case_id);
 };
 

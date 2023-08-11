@@ -1,7 +1,12 @@
 #include "model.h"
 
-namespace symmetri {
+bool isDirect(const DirectMutation &) { return true; }
 
+symmetri::Result fire(const DirectMutation &) {
+  return {{}, symmetri::State::Completed};
+}
+
+namespace symmetri {
 std::tuple<std::vector<Transition>, std::vector<Place>,
            std::vector<PolyTransition>>
 convert(const Net &_net, const Store &_store) {
@@ -76,9 +81,17 @@ std::vector<int8_t> createPriorityLookup(
   return priority;
 }
 
-Model::Model(const Net &_net, const Store &store,
-             const PriorityTable &_priority, const Marking &M0)
-    : event_log({}), is_paused(false) {
+Petri::Petri(const Net &_net, const Store &store,
+             const PriorityTable &_priority, const Marking &M0,
+             const Marking &final_marking, const std::string &case_id,
+             std::shared_ptr<TaskSystem> stp)
+    : event_log({}),
+      state(State::Scheduled),
+      case_id(case_id),
+      thread_id_(std::nullopt),
+      active_reducers(
+          std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(32)),
+      pool(stp) {
   event_log.reserve(1000);
   std::tie(net.transition, net.place, net.store) = convert(_net, store);
   std::tie(net.input_n, net.output_n) = populateIoLookups(_net, net.place);
@@ -87,9 +100,10 @@ Model::Model(const Net &_net, const Store &store,
   net.priority = createPriorityLookup(net.transition, _priority);
   initial_tokens = toTokens(M0);
   tokens_n = initial_tokens;
+  final_marking_n = toTokens(final_marking);
 }
 
-std::vector<size_t> Model::toTokens(const Marking &marking) const noexcept {
+std::vector<size_t> Petri::toTokens(const Marking &marking) const noexcept {
   std::vector<size_t> tokens;
   for (const auto &[p, c] : marking) {
     for (int i = 0; i < c; i++) {
@@ -99,7 +113,7 @@ std::vector<size_t> Model::toTokens(const Marking &marking) const noexcept {
   return tokens;
 }
 
-std::vector<Transition> Model::getFireableTransitions() const {
+std::vector<Transition> Petri::getFireableTransitions() const {
   auto possible_transition_list_n =
       possibleTransitions(tokens_n, net.p_to_ts_n, net.priority);
   std::vector<Transition> fireable_transitions;
@@ -113,11 +127,11 @@ std::vector<Transition> Model::getFireableTransitions() const {
   return fireable_transitions;
 }
 
-bool Model::Fire(
+bool Petri::Fire(
     const size_t t,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers,
-    std::shared_ptr<TaskSystem> pool, const std::string &case_id) {
+    const std::string &case_id) {
   auto timestamp = Clock::now();
   // deduct the marking
   for (const size_t place : net.input_n[t]) {
@@ -141,31 +155,28 @@ bool Model::Fire(
     active_transitions_n.push_back(t);
     event_log.push_back({case_id, transition, State::Scheduled, timestamp});
     pool->push([=] {
-      reducers->enqueue(
-          createReducerForTransition(t, transition, task, case_id, reducers));
+      reducers->enqueue(fireTransition(t, transition, task, case_id, reducers));
     });
     return false;
   }
 }
 
-bool Model::fire(
+bool Petri::fire(
     const Transition &t,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers,
-    std::shared_ptr<TaskSystem> pool, const std::string &case_id) {
+    const std::string &case_id) {
   auto it = std::find(net.transition.begin(), net.transition.end(), t);
   return it != net.transition.end() &&
          canFire(net.input_n[std::distance(net.transition.begin(), it)],
                  tokens_n) &&
-         !Fire(std::distance(net.transition.begin(), it), reducers, pool,
-               case_id);
+         !Fire(std::distance(net.transition.begin(), it), reducers, case_id);
 }
 
-void Model::fireTransitions(
+void Petri::fireTransitions(
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers,
-    std::shared_ptr<TaskSystem> pool, bool run_all,
-    const std::string &case_id) {
+    bool run_all, const std::string &case_id) {
   // find possible transitions
   auto possible_transition_list_n =
       possibleTransitions(tokens_n, net.p_to_ts_n, net.priority);
@@ -187,7 +198,7 @@ void Model::fireTransitions(
 
   do {
     // if Fire returns true, update the possible transition list
-    if (Fire(possible_transition_list_n.front(), reducers, pool, case_id)) {
+    if (Fire(possible_transition_list_n.front(), reducers, case_id)) {
       possible_transition_list_n =
           possibleTransitions(tokens_n, net.p_to_ts_n, net.priority);
     }
@@ -198,11 +209,7 @@ void Model::fireTransitions(
   return;
 }
 
-std::pair<std::vector<Transition>, std::vector<Place>> Model::getState() const {
-  return {getActiveTransitions(), getMarking()};
-}
-
-std::vector<Place> Model::getMarking() const {
+std::vector<Place> Petri::getMarking() const {
   std::vector<Place> marking;
   marking.reserve(tokens_n.size());
   std::transform(tokens_n.cbegin(), tokens_n.cend(),
@@ -211,7 +218,19 @@ std::vector<Place> Model::getMarking() const {
   return marking;
 }
 
-std::vector<Transition> Model::getActiveTransitions() const {
+Eventlog Petri::getLog() const {
+  Eventlog eventlog = event_log;
+  // get event log from parent nets:
+  for (size_t pt_idx : active_transitions_n) {
+    auto sub_el = ::getLog(net.store[pt_idx]);
+    if (!sub_el.empty()) {
+      eventlog.insert(eventlog.end(), sub_el.begin(), sub_el.end());
+    }
+  }
+  return eventlog;
+}
+
+std::vector<Transition> Petri::getActiveTransitions() const {
   std::vector<Transition> transition_list;
   if (active_transitions_n.size() > 0) {
     transition_list.reserve(active_transitions_n.size());

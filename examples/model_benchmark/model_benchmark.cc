@@ -2,6 +2,7 @@
 
 #include "symmetri/parsers.h"
 #include "symmetri/symmetri.h"
+#include "symmetri/utilities.hpp"
 
 int main(int, char *argv[]) {
   spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] %v");
@@ -16,14 +17,14 @@ int main(int, char *argv[]) {
     if (bolus) {
       store.insert({t, []() {}});
     } else {
-      store.insert({t, nullptr});
+      store.insert({t, DirectMutation{}});
     }
   }
 
-  symmetri::PetriNet bignet(net, m0, {}, store, {}, "pluto", pool);
+  PetriNet bignet(net, m0, {}, store, {}, "pluto", pool);
   spdlog::info("start!");
   const auto start_time = symmetri::Clock::now();
-  auto [el, result] = symmetri::fire(bignet);  // infinite loop
+  auto [el, result] = fire(bignet);  // infinite loop
   const auto end_time = symmetri::Clock::now();
   auto trans_count = el.size() / 2;
   auto delta_t = (double((end_time - start_time).count()) / 1e9);

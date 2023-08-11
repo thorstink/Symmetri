@@ -1,12 +1,23 @@
 #pragma once
 
-#include <functional>
 #include <set>
 #include <unordered_map>
 
 #include "symmetri/polytransition.h"
 #include "symmetri/tasks.h"
 #include "symmetri/types.h"
+
+/**
+ * @brief The PetriNet class is a class that can create, configure and
+ * run a Petri net.
+ *
+ */
+class PetriNet;
+symmetri::Result fire(const PetriNet &);
+symmetri::Result cancel(const PetriNet &);
+void pause(const PetriNet &);
+void resume(const PetriNet &);
+symmetri::Eventlog getLog(const PetriNet &);
 
 namespace symmetri {
 /**
@@ -25,11 +36,8 @@ using Store = std::unordered_map<Transition, PolyTransition>;
  */
 struct Petri;
 
-/**
- * @brief The PetriNet class is a class that can create, configure and
- * run a Petri net.
- *
- */
+}  // namespace symmetri
+
 class PetriNet final {
  public:
   /**
@@ -43,9 +51,9 @@ class PetriNet final {
    * @param stp
    */
   PetriNet(const std::set<std::string> &path_to_pnml,
-           const Marking &final_marking, const Store &store,
-           const PriorityTable &priority, const std::string &case_id,
-           std::shared_ptr<TaskSystem> stp);
+           const symmetri::Marking &final_marking, const symmetri::Store &store,
+           const symmetri::PriorityTable &priority, const std::string &case_id,
+           std::shared_ptr<symmetri::TaskSystem> stp);
 
   /**
    * @brief Construct a new PetriNet object from a set of paths to
@@ -58,8 +66,9 @@ class PetriNet final {
    * @param stp
    */
   PetriNet(const std::set<std::string> &path_to_grml,
-           const Marking &final_marking, const Store &store,
-           const std::string &case_id, std::shared_ptr<TaskSystem> stp);
+           const symmetri::Marking &final_marking, const symmetri::Store &store,
+           const std::string &case_id,
+           std::shared_ptr<symmetri::TaskSystem> stp);
 
   /**
    * @brief Construct a new PetriNet object from a net and initial marking
@@ -72,9 +81,10 @@ class PetriNet final {
    * @param case_id
    * @param stp
    */
-  PetriNet(const Net &net, const Marking &m0, const Marking &final_marking,
-           const Store &store, const PriorityTable &priority,
-           const std::string &case_id, std::shared_ptr<TaskSystem> stp);
+  PetriNet(const symmetri::Net &net, const symmetri::Marking &m0,
+           const symmetri::Marking &final_marking, const symmetri::Store &store,
+           const symmetri::PriorityTable &priority, const std::string &case_id,
+           std::shared_ptr<symmetri::TaskSystem> stp);
 
   /**
    * @brief register transition gives a handle to manually force a transition to
@@ -89,27 +99,7 @@ class PetriNet final {
   std::function<void()> registerTransitionCallback(
       const std::string &transition) const noexcept;
 
-  /**
-   * @brief Get the Event Log object. If the Petri net is running, this call is
-   * blocking as it is executed on the Petri net execution loop. Otherwise it
-   * directly returns the log.
-   *
-   *
-   * @return Eventlog
-   */
-  Eventlog getEventLog() const noexcept;
-
-  /**
-   * @brief Get the State, represented by a vector of *active* transitions (who
-   * can still produce reducers and hence marking mutations) and the *current
-   * marking*. If the Petri net is running, this call is blocking as it is
-   * executed on the Petri net execution loop. Otherwise it directly returns the
-   * state.
-   *
-   * @return std::pair<std::vector<Transition>, std::vector<Place>>
-   */
-  std::pair<std::vector<Transition>, std::vector<Place>> getState()
-      const noexcept;
+  std::vector<symmetri::Place> getMarking() const noexcept;
 
   /**
    * @brief reuseApplication resets the application such that the same net can
@@ -119,59 +109,14 @@ class PetriNet final {
    */
   bool reuseApplication(const std::string &case_id);
 
-  /**
-   * @brief Fire for a PetriNet means that it executes the Petri net until it
-   * reaches a final marking, deadlocks or is preempted by a user.
-   *
-   * @return Result
-   */
-  friend Result fire(const PetriNet &app);
-
-  /**
-   * @brief cancel interrupts and stops the Petri net execution and
-   * calls cancel on all child transitions that are active. If transitions do
-   * not have a cancel functionality implemented, they will not be cancelled.
-   * Their reducers however will not be processed.
-   *
-   * @return Result
-   */
-  friend Result cancel(const PetriNet &app);
-
-  /**
-   * @brief pause interrupts and pauses the Petri net execution and
-   * calls pause on all child transitions that are active. The Petri net will
-   * still consume reducers produced by finished transitions but it will not
-   * queue new transitions for execution. This mostly happens when active
-   * transitions do not have a pause-functionality implemented.
-   *
-   * @param app
-   */
-  friend void pause(const PetriNet &app);
-
-  /**
-   * @brief resume breaks the pause and immediately will try to fire all
-   * possible transitions. It will also call resume on all active transitions.
-   *
-   */
-  friend void resume(const PetriNet &app);
-
-  friend Eventlog getLog(const PetriNet &app);
+  friend symmetri::Result(::fire)(const PetriNet &);
+  friend symmetri::Result(::cancel)(const PetriNet &);
+  friend void(::pause)(const PetriNet &);
+  friend void(::resume)(const PetriNet &);
+  friend symmetri::Eventlog(::getLog)(const PetriNet &);
 
  private:
-  std::shared_ptr<Petri> impl;  ///< Pointer to the implementation, all
-                                ///< information is stored in Petri
-  std::function<void(const std::string &)>
-      register_functor;  ///< At PetriNet construction this function is
-                         ///< created. It can be used to assign a trigger to
-                         ///< transitions - allowing the user to invoke a
-                         ///< transition without meeting the pre-conditions.
+  const std::shared_ptr<symmetri::Petri>
+      impl;  ///< Pointer to the implementation, all
+             ///< information is stored in Petri
 };
-
-Result fire(const PetriNet &);
-Result cancel(const PetriNet &);
-void pause(const PetriNet &);
-void resume(const PetriNet &);
-bool isDirect(const PetriNet &);
-Eventlog getLog(const PetriNet &);
-
-}  // namespace symmetri

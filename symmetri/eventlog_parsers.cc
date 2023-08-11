@@ -31,7 +31,7 @@ std::string mermaidFromEventlog(symmetri::Eventlog el) {
 
   std::stringstream mermaid;
   mermaid << "\n---\ndisplayMode : compact\n---\ngantt\ntitle A Gantt "
-             "Diagram\ndateFormat x\naxisFormat \%H:\%M:\%S\n";
+             "Diagram\ndateFormat x\naxisFormat %H:%M:%S\n";
   std::string current_section("");
   for (auto it = el.begin(); std::next(it) != el.end(); it = std::next(it)) {
     const auto &start = *it;

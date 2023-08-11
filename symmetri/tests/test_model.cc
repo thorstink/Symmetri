@@ -2,6 +2,8 @@
 #include <map>
 
 #include "model.h"
+#include "symmetri/utilities.hpp"
+
 using namespace symmetri;
 using namespace moodycamel;
 
@@ -49,12 +51,12 @@ TEST_CASE("Test equaliy of nets") {
 TEST_CASE("Run one transition iteration in a petri net") {
   auto [net, store, priority, m0] = testNet();
 
-  Model m(net, store, priority, m0);
   auto stp = std::make_shared<TaskSystem>(1);
+  Petri m(net, store, priority, m0, {}, "s", stp);
   auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
 
   // t0 is enabled.
-  m.fireTransitions(reducers, stp, true, "");
+  m.fireTransitions(reducers, true, "");
   // t0 is dispatched but it's reducer has not yet run, so pre-conditions are
   // processed but post are not:
   REQUIRE(m.getActiveTransitions() ==
@@ -76,8 +78,8 @@ TEST_CASE("Run one transition iteration in a petri net") {
         std::vector<symmetri::Transition>{"t0", "t0"});
 
   // process the reducers
-  m = r1(std::move(m));
-  m = r2(std::move(m));
+  r1(m);
+  r2(m);
   // and now the post-conditions are processed:
   REQUIRE(m.active_transitions_n.empty());
   REQUIRE(MarkingEquality(
@@ -88,20 +90,19 @@ TEST_CASE("Run until net dies") {
   using namespace moodycamel;
 
   auto [net, store, priority, m0] = testNet();
-  Model m(net, store, priority, m0);
+  auto stp = std::make_shared<TaskSystem>(1);
+  Petri m(net, store, priority, m0, {}, "s", stp);
 
   auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
-
-  auto stp = std::make_shared<TaskSystem>(1);
 
   Reducer r;
   PolyTransition a([] {});
   // we need to enqueue one 'no-operation' to start the live net.
-  reducers->enqueue([](Model&& m) { return std::ref(m); });
+  reducers->enqueue([](Petri&) {});
   do {
     if (reducers->try_dequeue(r)) {
-      m = r(std::move(m));
-      m.fireTransitions(reducers, stp, true);
+      r(m);
+      m.fireTransitions(reducers, true);
     }
   } while (m.active_transitions_n.size() > 0);
 
@@ -117,20 +118,20 @@ TEST_CASE("Run until net dies with nullptr") {
   using namespace moodycamel;
 
   auto [net, store, priority, m0] = testNet();
-  store = {{"t0", nullptr}, {"t1", nullptr}};
-  Model m(net, store, priority, m0);
+  store = {{"t0", DirectMutation{}}, {"t1", DirectMutation{}}};
+  auto stp = std::make_shared<TaskSystem>(1);
+  Petri m(net, store, priority, m0, {}, "s", stp);
 
   auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
-  auto stp = std::make_shared<TaskSystem>(1);
 
   Reducer r;
   PolyTransition a([] {});
   // we need to enqueue one 'no-operation' to start the live net.
-  reducers->enqueue([](Model&& m) { return std::ref(m); });
+  reducers->enqueue([](Petri&) {});
   do {
     if (reducers->try_dequeue(r)) {
-      m = r(std::move(m));
-      m.fireTransitions(reducers, stp, true);
+      r(m);
+      m.fireTransitions(reducers, true);
     }
   } while (m.active_transitions_n.size() > 0);
 
@@ -150,11 +151,13 @@ TEST_CASE(
 
   Store store;
   for (auto [t, dm] : net) {
-    store.insert({t, nullptr});
+    store.insert({t, DirectMutation{}});
   }
   // with this initial marking, all but transition e are possible.
   Marking m0 = {{"Pa", 1}};
-  Model m(net, store, {}, m0);
+  auto stp = std::make_shared<TaskSystem>(1);
+
+  Petri m(net, store, {}, m0, {}, "s", stp);
   auto fireable_transitions = m.getFireableTransitions();
   auto find = [&](auto a) {
     return std::find(fireable_transitions.begin(), fireable_transitions.end(),
@@ -184,13 +187,13 @@ TEST_CASE("Step through transitions") {
     auto stp = std::make_shared<TaskSystem>(1);
     // with this initial marking, all but transition e are possible.
     Marking m0 = {{"Pa", 4}};
-    Model m(net, store, {}, m0);
+    Petri m(net, store, {}, m0, {}, "s", stp);
     REQUIRE(m.getFireableTransitions().size() == 4);  // abcd
-    m.fire("e", reducers, stp);
-    m.fire("b", reducers, stp);
-    m.fire("b", reducers, stp);
-    m.fire("c", reducers, stp);
-    m.fire("b", reducers, stp);
+    m.fire("e", reducers);
+    m.fire("b", reducers);
+    m.fire("b", reducers);
+    m.fire("c", reducers);
+    m.fire("b", reducers);
     // there are no reducers ran, so this doesn't update.
     REQUIRE(m.getActiveTransitions().size() == 4);
     // there should be no markers left.
@@ -202,7 +205,7 @@ TEST_CASE("Step through transitions") {
     while (j < 2 * 4 &&
            reducers->wait_dequeue_timed(r, std::chrono::seconds(1))) {
       j++;
-      m = r(std::move(m));
+      r(m);
     }
     // reducers update, there should be active transitions left.
     REQUIRE(m.getActiveTransitions().size() == 0);
