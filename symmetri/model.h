@@ -10,9 +10,6 @@
 #include "symmetri/tasks.h"
 #include "symmetri/types.h"
 
-bool isDirect(const DirectMutation &);
-symmetri::Result fire(const DirectMutation &);
-
 namespace symmetri {
 
 using SmallVector = gch::small_vector<size_t, 4>;

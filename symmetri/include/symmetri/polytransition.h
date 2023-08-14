@@ -6,6 +6,9 @@
 
 struct DirectMutation {};
 
+bool isDirect(const DirectMutation &);
+symmetri::Result fire(const DirectMutation &);
+
 /**
  * @brief Checks if the transition-function can be invoked.
  *
