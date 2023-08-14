@@ -130,17 +130,24 @@ symmetri::Result fire(const PetriNet &app) {
       f(m);
     } while (m.active_reducers->try_dequeue(f));
 
-    m.state = symmetri::MarkingReached(m.tokens_n, m.final_marking_n)
-                  ? State::Completed
-                  : m.state;
+    if (symmetri::MarkingReached(m.tokens_n, m.final_marking_n)) {
+      m.state = State::Completed;
+    }
 
     if (m.state == State::Started) {
       // we're firing
       m.fireTransitions(m.active_reducers, true, m.case_id);
       // if there's nothing to fire; we deadlocked
-      m.state = m.active_transitions_n.size() == 0 ? State::Deadlock : m.state;
+      if (m.active_transitions_n.size() == 0) {
+        m.state = State::Deadlock;
+      }
     }
   }
+
+  if (symmetri::MarkingReached(m.tokens_n, m.final_marking_n)) {
+    m.state = State::Completed;
+  }
+
   m.thread_id_.store(std::nullopt);
   // empty reducers
   m.active_transitions_n.clear();

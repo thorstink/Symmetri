@@ -8,7 +8,7 @@
 using namespace symmetri;
 using namespace moodycamel;
 
-void t(){};
+void t(){}
 
 TEST_CASE(
     "Run a transition with a higher priority over one with a lower priority") {

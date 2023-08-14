@@ -22,7 +22,7 @@ if(BUILD_TESTING)
   elseif(TSAN_BUILD AND NOT ASAN_BUILD)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=thread -fno-omit-frame-pointer -O0")
   else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto -O3")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto=auto -O3")
   endif()
 endif()
 
