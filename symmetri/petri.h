@@ -6,14 +6,14 @@
 #include <optional>
 
 #include "small_vector.hpp"
-#include "symmetri/polytransition.h"
+#include "symmetri/callback.h"
 #include "symmetri/tasks.h"
 #include "symmetri/types.h"
 
 namespace symmetri {
 
 using SmallVector = gch::small_vector<size_t, 4>;
-using Store = std::unordered_map<Transition, PolyTransition>;
+using Store = std::unordered_map<Transition, Callback>;
 
 /**
  * @brief a small helper function to get the index representation of a place or
@@ -64,7 +64,7 @@ using Reducer = std::function<void(Petri &)>;
  * @return Reducer
  */
 Reducer fireTransition(
-    size_t T_i, const std::string &transition, const PolyTransition &task,
+    size_t T_i, const std::string &transition, const Callback &task,
     const std::string &case_id,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers);
@@ -87,9 +87,9 @@ struct Petri {
    * @param priority
    * @param M0
    */
-  explicit Petri(const Net &net, const Store &store,
-                 const PriorityTable &priority, const Marking &M0,
-                 const Marking &final_marking, const std::string &case_id,
+  explicit Petri(const Net &_net, const Store &_store,
+                 const PriorityTable &_priority, const Marking &_initial_tokens,
+                 const Marking &_final_marking, const std::string &_case_id,
                  std::shared_ptr<TaskSystem> stp);
   ~Petri() noexcept = default;
   Petri(Petri const &) = delete;
@@ -175,39 +175,67 @@ struct Petri {
       bool run_all = true, const std::string &case_id = "undefined_case_id");
 
   struct {
-    std::vector<Transition>
-        transition;  ///< (ordered) list of string representation of transitions
-    std::vector<Place>
-        place;  ///< (ordered) list of string representation of places
-    std::vector<SmallVector>
-        input_n;  ///< list of list of inputs to transitions. This vector is
-                  ///< indexed like `transition`.
-    std::vector<SmallVector>
-        output_n;  ///< list of list of outputs of transitions. This vector is
-                   ///< indexed like `transition`.
-    std::vector<SmallVector>
-        p_to_ts_n;  ///< list of list of transitions that have places as inputs.
-                    ///< This vector is index like `place`
-    std::vector<int8_t>
-        priority;  ///< This vector holds priorities for all transitions. This
-                   ///< vector is index like `transition`.
-    std::vector<PolyTransition>
-        store;  ///< This is the same 'lookup table', only index using
-                ///< `transition` so it is compatible with index lookup.
-  } net;        ///< Is a data-oriented design of a Petri net
+    /**
+     * @brief (ordered) list of string representation of transitions
+     *
+     */
+    std::vector<Transition> transition;
 
-  std::vector<size_t> initial_tokens;        ///< The initial marking
-  std::vector<size_t> tokens_n;              ///< The current marking
-  std::vector<size_t> final_marking_n;       ///< The final marking
-  std::vector<size_t> active_transitions_n;  ///< List of active transitions
-  Eventlog event_log;                        ///< The most actual event_log
-  State state;
-  std::string case_id;
+    /**
+     * @brief (ordered) list of string representation of places
+     *
+     */
+    std::vector<Place> place;
+
+    /**
+     * @brief list of list of inputs to transitions. This vector is indexed like
+     * `transition`.
+     *
+     */
+    std::vector<SmallVector> input_n;
+
+    /**
+     * @brief list of list of outputs of transitions. This vector is indexed
+     * like `transition`.
+     *
+     */
+    std::vector<SmallVector> output_n;
+
+    /**
+     * @brief list of list of transitions that have places as inputs. This
+     * vector is index like `place`
+     *
+     */
+    std::vector<SmallVector> p_to_ts_n;
+
+    /**
+     * @brief This vector holds priorities for all transitions. This vector is
+     * index like `transition`.
+     *
+     */
+    std::vector<int8_t> priority;
+
+    /**
+     * @brief This is the same 'lookup table', only index using  `transition` so
+     * it is compatible with index lookup.
+     *
+     */
+    std::vector<Callback> store;
+  } net;  ///< Is a data-oriented design of a Petri net
+
+  std::vector<size_t> initial_tokens;      ///< The initial marking
+  std::vector<size_t> tokens;              ///< The current marking
+  std::vector<size_t> final_marking;       ///< The final marking
+  std::vector<size_t> active_transitions;  ///< List of active transitions
+  Eventlog event_log;                      ///< The most actual event_log
+  State state;                             ///< The current state of the Petri
+  std::string case_id;  ///< The unique identifier for this Petri-run
   std::atomic<std::optional<unsigned int>>
-      thread_id_;  ///< The id of the thread from which run is called.
+      thread_id_;  ///< The id of the thread from which the Petri is fired.
 
-  std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>> active_reducers;
-  std::shared_ptr<TaskSystem> pool;
+  std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>> reducer_queue;
+  std::shared_ptr<TaskSystem>
+      pool;  ///< A pointer to the threadpool used to defer Callbacks.
 
  private:
   /**

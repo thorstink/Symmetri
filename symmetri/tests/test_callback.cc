@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
 
-#include "symmetri/polytransition.h"
+#include "symmetri/callback.h"
 
 using namespace symmetri;
 
@@ -37,14 +37,14 @@ TEST_CASE("Constructing is just as you expect") {
 }
 
 TEST_CASE("Creating and and inserting is ok") {
-  PolyTransition f(Foo("hi"));
-  std::vector<PolyTransition> p;
+  Callback f(Foo("hi"));
+  std::vector<Callback> p;
   p.push_back(f);
   resume(p.back());
 }
 
 TEST_CASE("Constructing in place is the same") {
-  std::vector<PolyTransition> p;
+  std::vector<Callback> p;
   p.push_back(Foo("lol"));
   resume(p.back());
 }

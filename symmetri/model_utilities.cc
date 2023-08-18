@@ -1,5 +1,5 @@
 
-#include "model.h"
+#include "petri.h"
 namespace symmetri {
 
 size_t toIndex(const std::vector<std::string> &m, const std::string &s) {
@@ -42,14 +42,14 @@ Reducer createReducerForTransition(size_t t_i, const Eventlog &ev,
   return [=](Petri &model) {
     // if it is in the active transition set it means it is finished and we
     // should process it.
-    auto it = std::find(model.active_transitions_n.begin(),
-                        model.active_transitions_n.end(), t_i);
-    if (it != model.active_transitions_n.end()) {
-      model.active_transitions_n.erase(it);
+    auto it = std::find(model.active_transitions.begin(),
+                        model.active_transitions.end(), t_i);
+    if (it != model.active_transitions.end()) {
+      model.active_transitions.erase(it);
       if (result == State::Completed) {
         const auto &place_list = model.net.output_n;
-        model.tokens_n.insert(model.tokens_n.begin(), place_list[t_i].begin(),
-                              place_list[t_i].end());
+        model.tokens.insert(model.tokens.begin(), place_list[t_i].begin(),
+                            place_list[t_i].end());
       }
       model.event_log.insert(model.event_log.end(), ev.begin(), ev.end());
     };
@@ -57,7 +57,7 @@ Reducer createReducerForTransition(size_t t_i, const Eventlog &ev,
 }
 
 Reducer fireTransition(
-    size_t t_i, const std::string &transition, const PolyTransition &task,
+    size_t t_i, const std::string &transition, const Callback &task,
     const std::string &case_id,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers) {

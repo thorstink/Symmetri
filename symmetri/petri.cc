@@ -1,19 +1,18 @@
-#include "model.h"
+#include "petri.h"
 
-bool isDirect(const DirectMutation &) { return true; }
+bool isSynchronous(const DirectMutation &) { return true; }
 
 symmetri::Result fire(const DirectMutation &) {
   return {{}, symmetri::State::Completed};
 }
 
 namespace symmetri {
-std::tuple<std::vector<Transition>, std::vector<Place>,
-           std::vector<PolyTransition>>
+std::tuple<std::vector<Transition>, std::vector<Place>, std::vector<Callback>>
 convert(const Net &_net, const Store &_store) {
   const auto transition_count = _net.size();
   std::vector<Transition> transitions;
   std::vector<Place> places;
-  std::vector<PolyTransition> store;
+  std::vector<Callback> store;
   transitions.reserve(transition_count);
   store.reserve(transition_count);
   for (const auto &[t, io] : _net) {
@@ -81,26 +80,26 @@ std::vector<int8_t> createPriorityLookup(
   return priority;
 }
 
-Petri::Petri(const Net &_net, const Store &store,
-             const PriorityTable &_priority, const Marking &M0,
-             const Marking &final_marking, const std::string &case_id,
+Petri::Petri(const Net &_net, const Store &_store,
+             const PriorityTable &_priority, const Marking &_initial_tokens,
+             const Marking &_final_marking, const std::string &_case_id,
              std::shared_ptr<TaskSystem> stp)
     : event_log({}),
       state(State::Scheduled),
-      case_id(case_id),
+      case_id(_case_id),
       thread_id_(std::nullopt),
-      active_reducers(
-          std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(32)),
+      reducer_queue(
+          std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(128)),
       pool(stp) {
   event_log.reserve(1000);
-  std::tie(net.transition, net.place, net.store) = convert(_net, store);
+  std::tie(net.transition, net.place, net.store) = convert(_net, _store);
   std::tie(net.input_n, net.output_n) = populateIoLookups(_net, net.place);
   net.p_to_ts_n = createReversePlaceToTransitionLookup(
       net.place.size(), net.transition.size(), net.input_n);
   net.priority = createPriorityLookup(net.transition, _priority);
-  initial_tokens = toTokens(M0);
-  tokens_n = initial_tokens;
-  final_marking_n = toTokens(final_marking);
+  initial_tokens = toTokens(_initial_tokens);
+  tokens = initial_tokens;
+  final_marking = toTokens(_final_marking);
 }
 
 std::vector<size_t> Petri::toTokens(const Marking &marking) const noexcept {
@@ -115,12 +114,12 @@ std::vector<size_t> Petri::toTokens(const Marking &marking) const noexcept {
 
 std::vector<Transition> Petri::getFireableTransitions() const {
   auto possible_transition_list_n =
-      possibleTransitions(tokens_n, net.p_to_ts_n, net.priority);
+      possibleTransitions(tokens, net.p_to_ts_n, net.priority);
   std::vector<Transition> fireable_transitions;
   fireable_transitions.reserve(possible_transition_list_n.size());
   for (const size_t t_idx : possible_transition_list_n) {
     const auto &pre = net.input_n[t_idx];
-    if (canFire(pre, tokens_n)) {
+    if (canFire(pre, tokens)) {
       fireable_transitions.push_back(net.transition[t_idx]);
     }
   }
@@ -137,7 +136,7 @@ bool Petri::Fire(
   for (const size_t place : net.input_n[t]) {
     // erase one by one. using std::remove_if would remove all tokens at
     // a particular place.
-    tokens_n.erase(std::find(tokens_n.begin(), tokens_n.end(), place));
+    tokens.erase(std::find(tokens.begin(), tokens.end(), place));
   }
 
   const auto &task = net.store[t];
@@ -146,13 +145,14 @@ bool Petri::Fire(
   // marking mutation and do it immediately.
   const auto &transition = net.transition[t];
   const auto &lookup_t = net.output_n[t];
-  if (isDirect(task)) {
-    tokens_n.insert(tokens_n.begin(), lookup_t.begin(), lookup_t.end());
+  if (isSynchronous(task)) {
+    tokens.insert(tokens.begin(), lookup_t.begin(), lookup_t.end());
     event_log.push_back({case_id, transition, State::Started, timestamp});
-    event_log.push_back({case_id, transition, State::Completed, timestamp});
+    event_log.push_back({case_id, transition,
+                         std::get<symmetri::State>(::fire(task)), timestamp});
     return true;
   } else {
-    active_transitions_n.push_back(t);
+    active_transitions.push_back(t);
     event_log.push_back({case_id, transition, State::Scheduled, timestamp});
     pool->push([=] {
       reducers->enqueue(fireTransition(t, transition, task, case_id, reducers));
@@ -169,7 +169,7 @@ bool Petri::fire(
   auto it = std::find(net.transition.begin(), net.transition.end(), t);
   return it != net.transition.end() &&
          canFire(net.input_n[std::distance(net.transition.begin(), it)],
-                 tokens_n) &&
+                 tokens) &&
          !Fire(std::distance(net.transition.begin(), it), reducers, case_id);
 }
 
@@ -179,7 +179,7 @@ void Petri::fireTransitions(
     bool run_all, const std::string &case_id) {
   // find possible transitions
   auto possible_transition_list_n =
-      possibleTransitions(tokens_n, net.p_to_ts_n, net.priority);
+      possibleTransitions(tokens, net.p_to_ts_n, net.priority);
   auto filter_transitions = [&](const auto &tokens) {
     possible_transition_list_n.erase(
         std::remove_if(
@@ -190,7 +190,7 @@ void Petri::fireTransitions(
   };
 
   // remove transitions that are not fireable;
-  filter_transitions(tokens_n);
+  filter_transitions(tokens);
 
   if (possible_transition_list_n.empty()) {
     return;
@@ -200,10 +200,10 @@ void Petri::fireTransitions(
     // if Fire returns true, update the possible transition list
     if (Fire(possible_transition_list_n.front(), reducers, case_id)) {
       possible_transition_list_n =
-          possibleTransitions(tokens_n, net.p_to_ts_n, net.priority);
+          possibleTransitions(tokens, net.p_to_ts_n, net.priority);
     }
     // remove transitions that are not fireable;
-    filter_transitions(tokens_n);
+    filter_transitions(tokens);
   } while (run_all && !possible_transition_list_n.empty());
 
   return;
@@ -211,9 +211,8 @@ void Petri::fireTransitions(
 
 std::vector<Place> Petri::getMarking() const {
   std::vector<Place> marking;
-  marking.reserve(tokens_n.size());
-  std::transform(tokens_n.cbegin(), tokens_n.cend(),
-                 std::back_inserter(marking),
+  marking.reserve(tokens.size());
+  std::transform(tokens.cbegin(), tokens.cend(), std::back_inserter(marking),
                  [&](auto place_index) { return net.place[place_index]; });
   return marking;
 }
@@ -221,7 +220,7 @@ std::vector<Place> Petri::getMarking() const {
 Eventlog Petri::getLog() const {
   Eventlog eventlog = event_log;
   // get event log from parent nets:
-  for (size_t pt_idx : active_transitions_n) {
+  for (size_t pt_idx : active_transitions) {
     auto sub_el = ::getLog(net.store[pt_idx]);
     if (!sub_el.empty()) {
       eventlog.insert(eventlog.end(), sub_el.begin(), sub_el.end());
@@ -232,9 +231,9 @@ Eventlog Petri::getLog() const {
 
 std::vector<Transition> Petri::getActiveTransitions() const {
   std::vector<Transition> transition_list;
-  if (active_transitions_n.size() > 0) {
-    transition_list.reserve(active_transitions_n.size());
-    std::transform(active_transitions_n.cbegin(), active_transitions_n.cend(),
+  if (active_transitions.size() > 0) {
+    transition_list.reserve(active_transitions.size());
+    std::transform(active_transitions.cbegin(), active_transitions.cend(),
                    std::back_inserter(transition_list), [&](auto place_index) {
                      return net.transition[place_index];
                    });

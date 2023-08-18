@@ -3,7 +3,7 @@
 #include <set>
 #include <unordered_map>
 
-#include "symmetri/polytransition.h"
+#include "symmetri/callback.h"
 #include "symmetri/tasks.h"
 #include "symmetri/types.h"
 
@@ -13,10 +13,47 @@
  *
  */
 class PetriNet;
+
+/**
+ * @brief The fire specialization for a PetriNet runs the Petri net until it
+ * completes, deadlocks or is preempted. It returns an event log along with the
+ * result state.
+ *
+ * @return symmetri::Result
+ */
 symmetri::Result fire(const PetriNet &);
+
+/**
+ * @brief The cancel specialization for a PetriNet breaks the PetriNets'
+ * internal loop. It will not queue any new Callbacks and it will cancel all
+ * child Callbacks that are running. The cancel function will return before the
+ * PetriNet is preempted completely.
+ *
+ * @return symmetri::Result
+ */
 symmetri::Result cancel(const PetriNet &);
+
+/**
+ * @brief The pause specialization for a PetriNet prevents new fire-able
+ * Callbacks from being scheduled. It will also pause all child Callbacks that
+ * are running. The pause function will return before the PetriNet will pause.
+ *
+ */
 void pause(const PetriNet &);
+
+/**
+ * @brief The resume specialization for a PetriNet undoes pause and puts the
+ * PetriNet back in a normal state where all fireable Callback are scheduled for
+ * execution. The resume function will return before the PetriNet will resume.
+ *
+ */
 void resume(const PetriNet &);
+
+/**
+ * @brief Get the Log object
+ *
+ * @return symmetri::Eventlog
+ */
 symmetri::Eventlog getLog(const PetriNet &);
 
 namespace symmetri {
@@ -26,7 +63,7 @@ namespace symmetri {
  * PolyTask may contain side-effects.
  *
  */
-using Store = std::unordered_map<Transition, PolyTransition>;
+using Store = std::unordered_map<Transition, Callback>;
 
 /**
  * @brief Forward declaration for the implementation of the PetriNet class.
@@ -38,6 +75,10 @@ struct Petri;
 
 }  // namespace symmetri
 
+/**
+ * @brief PetriNet exposes the possible constructors to create PetriNets.
+ *
+ */
 class PetriNet final {
  public:
   /**
@@ -88,24 +129,31 @@ class PetriNet final {
 
   /**
    * @brief register transition gives a handle to manually force a transition to
-   * fire. This is usefull if you want to trigger a transition that has no input
-   * places. It is not recommended to use this for transitions with input
-   * places! This violates the mathematics of petri nets.
+   * fire. It returns a callable handle that will schedule a reducer for the
+   * transition, generating tokens.
    *
-   * @param transition the name of transition. This transition has to be
-   * available in the net.
+   * @param transition the name of transition
    * @return std::function<void()>
    */
   std::function<void()> registerTransitionCallback(
       const std::string &transition) const noexcept;
 
+  /**
+   * @brief Get the Marking object. This function is thread-safe and be called
+   * during PetriNet execution.
+   *
+   * @return std::vector<symmetri::Place>
+   */
   std::vector<symmetri::Place> getMarking() const noexcept;
 
   /**
-   * @brief reuseApplication resets the application such that the same net can
-   * be used again after an cancel call. You do need to supply a new case_id
-   * which must be different.
+   * @brief reuseApplication resets the PetriNet such that the same net can
+   * be used again after a cancel call or natural termination of the PetriNet.
+   * You do need to supply a new case_id which must be different.
    *
+   * @param case_id needs to be a new unique id
+   * @return true
+   * @return false
    */
   bool reuseApplication(const std::string &case_id);
 

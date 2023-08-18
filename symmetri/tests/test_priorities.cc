@@ -2,13 +2,13 @@
 #include <catch2/catch_test_macros.hpp>
 #include <list>
 
-#include "model.h"
+#include "petri.h"
 #include "symmetri/utilities.hpp"
 
 using namespace symmetri;
 using namespace moodycamel;
 
-void t(){}
+void t() {}
 
 TEST_CASE(
     "Run a transition with a higher priority over one with a lower priority") {

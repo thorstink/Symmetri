@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <thread>
 
-#include "model.h"
+#include "petri.h"
 #include "symmetri/parsers.h"
 #include "symmetri/utilities.hpp"
 
@@ -75,13 +75,13 @@ std::function<void()> PetriNet::registerTransitionCallback(
     const Transition &transition) const noexcept {
   return [transition, this] {
     if (impl->thread_id_.load()) {
-      impl->active_reducers->enqueue([=](Petri &m) {
+      impl->reducer_queue->enqueue([=](Petri &m) {
         if (m.thread_id_.load()) {
           const auto t_index = toIndex(m.net.transition, transition);
-          m.active_transitions_n.push_back(t_index);
-          m.active_reducers->enqueue(fireTransition(
-              t_index, m.net.transition[t_index], m.net.store[t_index],
-              m.case_id, m.active_reducers));
+          m.active_transitions.push_back(t_index);
+          m.reducer_queue->enqueue(
+              fireTransition(t_index, m.net.transition[t_index],
+                             m.net.store[t_index], m.case_id, m.reducer_queue));
         }
       });
     }
@@ -92,7 +92,7 @@ std::vector<Place> PetriNet::getMarking() const noexcept {
   if (impl->thread_id_.load()) {
     std::promise<std::vector<Place>> el;
     std::future<std::vector<Place>> el_getter = el.get_future();
-    impl->active_reducers->enqueue(
+    impl->reducer_queue->enqueue(
         [&](Petri &model) { el.set_value(model.getMarking()); });
     return el_getter.get();
   } else {
@@ -117,41 +117,41 @@ symmetri::Result fire(const PetriNet &app) {
 
   // we are running!
   m.event_log.clear();
-  m.tokens_n = m.initial_tokens;
+  m.tokens = m.initial_tokens;
   m.state = State::Started;
   symmetri::Reducer f;
-  while (m.active_reducers->try_dequeue(f)) { /* get rid of old reducers  */
+  while (m.reducer_queue->try_dequeue(f)) { /* get rid of old reducers  */
   }
   // start!
-  m.fireTransitions(m.active_reducers, true, m.case_id);
+  m.fireTransitions(m.reducer_queue, true, m.case_id);
   while ((m.state == State::Started || m.state == State::Paused) &&
-         m.active_reducers->wait_dequeue_timed(f, -1)) {
+         m.reducer_queue->wait_dequeue_timed(f, -1)) {
     do {
       f(m);
-    } while (m.active_reducers->try_dequeue(f));
+    } while (m.reducer_queue->try_dequeue(f));
 
-    if (symmetri::MarkingReached(m.tokens_n, m.final_marking_n)) {
+    if (symmetri::MarkingReached(m.tokens, m.final_marking)) {
       m.state = State::Completed;
     }
 
     if (m.state == State::Started) {
       // we're firing
-      m.fireTransitions(m.active_reducers, true, m.case_id);
+      m.fireTransitions(m.reducer_queue, true, m.case_id);
       // if there's nothing to fire; we deadlocked
-      if (m.active_transitions_n.size() == 0) {
+      if (m.active_transitions.size() == 0) {
         m.state = State::Deadlock;
       }
     }
   }
 
-  if (symmetri::MarkingReached(m.tokens_n, m.final_marking_n)) {
+  if (symmetri::MarkingReached(m.tokens, m.final_marking)) {
     m.state = State::Completed;
   }
 
   m.thread_id_.store(std::nullopt);
   // empty reducers
-  m.active_transitions_n.clear();
-  while (m.active_reducers->try_dequeue(f)) {
+  m.active_transitions.clear();
+  while (m.reducer_queue->try_dequeue(f)) {
     f(m);
   }
 
@@ -159,11 +159,11 @@ symmetri::Result fire(const PetriNet &app) {
 }
 
 symmetri::Result cancel(const PetriNet &app) {
-  app.impl->active_reducers->enqueue([=](symmetri::Petri &model) {
+  app.impl->reducer_queue->enqueue([=](symmetri::Petri &model) {
     model.state = symmetri::State::UserExit;
     // populate that eventlog with child eventlog and possible
     // cancelations.
-    for (const auto transition_index : model.active_transitions_n) {
+    for (const auto transition_index : model.active_transitions) {
       auto [el, state] = cancel(model.net.store.at(transition_index));
       if (!el.empty()) {
         model.event_log.insert(model.event_log.end(), el.begin(), el.end());
@@ -172,25 +172,25 @@ symmetri::Result cancel(const PetriNet &app) {
                                  model.net.transition[transition_index], state,
                                  symmetri::Clock::now()});
     }
-    model.active_transitions_n.clear();
+    model.active_transitions.clear();
   });
 
   return {getLog(app), symmetri::State::UserExit};
 }
 
 void pause(const PetriNet &app) {
-  app.impl->active_reducers->enqueue([](symmetri::Petri &model) {
+  app.impl->reducer_queue->enqueue([](symmetri::Petri &model) {
     model.state = State::Paused;
-    for (const auto transition_index : model.active_transitions_n) {
+    for (const auto transition_index : model.active_transitions) {
       pause(model.net.store.at(transition_index));
     }
   });
 }
 
 void resume(const PetriNet &app) {
-  app.impl->active_reducers->enqueue([](symmetri::Petri &model) {
+  app.impl->reducer_queue->enqueue([](symmetri::Petri &model) {
     model.state = State::Started;
-    for (const auto transition_index : model.active_transitions_n) {
+    for (const auto transition_index : model.active_transitions) {
       resume(model.net.store.at(transition_index));
     }
   });
@@ -200,7 +200,7 @@ symmetri::Eventlog getLog(const PetriNet &app) {
   if (app.impl->thread_id_.load()) {
     std::promise<Eventlog> el;
     std::future<Eventlog> el_getter = el.get_future();
-    app.impl->active_reducers->enqueue(
+    app.impl->reducer_queue->enqueue(
         [&](Petri &model) { el.set_value(model.getLog()); });
     return el_getter.get();
   } else {

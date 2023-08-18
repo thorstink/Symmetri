@@ -2734,3 +2734,12 @@ GENERATE_LEGEND        = YES
 # The default value is: YES.
 
 DOT_CLEANUP            = YES
+IMAGE_PATH += docs
+
+# USE_MDFILE_AS_MAINPAGE = README.md
+INPUT                  += README.md \
+                            docs/symmetri_nets.md \
+                            docs/symmetri_lib.md
+
+DISABLE_INDEX = NO
+GENERATE_TREEVIEW = YES

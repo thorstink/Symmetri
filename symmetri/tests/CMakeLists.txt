@@ -37,7 +37,7 @@ add_executable(${PROJECT_NAME}_parser_test test_parser.cc)
 target_link_libraries(${PROJECT_NAME}_parser_test PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME})
 add_test(${PROJECT_NAME}_parser_test ${PROJECT_NAME}_parser_test)
 
-add_executable(${PROJECT_NAME}_model_test test_model.cc)
+add_executable(${PROJECT_NAME}_model_test test_petri.cc)
 target_link_libraries(${PROJECT_NAME}_model_test PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue )
 add_test(${PROJECT_NAME}_model_test ${PROJECT_NAME}_model_test)
 
@@ -65,6 +65,6 @@ add_executable(${PROJECT_NAME}_types test_types.cc)
 target_link_libraries(${PROJECT_NAME}_types PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue )
 add_test(${PROJECT_NAME}_types ${PROJECT_NAME}_types)
 
-add_executable(${PROJECT_NAME}_polytransition test_polytransition.cc)
-target_link_libraries(${PROJECT_NAME}_polytransition PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue )
-add_test(${PROJECT_NAME}_polytransition ${PROJECT_NAME}_polytransition)
+add_executable(${PROJECT_NAME}_Callback test_callback.cc)
+target_link_libraries(${PROJECT_NAME}_Callback PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue )
+add_test(${PROJECT_NAME}_Callback ${PROJECT_NAME}_Callback)

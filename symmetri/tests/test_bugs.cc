@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <condition_variable>
 
-#include "model.h"
+#include "petri.h"
 #include "symmetri/utilities.hpp"
 
 using namespace symmetri;
@@ -38,12 +38,12 @@ TEST_CASE("Firing the same transition before it can complete should work") {
   Petri m(net, store, priority, m0, {}, "s", stp);
   auto reducers =
       std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(4);
-  REQUIRE(m.active_transitions_n.empty());
+  REQUIRE(m.active_transitions.empty());
   m.fireTransitions(reducers, true);
   REQUIRE(m.getMarking().empty());
   CHECK(m.getActiveTransitions() ==
         std::vector<symmetri::Transition>{"t", "t"});
-  REQUIRE(m.active_transitions_n.size() == 2);
+  REQUIRE(m.active_transitions.size() == 2);
 
   Reducer r;
   while (reducers->wait_dequeue_timed(r, std::chrono::milliseconds(250))) {
@@ -63,7 +63,7 @@ TEST_CASE("Firing the same transition before it can complete should work") {
 
   // offending test, but fixed :-)
   CHECK(m.getActiveTransitions() == std::vector<symmetri::Transition>{"t"});
-  REQUIRE(m.active_transitions_n.size() == 1);
+  REQUIRE(m.active_transitions.size() == 1);
   {
     std::lock_guard<std::mutex> lk(cv_m);
     is_ready2 = true;
@@ -74,5 +74,5 @@ TEST_CASE("Firing the same transition before it can complete should work") {
 
   REQUIRE(MarkingEquality(m.getMarking(), {"Pb", "Pb"}));
 
-  CHECK(m.active_transitions_n.empty());
+  CHECK(m.active_transitions.empty());
 }

@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <map>
 
-#include "model.h"
+#include "petri.h"
 #include "symmetri/utilities.hpp"
 
 using namespace symmetri;
@@ -81,7 +81,7 @@ TEST_CASE("Run one transition iteration in a petri net") {
   r1(m);
   r2(m);
   // and now the post-conditions are processed:
-  REQUIRE(m.active_transitions_n.empty());
+  REQUIRE(m.active_transitions.empty());
   REQUIRE(MarkingEquality(
       m.getMarking(), std::vector<symmetri::Place>{"Pa", "Pa", "Pc", "Pc"}));
 }
@@ -96,7 +96,7 @@ TEST_CASE("Run until net dies") {
   auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
 
   Reducer r;
-  PolyTransition a([] {});
+  Callback a([] {});
   // we need to enqueue one 'no-operation' to start the live net.
   reducers->enqueue([](Petri&) {});
   do {
@@ -104,7 +104,7 @@ TEST_CASE("Run until net dies") {
       r(m);
       m.fireTransitions(reducers, true);
     }
-  } while (m.active_transitions_n.size() > 0);
+  } while (m.active_transitions.size() > 0);
 
   // For this specific net we expect:
   REQUIRE(MarkingEquality(
@@ -125,7 +125,7 @@ TEST_CASE("Run until net dies with nullptr") {
   auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
 
   Reducer r;
-  PolyTransition a([] {});
+  Callback a([] {});
   // we need to enqueue one 'no-operation' to start the live net.
   reducers->enqueue([](Petri&) {});
   do {
@@ -133,7 +133,7 @@ TEST_CASE("Run until net dies with nullptr") {
       r(m);
       m.fireTransitions(reducers, true);
     }
-  } while (m.active_transitions_n.size() > 0);
+  } while (m.active_transitions.size() > 0);
 
   // For this specific net we expect:
   REQUIRE(MarkingEquality(
