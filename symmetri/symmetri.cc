@@ -79,9 +79,9 @@ std::function<void()> PetriNet::registerTransitionCallback(
         if (m.thread_id_.load()) {
           const auto t_index = toIndex(m.net.transition, transition);
           m.active_transitions.push_back(t_index);
-          m.reducer_queue->enqueue(
-              fireTransition(t_index, m.net.transition[t_index],
-                             m.net.store[t_index], m.case_id, m.reducer_queue));
+          m.reducer_queue->enqueue(scheduleCallback(
+              t_index, m.net.transition[t_index], m.net.store[t_index],
+              m.case_id, m.reducer_queue));
         }
       });
     }
@@ -123,7 +123,7 @@ symmetri::Result fire(const PetriNet &app) {
   while (m.reducer_queue->try_dequeue(f)) { /* get rid of old reducers  */
   }
   // start!
-  m.fireTransitions(m.reducer_queue, true, m.case_id);
+  m.fireTransitions();
   while ((m.state == State::Started || m.state == State::Paused) &&
          m.reducer_queue->wait_dequeue_timed(f, -1)) {
     do {
@@ -136,7 +136,7 @@ symmetri::Result fire(const PetriNet &app) {
 
     if (m.state == State::Started) {
       // we're firing
-      m.fireTransitions(m.reducer_queue, true, m.case_id);
+      m.fireTransitions();
       // if there's nothing to fire; we deadlocked
       if (m.active_transitions.size() == 0) {
         m.state = State::Deadlock;

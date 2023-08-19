@@ -1,5 +1,7 @@
 #pragma once
 
+/** @file callback.h */
+
 #include <memory>
 
 #include "symmetri/types.h"

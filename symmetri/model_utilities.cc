@@ -14,11 +14,10 @@ bool canFire(const SmallVector &pre, const std::vector<size_t> &tokens) {
   });
 }
 
-gch::small_vector<uint8_t, 32> possibleTransitions(
+gch::small_vector<size_t, 32> possibleTransitions(
     const std::vector<size_t> &tokens,
-    const std::vector<SmallVector> &p_to_ts_n,
-    const std::vector<int8_t> &priorities) {
-  gch::small_vector<uint8_t, 32> possible_transition_list_n;
+    const std::vector<SmallVector> &p_to_ts_n) {
+  gch::small_vector<size_t, 32> possible_transition_list_n;
   for (const size_t place : tokens) {
     for (size_t t : p_to_ts_n[place]) {
       if (std::find(possible_transition_list_n.begin(),
@@ -29,16 +28,10 @@ gch::small_vector<uint8_t, 32> possibleTransitions(
     }
   }
 
-  // sort transition list according to priority
-  std::sort(possible_transition_list_n.begin(),
-            possible_transition_list_n.end(),
-            [&](size_t a, size_t b) { return priorities[a] > priorities[b]; });
-
   return possible_transition_list_n;
 }
 
-Reducer createReducerForTransition(size_t t_i, const Eventlog &ev,
-                                   State result) {
+Reducer createReducerForCallback(size_t t_i, const Eventlog &ev, State result) {
   return [=](Petri &model) {
     // if it is in the active transition set it means it is finished and we
     // should process it.
@@ -56,7 +49,7 @@ Reducer createReducerForTransition(size_t t_i, const Eventlog &ev,
   };
 }
 
-Reducer fireTransition(
+Reducer scheduleCallback(
     size_t t_i, const std::string &transition, const Callback &task,
     const std::string &case_id,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
@@ -67,9 +60,9 @@ Reducer fireTransition(
         {case_id, transition, State::Started, start_time});
   });
 
-  auto [ev, res] = fire(task);
+  auto [ev, res] = ::fire(task);
   ev.push_back({case_id, transition, res, Clock::now()});
-  return createReducerForTransition(t_i, ev, res);
+  return createReducerForCallback(t_i, ev, res);
 }
 
 }  // namespace symmetri

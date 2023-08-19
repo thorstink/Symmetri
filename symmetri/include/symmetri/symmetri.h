@@ -1,5 +1,7 @@
 #pragma once
 
+/** @file symmetri.h */
+
 #include <set>
 #include <unordered_map>
 

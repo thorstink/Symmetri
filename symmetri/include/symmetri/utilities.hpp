@@ -1,4 +1,7 @@
 #pragma once
+
+/** @file utilities.hpp */
+
 #include <algorithm>
 
 #include "symmetri/types.h"

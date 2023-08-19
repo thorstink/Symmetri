@@ -1,4 +1,7 @@
 #pragma once
+
+/** @file petri.h */
+
 #include <blockingconcurrentqueue.h>
 
 #include <functional>
@@ -32,47 +35,58 @@ size_t toIndex(const std::vector<std::string> &m, const std::string &s);
  *
  * @param tokens
  * @param p_to_ts_n
- * @param priorities
- * @return gch::small_vector<uint8_t, 32>
+ * @return gch::small_vector<size_t, 32>
  */
-gch::small_vector<uint8_t, 32> possibleTransitions(
+gch::small_vector<size_t, 32> possibleTransitions(
     const std::vector<size_t> &tokens,
-    const std::vector<SmallVector> &p_to_ts_n,
-    const std::vector<int8_t> &priorities);
+    const std::vector<SmallVector> &p_to_ts_n);
 
 /**
  * @brief Takes a vector of input places (pre-conditions) and the current token
- * distribution to determine whether the pre-conditions are met.
+ * distribution to determine whether the pre-conditions are met, e.g. the
+ * transition is active.
  *
- * @param pre
- * @param tokens
+ * @param pre vector of preconditions
+ * @param tokens the current token distribution
  * @return true if the pre-conditions are met
  * @return false otherwise
  */
 bool canFire(const SmallVector &pre, const std::vector<size_t> &tokens);
 
+/**
+ * @brief Forward declaration of the Petri-class
+ *
+ */
 struct Petri;
+
+/**
+ * @brief A Reducer updates the Petri-object. Reducers are used to process the
+ * post-callback marking mutations.
+ */
 using Reducer = std::function<void(Petri &)>;
 
 /**
- * @brief Create a Reducer For Transition object
+ * @brief Schedules the callback associated with transition t_idx/transition. It
+ * returns a reducer which is to be executed _after_ Callback task completed.
  *
- * @param T_i
- * @param task
+ * @param t_idx the index of the transition as used in the Petri-class
+ * @param transition the string representation as used in the PetriNet (e.g.
+ * PNML/GRML)
+ * @param task the Callback to be scheduled
  * @param case_id
  * @param reducers
  * @return Reducer
  */
-Reducer fireTransition(
-    size_t T_i, const std::string &transition, const Callback &task,
+Reducer scheduleCallback(
+    size_t t_idx, const std::string &transition, const Callback &task,
     const std::string &case_id,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducers);
 
 /**
- * @brief Petri is a different data structure to encode the Petri net. It is
- * optimized for calculating the fireable transitions and quick lookups in
- * ordered vectors.
+ * @brief Petri is a data structure that encodes the Petri net and holds
+ * pointers to the thread-pool and the reducer-queue. It is optimized for
+ * calculating the active transition set and quick lookups in ordered vectors.
  *
  */
 struct Petri {
@@ -82,10 +96,13 @@ struct Petri {
    * marking. A lot of conversion work is done in the constructor, so you should
    * avoid creating Models during the run-time of a Petri application.
    *
-   * @param net
-   * @param store
-   * @param priority
-   * @param M0
+   * @param _net
+   * @param _store
+   * @param _priority
+   * @param _initial_tokens
+   * @param _final_marking
+   * @param _case_id
+   * @param stp
    */
   explicit Petri(const Net &_net, const Store &_store,
                  const PriorityTable &_priority, const Marking &_initial_tokens,
@@ -125,54 +142,19 @@ struct Petri {
   Eventlog getLog() const;
 
   /**
-   * @brief Get a vector of transitions that are *active*. Active means that
-   * they are either in the transition queue or its transition has been fired.
-   * In all cases in the future it will produce a reducer which will be
-   * processed if the Petri net is not halted before the reducer is pop'd from
-   * the reducer queue.
+   * @brief Try to fire a single transition. Does nothing if t is not active.
    *
-   * @return std::vector<Transition>
+   * @param t string representation of the transition that is tried to fire.
    */
-  std::vector<Transition> getActiveTransitions() const;
+  void tryFire(const Transition &t);
 
   /**
-   * @brief Gives a list of unique transitions that are fireable given the
-   * marking at the time of calling this function, sorted by priority.
+   * @brief Fires all active transitions until it there are none left.
+   * Associated asynchronous Callbacks are scheduled and synchronous Callback
+   * are executed immediately.
    *
-   * @return std::vector<Transition>
    */
-  std::vector<Transition> getFireableTransitions() const;
-
-  /**
-   * @brief Try to fire a single transition.
-   *
-   * @param t string representation of the transition
-   * @param reducers pointer reducer queue, needed to construct a reducer
-   * @param polymorphic_actions pointer to the threadpool, needed to dispatch
-   * the transition payload
-   * @param case_id the case id of the Petri instance
-   * @return true If the transition was fireable, it was queued
-   * @return false If the transition was not fireable, nothing happenend.
-   */
-  bool fire(const Transition &t,
-            const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
-                &reducers,
-            const std::string &case_id = "undefined_case_id");
-
-  /**
-   * @brief Tries to run a transition (or all) until it 'deadlocks'. The list
-   * of actions is queued and the function returns.
-   *
-   * @param reducers pointer reducer queue, needed to construct the reducer(s)
-   * @param polymorphic_actions pointer to the threadpool, needed to dispatch
-   * the transition payload(s)
-   * @param run_all if true, potentially queues multiple transitions
-   * @param case_id the case id of the Petri instance
-   */
-  void fireTransitions(
-      const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
-          &reducers,
-      bool run_all = true, const std::string &case_id = "undefined_case_id");
+  void fireTransitions();
 
   struct {
     /**
@@ -239,19 +221,25 @@ struct Petri {
 
  private:
   /**
-   * @brief fires a transition.
+   * @brief deducts the set input from the current token distribution
+   *
+   * @param inputs a vector representing the tokens to be removed
+   */
+  void deductMarking(const SmallVector &inputs);
+
+  /**
+   * @brief Runs the Callback associated with t immediately.
    *
    * @param t transition as index in transition vector
-   * @param reducers
-   * @param polymorphic_actions
-   * @param case_id
-   * @return true if the transition is direct.
-   * @return false if it is only dispatched.
    */
-  bool Fire(const size_t t,
-            const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
-                &reducers,
-            const std::string &case_id);
+  void fireSynchronous(const size_t t);
+
+  /**
+   * @brief Schedules the Callback associated with t on the threadpool
+   *
+   * @param t transition as index in transition vector
+   */
+  void fireAsynchronous(const size_t t);
 };
 
 }  // namespace symmetri

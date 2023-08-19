@@ -36,17 +36,14 @@ TEST_CASE("Firing the same transition before it can complete should work") {
   auto [net, store, priority, m0] = testNet();
   auto stp = std::make_shared<TaskSystem>(2);
   Petri m(net, store, priority, m0, {}, "s", stp);
-  auto reducers =
-      std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(4);
   REQUIRE(m.active_transitions.empty());
-  m.fireTransitions(reducers, true);
+  m.fireTransitions();
   REQUIRE(m.getMarking().empty());
-  CHECK(m.getActiveTransitions() ==
-        std::vector<symmetri::Transition>{"t", "t"});
   REQUIRE(m.active_transitions.size() == 2);
 
   Reducer r;
-  while (reducers->wait_dequeue_timed(r, std::chrono::milliseconds(250))) {
+  while (
+      m.reducer_queue->wait_dequeue_timed(r, std::chrono::milliseconds(250))) {
     r(m);
   }
 
@@ -57,19 +54,18 @@ TEST_CASE("Firing the same transition before it can complete should work") {
 
   cv.notify_one();
 
-  reducers->wait_dequeue_timed(r, std::chrono::milliseconds(250));
+  m.reducer_queue->wait_dequeue_timed(r, std::chrono::milliseconds(250));
   r(m);
   REQUIRE(MarkingEquality(m.getMarking(), {"Pb"}));
 
   // offending test, but fixed :-)
-  CHECK(m.getActiveTransitions() == std::vector<symmetri::Transition>{"t"});
   REQUIRE(m.active_transitions.size() == 1);
   {
     std::lock_guard<std::mutex> lk(cv_m);
     is_ready2 = true;
   }
   cv.notify_one();
-  reducers->wait_dequeue_timed(r, std::chrono::milliseconds(250));
+  m.reducer_queue->wait_dequeue_timed(r, std::chrono::milliseconds(250));
   r(m);
 
   REQUIRE(MarkingEquality(m.getMarking(), {"Pb", "Pb"}));

@@ -112,75 +112,53 @@ std::vector<size_t> Petri::toTokens(const Marking &marking) const noexcept {
   return tokens;
 }
 
-std::vector<Transition> Petri::getFireableTransitions() const {
-  auto possible_transition_list_n =
-      possibleTransitions(tokens, net.p_to_ts_n, net.priority);
-  std::vector<Transition> fireable_transitions;
-  fireable_transitions.reserve(possible_transition_list_n.size());
-  for (const size_t t_idx : possible_transition_list_n) {
-    const auto &pre = net.input_n[t_idx];
-    if (canFire(pre, tokens)) {
-      fireable_transitions.push_back(net.transition[t_idx]);
-    }
+void Petri::fireSynchronous(const size_t t) {
+  const auto timestamp = Clock::now();
+  const auto &task = net.store[t];
+  const auto &transition = net.transition[t];
+  const auto &lookup_t = net.output_n[t];
+  event_log.push_back({case_id, transition, State::Started, timestamp});
+  auto result = std::get<symmetri::State>(::fire(task));
+  event_log.push_back({case_id, transition, result, Clock::now()});
+  if (result == State::Completed) {
+    tokens.insert(tokens.begin(), lookup_t.begin(), lookup_t.end());
   }
-  return fireable_transitions;
 }
 
-bool Petri::Fire(
-    const size_t t,
-    const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
-        &reducers,
-    const std::string &case_id) {
-  auto timestamp = Clock::now();
-  // deduct the marking
-  for (const size_t place : net.input_n[t]) {
+void Petri::fireAsynchronous(const size_t t) {
+  const auto timestamp = Clock::now();
+  const auto &task = net.store[t];
+  const auto &transition = net.transition[t];
+  active_transitions.push_back(t);
+  event_log.push_back({case_id, transition, State::Scheduled, timestamp});
+  pool->push([=] {
+    reducer_queue->enqueue(
+        scheduleCallback(t, transition, task, case_id, reducer_queue));
+  });
+}
+
+void Petri::deductMarking(const SmallVector &inputs) {
+  for (const size_t place : inputs) {
     // erase one by one. using std::remove_if would remove all tokens at
     // a particular place.
     tokens.erase(std::find(tokens.begin(), tokens.end(), place));
   }
+}
 
-  const auto &task = net.store[t];
-
-  // if the transition is direct, we short-circuit the
-  // marking mutation and do it immediately.
-  const auto &transition = net.transition[t];
-  const auto &lookup_t = net.output_n[t];
-  if (isSynchronous(task)) {
-    tokens.insert(tokens.begin(), lookup_t.begin(), lookup_t.end());
-    event_log.push_back({case_id, transition, State::Started, timestamp});
-    event_log.push_back({case_id, transition,
-                         std::get<symmetri::State>(::fire(task)), timestamp});
-    return true;
-  } else {
-    active_transitions.push_back(t);
-    event_log.push_back({case_id, transition, State::Scheduled, timestamp});
-    pool->push([=] {
-      reducers->enqueue(fireTransition(t, transition, task, case_id, reducers));
-    });
-    return false;
+void Petri::tryFire(const Transition &t) {
+  auto it = std::find(net.transition.begin(), net.transition.end(), t);
+  const auto t_idx = std::distance(net.transition.begin(), it);
+  if (canFire(net.input_n[t_idx], tokens)) {
+    deductMarking(net.input_n[t_idx]);
+    isSynchronous(net.store[t_idx]) ? fireSynchronous(t_idx)
+                                    : fireAsynchronous(t_idx);
   }
 }
 
-bool Petri::fire(
-    const Transition &t,
-    const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
-        &reducers,
-    const std::string &case_id) {
-  auto it = std::find(net.transition.begin(), net.transition.end(), t);
-  return it != net.transition.end() &&
-         canFire(net.input_n[std::distance(net.transition.begin(), it)],
-                 tokens) &&
-         !Fire(std::distance(net.transition.begin(), it), reducers, case_id);
-}
-
-void Petri::fireTransitions(
-    const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
-        &reducers,
-    bool run_all, const std::string &case_id) {
+void Petri::fireTransitions() {
   // find possible transitions
-  auto possible_transition_list_n =
-      possibleTransitions(tokens, net.p_to_ts_n, net.priority);
-  auto filter_transitions = [&](const auto &tokens) {
+  auto possible_transition_list_n = possibleTransitions(tokens, net.p_to_ts_n);
+  auto remove_inactive_transitions_predicate = [&](const auto &tokens) {
     possible_transition_list_n.erase(
         std::remove_if(
             possible_transition_list_n.begin(),
@@ -189,22 +167,41 @@ void Petri::fireTransitions(
         possible_transition_list_n.end());
   };
 
-  // remove transitions that are not fireable;
-  filter_transitions(tokens);
+  // remove transitions that are not active;
+  remove_inactive_transitions_predicate(tokens);
 
-  if (possible_transition_list_n.empty()) {
-    return;
-  }
+  // sort transition list according to priority
+  std::sort(
+      possible_transition_list_n.begin(), possible_transition_list_n.end(),
+      [&](size_t a, size_t b) { return net.priority[a] > net.priority[b]; });
 
-  do {
-    // if Fire returns true, update the possible transition list
-    if (Fire(possible_transition_list_n.front(), reducers, case_id)) {
-      possible_transition_list_n =
-          possibleTransitions(tokens, net.p_to_ts_n, net.priority);
+  while (!possible_transition_list_n.empty()) {
+    const auto t_idx = possible_transition_list_n.front();
+    deductMarking(net.input_n[t_idx]);
+    if (isSynchronous(net.store[t_idx])) {
+      fireSynchronous(t_idx);
+      // add the output places-connected transitions as new possible
+      // transitions:
+      for (const auto &p : net.output_n[t_idx]) {
+        for (const auto t : net.p_to_ts_n[p]) {
+          if (canFire(net.input_n[t], tokens)) {
+            possible_transition_list_n.push_back(t);
+          }
+        }
+      }
+
+      // sort again
+      std::sort(possible_transition_list_n.begin(),
+                possible_transition_list_n.end(), [&](size_t a, size_t b) {
+                  return net.priority[a] > net.priority[b];
+                });
+    } else {
+      fireAsynchronous(t_idx);
     }
-    // remove transitions that are not fireable;
-    filter_transitions(tokens);
-  } while (run_all && !possible_transition_list_n.empty());
+    // remove transitions that are not active anymore because of the marking
+    // mutation;
+    remove_inactive_transitions_predicate(tokens);
+  }
 
   return;
 }
@@ -227,18 +224,6 @@ Eventlog Petri::getLog() const {
     }
   }
   return eventlog;
-}
-
-std::vector<Transition> Petri::getActiveTransitions() const {
-  std::vector<Transition> transition_list;
-  if (active_transitions.size() > 0) {
-    transition_list.reserve(active_transitions.size());
-    std::transform(active_transitions.cbegin(), active_transitions.cend(),
-                   std::back_inserter(transition_list), [&](auto place_index) {
-                     return net.transition[place_index];
-                   });
-  }
-  return transition_list;
 }
 
 }  // namespace symmetri

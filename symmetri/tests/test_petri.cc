@@ -53,29 +53,23 @@ TEST_CASE("Run one transition iteration in a petri net") {
 
   auto stp = std::make_shared<TaskSystem>(1);
   Petri m(net, store, priority, m0, {}, "s", stp);
-  auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
 
   // t0 is enabled.
-  m.fireTransitions(reducers, true, "");
+  m.fireTransitions();
   // t0 is dispatched but it's reducer has not yet run, so pre-conditions are
   // processed but post are not:
-  REQUIRE(m.getActiveTransitions() ==
-          std::vector<symmetri::Transition>{"t0", "t0"});
   REQUIRE(m.getMarking() == std::vector<symmetri::Place>{"Pa", "Pa"});
 
   // now there should be two reducers;
   Reducer r1, r2;
-  REQUIRE(reducers->wait_dequeue_timed(r1, std::chrono::seconds(1)));
-  REQUIRE(reducers->wait_dequeue_timed(r1, std::chrono::seconds(1)));
-  REQUIRE(reducers->wait_dequeue_timed(r2, std::chrono::seconds(1)));
-  REQUIRE(reducers->wait_dequeue_timed(r2, std::chrono::seconds(1)));
+  REQUIRE(m.reducer_queue->wait_dequeue_timed(r1, std::chrono::seconds(1)));
+  REQUIRE(m.reducer_queue->wait_dequeue_timed(r1, std::chrono::seconds(1)));
+  REQUIRE(m.reducer_queue->wait_dequeue_timed(r2, std::chrono::seconds(1)));
+  REQUIRE(m.reducer_queue->wait_dequeue_timed(r2, std::chrono::seconds(1)));
   // verify that t0 has actually ran twice.
   REQUIRE(T0_COUNTER.load() == 2);
   // the marking should still be the same.
   REQUIRE(m.getMarking() == std::vector<symmetri::Place>{"Pa", "Pa"});
-
-  CHECK(m.getActiveTransitions() ==
-        std::vector<symmetri::Transition>{"t0", "t0"});
 
   // process the reducers
   r1(m);
@@ -93,16 +87,14 @@ TEST_CASE("Run until net dies") {
   auto stp = std::make_shared<TaskSystem>(1);
   Petri m(net, store, priority, m0, {}, "s", stp);
 
-  auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
-
   Reducer r;
   Callback a([] {});
   // we need to enqueue one 'no-operation' to start the live net.
-  reducers->enqueue([](Petri&) {});
+  m.reducer_queue->enqueue([](Petri&) {});
   do {
-    if (reducers->try_dequeue(r)) {
+    if (m.reducer_queue->try_dequeue(r)) {
       r(m);
-      m.fireTransitions(reducers, true);
+      m.fireTransitions();
     }
   } while (m.active_transitions.size() > 0);
 
@@ -122,16 +114,14 @@ TEST_CASE("Run until net dies with nullptr") {
   auto stp = std::make_shared<TaskSystem>(1);
   Petri m(net, store, priority, m0, {}, "s", stp);
 
-  auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(4);
-
   Reducer r;
   Callback a([] {});
   // we need to enqueue one 'no-operation' to start the live net.
-  reducers->enqueue([](Petri&) {});
+  m.reducer_queue->enqueue([](Petri&) {});
   do {
-    if (reducers->try_dequeue(r)) {
+    if (m.reducer_queue->try_dequeue(r)) {
       r(m);
-      m.fireTransitions(reducers, true);
+      m.fireTransitions();
     }
   } while (m.active_transitions.size() > 0);
 
@@ -140,35 +130,36 @@ TEST_CASE("Run until net dies with nullptr") {
       m.getMarking(), std::vector<symmetri::Place>{"Pb", "Pb", "Pd", "Pd"}));
 }
 
-TEST_CASE(
-    "getFireableTransitions return a vector of unique of unique fireable "
-    "transitions") {
-  Net net = {{"a", {{"Pa"}, {}}},
-             {"b", {{"Pa"}, {}}},
-             {"c", {{"Pa"}, {}}},
-             {"d", {{"Pa"}, {}}},
-             {"e", {{"Pb"}, {}}}};
+// TEST_CASE(
+//     "getFireableTransitions return a vector of unique of unique fireable "
+//     "transitions") {
+//   Net net = {{"a", {{"Pa"}, {}}},
+//              {"b", {{"Pa"}, {}}},
+//              {"c", {{"Pa"}, {}}},
+//              {"d", {{"Pa"}, {}}},
+//              {"e", {{"Pb"}, {}}}};
 
-  Store store;
-  for (auto [t, dm] : net) {
-    store.insert({t, DirectMutation{}});
-  }
-  // with this initial marking, all but transition e are possible.
-  Marking m0 = {{"Pa", 1}};
-  auto stp = std::make_shared<TaskSystem>(1);
+//   Store store;
+//   for (auto [t, dm] : net) {
+//     store.insert({t, DirectMutation{}});
+//   }
+//   // with this initial marking, all but transition e are possible.
+//   Marking m0 = {{"Pa", 1}};
+//   auto stp = std::make_shared<TaskSystem>(1);
 
-  Petri m(net, store, {}, m0, {}, "s", stp);
-  auto fireable_transitions = m.getFireableTransitions();
-  auto find = [&](auto a) {
-    return std::find(fireable_transitions.begin(), fireable_transitions.end(),
-                     a);
-  };
-  REQUIRE(find("a") != fireable_transitions.end());
-  REQUIRE(find("b") != fireable_transitions.end());
-  REQUIRE(find("c") != fireable_transitions.end());
-  REQUIRE(find("d") != fireable_transitions.end());
-  REQUIRE(find("e") == fireable_transitions.end());
-}
+//   Petri m(net, store, {}, m0, {}, "s", stp);
+//   auto fireable_transitions = m.getFireableTransitions();
+//   auto find = [&](auto a) {
+//     return std::find(fireable_transitions.begin(),
+//     fireable_transitions.end(),
+//                      a);
+//   };
+//   REQUIRE(find("a") != fireable_transitions.end());
+//   REQUIRE(find("b") != fireable_transitions.end());
+//   REQUIRE(find("c") != fireable_transitions.end());
+//   REQUIRE(find("d") != fireable_transitions.end());
+//   REQUIRE(find("e") == fireable_transitions.end());
+// }
 
 TEST_CASE("Step through transitions") {
   std::map<std::string, size_t> hitmap;
@@ -183,32 +174,34 @@ TEST_CASE("Step through transitions") {
       hitmap.insert({t, 0});
       store.insert({t, [&, t = t] { hitmap[t] += 1; }});
     }
-    auto reducers = std::make_shared<BlockingConcurrentQueue<Reducer>>(5);
     auto stp = std::make_shared<TaskSystem>(1);
     // with this initial marking, all but transition e are possible.
     Marking m0 = {{"Pa", 4}};
     Petri m(net, store, {}, m0, {}, "s", stp);
-    REQUIRE(m.getFireableTransitions().size() == 4);  // abcd
-    m.fire("e", reducers);
-    m.fire("b", reducers);
-    m.fire("b", reducers);
-    m.fire("c", reducers);
-    m.fire("b", reducers);
+
+    // auto active_transitions = m.getActiveTransitions();
+    // REQUIRE(active_transitions.size() == 4);  // abcd
+    m.tryFire("e");
+    m.tryFire("b");
+    m.tryFire("b");
+    m.tryFire("c");
+    m.tryFire("b");
     // there are no reducers ran, so this doesn't update.
-    REQUIRE(m.getActiveTransitions().size() == 4);
+    REQUIRE(m.active_transitions.size() == 4);
     // there should be no markers left.
     REQUIRE(m.getMarking().size() == 0);
     // there should be nothing left to fire
-    REQUIRE(m.getFireableTransitions().size() == 0);
+    // active_transitions = m.getActiveTransitions();
+    // REQUIRE(active_transitions.size() == 0);
     int j = 0;
     Reducer r;
     while (j < 2 * 4 &&
-           reducers->wait_dequeue_timed(r, std::chrono::seconds(1))) {
+           m.reducer_queue->wait_dequeue_timed(r, std::chrono::seconds(1))) {
       j++;
       r(m);
     }
     // reducers update, there should be active transitions left.
-    REQUIRE(m.getActiveTransitions().size() == 0);
+    REQUIRE(m.active_transitions.size() == 0);
   }
 
   // validate we only ran transition 3 times b, 1 time c and none of the others.

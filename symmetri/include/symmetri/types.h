@@ -1,4 +1,7 @@
 #pragma once
+
+/** @file types.h */
+
 #include <chrono>
 #include <string>
 #include <unordered_map>
@@ -23,7 +26,7 @@ enum class State {
   Started,    ///< The transition started
   Completed,  ///< The transition completed as expected
   Deadlock,   ///< The transition deadlocked
-  UserExit,   ///< The transition or interrupted and possibly stopped
+  UserExit,   ///< The transition is interrupted and possibly stopped
   Paused,     ///< The transition is paused
   Error       ///< None of the above
 };
@@ -37,8 +40,7 @@ struct Event {
   std::string case_id;      ///< The case_id of this event
   std::string transition;   ///< The transition that generated the event
   State state;              ///< The resulting state of the event
-  Clock::time_point stamp;  ///< The timestamp when the reducer of this
-                            ///< event was processed
+  Clock::time_point stamp;  ///< The timestamp of the event
 };
 
 using Eventlog = std::vector<Event>;  ///< The eventlog is simply a log of
@@ -49,9 +51,9 @@ using Result =
 using Net = std::unordered_map<
     Transition,
     std::pair<std::vector<Place>,
-              std::vector<Place>>>;  ///< This is the class multiset definition
+              std::vector<Place>>>;  ///< This is the multiset definition
                                      ///< of a Petri net. For each transition
-                                     ///< there is a pair of sets for input and
+                                     ///< there is a pair of lists for input and
                                      ///< output transitions
 using Marking =
     std::unordered_map<Place,
