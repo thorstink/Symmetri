@@ -45,7 +45,7 @@ symmetri::Result cancel(const T &) {
 }
 
 /**
- * @brief Implments a pause action for a Callback. By default it does nothing
+ * @brief Implements a pause action for a Callback. By default it does nothing
  * and not pause the Callback.
  *
  * @tparam T the type of the callback.
@@ -67,19 +67,18 @@ void resume(const T &) {}
  * Callback returns.
  *
  * @tparam T the type of the callback.
- * @param transition The function to be executed.
+ * @param callback The function to be executed.
  * @return Result Contains information on the result-state and
- * possible eventlog of the transition.
+ * possible eventlog of the callback.
  */
 template <typename T>
-symmetri::Result fire(const T &transition) {
-  if constexpr (std::is_same_v<symmetri::State, decltype(transition())>) {
-    return {{}, transition()};
-  } else if constexpr (std::is_same_v<symmetri::Result,
-                                      decltype(transition())>) {
-    return transition();
-  } else if constexpr (std::is_same_v<void, decltype(transition())>) {
-    transition();
+symmetri::Result fire(const T &callback) {
+  if constexpr (std::is_same_v<symmetri::State, decltype(callback())>) {
+    return {{}, callback()};
+  } else if constexpr (std::is_same_v<symmetri::Result, decltype(callback())>) {
+    return callback();
+  } else if constexpr (std::is_same_v<void, decltype(callback())>) {
+    callback();
     return {{}, symmetri::State::Completed};
   }
 }

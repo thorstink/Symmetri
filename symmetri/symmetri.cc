@@ -24,19 +24,6 @@ unsigned int getThreadId() {
       std::hash<std::thread::id>()(std::this_thread::get_id()));
 }
 
-void areAllTransitionsInStore(const Store &store, const Net &net) {
-  for (const auto &pair : net) {
-    bool store_has_transition =
-        std::find_if(store.begin(), store.end(), [&](const auto &e) {
-          return e.first == pair.first;
-        }) != store.end();
-    if (!store_has_transition) {
-      std::string err = "transition " + pair.first + " is not in store";
-      throw std::runtime_error(err);
-    }
-  }
-}
-
 }  // namespace symmetri
 
 using namespace symmetri;
@@ -47,7 +34,6 @@ PetriNet::PetriNet(const std::set<std::string> &files,
                    std::shared_ptr<TaskSystem> stp)
     : impl([&] {
         const auto [net, m0] = readPnml(files);
-        areAllTransitionsInStore(store, net);
         return std::make_shared<Petri>(net, store, priorities, m0,
                                        final_marking, case_id, stp);
       }()) {}
@@ -57,7 +43,6 @@ PetriNet::PetriNet(const std::set<std::string> &files,
                    const std::string &case_id, std::shared_ptr<TaskSystem> stp)
     : impl([&] {
         const auto [net, m0, priorities] = readGrml(files);
-        areAllTransitionsInStore(store, net);
         return std::make_shared<Petri>(net, store, priorities, m0,
                                        final_marking, case_id, stp);
       }()) {}
@@ -67,9 +52,7 @@ PetriNet::PetriNet(const Net &net, const Marking &m0,
                    const PriorityTable &priorities, const std::string &case_id,
                    std::shared_ptr<TaskSystem> stp)
     : impl(std::make_shared<Petri>(net, store, priorities, m0, final_marking,
-                                   case_id, stp)) {
-  areAllTransitionsInStore(store, net);
-}
+                                   case_id, stp)) {}
 
 std::function<void()> PetriNet::registerTransitionCallback(
     const Transition &transition) const noexcept {

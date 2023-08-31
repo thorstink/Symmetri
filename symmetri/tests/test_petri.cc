@@ -110,7 +110,9 @@ TEST_CASE("Run until net dies with nullptr") {
   using namespace moodycamel;
 
   auto [net, store, priority, m0] = testNet();
-  store = {{"t0", DirectMutation{}}, {"t1", DirectMutation{}}};
+  // we can pass an empty story, and DirectMutation will be used for the
+  // undefined transitions
+  store = {};
   auto stp = std::make_shared<TaskSystem>(1);
   Petri m(net, store, priority, m0, {}, "s", stp);
 

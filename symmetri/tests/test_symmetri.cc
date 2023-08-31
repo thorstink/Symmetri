@@ -50,28 +50,18 @@ TEST_CASE("Create a using the net constructor with end condition.") {
 TEST_CASE("Create a using pnml constructor.") {
   const std::string pnml_file = std::filesystem::current_path().append(
       "../../../symmetri/tests/assets/PT1.pnml");
-  {
-    auto stp = std::make_shared<TaskSystem>(1);
-    // This store is not appropriate for this net,
-    Store store = {{"wrong_id", &t0}};
-    PriorityTable priority;
-    // it should throw
-    REQUIRE_THROWS(PetriNet({pnml_file}, {}, store, priority, "fail", stp));
-  }
 
-  {
-    auto stp = std::make_shared<TaskSystem>(1);
-    // This store is appropriate for this net,
-    Store store = symmetri::Store{{"T0", &t0}};
-    PriorityTable priority;
-    Marking final_marking({{"P1", 1}});
-    PetriNet app({pnml_file}, final_marking, store, priority, "success", stp);
-    // so we can run it,
-    auto [ev, res] = fire(app);
-    // and the result is properly completed.
-    REQUIRE(res == State::Completed);
-    REQUIRE(!ev.empty());
-  }
+  auto stp = std::make_shared<TaskSystem>(1);
+  // This store is appropriate for this net,
+  Store store = symmetri::Store{{"T0", &t0}};
+  PriorityTable priority;
+  Marking final_marking({{"P1", 1}});
+  PetriNet app({pnml_file}, final_marking, store, priority, "success", stp);
+  // so we can run it,
+  auto [ev, res] = fire(app);
+  // and the result is properly completed.
+  REQUIRE(res == State::Completed);
+  REQUIRE(!ev.empty());
 }
 
 TEST_CASE("Reuse an application with a new case_id.") {

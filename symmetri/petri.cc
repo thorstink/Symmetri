@@ -17,7 +17,11 @@ convert(const Net &_net, const Store &_store) {
   store.reserve(transition_count);
   for (const auto &[t, io] : _net) {
     transitions.push_back(t);
-    store.push_back(_store.at(t));
+    // if the transition is not in the store, a DirectMutation-callback is used
+    // by default
+    auto callback =
+        _store.find(t) != _store.end() ? _store.at(t) : DirectMutation{};
+    store.push_back(callback);
     for (const auto &p : io.first) {
       places.push_back(p);
     }
