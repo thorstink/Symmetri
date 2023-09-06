@@ -30,7 +30,7 @@ TEST_CASE("Test external input.") {
   });
 
   // run the net
-  auto [ev, res] = fire(app);
+  auto res = fire(app);
 
   REQUIRE(res == State::Completed);
   REQUIRE(i_ran);

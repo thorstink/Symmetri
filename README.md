@@ -34,7 +34,7 @@ Marking m0 = {{"Z", 1}, {"B", 0}, {"C", 0}};
 auto pool = std::make_shared<symmetri::TaskSystem>(4);
 symmetri::PetriNet app(net, m0, {}, store, priority,
                           "test_net_without_end", pool);
-auto [eventlog, res] = app.fire(); // run until done.
+auto res = app.fire(); // run until done.
 ```
 
 - `net` is a multiset description of a Petri net

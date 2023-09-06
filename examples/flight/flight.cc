@@ -19,14 +19,11 @@ using namespace symmetri;
  *
  */
 
-Result fire(const Foo &f) {
-  return f.fire() ? Result{{}, State::Error} : Result{{}, State::Completed};
+State fire(const Foo &f) {
+  return f.fire() ? State::UserExit : State::Completed;
 }
 
-Result cancel(const Foo &f) {
-  f.cancel();
-  return {{}, State::UserExit};
-}
+void cancel(const Foo &f) { f.cancel(); }
 
 void pause(const Foo &f) { f.pause(); }
 
@@ -90,7 +87,7 @@ int main(int, char *argv[]) {
       if (!running) {
         break;
       }
-      writeMermaidHtmlToFile(symmetri::mermaidFromEventlog(getLog(bignet)));
+      // writeMermaidHtmlToFile(symmetri::mermaidFromEventlog(getLog(bignet)));
     }
   });
 
@@ -123,13 +120,14 @@ int main(int, char *argv[]) {
 
   // this is where we call the blocking fire-function that executes the petri
   // net
-  auto [el, result] = fire(bignet);
+  auto result = fire(bignet);
   running = false;
   // print the results and eventlog
   spdlog::info("Result of this net: {0}", printState(result));
+  const auto el = getLog(bignet);
   printLog(el);
   gantt.join();  // clean up
   t.join();      // clean up
-  writeMermaidHtmlToFile(symmetri::mermaidFromEventlog(el));
+  // writeMermaidHtmlToFile(symmetri::mermaidFromEventlog(el));
   return 0;
 }

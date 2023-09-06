@@ -25,8 +25,8 @@ TEST_CASE("Create a using the net constructor without end condition.") {
 
   PetriNet app(net, m0, {}, store, priority, "test_net_without_end", stp);
   // we can run the net
-  auto [ev, res] = fire(app);
-
+  auto res = fire(app);
+  auto ev = getLog(app);
   // because there's no final marking, but the net is finite, it deadlocks.
   REQUIRE(res == State::Deadlock);
   REQUIRE(!ev.empty());
@@ -40,7 +40,8 @@ TEST_CASE("Create a using the net constructor with end condition.") {
   PetriNet app(net, m0, final_marking, store, priority, "test_net_with_end",
                stp);
   // we can run the net
-  auto [ev, res] = fire(app);
+  auto res = fire(app);
+  auto ev = getLog(app);
 
   // now there is an end condition.
   REQUIRE(res == State::Completed);
@@ -58,7 +59,8 @@ TEST_CASE("Create a using pnml constructor.") {
   Marking final_marking({{"P1", 1}});
   PetriNet app({pnml_file}, final_marking, store, priority, "success", stp);
   // so we can run it,
-  auto [ev, res] = fire(app);
+  auto res = fire(app);
+  auto ev = getLog(app);
   // and the result is properly completed.
   REQUIRE(res == State::Completed);
   REQUIRE(!ev.empty());
@@ -73,7 +75,8 @@ TEST_CASE("Reuse an application with a new case_id.") {
   REQUIRE(!app.reuseApplication(initial_id));
   REQUIRE(app.reuseApplication(new_id));
   // fire a transition so that there's an entry in the eventlog
-  auto eventlog = fire(app).first;
+  fire(app);
+  auto eventlog = getLog(app);
   // double check that the eventlog is not empty
   REQUIRE(!eventlog.empty());
   // the eventlog should have a different case id.
@@ -92,7 +95,8 @@ TEST_CASE("Can not reuse an active application with a new case_id.") {
     // this should fail because we can not do this while everything is active.
     REQUIRE(!app.reuseApplication(new_id));
   });
-  auto [ev, res] = fire(app);
+
+  fire(app);
 }
 
 TEST_CASE("Test pause and resume") {

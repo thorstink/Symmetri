@@ -85,8 +85,8 @@ int main(int, char *argv[]) {
                                    // becomes false.
       });
 
-  auto [el, result] = fire(net);  // This function blocks until either
-                                  // the net completes, deadlocks
+  auto result = fire(net);  // This function blocks until either
+                            // the net completes, deadlocks
   // or user requests exit (ctrl-c)
   running.store(false);  // We set this to false so the thread that we launched
                          // gets interrupted.
@@ -94,7 +94,7 @@ int main(int, char *argv[]) {
 
   // this simply prints the event log
   uint64_t oldt = 0;
-  for (const auto &[caseid, t, s, c] : el) {
+  for (const auto &[caseid, t, s, c] : getLog(net)) {
     spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),
                  c.time_since_epoch().count());
     spdlog::info("{0}", c.time_since_epoch().count() - oldt);

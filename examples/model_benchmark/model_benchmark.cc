@@ -24,7 +24,8 @@ int main(int, char *argv[]) {
   PetriNet bignet(net, m0, {}, store, {}, "pluto", pool);
   spdlog::info("start!");
   const auto start_time = symmetri::Clock::now();
-  auto [el, result] = fire(bignet);  // infinite loop
+  auto result = fire(bignet);  // infinite loop
+  auto el = getLog(bignet);
   const auto end_time = symmetri::Clock::now();
   auto trans_count = el.size() / 2;
   auto delta_t = (double((end_time - start_time).count()) / 1e9);

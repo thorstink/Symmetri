@@ -2,8 +2,8 @@
 
 bool isSynchronous(const DirectMutation &) { return true; }
 
-symmetri::Result fire(const DirectMutation &) {
-  return {{}, symmetri::State::Completed};
+symmetri::State fire(const DirectMutation &) {
+  return symmetri::State::Completed;
 }
 
 namespace symmetri {
@@ -117,12 +117,11 @@ std::vector<size_t> Petri::toTokens(const Marking &marking) const noexcept {
 }
 
 void Petri::fireSynchronous(const size_t t) {
-  const auto timestamp = Clock::now();
   const auto &task = net.store[t];
   const auto &transition = net.transition[t];
   const auto &lookup_t = net.output_n[t];
-  event_log.push_back({case_id, transition, State::Started, timestamp});
-  auto result = std::get<symmetri::State>(::fire(task));
+  event_log.push_back({case_id, transition, State::Started, Clock::now()});
+  auto result = ::fire(task);
   event_log.push_back({case_id, transition, result, Clock::now()});
   if (result == State::Completed) {
     tokens.insert(tokens.begin(), lookup_t.begin(), lookup_t.end());
@@ -130,14 +129,12 @@ void Petri::fireSynchronous(const size_t t) {
 }
 
 void Petri::fireAsynchronous(const size_t t) {
-  const auto timestamp = Clock::now();
   const auto &task = net.store[t];
   const auto &transition = net.transition[t];
-  active_transitions.push_back(t);
-  event_log.push_back({case_id, transition, State::Scheduled, timestamp});
+  scheduled_callbacks.push_back(t);
+  event_log.push_back({case_id, transition, State::Scheduled, Clock::now()});
   pool->push([=] {
-    reducer_queue->enqueue(
-        scheduleCallback(t, transition, task, case_id, reducer_queue));
+    reducer_queue->enqueue(scheduleCallback(t, task, reducer_queue));
   });
 }
 
@@ -187,7 +184,7 @@ void Petri::fireTransitions() {
       // add the output places-connected transitions as new possible
       // transitions:
       for (const auto &p : net.output_n[t_idx]) {
-        for (const auto t : net.p_to_ts_n[p]) {
+        for (const auto &t : net.p_to_ts_n[p]) {
           if (canFire(net.input_n[t], tokens)) {
             possible_transition_list_n.push_back(t);
           }
@@ -221,7 +218,7 @@ std::vector<Place> Petri::getMarking() const {
 Eventlog Petri::getLog() const {
   Eventlog eventlog = event_log;
   // get event log from parent nets:
-  for (size_t pt_idx : active_transitions) {
+  for (size_t pt_idx : scheduled_callbacks) {
     auto sub_el = ::getLog(net.store[pt_idx]);
     if (!sub_el.empty()) {
       eventlog.insert(eventlog.end(), sub_el.begin(), sub_el.end());

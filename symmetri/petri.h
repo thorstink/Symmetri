@@ -70,18 +70,13 @@ using Reducer = std::function<void(Petri &)>;
  * returns a reducer which is to be executed _after_ Callback task completed.
  *
  * @param t_idx the index of the transition as used in the Petri-class
- * @param transition the string representation as used in the PetriNet (e.g.
- * PNML/GRML)
  * @param task the Callback to be scheduled
- * @param case_id
- * @param reducers
  * @return Reducer
  */
 Reducer scheduleCallback(
-    size_t t_idx, const std::string &transition, const Callback &task,
-    const std::string &case_id,
+    size_t t_idx, const Callback &task,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
-        &reducers);
+        &reducer_queue);
 
 /**
  * @brief Petri is a data structure that encodes the Petri net and holds
@@ -205,12 +200,12 @@ struct Petri {
     std::vector<Callback> store;
   } net;  ///< Is a data-oriented design of a Petri net
 
-  std::vector<size_t> initial_tokens;      ///< The initial marking
-  std::vector<size_t> tokens;              ///< The current marking
-  std::vector<size_t> final_marking;       ///< The final marking
-  std::vector<size_t> active_transitions;  ///< List of active transitions
-  Eventlog event_log;                      ///< The most actual event_log
-  State state;                             ///< The current state of the Petri
+  std::vector<size_t> initial_tokens;       ///< The initial marking
+  std::vector<size_t> tokens;               ///< The current marking
+  std::vector<size_t> final_marking;        ///< The final marking
+  std::vector<size_t> scheduled_callbacks;  ///< List of active transitions
+  Eventlog event_log;                       ///< The most actual event_log
+  State state;                              ///< The current state of the Petri
   std::string case_id;  ///< The unique identifier for this Petri-run
   std::atomic<std::optional<unsigned int>>
       thread_id_;  ///< The id of the thread from which the Petri is fired.

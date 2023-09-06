@@ -23,7 +23,7 @@ class Foo {
   const int copy_constructor;
 };
 
-Result fire(const Foo&) { return {{}, State::Completed}; }
+State fire(const Foo&) { return State::Completed; }
 
 void resume(const Foo& f) {
   REQUIRE(f.constructor == 1);

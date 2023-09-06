@@ -45,9 +45,7 @@ struct Event {
 
 using Eventlog = std::vector<Event>;  ///< The eventlog is simply a log of
                                       ///< events, sorted by their stamp
-using Result =
-    std::pair<Eventlog, State>;  ///< The result of a transition is described by
-                                 ///< its Eventlog and State
+
 using Net = std::unordered_map<
     Transition,
     std::pair<std::vector<Place>,

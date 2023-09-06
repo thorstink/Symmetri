@@ -75,7 +75,7 @@ TEST_CASE("Run one transition iteration in a petri net") {
   r1(m);
   r2(m);
   // and now the post-conditions are processed:
-  REQUIRE(m.active_transitions.empty());
+  REQUIRE(m.scheduled_callbacks.empty());
   REQUIRE(MarkingEquality(
       m.getMarking(), std::vector<symmetri::Place>{"Pa", "Pa", "Pc", "Pc"}));
 }
@@ -96,7 +96,7 @@ TEST_CASE("Run until net dies") {
       r(m);
       m.fireTransitions();
     }
-  } while (m.active_transitions.size() > 0);
+  } while (m.scheduled_callbacks.size() > 0);
 
   // For this specific net we expect:
   REQUIRE(MarkingEquality(
@@ -125,7 +125,7 @@ TEST_CASE("Run until net dies with nullptr") {
       r(m);
       m.fireTransitions();
     }
-  } while (m.active_transitions.size() > 0);
+  } while (m.scheduled_callbacks.size() > 0);
 
   // For this specific net we expect:
   REQUIRE(MarkingEquality(
@@ -181,20 +181,20 @@ TEST_CASE("Step through transitions") {
     Marking m0 = {{"Pa", 4}};
     Petri m(net, store, {}, m0, {}, "s", stp);
 
-    // auto active_transitions = m.getActiveTransitions();
-    // REQUIRE(active_transitions.size() == 4);  // abcd
+    // auto scheduled_callbacks = m.getActiveTransitions();
+    // REQUIRE(scheduled_callbacks.size() == 4);  // abcd
     m.tryFire("e");
     m.tryFire("b");
     m.tryFire("b");
     m.tryFire("c");
     m.tryFire("b");
     // there are no reducers ran, so this doesn't update.
-    REQUIRE(m.active_transitions.size() == 4);
+    REQUIRE(m.scheduled_callbacks.size() == 4);
     // there should be no markers left.
     REQUIRE(m.getMarking().size() == 0);
     // there should be nothing left to fire
-    // active_transitions = m.getActiveTransitions();
-    // REQUIRE(active_transitions.size() == 0);
+    // scheduled_callbacks = m.getActiveTransitions();
+    // REQUIRE(scheduled_callbacks.size() == 0);
     int j = 0;
     Reducer r;
     while (j < 2 * 4 &&
@@ -203,7 +203,7 @@ TEST_CASE("Step through transitions") {
       r(m);
     }
     // reducers update, there should be active transitions left.
-    REQUIRE(m.active_transitions.size() == 0);
+    REQUIRE(m.scheduled_callbacks.size() == 0);
   }
 
   // validate we only ran transition 3 times b, 1 time c and none of the others.

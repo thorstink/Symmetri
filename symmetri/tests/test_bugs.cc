@@ -36,10 +36,10 @@ TEST_CASE("Firing the same transition before it can complete should work") {
   auto [net, store, priority, m0] = testNet();
   auto stp = std::make_shared<TaskSystem>(2);
   Petri m(net, store, priority, m0, {}, "s", stp);
-  REQUIRE(m.active_transitions.empty());
+  REQUIRE(m.scheduled_callbacks.empty());
   m.fireTransitions();
   REQUIRE(m.getMarking().empty());
-  REQUIRE(m.active_transitions.size() == 2);
+  REQUIRE(m.scheduled_callbacks.size() == 2);
 
   Reducer r;
   while (
@@ -59,7 +59,7 @@ TEST_CASE("Firing the same transition before it can complete should work") {
   REQUIRE(MarkingEquality(m.getMarking(), {"Pb"}));
 
   // offending test, but fixed :-)
-  REQUIRE(m.active_transitions.size() == 1);
+  REQUIRE(m.scheduled_callbacks.size() == 1);
   {
     std::lock_guard<std::mutex> lk(cv_m);
     is_ready2 = true;
@@ -70,5 +70,5 @@ TEST_CASE("Firing the same transition before it can complete should work") {
 
   REQUIRE(MarkingEquality(m.getMarking(), {"Pb", "Pb"}));
 
-  CHECK(m.active_transitions.empty());
+  CHECK(m.scheduled_callbacks.empty());
 }

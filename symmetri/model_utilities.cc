@@ -31,38 +31,43 @@ gch::small_vector<size_t, 32> possibleTransitions(
   return possible_transition_list_n;
 }
 
-Reducer createReducerForCallback(size_t t_i, const Eventlog &ev, State result) {
+Reducer createReducerForCallback(const size_t t_i, const State result,
+                                 const Clock::time_point t_end) {
   return [=](Petri &model) {
     // if it is in the active transition set it means it is finished and we
     // should process it.
-    auto it = std::find(model.active_transitions.begin(),
-                        model.active_transitions.end(), t_i);
-    if (it != model.active_transitions.end()) {
-      model.active_transitions.erase(it);
+    auto it = std::find(model.scheduled_callbacks.begin(),
+                        model.scheduled_callbacks.end(), t_i);
+    if (it != model.scheduled_callbacks.end()) {
+      model.scheduled_callbacks.erase(it);
       if (result == State::Completed) {
         const auto &place_list = model.net.output_n;
         model.tokens.insert(model.tokens.begin(), place_list[t_i].begin(),
                             place_list[t_i].end());
       }
-      model.event_log.insert(model.event_log.end(), ev.begin(), ev.end());
     };
+    // get the log
+    Eventlog ev;
+    model.net.store[t_i](ev);
+    const Transition &transition = model.net.transition[t_i];
+    if (!ev.empty()) {
+      model.event_log.insert(model.event_log.end(), ev.begin(), ev.end());
+    }
+    model.event_log.push_back({model.case_id, transition, result, t_end});
   };
 }
 
 Reducer scheduleCallback(
-    size_t t_i, const std::string &transition, const Callback &task,
-    const std::string &case_id,
+    size_t t_i, const Callback &task,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
-        &reducers) {
-  const auto start_time = Clock::now();
-  reducers->enqueue([=](Petri &model) {
-    model.event_log.push_back(
-        {case_id, transition, State::Started, start_time});
-  });
+        &reducer_queue) {
+  reducer_queue->enqueue(
+      [start_time = Clock::now(), t_i](symmetri::Petri &model) {
+        model.event_log.push_back({model.case_id, model.net.transition[t_i],
+                                   State::Started, start_time});
+      });
 
-  auto [ev, res] = ::fire(task);
-  ev.push_back({case_id, transition, res, Clock::now()});
-  return createReducerForCallback(t_i, ev, res);
+  return createReducerForCallback(t_i, ::fire(task), Clock::now());
 }
 
 }  // namespace symmetri
