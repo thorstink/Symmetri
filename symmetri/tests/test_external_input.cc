@@ -6,13 +6,13 @@
 using namespace symmetri;
 
 std::atomic<bool> i_ran(false);
-void t() { i_ran.store(true); }
+void tExtInput() { i_ran.store(true); }
 
 TEST_CASE("Test external input.") {
   Net net = {
       {"t0", {{}, {"Pa"}}}, {"t1", {{"Pa"}, {"Pb"}}}, {"t2", {{"Pc"}, {"Pb"}}}};
   // we can omit t0, it will be auto-filled as {"t0", DirectMutation{}}
-  Store store = {{"t1", &t},
+  Store store = {{"t1", &tExtInput},
                  {"t2", []() {
                     std::this_thread::sleep_for(std::chrono::milliseconds(15));
                   }}};

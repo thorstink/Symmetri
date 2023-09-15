@@ -5,18 +5,18 @@ include(FetchContent)
 
 FetchContent_Declare(
   concurrentqueue
-  GIT_REPOSITORY    https://github.com/cameron314/concurrentqueue
-  GIT_TAG           master
+  GIT_REPOSITORY https://github.com/cameron314/concurrentqueue
+  GIT_TAG master
 )
 
 # FetchContent_MakeAvailable(concurrentqueue)
 # https://stackoverflow.com/questions/65527126/disable-install-for-fetchcontent
 FetchContent_GetProperties(concurrentqueue)
+
 if(NOT concurrentqueue_POPULATED)
   FetchContent_Populate(concurrentqueue)
   add_subdirectory(${concurrentqueue_SOURCE_DIR} ${concurrentqueue_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
-
 
 include_directories(${EIGEN3_INCLUDE_DIRS} ../include ..)
 
@@ -29,42 +29,17 @@ set(test_files
 
 install(DIRECTORY ${test_files} DESTINATION ${PROJECT_SOURCE_DIR}/build/symmetri/tests)
 
-add_executable(${PROJECT_NAME}_actions_test test_actions.cc)
-target_link_libraries(${PROJECT_NAME}_actions_test PRIVATE Catch2::Catch2WithMain pthread ${PROJECT_NAME} concurrentqueue)
-add_test(${PROJECT_NAME}_actions_test ${PROJECT_NAME}_actions_test)
-
-add_executable(${PROJECT_NAME}_parser_test test_parser.cc)
-target_link_libraries(${PROJECT_NAME}_parser_test PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME})
-add_test(${PROJECT_NAME}_parser_test ${PROJECT_NAME}_parser_test)
-
-add_executable(${PROJECT_NAME}_model_test test_petri.cc)
-target_link_libraries(${PROJECT_NAME}_model_test PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue )
-add_test(${PROJECT_NAME}_model_test ${PROJECT_NAME}_model_test)
-
-add_executable(${PROJECT_NAME}_symmetri_test test_symmetri.cc)
-target_link_libraries(${PROJECT_NAME}_symmetri_test PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue )
+add_executable(${PROJECT_NAME}_symmetri_test
+  test_actions.cc
+  test_parser.cc
+  test_petri.cc
+  test_symmetri.cc
+  maxplus.cc
+  test_external_input.cc
+  test_priorities.cc
+  test_bugs.cc
+  test_types.cc
+  test_callback.cc
+)
+target_link_libraries(${PROJECT_NAME}_symmetri_test PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue)
 add_test(${PROJECT_NAME}_symmetri_test ${PROJECT_NAME}_symmetri_test)
-
-add_executable(${PROJECT_NAME}_maxplus_test maxplus.cc)
-target_link_libraries(${PROJECT_NAME}_maxplus_test PRIVATE Catch2::Catch2WithMain)
-add_test(${PROJECT_NAME}_maxplus_test ${PROJECT_NAME}_maxplus_test)
-
-add_executable(${PROJECT_NAME}_external_input_test test_external_input.cc)
-target_link_libraries(${PROJECT_NAME}_external_input_test PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue )
-add_test(${PROJECT_NAME}_external_input_test ${PROJECT_NAME}_external_input_test)
-
-add_executable(${PROJECT_NAME}_priorities_test test_priorities.cc)
-target_link_libraries(${PROJECT_NAME}_priorities_test PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue )
-add_test(${PROJECT_NAME}_priorities_test ${PROJECT_NAME}_priorities_test)
-
-add_executable(${PROJECT_NAME}_symmetri_bugs test_bugs.cc)
-target_link_libraries(${PROJECT_NAME}_symmetri_bugs PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue )
-add_test(${PROJECT_NAME}_symmetri_bugs ${PROJECT_NAME}_symmetri_bugs)
-
-add_executable(${PROJECT_NAME}_types test_types.cc)
-target_link_libraries(${PROJECT_NAME}_types PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue )
-add_test(${PROJECT_NAME}_types ${PROJECT_NAME}_types)
-
-add_executable(${PROJECT_NAME}_Callback test_callback.cc)
-target_link_libraries(${PROJECT_NAME}_Callback PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME} concurrentqueue )
-add_test(${PROJECT_NAME}_Callback ${PROJECT_NAME}_Callback)

@@ -8,8 +8,6 @@
 using namespace symmetri;
 using namespace moodycamel;
 
-void t() {}
-
 TEST_CASE(
     "Run a transition with a higher priority over one with a lower priority") {
   std::list<PriorityTable> priorities = {{{"t0", 1}, {"t1", 0}},

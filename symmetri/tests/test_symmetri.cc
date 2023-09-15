@@ -8,7 +8,7 @@ using namespace symmetri;
 void t0() {}
 auto t1() {}
 
-std::tuple<Net, Store, PriorityTable, Marking> testNet() {
+std::tuple<Net, Store, PriorityTable, Marking> SymmetriTestNet() {
   Net net = {{"t0", {{"Pa", "Pb"}, {"Pc"}}},
              {"t1", {{"Pc", "Pc"}, {"Pb", "Pb", "Pd"}}}};
 
@@ -20,7 +20,7 @@ std::tuple<Net, Store, PriorityTable, Marking> testNet() {
 }
 
 TEST_CASE("Create a using the net constructor without end condition.") {
-  auto [net, store, priority, m0] = testNet();
+  auto [net, store, priority, m0] = SymmetriTestNet();
   auto stp = std::make_shared<TaskSystem>(1);
 
   PetriNet app(net, m0, {}, store, priority, "test_net_without_end", stp);
@@ -36,7 +36,7 @@ TEST_CASE("Create a using the net constructor with end condition.") {
   auto stp = std::make_shared<TaskSystem>(1);
 
   Marking final_marking({{"Pa", 0}, {"Pb", 2}, {"Pc", 0}, {"Pd", 2}});
-  auto [net, store, priority, m0] = testNet();
+  auto [net, store, priority, m0] = SymmetriTestNet();
   PetriNet app(net, m0, final_marking, store, priority, "test_net_with_end",
                stp);
   // we can run the net
@@ -67,7 +67,7 @@ TEST_CASE("Create a using pnml constructor.") {
 }
 
 TEST_CASE("Reuse an application with a new case_id.") {
-  auto [net, store, priority, m0] = testNet();
+  auto [net, store, priority, m0] = SymmetriTestNet();
   const auto initial_id = "initial0";
   const auto new_id = "something_different0";
   auto stp = std::make_shared<TaskSystem>(1);
@@ -86,7 +86,7 @@ TEST_CASE("Reuse an application with a new case_id.") {
 }
 
 TEST_CASE("Can not reuse an active application with a new case_id.") {
-  auto [net, store, priority, m0] = testNet();
+  auto [net, store, priority, m0] = SymmetriTestNet();
   const auto initial_id = "initial1";
   const auto new_id = "something_different1";
   auto stp = std::make_shared<TaskSystem>(1);

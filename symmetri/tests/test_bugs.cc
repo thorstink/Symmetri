@@ -24,7 +24,7 @@ void t() {
   });
 }
 
-std::tuple<Net, Store, PriorityTable, Marking> testNet() {
+std::tuple<Net, Store, PriorityTable, Marking> BugsTestNet() {
   Net net = {{"t", {{"Pa"}, {"Pb"}}}};
   Store store = {{"t", &t}};
   PriorityTable priority;
@@ -33,7 +33,7 @@ std::tuple<Net, Store, PriorityTable, Marking> testNet() {
 }
 
 TEST_CASE("Firing the same transition before it can complete should work") {
-  auto [net, store, priority, m0] = testNet();
+  auto [net, store, priority, m0] = BugsTestNet();
   auto stp = std::make_shared<TaskSystem>(2);
   Petri m(net, store, priority, m0, {}, "s", stp);
   REQUIRE(m.scheduled_callbacks.empty());
