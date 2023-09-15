@@ -2,8 +2,8 @@
 
 bool isSynchronous(const DirectMutation &) { return true; }
 
-symmetri::State fire(const DirectMutation &) {
-  return symmetri::State::Completed;
+symmetri::Result fire(const DirectMutation &) {
+  return symmetri::state::Completed;
 }
 
 namespace symmetri {
@@ -89,7 +89,7 @@ Petri::Petri(const Net &_net, const Store &_store,
              const Marking &_final_marking, const std::string &_case_id,
              std::shared_ptr<TaskSystem> stp)
     : event_log({}),
-      state(State::Scheduled),
+      state(state::Scheduled),
       case_id(_case_id),
       thread_id_(std::nullopt),
       reducer_queue(
@@ -120,10 +120,10 @@ void Petri::fireSynchronous(const size_t t) {
   const auto &task = net.store[t];
   const auto &transition = net.transition[t];
   const auto &lookup_t = net.output_n[t];
-  event_log.push_back({case_id, transition, State::Started, Clock::now()});
+  event_log.push_back({case_id, transition, state::Started, Clock::now()});
   auto result = ::fire(task);
   event_log.push_back({case_id, transition, result, Clock::now()});
-  if (result == State::Completed) {
+  if (result == state::Completed) {
     tokens.insert(tokens.begin(), lookup_t.begin(), lookup_t.end());
   }
 }
@@ -132,7 +132,7 @@ void Petri::fireAsynchronous(const size_t t) {
   const auto &task = net.store[t];
   const auto &transition = net.transition[t];
   scheduled_callbacks.push_back(t);
-  event_log.push_back({case_id, transition, State::Scheduled, Clock::now()});
+  event_log.push_back({case_id, transition, state::Scheduled, Clock::now()});
   pool->push([=] {
     reducer_queue->enqueue(scheduleCallback(t, task, reducer_queue));
   });

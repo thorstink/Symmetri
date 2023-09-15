@@ -19,9 +19,10 @@ using namespace symmetri;
  *
  */
 
-State fire(const Foo &f) {
-  return f.fire() ? State::UserExit : State::Completed;
-}
+const static Result FooFail(
+    state::create<state::ConstStringHash("FooFail")>("FooFail"));
+
+Result fire(const Foo &f) { return f.fire() ? FooFail : state::Completed; }
 
 void cancel(const Foo &f) { f.cancel(); }
 

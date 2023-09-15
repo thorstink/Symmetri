@@ -90,9 +90,9 @@ bool PetriNet::reuseApplication(const std::string &new_case_id) {
   return false;
 }
 
-symmetri::State fire(const PetriNet &app) {
+symmetri::Result fire(const PetriNet &app) {
   if (app.impl->thread_id_.load().has_value()) {
-    return symmetri::State::Error;
+    return symmetri::state::Error;
   }
   auto &m = *app.impl;
   m.thread_id_.store(symmetri::getThreadId());
@@ -101,34 +101,34 @@ symmetri::State fire(const PetriNet &app) {
   m.event_log.clear();
   m.scheduled_callbacks.clear();
   m.tokens = m.initial_tokens;
-  m.state = State::Started;
+  m.state = state::Started;
   symmetri::Reducer f;
   while (m.reducer_queue->try_dequeue(f)) { /* get rid of old reducers  */
   }
   // start!
   m.fireTransitions();
-  while ((m.state == State::Started || m.state == State::Paused) &&
+  while ((m.state == state::Started || m.state == state::Paused) &&
          m.reducer_queue->wait_dequeue_timed(f, -1)) {
     do {
       f(m);
     } while (m.reducer_queue->try_dequeue(f));
 
     if (symmetri::MarkingReached(m.tokens, m.final_marking)) {
-      m.state = State::Completed;
+      m.state = state::Completed;
     }
 
-    if (m.state == State::Started) {
+    if (m.state == state::Started) {
       // we're firing
       m.fireTransitions();
       // if there's nothing to fire; we deadlocked
       if (m.scheduled_callbacks.size() == 0) {
-        m.state = State::Deadlock;
+        m.state = state::Deadlock;
       }
     }
   }
 
   if (symmetri::MarkingReached(m.tokens, m.final_marking)) {
-    m.state = State::Completed;
+    m.state = state::Completed;
   }
 
   while (!m.scheduled_callbacks.empty()) {
@@ -144,21 +144,21 @@ symmetri::State fire(const PetriNet &app) {
 
 void cancel(const PetriNet &app) {
   app.impl->reducer_queue->enqueue([=](symmetri::Petri &model) {
-    model.state = symmetri::State::UserExit;
+    model.state = symmetri::state::UserExit;
     // populate that eventlog with child eventlog and possible
     // cancelations.
     for (const auto transition_index : model.scheduled_callbacks) {
       cancel(model.net.store.at(transition_index));
       model.event_log.push_back({model.case_id,
                                  model.net.transition[transition_index],
-                                 State::UserExit, symmetri::Clock::now()});
+                                 state::UserExit, symmetri::Clock::now()});
     }
   });
 }
 
 void pause(const PetriNet &app) {
   app.impl->reducer_queue->enqueue([](symmetri::Petri &model) {
-    model.state = State::Paused;
+    model.state = state::Paused;
     for (const auto transition_index : model.scheduled_callbacks) {
       pause(model.net.store.at(transition_index));
     }
@@ -167,7 +167,7 @@ void pause(const PetriNet &app) {
 
 void resume(const PetriNet &app) {
   app.impl->reducer_queue->enqueue([](symmetri::Petri &model) {
-    model.state = State::Started;
+    model.state = state::Started;
     for (const auto transition_index : model.scheduled_callbacks) {
       resume(model.net.store.at(transition_index));
     }

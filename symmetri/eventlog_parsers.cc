@@ -9,7 +9,7 @@ std::string mermaidFromEventlog(symmetri::Eventlog el) {
   auto now_timestamp = Clock::now();
   el.erase(std::remove_if(el.begin(), el.end(),
                           [](const auto &x) {
-                            return x.state == symmetri::State::Scheduled;
+                            return x.state == symmetri::state::Scheduled;
                           }),
            el.end());
   std::sort(el.begin(), el.end(), [](const auto &a, const auto &b) {
@@ -38,15 +38,15 @@ std::string mermaidFromEventlog(symmetri::Eventlog el) {
     const auto &end = *std::next(it);
     auto id1 = start.case_id + start.transition;
     auto id2 = end.case_id + end.transition;
-    if (start.state == symmetri::State::Started) {
+    if (start.state == symmetri::state::Started) {
       if (current_section != start.case_id) {
         current_section = start.case_id;
         mermaid << "section " << start.case_id << "\n";
       }
-      auto result = (end.state == symmetri::State::Error ||
-                     end.state == symmetri::State::Deadlock)
+      auto result = (end.state == symmetri::state::Error ||
+                     end.state == symmetri::state::Deadlock)
                         ? "crit"
-                        : (end.state == symmetri::State::UserExit  // Paused
+                        : (end.state == symmetri::state::UserExit  // Paused
                                ? "active"
                                : "done");  // Completed
 
@@ -66,7 +66,7 @@ std::string mermaidFromEventlog(symmetri::Eventlog el) {
 
   // and check if the latest is an active transition
   const auto &start = el.back();
-  if (start.state == symmetri::State::Started) {
+  if (start.state == symmetri::state::Started) {
     mermaid << start.transition << " :"
             << "active"
             << ", "

@@ -28,7 +28,7 @@ TEST_CASE("Create a using the net constructor without end condition.") {
   auto res = fire(app);
   auto ev = getLog(app);
   // because there's no final marking, but the net is finite, it deadlocks.
-  REQUIRE(res == State::Deadlock);
+  REQUIRE(res == state::Deadlock);
   REQUIRE(!ev.empty());
 }
 
@@ -44,7 +44,7 @@ TEST_CASE("Create a using the net constructor with end condition.") {
   auto ev = getLog(app);
 
   // now there is an end condition.
-  REQUIRE(res == State::Completed);
+  REQUIRE(res == state::Completed);
   REQUIRE(!ev.empty());
 }
 
@@ -62,7 +62,7 @@ TEST_CASE("Create a using pnml constructor.") {
   auto res = fire(app);
   auto ev = getLog(app);
   // and the result is properly completed.
-  REQUIRE(res == State::Completed);
+  REQUIRE(res == state::Completed);
   REQUIRE(!ev.empty());
 }
 
@@ -123,4 +123,22 @@ TEST_CASE("Test pause and resume") {
   REQUIRE(check1 == check2);
   REQUIRE(i.load() > check2);
   REQUIRE(i.load() > check2 + 1);
+}
+namespace symmetri {
+namespace state {
+const static Result ExternalState(
+    create<ConstStringHash("ExternalState")>("ExternalState"));
+}
+}  // namespace symmetri
+
+TEST_CASE("Types") {
+  using namespace symmetri::state;
+  REQUIRE(Scheduled != ExternalState);
+  REQUIRE(Started != ExternalState);
+  REQUIRE(Completed != ExternalState);
+  REQUIRE(Deadlock != ExternalState);
+  REQUIRE(Paused != ExternalState);
+  REQUIRE(UserExit != ExternalState);
+  REQUIRE(ExternalState == ExternalState);
+  REQUIRE(printState(ExternalState) != "");
 }

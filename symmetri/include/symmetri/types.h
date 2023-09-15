@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "result_factory.hpp"
 namespace symmetri {
 
 using Place = std::string;       ///< The string representation of the place the
@@ -17,19 +18,17 @@ using Clock =
     std::chrono::steady_clock;  ///< The clock definition in Symmetri is the
                                 ///< steady clock for monotonic reasons
 
-/**
- * @brief The difference kinds of results a transition can have.
- *
- */
-enum class State {
-  Scheduled,  ///< The transition is put into the task system
-  Started,    ///< The transition started
-  Completed,  ///< The transition completed as expected
-  Deadlock,   ///< The transition deadlocked
-  UserExit,   ///< The transition is interrupted and possibly stopped
-  Paused,     ///< The transition is paused
-  Error       ///< None of the above
-};
+namespace state {
+const static Result Scheduled(
+    create<ConstStringHash("Scheduled")>("Scheduled"));
+const static Result Started(create<ConstStringHash("Started")>("Started"));
+const static Result Completed(
+    create<ConstStringHash("Completed")>("Completed"));
+const static Result Deadlock(create<ConstStringHash("Deadlock")>("Deadlock"));
+const static Result UserExit(create<ConstStringHash("UserExit")>("UserExit"));
+const static Result Paused(create<ConstStringHash("Paused")>("Paused"));
+const static Result Error(create<ConstStringHash("Error")>("Error"));
+};  // namespace state
 
 /**
  * @brief This struct defines a subset of data that we associate with the
@@ -39,7 +38,7 @@ enum class State {
 struct Event {
   std::string case_id;      ///< The case_id of this event
   std::string transition;   ///< The transition that generated the event
-  State state;              ///< The resulting state of the event
+  Result state;             ///< The result of the event
   Clock::time_point stamp;  ///< The timestamp of the event
 };
 

@@ -17,7 +17,7 @@ void t0() {
 auto t1() {
   auto inc = T1_COUNTER.load() + 1;
   T1_COUNTER.store(inc);
-  return symmetri::State::Completed;
+  return symmetri::state::Completed;
 }
 
 std::tuple<Net, Store, PriorityTable, Marking> testNet() {

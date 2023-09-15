@@ -86,13 +86,4 @@ bool stateNetEquality(const Net& net1, const Net& net2);
  */
 size_t calculateTrace(const Eventlog& event_log) noexcept;
 
-/**
- * @brief A convenience function to get a string representation of the
- * state-enum.
- *
- * @param s The State
- * @return std::string The State as a human readable string.
- */
-std::string printState(State s) noexcept;
-
 }  // namespace symmetri

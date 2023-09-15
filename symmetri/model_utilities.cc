@@ -31,7 +31,7 @@ gch::small_vector<size_t, 32> possibleTransitions(
   return possible_transition_list_n;
 }
 
-Reducer createReducerForCallback(const size_t t_i, const State result,
+Reducer createReducerForCallback(const size_t t_i, const Result result,
                                  const Clock::time_point t_end) {
   return [=](Petri &model) {
     // if it is in the active transition set it means it is finished and we
@@ -40,7 +40,7 @@ Reducer createReducerForCallback(const size_t t_i, const State result,
                         model.scheduled_callbacks.end(), t_i);
     if (it != model.scheduled_callbacks.end()) {
       model.scheduled_callbacks.erase(it);
-      if (result == State::Completed) {
+      if (result == state::Completed) {
         const auto &place_list = model.net.output_n;
         model.tokens.insert(model.tokens.begin(), place_list[t_i].begin(),
                             place_list[t_i].end());
@@ -64,7 +64,7 @@ Reducer scheduleCallback(
   reducer_queue->enqueue(
       [start_time = Clock::now(), t_i](symmetri::Petri &model) {
         model.event_log.push_back({model.case_id, model.net.transition[t_i],
-                                   State::Started, start_time});
+                                   state::Started, start_time});
       });
 
   return createReducerForCallback(t_i, ::fire(task), Clock::now());

@@ -20,13 +20,13 @@
 void helloWorld() { std::this_thread::sleep_for(std::chrono::seconds(1)); }
 
 // If you want to specify 'success' or 'failure' you can return a
-// "State". It can be {Started, Completed, Deadlock, UserExit, Error},
+// "Result". It can be {Started, Completed, Deadlock, UserExit, Error},
 // and in the case of defining your own function it makes sense to return either
 // "Completed" or "Error". The Other states re meant when the function is a
 // nested petri-net.
-symmetri::State helloResult() {
+symmetri::Result helloResult() {
   std::this_thread::sleep_for(std::chrono::seconds(1));
-  return symmetri::State::Completed;
+  return symmetri::state::Completed;
 }
 
 // The main is simply the body of a cpp program. It has to start somewhere, so
@@ -95,7 +95,7 @@ int main(int, char *argv[]) {
   // this simply prints the event log
   uint64_t oldt = 0;
   for (const auto &[caseid, t, s, c] : getLog(net)) {
-    spdlog::info("{0}, {1}, {2}, {3}", caseid, t, printState(s),
+    spdlog::info("{0}, {1}, {2}, {3}", caseid, t, symmetri::printState(s),
                  c.time_since_epoch().count());
     spdlog::info("{0}", c.time_since_epoch().count() - oldt);
     oldt = c.time_since_epoch().count();
@@ -103,5 +103,5 @@ int main(int, char *argv[]) {
 
   // return the result! in linux is enverything went well, you typically return
   // 0.
-  return result == symmetri::State::Completed ? 0 : -1;
+  return result == symmetri::state::Completed ? 0 : -1;
 }
