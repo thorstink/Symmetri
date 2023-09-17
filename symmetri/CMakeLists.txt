@@ -20,7 +20,7 @@ include_directories(include submodules)
 add_library(${PROJECT_NAME} SHARED
   tasks.cpp
   petri.cc
-  model_utilities.cc
+  petri_utilities.cc
   pnml_parser.cc
   grml_parser.cc
   eventlog_parsers.cc
