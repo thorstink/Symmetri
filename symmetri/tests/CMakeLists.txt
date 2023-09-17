@@ -13,11 +13,6 @@ FetchContent_Declare(
 # https://stackoverflow.com/questions/65527126/disable-install-for-fetchcontent
 FetchContent_GetProperties(concurrentqueue)
 
-if(NOT concurrentqueue_POPULATED)
-  FetchContent_Populate(concurrentqueue)
-  add_subdirectory(${concurrentqueue_SOURCE_DIR} ${concurrentqueue_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif()
-
 include_directories(${EIGEN3_INCLUDE_DIRS} ../include ..)
 
 include(CTest)
