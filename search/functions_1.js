@@ -1,7 +1,5 @@
 var searchData=
 [
-  ['getactivetransitions_0',['getActiveTransitions',['../structsymmetri_1_1Petri.html#ad5f7f6f28d1a6c6162c40ed2825e3315',1,'symmetri::Petri']]],
-  ['getfireabletransitions_1',['getFireableTransitions',['../structsymmetri_1_1Petri.html#af52ae8dd4a3d3d7a458cae5898c919c7',1,'symmetri::Petri']]],
-  ['getlog_2',['getLog',['../structsymmetri_1_1Petri.html#a4d1bf8dce13f9200dbb31d859838713c',1,'symmetri::Petri']]],
-  ['getmarking_3',['getMarking',['../structsymmetri_1_1Petri.html#a6ba02d0dd15f81c7f3ebcad102907865',1,'symmetri::Petri']]]
+  ['fire_0',['fire',['../callback_8h.html#a44f6550766a5a34f4b7319aaa8800ce2',1,'fire(const T &amp;callback):&#160;callback.h'],['../symmetri_8h.html#a1472be983ff7e0daedbaa3569742dc24',1,'fire(const PetriNet &amp;):&#160;symmetri.cc']]],
+  ['firetransitions_1',['fireTransitions',['../structsymmetri_1_1Petri.html#af463c39b83fe0a7eebd288bf29c3479d',1,'symmetri::Petri']]]
 ];

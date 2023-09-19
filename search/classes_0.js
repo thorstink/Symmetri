@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['directmutation_0',['DirectMutation',['../structDirectMutation.html',1,'']]]
+  ['callback_0',['Callback',['../classsymmetri_1_1Callback.html',1,'symmetri']]]
 ];

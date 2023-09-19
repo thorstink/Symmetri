@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['stamp_0',['stamp',['../structsymmetri_1_1Event.html#a51e5b4b01acd062d8f09eb9c335017d3',1,'symmetri::Event']]],
-  ['state_1',['state',['../structsymmetri_1_1Event.html#a640691cd84a1d64758c731d3815379e6',1,'symmetri::Event']]],
-  ['store_2',['store',['../structsymmetri_1_1Petri.html#a22dea240b5642ac60e86be5c9435f29f',1,'symmetri::Petri']]]
+  ['of_20transitions_0',['Failure at the level of transitions',['../md_docs_2symmetri__nets.html#autotoc_md4',1,'']]],
+  ['output_5fn_1',['output_n',['../structsymmetri_1_1Petri.html#a83b3dd8d3659e2467726568152f73ac9',1,'symmetri::Petri']]]
 ];

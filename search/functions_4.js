@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['tasksystem_0',['TaskSystem',['../classsymmetri_1_1TaskSystem.html#a7c91e814539081318e533290dc55cb61',1,'symmetri::TaskSystem']]],
-  ['totokens_1',['toTokens',['../structsymmetri_1_1Petri.html#a70d476d1cb8cdc7658aff4ccbdfdc2ce',1,'symmetri::Petri']]]
+  ['markingequality_0',['MarkingEquality',['../utilities_8hpp.html#a663f9de17f04a2b8e0d290e47e1dc92d',1,'symmetri']]],
+  ['markingreached_1',['MarkingReached',['../utilities_8hpp.html#a418009feff8440061b68e708f273021b',1,'symmetri']]]
 ];

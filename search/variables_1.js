@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['case_5fid_0',['case_id',['../structsymmetri_1_1Event.html#ab103e727752222c9b86b3baea03b6840',1,'symmetri::Event']]]
+  ['event_5flog_0',['event_log',['../structsymmetri_1_1Petri.html#a7a974c0807e4ada7be5fc8f228bab2a8',1,'symmetri::Petri']]]
 ];
