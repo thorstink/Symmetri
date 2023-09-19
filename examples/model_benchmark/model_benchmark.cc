@@ -24,7 +24,8 @@ int main(int, char *argv[]) {
   PetriNet bignet(net, m0, {}, store, {}, "pluto", pool);
   spdlog::info("start!");
   const auto start_time = symmetri::Clock::now();
-  auto [el, result] = fire(bignet);  // infinite loop
+  auto result = fire(bignet);  // infinite loop
+  auto el = getLog(bignet);
   const auto end_time = symmetri::Clock::now();
   auto trans_count = el.size() / 2;
   auto delta_t = (double((end_time - start_time).count()) / 1e9);
@@ -35,6 +36,6 @@ int main(int, char *argv[]) {
       "transition: "
       "{1} [ns], transitions per second: {2} [t/s]",
       trans_count, time_per_trans * 1e9, trans_per_second, delta_t);
-  spdlog::info("Result of this net: {0}", printState(result));
-  return result == symmetri::State::Completed ? 0 : -1;
+  spdlog::info("Result of this net: {0}", symmetri::printState(result));
+  return result == symmetri::state::Completed ? 0 : -1;
 }

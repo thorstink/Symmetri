@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <condition_variable>
 
-#include "model.h"
+#include "petri.h"
 #include "symmetri/utilities.hpp"
 
 using namespace symmetri;
@@ -24,7 +24,7 @@ void t() {
   });
 }
 
-std::tuple<Net, Store, PriorityTable, Marking> testNet() {
+std::tuple<Net, Store, PriorityTable, Marking> BugsTestNet() {
   Net net = {{"t", {{"Pa"}, {"Pb"}}}};
   Store store = {{"t", &t}};
   PriorityTable priority;
@@ -33,20 +33,17 @@ std::tuple<Net, Store, PriorityTable, Marking> testNet() {
 }
 
 TEST_CASE("Firing the same transition before it can complete should work") {
-  auto [net, store, priority, m0] = testNet();
+  auto [net, store, priority, m0] = BugsTestNet();
   auto stp = std::make_shared<TaskSystem>(2);
   Petri m(net, store, priority, m0, {}, "s", stp);
-  auto reducers =
-      std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(4);
-  REQUIRE(m.active_transitions_n.empty());
-  m.fireTransitions(reducers, true);
+  REQUIRE(m.scheduled_callbacks.empty());
+  m.fireTransitions();
   REQUIRE(m.getMarking().empty());
-  CHECK(m.getActiveTransitions() ==
-        std::vector<symmetri::Transition>{"t", "t"});
-  REQUIRE(m.active_transitions_n.size() == 2);
+  REQUIRE(m.scheduled_callbacks.size() == 2);
 
   Reducer r;
-  while (reducers->wait_dequeue_timed(r, std::chrono::milliseconds(250))) {
+  while (
+      m.reducer_queue->wait_dequeue_timed(r, std::chrono::milliseconds(250))) {
     r(m);
   }
 
@@ -57,22 +54,21 @@ TEST_CASE("Firing the same transition before it can complete should work") {
 
   cv.notify_one();
 
-  reducers->wait_dequeue_timed(r, std::chrono::milliseconds(250));
+  m.reducer_queue->wait_dequeue_timed(r, std::chrono::milliseconds(250));
   r(m);
   REQUIRE(MarkingEquality(m.getMarking(), {"Pb"}));
 
   // offending test, but fixed :-)
-  CHECK(m.getActiveTransitions() == std::vector<symmetri::Transition>{"t"});
-  REQUIRE(m.active_transitions_n.size() == 1);
+  REQUIRE(m.scheduled_callbacks.size() == 1);
   {
     std::lock_guard<std::mutex> lk(cv_m);
     is_ready2 = true;
   }
   cv.notify_one();
-  reducers->wait_dequeue_timed(r, std::chrono::milliseconds(250));
+  m.reducer_queue->wait_dequeue_timed(r, std::chrono::milliseconds(250));
   r(m);
 
   REQUIRE(MarkingEquality(m.getMarking(), {"Pb", "Pb"}));
 
-  CHECK(m.active_transitions_n.empty());
+  CHECK(m.scheduled_callbacks.empty());
 }

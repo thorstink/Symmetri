@@ -1,4 +1,7 @@
 #pragma once
+
+/** @file utilities.hpp */
+
 #include <algorithm>
 
 #include "symmetri/types.h"
@@ -82,14 +85,5 @@ bool stateNetEquality(const Net& net1, const Net& net2);
  * @return size_t The hashed result.
  */
 size_t calculateTrace(const Eventlog& event_log) noexcept;
-
-/**
- * @brief A convenience function to get a string representation of the
- * state-enum.
- *
- * @param s The State
- * @return std::string The State as a human readable string.
- */
-std::string printState(State s) noexcept;
 
 }  // namespace symmetri

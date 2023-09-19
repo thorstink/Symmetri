@@ -1,4 +1,7 @@
 #pragma once
+
+/** @file parsers.h */
+
 #include <set>
 #include <tuple>
 

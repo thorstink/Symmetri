@@ -4,6 +4,12 @@
 #include <numeric>
 namespace symmetri {
 
+Result registerResult(Result r, std::string s) {
+  ResultLookup::map[r] = s;
+  return r;
+}
+std::string printState(symmetri::Result r) { return ResultLookup::map[r]; }
+
 bool stateNetEquality(const Net& net1, const Net& net2) {
   if (net1.size() != net2.size()) {
     return false;
@@ -45,38 +51,9 @@ size_t calculateTrace(const Eventlog& event_log) noexcept {
       [](const auto& acc, const Event& n) {
         constexpr auto success = "o";
         constexpr auto fail = "x";
-        return n.state == State::Completed ? acc + n.transition + success
+        return n.state == state::Completed ? acc + n.transition + success
                                            : acc + fail;
       }));
-}
-
-std::string printState(symmetri::State s) noexcept {
-  std::string ret;
-  switch (s) {
-    case State::Scheduled:
-      ret = "Scheduled";
-      break;
-    case State::Started:
-      ret = "Started";
-      break;
-    case State::Completed:
-      ret = "Completed";
-      break;
-    case State::Deadlock:
-      ret = "Deadlock";
-      break;
-    case State::UserExit:
-      ret = "UserExit";
-      break;
-    case State::Paused:
-      ret = "Paused";
-      break;
-    case State::Error:
-      ret = "Error";
-      break;
-  }
-
-  return ret;
 }
 
 }  // namespace symmetri

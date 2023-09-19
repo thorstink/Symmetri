@@ -1,5 +1,7 @@
 #pragma once
 
+/** @file tasks.h */
+
 #include <atomic>
 #include <functional>
 #include <memory>
