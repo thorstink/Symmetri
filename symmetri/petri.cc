@@ -2,7 +2,7 @@
 
 bool isSynchronous(const DirectMutation &) { return true; }
 
-symmetri::Result fire(const DirectMutation &) {
+symmetri::Token fire(const DirectMutation &) {
   return symmetri::state::Completed;
 }
 

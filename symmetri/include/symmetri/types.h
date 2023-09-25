@@ -19,15 +19,13 @@ using Clock =
                                 ///< steady clock for monotonic reasons
 
 namespace state {
-const static Result Scheduled(
-    create<ConstStringHash("Scheduled")>("Scheduled"));
-const static Result Started(create<ConstStringHash("Started")>("Started"));
-const static Result Completed(
-    create<ConstStringHash("Completed")>("Completed"));
-const static Result Deadlock(create<ConstStringHash("Deadlock")>("Deadlock"));
-const static Result UserExit(create<ConstStringHash("UserExit")>("UserExit"));
-const static Result Paused(create<ConstStringHash("Paused")>("Paused"));
-const static Result Error(create<ConstStringHash("Error")>("Error"));
+const static Token Scheduled(create<ConstStringHash("Scheduled")>("Scheduled"));
+const static Token Started(create<ConstStringHash("Started")>("Started"));
+const static Token Completed(create<ConstStringHash("Completed")>("Completed"));
+const static Token Deadlock(create<ConstStringHash("Deadlock")>("Deadlock"));
+const static Token UserExit(create<ConstStringHash("UserExit")>("UserExit"));
+const static Token Paused(create<ConstStringHash("Paused")>("Paused"));
+const static Token Error(create<ConstStringHash("Error")>("Error"));
 };  // namespace state
 
 /**
@@ -38,7 +36,7 @@ const static Result Error(create<ConstStringHash("Error")>("Error"));
 struct Event {
   std::string case_id;      ///< The case_id of this event
   std::string transition;   ///< The transition that generated the event
-  Result state;             ///< The result of the event
+  Token state;              ///< The result of the event
   Clock::time_point stamp;  ///< The timestamp of the event
 };
 

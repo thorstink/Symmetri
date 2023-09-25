@@ -21,9 +21,9 @@ class PetriNet;
  * completes, deadlocks or is preempted. It returns an event log along with the
  * result state.
  *
- * @return symmetri::Result
+ * @return symmetri::Token
  */
-symmetri::Result fire(const PetriNet &);
+symmetri::Token fire(const PetriNet &);
 
 /**
  * @brief The cancel specialization for a PetriNet breaks the PetriNets'
@@ -31,7 +31,7 @@ symmetri::Result fire(const PetriNet &);
  * child Callbacks that are running. The cancel function will return before the
  * PetriNet is preempted completely.
  *
- * @return symmetri::Result
+ * @return symmetri::Token
  */
 void cancel(const PetriNet &);
 
@@ -159,7 +159,7 @@ class PetriNet final {
    */
   bool reuseApplication(const std::string &case_id);
 
-  friend symmetri::Result(::fire)(const PetriNet &);
+  friend symmetri::Token(::fire)(const PetriNet &);
   friend void(::cancel)(const PetriNet &);
   friend void(::pause)(const PetriNet &);
   friend void(::resume)(const PetriNet &);

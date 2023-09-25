@@ -31,7 +31,7 @@ gch::small_vector<size_t, 32> possibleTransitions(
   return possible_transition_list_n;
 }
 
-Reducer createReducerForCallback(const size_t t_i, const Result result,
+Reducer createReducerForCallback(const size_t t_i, const Token result,
                                  const Clock::time_point t_end) {
   return [=](Petri &model) {
     // if it is in the active transition set it means it is finished and we

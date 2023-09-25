@@ -90,7 +90,7 @@ bool PetriNet::reuseApplication(const std::string &new_case_id) {
   return false;
 }
 
-symmetri::Result fire(const PetriNet &app) {
+symmetri::Token fire(const PetriNet &app) {
   if (app.impl->thread_id_.load().has_value()) {
     return symmetri::state::Error;
   }

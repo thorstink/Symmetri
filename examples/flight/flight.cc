@@ -19,10 +19,10 @@ using namespace symmetri;
  *
  */
 
-const static Result FooFail(
+const static Token FooFail(
     state::create<state::ConstStringHash("FooFail")>("FooFail"));
 
-Result fire(const Foo &f) { return f.fire() ? FooFail : state::Completed; }
+Token fire(const Foo &f) { return f.fire() ? FooFail : state::Completed; }
 
 void cancel(const Foo &f) { f.cancel(); }
 
@@ -124,7 +124,7 @@ int main(int, char *argv[]) {
   auto result = fire(bignet);
   running = false;
   // print the results and eventlog
-  spdlog::info("Result of this net: {0}", printState(result));
+  spdlog::info("Token of this net: {0}", printState(result));
   const auto el = getLog(bignet);
   printLog(el);
   gantt.join();  // clean up

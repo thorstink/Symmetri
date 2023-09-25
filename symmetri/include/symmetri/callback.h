@@ -13,7 +13,7 @@
  */
 struct DirectMutation {};
 bool isSynchronous(const DirectMutation &);
-symmetri::Result fire(const DirectMutation &);
+symmetri::Token fire(const DirectMutation &);
 
 /**
  * @brief Checks if the callback is synchronous. Synchronous callbacks are
@@ -36,7 +36,7 @@ bool isSynchronous(const T &) {
  * produce a reducer, however, it will never be processed.
  *
  * @tparam T the type of the callback.
- * @return Result, can be used to return the state at the moment on
+ * @return Token, can be used to return the state at the moment on
  * cancellation.
  */
 template <typename T>
@@ -61,17 +61,17 @@ template <typename T>
 void resume(const T &) {}
 
 /**
- * @brief Generates a Result based on what kind of information the
+ * @brief Generates a Token based on what kind of information the
  * Callback returns.
  *
  * @tparam T the type of the callback.
  * @param callback The function to be executed.
- * @return Result Contains information on the result-state and
+ * @return Token Contains information on the result-state and
  * possible eventlog of the callback.
  */
 template <typename T>
-symmetri::Result fire(const T &callback) {
-  if constexpr (std::is_same_v<symmetri::Result, decltype(callback())>) {
+symmetri::Token fire(const T &callback) {
+  if constexpr (std::is_same_v<symmetri::Token, decltype(callback())>) {
     return callback();
   } else if constexpr (std::is_same_v<void, decltype(callback())>) {
     callback();
@@ -98,7 +98,7 @@ namespace symmetri {
  * executes some side-effects, but it can by anything if you implement a
  * fire-function for it. The output can be used to communicate success or
  * failure to the petri-net executor. You can create custom behavior by defining
- * a tailored "Result fire(const A&)" for your class A.
+ * a tailored "Token fire(const A&)" for your class A.
  *
  * Random note, this class is inspired/taken by Sean Parents' talk "inheritance
  * is the base class of evil".
@@ -115,9 +115,9 @@ class Callback {
   Callback(Transition cb)
       : self_(std::make_shared<model<Transition>>(std::move(cb))) {}
 
-  Result operator()() const { return this->self_->fire_(); }
+  Token operator()() const { return this->self_->fire_(); }
   void operator()(Eventlog &el) const { el = this->self_->get_log_(); }
-  friend Result fire(const Callback &cb) { return cb.self_->fire_(); }
+  friend Token fire(const Callback &cb) { return cb.self_->fire_(); }
   friend Eventlog getLog(const Callback &cb) { return cb.self_->get_log_(); }
   friend bool isSynchronous(const Callback &cb) {
     return cb.self_->is_synchronous_();
@@ -129,7 +129,7 @@ class Callback {
  private:
   struct concept_t {
     virtual ~concept_t() = default;
-    virtual Result fire_() const = 0;
+    virtual Token fire_() const = 0;
     virtual Eventlog get_log_() const = 0;
     virtual void cancel_() const = 0;
     virtual void pause_() const = 0;
@@ -147,7 +147,7 @@ class Callback {
   template <typename Transition>
   struct model final : concept_t {
     model(Transition &&x) : transition_(std::move(x)) {}
-    Result fire_() const override { return fire(transition_); }
+    Token fire_() const override { return fire(transition_); }
     Eventlog get_log_() const override { return getLog(transition_); }
     void cancel_() const override { return cancel(transition_); }
     bool is_synchronous_() const override { return isSynchronous(transition_); }

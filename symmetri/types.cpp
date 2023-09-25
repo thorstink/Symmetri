@@ -4,11 +4,11 @@
 #include <numeric>
 namespace symmetri {
 
-Result registerResult(Result r, std::string s) {
+Token registerResult(Token r, std::string s) {
   ResultLookup::map[r] = s;
   return r;
 }
-std::string printState(symmetri::Result r) { return ResultLookup::map[r]; }
+std::string printState(symmetri::Token r) { return ResultLookup::map[r]; }
 
 bool stateNetEquality(const Net& net1, const Net& net2) {
   if (net1.size() != net2.size()) {

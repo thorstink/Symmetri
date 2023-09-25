@@ -205,7 +205,7 @@ struct Petri {
   std::vector<size_t> final_marking;        ///< The final marking
   std::vector<size_t> scheduled_callbacks;  ///< List of active transitions
   Eventlog event_log;                       ///< The most actual event_log
-  Result state;                             ///< The current state of the Petri
+  Token state;                              ///< The current state of the Petri
   std::string case_id;  ///< The unique identifier for this Petri-run
   std::atomic<std::optional<unsigned int>>
       thread_id_;  ///< The id of the thread from which the Petri is fired.
