@@ -5,16 +5,17 @@
 namespace symmetri {
 using Token = uint32_t;
 
-Token registerResult(Token r, std::string s);
-std::string printState(symmetri::Token r);
-class ResultLookup {
+Token registerResult(std::string s);
+std::string printState(Token r);
+class TokenLookup {
  public:
-  ResultLookup() = delete;
+  TokenLookup() = delete;
+  static const std::vector<std::string>& getColors() { return colors; }
 
  private:
-  inline static std::unordered_map<Token, std::string> map = {};
-  friend Token registerResult(Token r, std::string s);
-  friend std::string printState(symmetri::Token r);
+  inline static std::vector<std::string> colors = {};
+  friend Token registerResult(std::string s);
+  friend std::string printState(Token r);
 };
 
 namespace state {
@@ -26,7 +27,7 @@ unsigned constexpr ConstStringHash(char const* input) {
 
 template <unsigned int i>
 auto create(const std::string& name) {
-  return registerResult(i, name);
+  return registerResult(name);
 };
 }  // namespace state
 }  // namespace symmetri

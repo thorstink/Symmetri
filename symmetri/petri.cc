@@ -7,11 +7,13 @@ symmetri::Token fire(const DirectMutation &) {
 }
 
 namespace symmetri {
-std::tuple<std::vector<Transition>, std::vector<Place>, std::vector<Callback>>
+std::tuple<std::vector<std::string>, std::vector<std::string>,
+           std::vector<std::string>, std::vector<Callback>>
 convert(const Net &_net, const Store &_store) {
   const auto transition_count = _net.size();
-  std::vector<Transition> transitions;
-  std::vector<Place> places;
+  std::vector<std::string> transitions;
+  std::vector<std::string> places;
+  const std::vector<std::string> &colors = TokenLookup::getColors();
   std::vector<Callback> store;
   transitions.reserve(transition_count);
   store.reserve(transition_count);
@@ -33,36 +35,34 @@ convert(const Net &_net, const Store &_store) {
     auto last = std::unique(places.begin(), places.end());
     places.erase(last, places.end());
   }
-  return {transitions, places, store};
+  return {transitions, places, colors, store};
 }
 
-std::tuple<std::vector<symmetri::SmallVector>,
-           std::vector<symmetri::SmallVector>>
+std::tuple<std::vector<SmallVectorInput>, std::vector<SmallVectorInput>>
 populateIoLookups(const Net &_net, const std::vector<Place> &ordered_places) {
-  std::vector<symmetri::SmallVector> input_n, output_n;
+  std::vector<SmallVectorInput> input_n, output_n;
   for (const auto &[t, io] : _net) {
-    SmallVector q;
+    SmallVectorInput q_in, q_out;
     for (const auto &p : io.first) {
-      q.push_back(toIndex(ordered_places, p));
+      q_in.push_back({toIndex(ordered_places, p), PLACEHOLDER});
     }
-    input_n.push_back(q);
-    q.clear();
+    input_n.push_back(q_in);
     for (const auto &p : io.second) {
-      q.push_back(toIndex(ordered_places, p));
+      q_out.push_back({toIndex(ordered_places, p), PLACEHOLDER});
     }
-    output_n.push_back(q);
+    output_n.push_back(q_out);
   }
   return {input_n, output_n};
 }
 
-std::vector<symmetri::SmallVector> createReversePlaceToTransitionLookup(
+std::vector<SmallVector> createReversePlaceToTransitionLookup(
     size_t place_count, size_t transition_count,
-    const std::vector<symmetri::SmallVector> &input_transitions) {
-  std::vector<symmetri::SmallVector> p_to_ts_n;
+    const std::vector<SmallVectorInput> &input_transitions) {
+  std::vector<SmallVector> p_to_ts_n;
   for (size_t p = 0; p < place_count; p++) {
     SmallVector q;
     for (size_t c = 0; c < transition_count; c++) {
-      for (const auto &input_place : input_transitions[c]) {
+      for (const auto &[input_place, input_color] : input_transitions[c]) {
         if (p == input_place && std::find(q.begin(), q.end(), c) == q.end()) {
           q.push_back(c);
         }
@@ -96,7 +96,14 @@ Petri::Petri(const Net &_net, const Store &_store,
           std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(128)),
       pool(stp) {
   event_log.reserve(1000);
-  std::tie(net.transition, net.place, net.store) = convert(_net, _store);
+  std::tie(net.transition, net.place, net.color, net.store) =
+      convert(_net, _store);
+  // populate transition_colors;
+  auto &local = net.transition_colors;
+  local.resize(net.transition.size());
+  std::transform(local.cbegin(), local.cend(), local.begin(),
+                 [black = state::Completed](size_t) { return black; });
+  // end ugly here
   std::tie(net.input_n, net.output_n) = populateIoLookups(_net, net.place);
   net.p_to_ts_n = createReversePlaceToTransitionLookup(
       net.place.size(), net.transition.size(), net.input_n);
@@ -106,11 +113,12 @@ Petri::Petri(const Net &_net, const Store &_store,
   final_marking = toTokens(_final_marking);
 }
 
-std::vector<size_t> Petri::toTokens(const Marking &marking) const noexcept {
-  std::vector<size_t> tokens;
+std::vector<AugmentedPlace> Petri::toTokens(
+    const Marking &marking) const noexcept {
+  std::vector<AugmentedPlace> tokens;
   for (const auto &[p, c] : marking) {
     for (int i = 0; i < c; i++) {
-      tokens.push_back(toIndex(net.place, p));
+      tokens.push_back({toIndex(net.place, p), PLACEHOLDER});
     }
   }
   return tokens;
@@ -138,8 +146,8 @@ void Petri::fireAsynchronous(const size_t t) {
   });
 }
 
-void Petri::deductMarking(const SmallVector &inputs) {
-  for (const size_t place : inputs) {
+void Petri::deductMarking(const SmallVectorInput &inputs) {
+  for (const auto place : inputs) {
     // erase one by one. using std::remove_if would remove all tokens at
     // a particular place.
     tokens.erase(std::find(tokens.begin(), tokens.end(), place));
@@ -183,7 +191,7 @@ void Petri::fireTransitions() {
       fireSynchronous(t_idx);
       // add the output places-connected transitions as new possible
       // transitions:
-      for (const auto &p : net.output_n[t_idx]) {
+      for (const auto &[p, c] : net.output_n[t_idx]) {
         for (const auto &t : net.p_to_ts_n[p]) {
           if (canFire(net.input_n[t], tokens)) {
             possible_transition_list_n.push_back(t);
@@ -210,8 +218,9 @@ void Petri::fireTransitions() {
 std::vector<Place> Petri::getMarking() const {
   std::vector<Place> marking;
   marking.reserve(tokens.size());
-  std::transform(tokens.cbegin(), tokens.cend(), std::back_inserter(marking),
-                 [&](auto place_index) { return net.place[place_index]; });
+  std::transform(
+      tokens.cbegin(), tokens.cend(), std::back_inserter(marking),
+      [&](auto place_index) { return net.place[place_index.place]; });
   return marking;
 }
 

@@ -7,19 +7,21 @@ size_t toIndex(const std::vector<std::string> &m, const std::string &s) {
   return std::distance(m.begin(), ptr);
 }
 
-bool canFire(const SmallVector &pre, const std::vector<size_t> &tokens) {
+bool canFire(const SmallVectorInput &pre,
+             const std::vector<AugmentedPlace> &tokens) {
   return std::all_of(pre.begin(), pre.end(), [&](const auto &m_p) {
-    return std::count(tokens.begin(), tokens.end(), m_p) >=
-           std::count(pre.begin(), pre.end(), m_p);
+    size_t actual = std::count(tokens.begin(), tokens.end(), m_p);
+    size_t required = std::count(pre.begin(), pre.end(), m_p);
+    return actual >= required;
   });
 }
 
 gch::small_vector<size_t, 32> possibleTransitions(
-    const std::vector<size_t> &tokens,
+    const std::vector<AugmentedPlace> &tokens,
     const std::vector<SmallVector> &p_to_ts_n) {
   gch::small_vector<size_t, 32> possible_transition_list_n;
-  for (const size_t place : tokens) {
-    for (size_t t : p_to_ts_n[place]) {
+  for (const AugmentedPlace &place : tokens) {
+    for (size_t t : p_to_ts_n[place.place]) {
       if (std::find(possible_transition_list_n.begin(),
                     possible_transition_list_n.end(),
                     t) == possible_transition_list_n.end()) {

@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <filesystem>
+#include <iostream>
 
 #include "symmetri/symmetri.h"
 
@@ -141,4 +142,15 @@ TEST_CASE("Types") {
   REQUIRE(UserExit != ExternalState);
   REQUIRE(ExternalState == ExternalState);
   REQUIRE(printState(ExternalState) != "");
+}
+
+TEST_CASE("Print Types") {
+  using namespace symmetri::state;
+  std::cout << printState(Scheduled) << ", " << Scheduled << std::endl;
+  std::cout << printState(Started) << ", " << Started << std::endl;
+  std::cout << printState(Completed) << ", " << Completed << std::endl;
+  std::cout << printState(Deadlock) << ", " << Deadlock << std::endl;
+  std::cout << printState(Paused) << ", " << Paused << std::endl;
+  std::cout << printState(UserExit) << ", " << UserExit << std::endl;
+  std::cout << printState(ExternalState) << ", " << ExternalState << std::endl;
 }

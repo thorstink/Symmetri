@@ -4,11 +4,16 @@
 #include <numeric>
 namespace symmetri {
 
-Token registerResult(Token r, std::string s) {
-  ResultLookup::map[r] = s;
-  return r;
+Token registerResult(std::string s) {
+  const auto& m = TokenLookup::colors;
+  auto ptr = std::find(m.begin(), m.end(), s);
+  if (ptr == m.end()) {
+    TokenLookup::colors.push_back(s);
+  }
+  return std::distance(m.begin(), ptr);
 }
-std::string printState(symmetri::Token r) { return ResultLookup::map[r]; }
+
+std::string printState(symmetri::Token r) { return TokenLookup::colors[r]; }
 
 bool stateNetEquality(const Net& net1, const Net& net2) {
   if (net1.size() != net2.size()) {
