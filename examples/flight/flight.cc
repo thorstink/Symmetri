@@ -19,8 +19,7 @@ using namespace symmetri;
  *
  */
 
-const static Token FooFail(
-    state::create<state::ConstStringHash("FooFail")>("FooFail"));
+const static Token FooFail(registerToken("FooFail"));
 
 Token fire(const Foo &f) { return f.fire() ? FooFail : state::Completed; }
 

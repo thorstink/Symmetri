@@ -4,7 +4,7 @@
 #include <numeric>
 namespace symmetri {
 
-Token registerResult(std::string s) {
+Token registerToken(const std::string& s) {
   const auto& m = TokenLookup::colors;
   auto ptr = std::find(m.begin(), m.end(), s);
   if (ptr == m.end()) {

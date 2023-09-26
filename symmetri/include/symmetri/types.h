@@ -19,13 +19,13 @@ using Clock =
                                 ///< steady clock for monotonic reasons
 
 namespace state {
-const static Token Scheduled(create<ConstStringHash("Scheduled")>("Scheduled"));
-const static Token Started(create<ConstStringHash("Started")>("Started"));
-const static Token Completed(create<ConstStringHash("Completed")>("Completed"));
-const static Token Deadlock(create<ConstStringHash("Deadlock")>("Deadlock"));
-const static Token UserExit(create<ConstStringHash("UserExit")>("UserExit"));
-const static Token Paused(create<ConstStringHash("Paused")>("Paused"));
-const static Token Error(create<ConstStringHash("Error")>("Error"));
+const static Token Scheduled(registerToken("Scheduled"));
+const static Token Started(registerToken("Started"));
+const static Token Completed(registerToken("Completed"));
+const static Token Deadlock(registerToken("Deadlock"));
+const static Token UserExit(registerToken("UserExit"));
+const static Token Paused(registerToken("Paused"));
+const static Token Error(registerToken("Error"));
 };  // namespace state
 
 /**

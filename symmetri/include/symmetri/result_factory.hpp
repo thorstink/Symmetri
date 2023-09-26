@@ -5,7 +5,7 @@
 namespace symmetri {
 using Token = uint32_t;
 
-Token registerResult(std::string s);
+Token registerToken(const std::string& s);
 std::string printState(Token r);
 class TokenLookup {
  public:
@@ -14,20 +14,8 @@ class TokenLookup {
 
  private:
   inline static std::vector<std::string> colors = {};
-  friend Token registerResult(std::string s);
+  friend Token registerToken(const std::string& s);
   friend std::string printState(Token r);
 };
 
-namespace state {
-unsigned constexpr ConstStringHash(char const* input) {
-  return *input ? static_cast<unsigned int>(*input) +
-                      33 * ConstStringHash(input + 1)
-                : 5381;
-}
-
-template <unsigned int i>
-auto create(const std::string& name) {
-  return registerResult(name);
-};
-}  // namespace state
 }  // namespace symmetri

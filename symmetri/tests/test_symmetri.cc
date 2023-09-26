@@ -127,8 +127,7 @@ TEST_CASE("Test pause and resume") {
 }
 namespace symmetri {
 namespace state {
-const static Token ExternalState(
-    create<ConstStringHash("ExternalState")>("ExternalState"));
+const static Token ExternalState(registerToken("ExternalState"));
 }
 }  // namespace symmetri
 
