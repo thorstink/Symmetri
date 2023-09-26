@@ -117,9 +117,7 @@ std::vector<AugmentedPlace> Petri::toTokens(
     const Marking &marking) const noexcept {
   std::vector<AugmentedPlace> tokens;
   for (const auto &[p, c] : marking) {
-    for (int i = 0; i < c; i++) {
-      tokens.push_back({toIndex(net.place, p), PLACEHOLDER});
-    }
+    tokens.push_back({toIndex(net.place, p), PLACEHOLDER});
   }
   return tokens;
 }
@@ -215,12 +213,13 @@ void Petri::fireTransitions() {
   return;
 }
 
-std::vector<Place> Petri::getMarking() const {
-  std::vector<Place> marking;
+Marking Petri::getMarking() const {
+  Marking marking;
   marking.reserve(tokens.size());
-  std::transform(
-      tokens.cbegin(), tokens.cend(), std::back_inserter(marking),
-      [&](auto place_index) { return net.place[place_index.place]; });
+  std::transform(tokens.cbegin(), tokens.cend(), std::back_inserter(marking),
+                 [&](auto place_index) -> std::pair<std::string, std::string> {
+                   return {net.place[place_index.place], PLACEHOLDER_STRING};
+                 });
   return marking;
 }
 

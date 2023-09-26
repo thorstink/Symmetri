@@ -66,14 +66,19 @@ int main(int, char *argv[]) {
   // Here we create the first PetriNet based on composing pnml1 and pnml2
   // using flat composition. The associated transitions are two instance of
   // the Foo-class.
-  PetriNet subnet({pnml1, pnml2}, {{"P2", 1}},
+  PetriNet subnet({pnml1, pnml2}, {{"P2", PLACEHOLDER_STRING}},
                   {{"T0", Foo("SubFoo")}, {"T1", Foo("SubBar")}}, {}, "SubNet",
                   pool);
 
   // We create another PetriNet by flatly composing all three petri nets.
   // Again we have 2 Foo-transitions, and the first transition (T0) is the
   // subnet. This show how you can also nest PetriNets.
-  PetriNet bignet({pnml1, pnml2, pnml3}, {{"P3", 5}},
+  PetriNet bignet({pnml1, pnml2, pnml3},
+                  {{"P3", PLACEHOLDER_STRING},
+                   {"P3", PLACEHOLDER_STRING},
+                   {"P3", PLACEHOLDER_STRING},
+                   {"P3", PLACEHOLDER_STRING},
+                   {"P3", PLACEHOLDER_STRING}},
                   {{"T0", subnet}, {"T1", Foo("Bar")}, {"T2", Foo("Foo")}}, {},
                   "RootNet", pool);
 

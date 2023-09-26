@@ -28,7 +28,7 @@ std::tuple<Net, Store, PriorityTable, Marking> BugsTestNet() {
   Net net = {{"t", {{"Pa"}, {"Pb"}}}};
   Store store = {{"t", &t}};
   PriorityTable priority;
-  Marking m0 = {{"Pa", 2}};
+  Marking m0 = {{"Pa", PLACEHOLDER_STRING}, {"Pa", PLACEHOLDER_STRING}};
   return {net, store, priority, m0};
 }
 
@@ -56,7 +56,10 @@ TEST_CASE("Firing the same transition before it can complete should work") {
 
   m.reducer_queue->wait_dequeue_timed(r, std::chrono::milliseconds(250));
   r(m);
-  REQUIRE(MarkingEquality(m.getMarking(), {"Pb"}));
+  {
+    Marking expected = {{"Pb", PLACEHOLDER_STRING}};
+    REQUIRE(MarkingEquality(m.getMarking(), expected));
+  }
 
   // offending test, but fixed :-)
   REQUIRE(m.scheduled_callbacks.size() == 1);
@@ -67,8 +70,10 @@ TEST_CASE("Firing the same transition before it can complete should work") {
   cv.notify_one();
   m.reducer_queue->wait_dequeue_timed(r, std::chrono::milliseconds(250));
   r(m);
-
-  REQUIRE(MarkingEquality(m.getMarking(), {"Pb", "Pb"}));
+  {
+    Marking expected = {{"Pb", PLACEHOLDER_STRING}, {"Pb", PLACEHOLDER_STRING}};
+    REQUIRE(MarkingEquality(m.getMarking(), expected));
+  }
 
   CHECK(m.scheduled_callbacks.empty());
 }

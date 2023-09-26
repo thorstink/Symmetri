@@ -20,8 +20,8 @@ TEST_CASE("Test external input.") {
                {"t2", {{"Pb", "Pb"}, {"Pc"}}}};
     // we can omit t0, it will be auto-filled as {"t0", DirectMutation{}}
     Store store = {{"t1", &tAllowExitInput}, {"t2", DirectMutation{}}};
-    Marking m0 = {{"Pa", 2}, {"Pb", 0}, {"Pc", 0}};
-    Marking final_m = {{"Pc", 1}};
+    Marking m0 = {{"Pa", PLACEHOLDER_STRING}, {"Pa", PLACEHOLDER_STRING}};
+    Marking final_m = {{"Pc", PLACEHOLDER_STRING}};
     auto stp = std::make_shared<TaskSystem>(3);
 
     PetriNet app(net, m0, final_m, store, {}, "test_net_ext_input", stp);

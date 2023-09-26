@@ -14,7 +14,6 @@
 #include "symmetri/types.h"
 
 namespace symmetri {
-const size_t PLACEHOLDER = 999;
 struct AugmentedPlace {
   size_t place, color;
 };
@@ -140,7 +139,7 @@ struct Petri {
    *
    * @return std::vector<Place>
    */
-  std::vector<Place> getMarking() const;
+  Marking getMarking() const;
 
   /**
    * @brief get the current eventlog, also copies in all child eventlogs of

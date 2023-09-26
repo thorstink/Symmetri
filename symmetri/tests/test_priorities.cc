@@ -16,7 +16,7 @@ TEST_CASE(
     Net net = {{"t0", {{"Pa"}, {"Pb"}}}, {"t1", {{"Pa"}, {"Pc"}}}};
     Store store = {{"t0", [] {}}, {"t1", [] {}}};
 
-    Marking m0 = {{"Pa", 1}, {"Pb", 0}, {"Pc", 0}};
+    Marking m0 = {{"Pa", PLACEHOLDER_STRING}};
     auto stp = std::make_shared<TaskSystem>(1);
 
     auto m = Petri(net, store, priority, m0, {}, "s", stp);
@@ -35,9 +35,11 @@ TEST_CASE(
                      return e.first == "t1";
                    })->second;
     if (prio_t0 > prio_t1) {
-      CHECK(MarkingEquality(m.getMarking(), {"Pb"}));
+      Marking expected = {{"Pb", PLACEHOLDER_STRING}};
+      REQUIRE(MarkingEquality(m.getMarking(), expected));
     } else {
-      CHECK(MarkingEquality(m.getMarking(), {"Pc"}));
+      Marking expected = {{"Pc", PLACEHOLDER_STRING}};
+      REQUIRE(MarkingEquality(m.getMarking(), expected));
     }
   }
 }
@@ -49,7 +51,7 @@ TEST_CASE("Using DirectMutation does not queue reducers.") {
     Net net = {{"t0", {{"Pa"}, {"Pb"}}}, {"t1", {{"Pa"}, {"Pc"}}}};
     Store store = {{"t0", DirectMutation{}}, {"t1", DirectMutation{}}};
 
-    Marking m0 = {{"Pa", 1}, {"Pb", 0}, {"Pc", 0}};
+    Marking m0 = {{"Pa", PLACEHOLDER_STRING}};
     auto stp = std::make_shared<TaskSystem>(1);
 
     auto m = Petri(net, store, priority, m0, {}, "s", stp);
@@ -62,9 +64,11 @@ TEST_CASE("Using DirectMutation does not queue reducers.") {
                      return e.first == "t1";
                    })->second;
     if (prio_t0 > prio_t1) {
-      CHECK(MarkingEquality(m.getMarking(), {"Pb"}));
+      Marking expected = {{"Pb", PLACEHOLDER_STRING}};
+      REQUIRE(MarkingEquality(m.getMarking(), expected));
     } else {
-      CHECK(MarkingEquality(m.getMarking(), {"Pc"}));
+      Marking expected = {{"Pc", PLACEHOLDER_STRING}};
+      REQUIRE(MarkingEquality(m.getMarking(), expected));
     }
   }
 }

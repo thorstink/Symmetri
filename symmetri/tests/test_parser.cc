@@ -13,17 +13,11 @@ TEST_CASE("Load p1.pnml net") {
   const auto &[net, m0] = readPnml({pnml_file});
 
   // for this particular net, the initial marking is:
-  Marking m_test;
-  m_test["P0"] = 1;
-  m_test["P1"] = 1;
-  m_test["P2"] = 1;
-  m_test["P3"] = 1;
-  m_test["P4"] = 0;
-  m_test["P5"] = 0;
-  m_test["P6"] = 0;
-  m_test["P7"] = 0;
-  m_test["P8"] = 0;
-  REQUIRE(m_test == m0);
+  Marking m_expected = {{"P0", PLACEHOLDER_STRING},
+                        {"P1", PLACEHOLDER_STRING},
+                        {"P2", PLACEHOLDER_STRING},
+                        {"P3", PLACEHOLDER_STRING}};
+  REQUIRE(m0 == m_expected);
 
   // for this particular net, the following transitions connect places:
   Net net_test;
@@ -42,17 +36,11 @@ TEST_CASE("Load p1.grml net") {
   const auto &[net, m0, priorities] = readGrml({grml_file});
 
   // for this particular net, the initial marking is:
-  Marking m_test;
-  m_test["P0"] = 1;
-  m_test["P1"] = 1;
-  m_test["P2"] = 1;
-  m_test["P3"] = 1;
-  m_test["P4"] = 0;
-  m_test["P5"] = 0;
-  m_test["P6"] = 0;
-  m_test["P7"] = 0;
-  m_test["P8"] = 0;
-  REQUIRE(m_test == m0);
+  Marking m_expected = {{"P0", PLACEHOLDER_STRING},
+                        {"P1", PLACEHOLDER_STRING},
+                        {"P2", PLACEHOLDER_STRING},
+                        {"P3", PLACEHOLDER_STRING}};
+  REQUIRE(m0 == m_expected);
 
   // for this particular net, the following transitions connect places:
   Net net_test;
@@ -77,17 +65,10 @@ TEST_CASE("Load p1_multi.pnml net") {
   const auto &[net, m0] = readPnml({pnml_file});
 
   // for this particular net, the initial marking is:
-  Marking m_test;
-  m_test["P0"] = 0;
-  m_test["P1"] = 1;
-  m_test["P2"] = 1;
-  m_test["P3"] = 1;
-  m_test["P4"] = 0;
-  m_test["P5"] = 0;
-  m_test["P6"] = 0;
-  m_test["P7"] = 0;
-  m_test["P8"] = 0;
-  REQUIRE(m_test == m0);
+  Marking m_expected = {{"P1", PLACEHOLDER_STRING},
+                        {"P2", PLACEHOLDER_STRING},
+                        {"P3", PLACEHOLDER_STRING}};
+  REQUIRE(m0 == m_expected);
 
   // for this particular net, the following transitions connect places:
   Net net_test;
@@ -110,12 +91,8 @@ TEST_CASE("Compose PT1.pnml and PT2.pnml nets") {
   const auto &[net, m0] = readPnml({p1, p2});
 
   // for this compositions of nets, the initial marking is:
-  Marking m_test;
-  m_test["P0"] = 1;
-  m_test["P1"] = 0;
-  m_test["P2"] = 0;
-  REQUIRE(m_test == m0);
-
+  Marking m_expected = {{"P0", PLACEHOLDER_STRING}};
+  REQUIRE(m0 == m_expected);
   // the compositions of these two nets, the following transitions connect
   // places:
   Net net_test;

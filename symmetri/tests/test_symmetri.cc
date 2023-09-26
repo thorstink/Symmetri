@@ -16,7 +16,9 @@ std::tuple<Net, Store, PriorityTable, Marking> SymmetriTestNet() {
   Store store = {{"t0", &t0}, {"t1", &t1}};
   PriorityTable priority;
 
-  Marking m0 = {{"Pa", 4}, {"Pb", 2}, {"Pc", 0}, {"Pd", 0}};
+  Marking m0 = {{"Pa", PLACEHOLDER_STRING}, {"Pa", PLACEHOLDER_STRING},
+                {"Pa", PLACEHOLDER_STRING}, {"Pa", PLACEHOLDER_STRING},
+                {"Pb", PLACEHOLDER_STRING}, {"Pb", PLACEHOLDER_STRING}};
   return {net, store, priority, m0};
 }
 
@@ -36,7 +38,11 @@ TEST_CASE("Create a using the net constructor without end condition.") {
 TEST_CASE("Create a using the net constructor with end condition.") {
   auto stp = std::make_shared<TaskSystem>(1);
 
-  Marking final_marking({{"Pa", 0}, {"Pb", 2}, {"Pc", 0}, {"Pd", 2}});
+  Marking final_marking({{"Pb", PLACEHOLDER_STRING},
+                         {"Pb", PLACEHOLDER_STRING},
+                         {"Pd", PLACEHOLDER_STRING},
+                         {"Pd", PLACEHOLDER_STRING}});
+
   auto [net, store, priority, m0] = SymmetriTestNet();
   PetriNet app(net, m0, final_marking, store, priority, "test_net_with_end",
                stp);
@@ -57,7 +63,7 @@ TEST_CASE("Create a using pnml constructor.") {
   // This store is appropriate for this net,
   Store store = symmetri::Store{{"T0", &t0}};
   PriorityTable priority;
-  Marking final_marking({{"P1", 1}});
+  Marking final_marking({{"P1", PLACEHOLDER_STRING}});
   PetriNet app({pnml_file}, final_marking, store, priority, "success", stp);
   // so we can run it,
   auto res = fire(app);
@@ -104,9 +110,10 @@ TEST_CASE("Test pause and resume") {
   std::atomic<int> i = 0;
   Net net = {{"t0", {{"Pa"}, {"Pa"}}}, {"t1", {{}, {"Pb"}}}};
   Store store = {{"t0", [&] { i++; }}, {"t1", [] {}}};
-  Marking m0 = {{"Pa", 1}};
+  Marking m0 = {{"Pa", PLACEHOLDER_STRING}};
   auto stp = std::make_shared<TaskSystem>(2);
-  PetriNet app(net, m0, {{"Pb", 1}}, store, {}, "random_id", stp);
+  PetriNet app(net, m0, {{"Pb", PLACEHOLDER_STRING}}, store, {}, "random_id",
+               stp);
   int check1, check2;
   stp->push([&, app, t1 = app.registerTransitionCallback("t1")]() {
     const auto dt = std::chrono::milliseconds(5);

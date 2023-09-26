@@ -70,10 +70,10 @@ std::function<void()> PetriNet::registerTransitionCallback(
   };
 }
 
-std::vector<Place> PetriNet::getMarking() const noexcept {
+Marking PetriNet::getMarking() const noexcept {
   if (impl->thread_id_.load()) {
-    std::promise<std::vector<Place>> el;
-    std::future<std::vector<Place>> el_getter = el.get_future();
+    std::promise<Marking> el;
+    std::future<Marking> el_getter = el.get_future();
     impl->reducer_queue->enqueue(
         [&](Petri &model) { el.set_value(model.getMarking()); });
     return el_getter.get();

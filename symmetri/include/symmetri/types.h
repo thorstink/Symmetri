@@ -10,6 +10,9 @@
 #include "result_factory.hpp"
 namespace symmetri {
 
+const size_t PLACEHOLDER = 999;
+const std::string PLACEHOLDER_STRING = "PLACEHOLDER";
+
 using Place = std::string;       ///< The string representation of the place the
                                  ///< Petri net definition
 using Transition = std::string;  ///< The string representation of the
@@ -50,9 +53,9 @@ using Net = std::unordered_map<
                                      ///< of a Petri net. For each transition
                                      ///< there is a pair of lists for input and
                                      ///< output transitions
-using Marking =
-    std::unordered_map<Place,
-                       uint16_t>;  ///< The marking is limited from 0 to 65535
+
+using Marking = std::vector<std::pair<std::string, std::string>>;
+
 using PriorityTable =
     std::vector<std::pair<Transition, int8_t>>;  ///< Priority is limited from
                                                  ///< -128 to 127

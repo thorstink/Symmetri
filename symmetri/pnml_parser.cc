@@ -31,8 +31,9 @@ std::tuple<Net, Marking> readPnml(const std::set<std::string> &files) {
               : std::stoi(child->FirstChildElement("initialMarking")
                               ->FirstChildElement("text")
                               ->GetText());
-
-      place_initialMarking.insert({place_id, initial_marking});
+      for (int i = 0; i < initial_marking; i++) {
+        place_initialMarking.push_back({place_id, PLACEHOLDER_STRING});
+      }
       places.insert(std::string(place_id));
     }
 

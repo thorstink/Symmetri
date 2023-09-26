@@ -43,7 +43,9 @@ std::tuple<Net, Marking, PriorityTable> readGrml(
                               ->GetText());
           }
         }
-        place_initialMarking.insert({place_id, initial_marking});
+        for (int i = 0; i < initial_marking; i++) {
+          place_initialMarking.push_back({place_id, PLACEHOLDER_STRING});
+        }
         places.insert(place_id);
         id_lookup_table.insert({id, place_id});
       } else if (type == "transition") {

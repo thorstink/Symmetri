@@ -146,7 +146,7 @@ class PetriNet final {
    *
    * @return std::vector<symmetri::Place>
    */
-  std::vector<symmetri::Place> getMarking() const noexcept;
+  symmetri::Marking getMarking() const noexcept;
 
   /**
    * @brief reuseApplication resets the PetriNet such that the same net can

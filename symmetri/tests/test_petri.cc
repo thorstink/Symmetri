@@ -30,7 +30,9 @@ std::tuple<Net, Store, PriorityTable, Marking> PetriTestNet() {
   Store store = {{"t0", &petri0}, {"t1", &petri1}};
   PriorityTable priority;
 
-  Marking m0 = {{"Pa", 4}, {"Pb", 2}, {"Pc", 0}, {"Pd", 0}};
+  Marking m0 = {{"Pa", PLACEHOLDER_STRING}, {"Pa", PLACEHOLDER_STRING},
+                {"Pa", PLACEHOLDER_STRING}, {"Pa", PLACEHOLDER_STRING},
+                {"Pb", PLACEHOLDER_STRING}, {"Pb", PLACEHOLDER_STRING}};
   return {net, store, priority, m0};
 }
 
@@ -58,8 +60,10 @@ TEST_CASE("Run one transition iteration in a petri net") {
   m.fireTransitions();
   // t0 is dispatched but it's reducer has not yet run, so pre-conditions are
   // processed but post are not:
-  REQUIRE(m.getMarking() == std::vector<symmetri::Place>{"Pa", "Pa"});
-
+  {
+    Marking expected = {{"Pa", PLACEHOLDER_STRING}, {"Pa", PLACEHOLDER_STRING}};
+    REQUIRE(MarkingEquality(m.getMarking(), expected));
+  }
   // now there should be two reducers;
   Reducer r1, r2;
   REQUIRE(m.reducer_queue->wait_dequeue_timed(r1, std::chrono::seconds(1)));
@@ -69,15 +73,23 @@ TEST_CASE("Run one transition iteration in a petri net") {
   // verify that t0 has actually ran twice.
   REQUIRE(T0_COUNTER.load() == 2);
   // the marking should still be the same.
-  REQUIRE(m.getMarking() == std::vector<symmetri::Place>{"Pa", "Pa"});
+  {
+    Marking expected = {{"Pa", PLACEHOLDER_STRING}, {"Pa", PLACEHOLDER_STRING}};
+    REQUIRE(MarkingEquality(m.getMarking(), expected));
+  }
 
   // process the reducers
   r1(m);
   r2(m);
   // and now the post-conditions are processed:
   REQUIRE(m.scheduled_callbacks.empty());
-  REQUIRE(MarkingEquality(
-      m.getMarking(), std::vector<symmetri::Place>{"Pa", "Pa", "Pc", "Pc"}));
+  {
+    Marking expected = {{"Pa", PLACEHOLDER_STRING},
+                        {"Pa", PLACEHOLDER_STRING},
+                        {"Pc", PLACEHOLDER_STRING},
+                        {"Pc", PLACEHOLDER_STRING}};
+    REQUIRE(MarkingEquality(m.getMarking(), expected));
+  }
 }
 
 TEST_CASE("Run until net dies") {
@@ -99,8 +111,11 @@ TEST_CASE("Run until net dies") {
   } while (m.scheduled_callbacks.size() > 0);
 
   // For this specific net we expect:
-  REQUIRE(MarkingEquality(
-      m.getMarking(), std::vector<symmetri::Place>{"Pb", "Pb", "Pd", "Pd"}));
+  Marking expected = {{"Pb", PLACEHOLDER_STRING},
+                      {"Pb", PLACEHOLDER_STRING},
+                      {"Pd", PLACEHOLDER_STRING},
+                      {"Pd", PLACEHOLDER_STRING}};
+  REQUIRE(MarkingEquality(m.getMarking(), expected));
 
   REQUIRE(T0_COUNTER.load() == 4);
   REQUIRE(T1_COUNTER.load() == 2);
@@ -128,8 +143,11 @@ TEST_CASE("Run until net dies with nullptr") {
   } while (m.scheduled_callbacks.size() > 0);
 
   // For this specific net we expect:
-  REQUIRE(MarkingEquality(
-      m.getMarking(), std::vector<symmetri::Place>{"Pb", "Pb", "Pd", "Pd"}));
+  Marking expected = {{"Pb", PLACEHOLDER_STRING},
+                      {"Pb", PLACEHOLDER_STRING},
+                      {"Pd", PLACEHOLDER_STRING},
+                      {"Pd", PLACEHOLDER_STRING}};
+  REQUIRE(MarkingEquality(m.getMarking(), expected));
 }
 
 // TEST_CASE(
@@ -178,7 +196,10 @@ TEST_CASE("Step through transitions") {
     }
     auto stp = std::make_shared<TaskSystem>(1);
     // with this initial marking, all but transition e are possible.
-    Marking m0 = {{"Pa", 4}};
+    Marking m0 = {{"Pa", PLACEHOLDER_STRING},
+                  {"Pa", PLACEHOLDER_STRING},
+                  {"Pa", PLACEHOLDER_STRING},
+                  {"Pa", PLACEHOLDER_STRING}};
     Petri m(net, store, {}, m0, {}, "s", stp);
 
     // auto scheduled_callbacks = m.getActiveTransitions();
