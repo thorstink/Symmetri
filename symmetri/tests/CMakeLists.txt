@@ -27,12 +27,14 @@ install(DIRECTORY ${test_files} DESTINATION ${PROJECT_SOURCE_DIR}/build/symmetri
 add_executable(${PROJECT_NAME}_symmetri_test
   test_actions.cc
   test_parser.cc
+  test_petri_fire.cc
   test_petri.cc
   test_symmetri.cc
   maxplus.cc
   test_external_input.cc
   test_priorities.cc
   test_bugs.cc
+  test_colors.cc
   test_types.cc
   test_callback.cc
 )

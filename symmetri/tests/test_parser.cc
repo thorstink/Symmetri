@@ -1,6 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
 #include <filesystem>
-#include <iostream>
 
 #include "symmetri/parsers.h"
 #include "symmetri/utilities.hpp"
@@ -13,19 +12,34 @@ TEST_CASE("Load p1.pnml net") {
   const auto &[net, m0] = readPnml({pnml_file});
 
   // for this particular net, the initial marking is:
-  Marking m_expected = {{"P0", PLACEHOLDER_STRING},
-                        {"P1", PLACEHOLDER_STRING},
-                        {"P2", PLACEHOLDER_STRING},
-                        {"P3", PLACEHOLDER_STRING}};
+  Marking m_expected = {{"P0", TokenLookup::Completed},
+                        {"P1", TokenLookup::Completed},
+                        {"P2", TokenLookup::Completed},
+                        {"P3", TokenLookup::Completed}};
   REQUIRE(m0 == m_expected);
 
   // for this particular net, the following transitions connect places:
   Net net_test;
-  net_test["t0"] = {{"P0", "P3"}, {"P4", "P4", "P7"}};
-  net_test["t1"] = {{"P1", "P4", "P4"}, {"P5"}};
-  net_test["t2"] = {{"P2", "P5"}, {"P6"}};
-  net_test["t3"] = {{"P6", "P8"}, {"P0", "P1", "P2", "P3"}};
-  net_test["t4"] = {{"P7"}, {"P8"}};
+  net_test["t0"] = {
+      {{"P0", TokenLookup::Completed}, {"P3", TokenLookup::Completed}},
+      {{"P4", TokenLookup::Completed},
+       {"P4", TokenLookup::Completed},
+       {"P7", TokenLookup::Completed}}};
+  net_test["t1"] = {{{"P1", TokenLookup::Completed},
+                     {"P4", TokenLookup::Completed},
+                     {"P4", TokenLookup::Completed}},
+                    {{"P5", TokenLookup::Completed}}};
+  net_test["t2"] = {
+      {{"P2", TokenLookup::Completed}, {"P5", TokenLookup::Completed}},
+      {{"P6", TokenLookup::Completed}}};
+  net_test["t3"] = {
+      {{"P6", TokenLookup::Completed}, {"P8", TokenLookup::Completed}},
+      {{"P0", TokenLookup::Completed},
+       {"P1", TokenLookup::Completed},
+       {"P2", TokenLookup::Completed},
+       {"P3", TokenLookup::Completed}}};
+  net_test["t4"] = {{{"P7", TokenLookup::Completed}},
+                    {{"P8", TokenLookup::Completed}}};
 
   REQUIRE(stateNetEquality(net_test, net));
 }
@@ -36,19 +50,34 @@ TEST_CASE("Load p1.grml net") {
   const auto &[net, m0, priorities] = readGrml({grml_file});
 
   // for this particular net, the initial marking is:
-  Marking m_expected = {{"P0", PLACEHOLDER_STRING},
-                        {"P1", PLACEHOLDER_STRING},
-                        {"P2", PLACEHOLDER_STRING},
-                        {"P3", PLACEHOLDER_STRING}};
+  Marking m_expected = {{"P0", TokenLookup::Completed},
+                        {"P1", TokenLookup::Completed},
+                        {"P2", TokenLookup::Completed},
+                        {"P3", TokenLookup::Completed}};
   REQUIRE(m0 == m_expected);
 
   // for this particular net, the following transitions connect places:
   Net net_test;
-  net_test["t0"] = {{"P0", "P3"}, {"P4", "P4", "P7"}};
-  net_test["t1"] = {{"P1", "P4", "P4"}, {"P5"}};
-  net_test["t2"] = {{"P2", "P5"}, {"P6"}};
-  net_test["t3"] = {{"P6", "P8"}, {"P0", "P1", "P2", "P3"}};
-  net_test["t4"] = {{"P7"}, {"P8"}};
+  net_test["t0"] = {
+      {{"P0", TokenLookup::Completed}, {"P3", TokenLookup::Completed}},
+      {{"P4", TokenLookup::Completed},
+       {"P4", TokenLookup::Completed},
+       {"P7", TokenLookup::Completed}}};
+  net_test["t1"] = {{{"P1", TokenLookup::Completed},
+                     {"P4", TokenLookup::Completed},
+                     {"P4", TokenLookup::Completed}},
+                    {{"P5", TokenLookup::Completed}}};
+  net_test["t2"] = {
+      {{"P2", TokenLookup::Completed}, {"P5", TokenLookup::Completed}},
+      {{"P6", TokenLookup::Completed}}};
+  net_test["t3"] = {
+      {{"P6", TokenLookup::Completed}, {"P8", TokenLookup::Completed}},
+      {{"P0", TokenLookup::Completed},
+       {"P1", TokenLookup::Completed},
+       {"P2", TokenLookup::Completed},
+       {"P3", TokenLookup::Completed}}};
+  net_test["t4"] = {{{"P7", TokenLookup::Completed}},
+                    {{"P8", TokenLookup::Completed}}};
 
   // for this particular net the priorities are like this:
   PriorityTable priorities_gr = {{"t0", 2}};
@@ -65,19 +94,32 @@ TEST_CASE("Load p1_multi.pnml net") {
   const auto &[net, m0] = readPnml({pnml_file});
 
   // for this particular net, the initial marking is:
-  Marking m_expected = {{"P1", PLACEHOLDER_STRING},
-                        {"P2", PLACEHOLDER_STRING},
-                        {"P3", PLACEHOLDER_STRING}};
+  Marking m_expected = {{"P1", TokenLookup::Completed},
+                        {"P2", TokenLookup::Completed},
+                        {"P3", TokenLookup::Completed}};
   REQUIRE(m0 == m_expected);
 
   // for this particular net, the following transitions connect places:
   Net net_test;
-  net_test["t0"] = {{"P0", "P3"}, {"P4", "P7"}};
-  net_test["t1"] = {{"P1", "P4"}, {"P5"}};
-  net_test["t2"] = {{"P2", "P5"}, {"P6"}};
+  net_test["t0"] = {
+      {{"P0", TokenLookup::Completed}, {"P3", TokenLookup::Completed}},
+      {{"P4", TokenLookup::Completed}, {"P7", TokenLookup::Completed}}};
+  net_test["t1"] = {
+      {{"P1", TokenLookup::Completed}, {"P4", TokenLookup::Completed}},
+      {{"P5", TokenLookup::Completed}}};
+  net_test["t2"] = {
+      {{"P2", TokenLookup::Completed}, {"P5", TokenLookup::Completed}},
+      {{"P6", TokenLookup::Completed}}};
   // in this variant of this net, the transition from P6 to t3 has weight 2.
-  net_test["t3"] = {{"P6", "P6", "P8"}, {"P0", "P1", "P2", "P3"}};
-  net_test["t4"] = {{"P7"}, {"P8"}};
+  net_test["t3"] = {{{"P6", TokenLookup::Completed},
+                     {"P6", TokenLookup::Completed},
+                     {"P8", TokenLookup::Completed}},
+                    {{"P0", TokenLookup::Completed},
+                     {"P1", TokenLookup::Completed},
+                     {"P2", TokenLookup::Completed},
+                     {"P3", TokenLookup::Completed}}};
+  net_test["t4"] = {{{"P7", TokenLookup::Completed}},
+                    {{"P8", TokenLookup::Completed}}};
   REQUIRE(stateNetEquality(net_test, net));
 }
 
@@ -91,13 +133,15 @@ TEST_CASE("Compose PT1.pnml and PT2.pnml nets") {
   const auto &[net, m0] = readPnml({p1, p2});
 
   // for this compositions of nets, the initial marking is:
-  Marking m_expected = {{"P0", PLACEHOLDER_STRING}};
+  Marking m_expected = {{"P0", TokenLookup::Completed}};
   REQUIRE(m0 == m_expected);
   // the compositions of these two nets, the following transitions connect
   // places:
   Net net_test;
-  net_test["T0"] = {{"P0"}, {"P1"}};
-  net_test["T1"] = {{"P1"}, {"P2"}};
+  net_test["T0"] = {{{"P0", TokenLookup::Completed}},
+                    {{"P1", TokenLookup::Completed}}};
+  net_test["T1"] = {{{"P1", TokenLookup::Completed}},
+                    {{"P2", TokenLookup::Completed}}};
   REQUIRE(stateNetEquality(net_test, net));
 
   // REQUIRE(net_test == net);

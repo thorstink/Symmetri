@@ -14,20 +14,20 @@
 #include "symmetri/types.h"
 
 namespace symmetri {
-struct AugmentedPlace {
+struct AugmentedToken {
   size_t place, color;
 };
-inline bool operator==(const AugmentedPlace &lhs, const AugmentedPlace &rhs) {
+inline bool operator==(const AugmentedToken &lhs, const AugmentedToken &rhs) {
   return lhs.place == rhs.place && lhs.color == rhs.color;
 }
-inline bool operator<(const AugmentedPlace &lhs, const AugmentedPlace &rhs) {
+inline bool operator<(const AugmentedToken &lhs, const AugmentedToken &rhs) {
   return lhs.place < rhs.place && lhs.color < rhs.color;
 }
-inline bool operator>(const AugmentedPlace &lhs, const AugmentedPlace &rhs) {
+inline bool operator>(const AugmentedToken &lhs, const AugmentedToken &rhs) {
   return lhs.place > rhs.place && lhs.color > rhs.color;
 }
 using SmallVector = gch::small_vector<size_t, 4>;
-using SmallVectorInput = gch::small_vector<AugmentedPlace, 4>;
+using SmallVectorInput = gch::small_vector<AugmentedToken, 4>;
 using Store = std::unordered_map<Transition, Callback>;
 
 /**
@@ -50,7 +50,8 @@ size_t toIndex(const std::vector<std::string> &m, const std::string &s);
  * @return gch::small_vector<size_t, 32>
  */
 gch::small_vector<size_t, 32> possibleTransitions(
-    const std::vector<AugmentedPlace> &tokens,
+    const std::vector<AugmentedToken> &tokens,
+    const std::vector<SmallVectorInput> &input_n,
     const std::vector<SmallVector> &p_to_ts_n);
 
 /**
@@ -64,7 +65,7 @@ gch::small_vector<size_t, 32> possibleTransitions(
  * @return false otherwise
  */
 bool canFire(const SmallVectorInput &pre,
-             const std::vector<AugmentedPlace> &tokens);
+             const std::vector<AugmentedToken> &tokens);
 
 /**
  * @brief Forward declaration of the Petri-class
@@ -129,7 +130,7 @@ struct Petri {
    * @param marking
    * @return std::vector<size_t>
    */
-  std::vector<AugmentedPlace> toTokens(const Marking &marking) const noexcept;
+  std::vector<AugmentedToken> toTokens(const Marking &marking) const noexcept;
 
   /**
    * @brief Get the current marking. It is represented by a vector of places:
@@ -184,12 +185,6 @@ struct Petri {
     std::vector<std::string> color;
 
     /**
-     * @brief input color constraint per transition
-     *
-     */
-    std::vector<size_t> transition_colors;
-
-    /**
      * @brief list of list of inputs to transitions. This vector is indexed like
      * `transition`.
      *
@@ -225,9 +220,9 @@ struct Petri {
     std::vector<Callback> store;
   } net;  ///< Is a data-oriented design of a Petri net
 
-  std::vector<AugmentedPlace> initial_tokens;  ///< The initial marking
-  std::vector<AugmentedPlace> tokens;          ///< The current marking
-  std::vector<AugmentedPlace> final_marking;   ///< The final marking
+  std::vector<AugmentedToken> initial_tokens;  ///< The initial marking
+  std::vector<AugmentedToken> tokens;          ///< The current marking
+  std::vector<AugmentedToken> final_marking;   ///< The final marking
   std::vector<size_t> scheduled_callbacks;     ///< List of active transitions
   Eventlog event_log;                          ///< The most actual event_log
   Token state;          ///< The current state of the Petri

@@ -25,10 +25,12 @@ void t() {
 }
 
 std::tuple<Net, Store, PriorityTable, Marking> BugsTestNet() {
-  Net net = {{"t", {{"Pa"}, {"Pb"}}}};
+  Net net = {
+      {"t",
+       {{{"Pa", TokenLookup::Completed}}, {{"Pb", TokenLookup::Completed}}}}};
   Store store = {{"t", &t}};
   PriorityTable priority;
-  Marking m0 = {{"Pa", PLACEHOLDER_STRING}, {"Pa", PLACEHOLDER_STRING}};
+  Marking m0 = {{"Pa", TokenLookup::Completed}, {"Pa", TokenLookup::Completed}};
   return {net, store, priority, m0};
 }
 
@@ -57,7 +59,7 @@ TEST_CASE("Firing the same transition before it can complete should work") {
   m.reducer_queue->wait_dequeue_timed(r, std::chrono::milliseconds(250));
   r(m);
   {
-    Marking expected = {{"Pb", PLACEHOLDER_STRING}};
+    Marking expected = {{"Pb", TokenLookup::Completed}};
     REQUIRE(MarkingEquality(m.getMarking(), expected));
   }
 
@@ -71,7 +73,8 @@ TEST_CASE("Firing the same transition before it can complete should work") {
   m.reducer_queue->wait_dequeue_timed(r, std::chrono::milliseconds(250));
   r(m);
   {
-    Marking expected = {{"Pb", PLACEHOLDER_STRING}, {"Pb", PLACEHOLDER_STRING}};
+    Marking expected = {{"Pb", TokenLookup::Completed},
+                        {"Pb", TokenLookup::Completed}};
     REQUIRE(MarkingEquality(m.getMarking(), expected));
   }
 

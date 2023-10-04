@@ -10,15 +10,21 @@ void t0() {}
 auto t1() {}
 
 std::tuple<Net, Store, PriorityTable, Marking> SymmetriTestNet() {
-  Net net = {{"t0", {{"Pa", "Pb"}, {"Pc"}}},
-             {"t1", {{"Pc", "Pc"}, {"Pb", "Pb", "Pd"}}}};
+  Net net = {{"t0",
+              {{{"Pa", TokenLookup::Completed}, {"Pb", TokenLookup::Completed}},
+               {{"Pc", TokenLookup::Completed}}}},
+             {"t1",
+              {{{"Pc", TokenLookup::Completed}, {"Pc", TokenLookup::Completed}},
+               {{"Pb", TokenLookup::Completed},
+                {"Pb", TokenLookup::Completed},
+                {"Pd", TokenLookup::Completed}}}}};
 
   Store store = {{"t0", &t0}, {"t1", &t1}};
   PriorityTable priority;
 
-  Marking m0 = {{"Pa", PLACEHOLDER_STRING}, {"Pa", PLACEHOLDER_STRING},
-                {"Pa", PLACEHOLDER_STRING}, {"Pa", PLACEHOLDER_STRING},
-                {"Pb", PLACEHOLDER_STRING}, {"Pb", PLACEHOLDER_STRING}};
+  Marking m0 = {{"Pa", TokenLookup::Completed}, {"Pa", TokenLookup::Completed},
+                {"Pa", TokenLookup::Completed}, {"Pa", TokenLookup::Completed},
+                {"Pb", TokenLookup::Completed}, {"Pb", TokenLookup::Completed}};
   return {net, store, priority, m0};
 }
 
@@ -38,10 +44,10 @@ TEST_CASE("Create a using the net constructor without end condition.") {
 TEST_CASE("Create a using the net constructor with end condition.") {
   auto stp = std::make_shared<TaskSystem>(1);
 
-  Marking final_marking({{"Pb", PLACEHOLDER_STRING},
-                         {"Pb", PLACEHOLDER_STRING},
-                         {"Pd", PLACEHOLDER_STRING},
-                         {"Pd", PLACEHOLDER_STRING}});
+  Marking final_marking({{"Pb", TokenLookup::Completed},
+                         {"Pb", TokenLookup::Completed},
+                         {"Pd", TokenLookup::Completed},
+                         {"Pd", TokenLookup::Completed}});
 
   auto [net, store, priority, m0] = SymmetriTestNet();
   PetriNet app(net, m0, final_marking, store, priority, "test_net_with_end",
@@ -63,7 +69,7 @@ TEST_CASE("Create a using pnml constructor.") {
   // This store is appropriate for this net,
   Store store = symmetri::Store{{"T0", &t0}};
   PriorityTable priority;
-  Marking final_marking({{"P1", PLACEHOLDER_STRING}});
+  Marking final_marking({{"P1", TokenLookup::Completed}});
   PetriNet app({pnml_file}, final_marking, store, priority, "success", stp);
   // so we can run it,
   auto res = fire(app);
@@ -108,12 +114,15 @@ TEST_CASE("Can not reuse an active application with a new case_id.") {
 
 TEST_CASE("Test pause and resume") {
   std::atomic<int> i = 0;
-  Net net = {{"t0", {{"Pa"}, {"Pa"}}}, {"t1", {{}, {"Pb"}}}};
+  Net net = {
+      {"t0",
+       {{{"Pa", TokenLookup::Completed}}, {{"Pa", TokenLookup::Completed}}}},
+      {"t1", {{}, {{"Pb", TokenLookup::Completed}}}}};
   Store store = {{"t0", [&] { i++; }}, {"t1", [] {}}};
-  Marking m0 = {{"Pa", PLACEHOLDER_STRING}};
+  Marking m0 = {{"Pa", TokenLookup::Completed}};
   auto stp = std::make_shared<TaskSystem>(2);
-  PetriNet app(net, m0, {{"Pb", PLACEHOLDER_STRING}}, store, {}, "random_id",
-               stp);
+  PetriNet app(net, m0, {{"Pb", TokenLookup::Completed}}, store, {},
+               "random_id", stp);
   int check1, check2;
   stp->push([&, app, t1 = app.registerTransitionCallback("t1")]() {
     const auto dt = std::chrono::milliseconds(5);

@@ -8,23 +8,32 @@ size_t toIndex(const std::vector<std::string> &m, const std::string &s) {
 }
 
 bool canFire(const SmallVectorInput &pre,
-             const std::vector<AugmentedPlace> &tokens) {
-  return std::all_of(pre.begin(), pre.end(), [&](const auto &m_p) {
-    size_t actual = std::count(tokens.begin(), tokens.end(), m_p);
-    size_t required = std::count(pre.begin(), pre.end(), m_p);
-    return actual >= required;
-  });
+             const std::vector<AugmentedToken> &tokens) {
+  return pre.size() > 0 &&
+         std::all_of(pre.begin(), pre.end(), [&](const auto &m_p) {
+           size_t actual = std::count(tokens.begin(), tokens.end(), m_p);
+           size_t required = std::count(pre.begin(), pre.end(), m_p);
+           return actual >= required;
+         });
 }
 
 gch::small_vector<size_t, 32> possibleTransitions(
-    const std::vector<AugmentedPlace> &tokens,
+    const std::vector<AugmentedToken> &tokens,
+    const std::vector<SmallVectorInput> &input_n,
     const std::vector<SmallVector> &p_to_ts_n) {
   gch::small_vector<size_t, 32> possible_transition_list_n;
-  for (const AugmentedPlace &place : tokens) {
+  for (const AugmentedToken &place : tokens) {
+    // transition index
     for (size_t t : p_to_ts_n[place.place]) {
-      if (std::find(possible_transition_list_n.begin(),
-                    possible_transition_list_n.end(),
-                    t) == possible_transition_list_n.end()) {
+      const auto &inputs = input_n[t];
+      // current colored place is an input of t
+      bool is_input =
+          std::find(inputs.cbegin(), inputs.cend(), place) != inputs.end();
+      // transition is not already considered:
+      bool is_unique = std::find(possible_transition_list_n.begin(),
+                                 possible_transition_list_n.end(),
+                                 t) == possible_transition_list_n.end();
+      if (is_unique && is_input) {
         possible_transition_list_n.push_back(t);
       }
     }
@@ -41,12 +50,23 @@ Reducer createReducerForCallback(const size_t t_i, const Token result,
     auto it = std::find(model.scheduled_callbacks.begin(),
                         model.scheduled_callbacks.end(), t_i);
     if (it != model.scheduled_callbacks.end()) {
+      switch (result) {
+        case state::Scheduled:
+        case state::Started:
+        case state::Deadlock:
+        case state::UserExit:
+        case state::Paused:
+        case state::Error:
+          break;
+        default: {
+          const auto &place_list = model.net.output_n;
+          model.tokens.reserve(model.tokens.size() + place_list[t_i].size());
+          for (const auto &[p, c] : place_list[t_i]) {
+            model.tokens.push_back({p, result});
+          }
+        }
+      };
       model.scheduled_callbacks.erase(it);
-      if (result == state::Completed) {
-        const auto &place_list = model.net.output_n;
-        model.tokens.insert(model.tokens.begin(), place_list[t_i].begin(),
-                            place_list[t_i].end());
-      }
     };
     // get the log
     Eventlog ev;

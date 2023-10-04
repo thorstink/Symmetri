@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <iostream>
 #include <map>
 
 #include "petri.h"
@@ -24,15 +25,21 @@ std::tuple<Net, Store, PriorityTable, Marking> PetriTestNet() {
   T0_COUNTER.store(0);
   T1_COUNTER.store(0);
 
-  Net net = {{"t0", {{"Pa", "Pb"}, {"Pc"}}},
-             {"t1", {{"Pc", "Pc"}, {"Pb", "Pb", "Pd"}}}};
+  Net net = {{"t0",
+              {{{"Pa", TokenLookup::Completed}, {"Pb", TokenLookup::Completed}},
+               {{"Pc", TokenLookup::Completed}}}},
+             {"t1",
+              {{{"Pc", TokenLookup::Completed}, {"Pc", TokenLookup::Completed}},
+               {{"Pb", TokenLookup::Completed},
+                {"Pb", TokenLookup::Completed},
+                {"Pd", TokenLookup::Completed}}}}};
 
   Store store = {{"t0", &petri0}, {"t1", &petri1}};
   PriorityTable priority;
 
-  Marking m0 = {{"Pa", PLACEHOLDER_STRING}, {"Pa", PLACEHOLDER_STRING},
-                {"Pa", PLACEHOLDER_STRING}, {"Pa", PLACEHOLDER_STRING},
-                {"Pb", PLACEHOLDER_STRING}, {"Pb", PLACEHOLDER_STRING}};
+  Marking m0 = {{"Pa", TokenLookup::Completed}, {"Pa", TokenLookup::Completed},
+                {"Pa", TokenLookup::Completed}, {"Pa", TokenLookup::Completed},
+                {"Pb", TokenLookup::Completed}, {"Pb", TokenLookup::Completed}};
   return {net, store, priority, m0};
 }
 
@@ -46,7 +53,7 @@ TEST_CASE("Test equaliy of nets") {
   REQUIRE(!stateNetEquality(net, net2));
 
   // same transitions but different places.
-  net3.at("t0").second.push_back("px");
+  net3.at("t0").second.push_back({"px", TokenLookup::Completed});
   REQUIRE(!stateNetEquality(net, net3));
 }
 
@@ -61,7 +68,8 @@ TEST_CASE("Run one transition iteration in a petri net") {
   // t0 is dispatched but it's reducer has not yet run, so pre-conditions are
   // processed but post are not:
   {
-    Marking expected = {{"Pa", PLACEHOLDER_STRING}, {"Pa", PLACEHOLDER_STRING}};
+    Marking expected = {{"Pa", TokenLookup::Completed},
+                        {"Pa", TokenLookup::Completed}};
     REQUIRE(MarkingEquality(m.getMarking(), expected));
   }
   // now there should be two reducers;
@@ -74,7 +82,8 @@ TEST_CASE("Run one transition iteration in a petri net") {
   REQUIRE(T0_COUNTER.load() == 2);
   // the marking should still be the same.
   {
-    Marking expected = {{"Pa", PLACEHOLDER_STRING}, {"Pa", PLACEHOLDER_STRING}};
+    Marking expected = {{"Pa", TokenLookup::Completed},
+                        {"Pa", TokenLookup::Completed}};
     REQUIRE(MarkingEquality(m.getMarking(), expected));
   }
 
@@ -84,10 +93,10 @@ TEST_CASE("Run one transition iteration in a petri net") {
   // and now the post-conditions are processed:
   REQUIRE(m.scheduled_callbacks.empty());
   {
-    Marking expected = {{"Pa", PLACEHOLDER_STRING},
-                        {"Pa", PLACEHOLDER_STRING},
-                        {"Pc", PLACEHOLDER_STRING},
-                        {"Pc", PLACEHOLDER_STRING}};
+    Marking expected = {{"Pa", TokenLookup::Completed},
+                        {"Pa", TokenLookup::Completed},
+                        {"Pc", TokenLookup::Completed},
+                        {"Pc", TokenLookup::Completed}};
     REQUIRE(MarkingEquality(m.getMarking(), expected));
   }
 }
@@ -111,28 +120,26 @@ TEST_CASE("Run until net dies") {
   } while (m.scheduled_callbacks.size() > 0);
 
   // For this specific net we expect:
-  Marking expected = {{"Pb", PLACEHOLDER_STRING},
-                      {"Pb", PLACEHOLDER_STRING},
-                      {"Pd", PLACEHOLDER_STRING},
-                      {"Pd", PLACEHOLDER_STRING}};
+  Marking expected = {{"Pb", TokenLookup::Completed},
+                      {"Pb", TokenLookup::Completed},
+                      {"Pd", TokenLookup::Completed},
+                      {"Pd", TokenLookup::Completed}};
   REQUIRE(MarkingEquality(m.getMarking(), expected));
 
   REQUIRE(T0_COUNTER.load() == 4);
   REQUIRE(T1_COUNTER.load() == 2);
 }
 
-TEST_CASE("Run until net dies with nullptr") {
+TEST_CASE("Run until net dies with DirectMutations") {
   using namespace moodycamel;
 
   auto [net, store, priority, m0] = PetriTestNet();
   // we can pass an empty story, and DirectMutation will be used for the
   // undefined transitions
-  store = {};
   auto stp = std::make_shared<TaskSystem>(1);
-  Petri m(net, store, priority, m0, {}, "s", stp);
+  Petri m(net, {}, priority, m0, {}, "s", stp);
 
   Reducer r;
-  Callback a([] {});
   // we need to enqueue one 'no-operation' to start the live net.
   m.reducer_queue->enqueue([](Petri&) {});
   do {
@@ -141,12 +148,12 @@ TEST_CASE("Run until net dies with nullptr") {
       m.fireTransitions();
     }
   } while (m.scheduled_callbacks.size() > 0);
-
   // For this specific net we expect:
-  Marking expected = {{"Pb", PLACEHOLDER_STRING},
-                      {"Pb", PLACEHOLDER_STRING},
-                      {"Pd", PLACEHOLDER_STRING},
-                      {"Pd", PLACEHOLDER_STRING}};
+  Marking expected = {{"Pb", TokenLookup::Completed},
+                      {"Pb", TokenLookup::Completed},
+                      {"Pd", TokenLookup::Completed},
+                      {"Pd", TokenLookup::Completed}};
+
   REQUIRE(MarkingEquality(m.getMarking(), expected));
 }
 
@@ -184,11 +191,11 @@ TEST_CASE("Run until net dies with nullptr") {
 TEST_CASE("Step through transitions") {
   std::map<std::string, size_t> hitmap;
   {
-    Net net = {{"a", {{"Pa"}, {}}},
-               {"b", {{"Pa"}, {}}},
-               {"c", {{"Pa"}, {}}},
-               {"d", {{"Pa"}, {}}},
-               {"e", {{"Pb"}, {}}}};
+    Net net = {{"a", {{{"Pa", TokenLookup::Completed}}, {}}},
+               {"b", {{{"Pa", TokenLookup::Completed}}, {}}},
+               {"c", {{{"Pa", TokenLookup::Completed}}, {}}},
+               {"d", {{{"Pa", TokenLookup::Completed}}, {}}},
+               {"e", {{{"Pb", TokenLookup::Completed}}, {}}}};
     Store store;
     for (const auto& [t, dm] : net) {
       hitmap.insert({t, 0});
@@ -196,10 +203,10 @@ TEST_CASE("Step through transitions") {
     }
     auto stp = std::make_shared<TaskSystem>(1);
     // with this initial marking, all but transition e are possible.
-    Marking m0 = {{"Pa", PLACEHOLDER_STRING},
-                  {"Pa", PLACEHOLDER_STRING},
-                  {"Pa", PLACEHOLDER_STRING},
-                  {"Pa", PLACEHOLDER_STRING}};
+    Marking m0 = {{"Pa", TokenLookup::Completed},
+                  {"Pa", TokenLookup::Completed},
+                  {"Pa", TokenLookup::Completed},
+                  {"Pa", TokenLookup::Completed}};
     Petri m(net, store, {}, m0, {}, "s", stp);
 
     // auto scheduled_callbacks = m.getActiveTransitions();
@@ -233,4 +240,10 @@ TEST_CASE("Step through transitions") {
   REQUIRE(hitmap.at("c") == 1);
   REQUIRE(hitmap.at("d") == 0);
   REQUIRE(hitmap.at("e") == 0);
+}
+
+TEST_CASE("create fireable transitions shortlist") {
+  auto [net, store, priority, m0] = PetriTestNet();
+  auto stp = std::make_shared<TaskSystem>(1);
+  Petri m(net, store, priority, m0, {}, "s", stp);
 }

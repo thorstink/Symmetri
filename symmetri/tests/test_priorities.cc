@@ -13,10 +13,13 @@ TEST_CASE(
   std::list<PriorityTable> priorities = {{{"t0", 1}, {"t1", 0}},
                                          {{"t0", 0}, {"t1", 1}}};
   for (auto priority : priorities) {
-    Net net = {{"t0", {{"Pa"}, {"Pb"}}}, {"t1", {{"Pa"}, {"Pc"}}}};
+    Net net = {
+        {"t0",
+         {{{"Pa", TokenLookup::Completed}}, {{"Pb", TokenLookup::Completed}}}},
+        {"t1",
+         {{{"Pa", TokenLookup::Completed}}, {{"Pc", TokenLookup::Completed}}}}};
     Store store = {{"t0", [] {}}, {"t1", [] {}}};
-
-    Marking m0 = {{"Pa", PLACEHOLDER_STRING}};
+    Marking m0 = {{"Pa", TokenLookup::Completed}};
     auto stp = std::make_shared<TaskSystem>(1);
 
     auto m = Petri(net, store, priority, m0, {}, "s", stp);
@@ -35,10 +38,10 @@ TEST_CASE(
                      return e.first == "t1";
                    })->second;
     if (prio_t0 > prio_t1) {
-      Marking expected = {{"Pb", PLACEHOLDER_STRING}};
+      Marking expected = {{"Pb", TokenLookup::Completed}};
       REQUIRE(MarkingEquality(m.getMarking(), expected));
     } else {
-      Marking expected = {{"Pc", PLACEHOLDER_STRING}};
+      Marking expected = {{"Pc", TokenLookup::Completed}};
       REQUIRE(MarkingEquality(m.getMarking(), expected));
     }
   }
@@ -48,10 +51,15 @@ TEST_CASE("Using DirectMutation does not queue reducers.") {
   std::list<PriorityTable> priorities = {{{"t0", 1}, {"t1", 0}},
                                          {{"t0", 0}, {"t1", 1}}};
   for (auto priority : priorities) {
-    Net net = {{"t0", {{"Pa"}, {"Pb"}}}, {"t1", {{"Pa"}, {"Pc"}}}};
+    Net net = {
+        {"t0",
+         {{{"Pa", TokenLookup::Completed}}, {{"Pb", TokenLookup::Completed}}}},
+        {"t1",
+         {{{"Pa", TokenLookup::Completed}}, {{"Pc", TokenLookup::Completed}}}}};
+
     Store store = {{"t0", DirectMutation{}}, {"t1", DirectMutation{}}};
 
-    Marking m0 = {{"Pa", PLACEHOLDER_STRING}};
+    Marking m0 = {{"Pa", TokenLookup::Completed}};
     auto stp = std::make_shared<TaskSystem>(1);
 
     auto m = Petri(net, store, priority, m0, {}, "s", stp);
@@ -64,10 +72,10 @@ TEST_CASE("Using DirectMutation does not queue reducers.") {
                      return e.first == "t1";
                    })->second;
     if (prio_t0 > prio_t1) {
-      Marking expected = {{"Pb", PLACEHOLDER_STRING}};
+      Marking expected = {{"Pb", TokenLookup::Completed}};
       REQUIRE(MarkingEquality(m.getMarking(), expected));
     } else {
-      Marking expected = {{"Pc", PLACEHOLDER_STRING}};
+      Marking expected = {{"Pc", TokenLookup::Completed}};
       REQUIRE(MarkingEquality(m.getMarking(), expected));
     }
   }

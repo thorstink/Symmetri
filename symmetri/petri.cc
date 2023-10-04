@@ -13,7 +13,10 @@ convert(const Net &_net, const Store &_store) {
   const auto transition_count = _net.size();
   std::vector<std::string> transitions;
   std::vector<std::string> places;
-  const std::vector<std::string> &colors = TokenLookup::getColors();
+  std::vector<std::string> colors;
+  for (const auto &[t, c] : TokenLookup::map) {
+    colors.push_back(c);
+  }
   std::vector<Callback> store;
   transitions.reserve(transition_count);
   store.reserve(transition_count);
@@ -25,10 +28,10 @@ convert(const Net &_net, const Store &_store) {
         _store.find(t) != _store.end() ? _store.at(t) : DirectMutation{};
     store.push_back(callback);
     for (const auto &p : io.first) {
-      places.push_back(p);
+      places.push_back(p.first);
     }
     for (const auto &p : io.second) {
-      places.push_back(p);
+      places.push_back(p.first);
     }
     // sort and remove duplicates.
     std::sort(places.begin(), places.end());
@@ -39,16 +42,19 @@ convert(const Net &_net, const Store &_store) {
 }
 
 std::tuple<std::vector<SmallVectorInput>, std::vector<SmallVectorInput>>
-populateIoLookups(const Net &_net, const std::vector<Place> &ordered_places) {
+populateIoLookups(const Net &_net, const std::vector<Place> &ordered_places,
+                  const std::vector<Place> &) {
   std::vector<SmallVectorInput> input_n, output_n;
   for (const auto &[t, io] : _net) {
     SmallVectorInput q_in, q_out;
     for (const auto &p : io.first) {
-      q_in.push_back({toIndex(ordered_places, p), PLACEHOLDER});
+      q_in.push_back({toIndex(ordered_places, p.first),
+                      state::ConstStringHash(p.second.c_str())});
     }
     input_n.push_back(q_in);
     for (const auto &p : io.second) {
-      q_out.push_back({toIndex(ordered_places, p), PLACEHOLDER});
+      q_out.push_back({toIndex(ordered_places, p.first),
+                       state::ConstStringHash(p.second.c_str())});
     }
     output_n.push_back(q_out);
   }
@@ -98,13 +104,8 @@ Petri::Petri(const Net &_net, const Store &_store,
   event_log.reserve(1000);
   std::tie(net.transition, net.place, net.color, net.store) =
       convert(_net, _store);
-  // populate transition_colors;
-  auto &local = net.transition_colors;
-  local.resize(net.transition.size());
-  std::transform(local.cbegin(), local.cend(), local.begin(),
-                 [black = state::Completed](size_t) { return black; });
-  // end ugly here
-  std::tie(net.input_n, net.output_n) = populateIoLookups(_net, net.place);
+  std::tie(net.input_n, net.output_n) =
+      populateIoLookups(_net, net.place, net.color);
   net.p_to_ts_n = createReversePlaceToTransitionLookup(
       net.place.size(), net.transition.size(), net.input_n);
   net.priority = createPriorityLookup(net.transition, _priority);
@@ -113,11 +114,12 @@ Petri::Petri(const Net &_net, const Store &_store,
   final_marking = toTokens(_final_marking);
 }
 
-std::vector<AugmentedPlace> Petri::toTokens(
+std::vector<AugmentedToken> Petri::toTokens(
     const Marking &marking) const noexcept {
-  std::vector<AugmentedPlace> tokens;
+  std::vector<AugmentedToken> tokens;
   for (const auto &[p, c] : marking) {
-    tokens.push_back({toIndex(net.place, p), PLACEHOLDER});
+    tokens.push_back(
+        {toIndex(net.place, p), state::ConstStringHash(c.c_str())});
   }
   return tokens;
 }
@@ -162,52 +164,52 @@ void Petri::tryFire(const Transition &t) {
   }
 }
 
-void Petri::fireTransitions() {
-  // find possible transitions
-  auto possible_transition_list_n = possibleTransitions(tokens, net.p_to_ts_n);
-  auto remove_inactive_transitions_predicate = [&](const auto &tokens) {
-    possible_transition_list_n.erase(
-        std::remove_if(
-            possible_transition_list_n.begin(),
-            possible_transition_list_n.end(),
-            [&](auto t_idx) { return !canFire(net.input_n[t_idx], tokens); }),
-        possible_transition_list_n.end());
-  };
-
-  // remove transitions that are not active;
-  remove_inactive_transitions_predicate(tokens);
+void updatePossibleTransitions(
+    gch::small_vector<size_t, 32> &possible_transitions,
+    const std::vector<SmallVectorInput> &input_n,
+    const std::vector<int8_t> &priority,
+    const std::vector<AugmentedToken> &tokens) {
+  possible_transitions.erase(
+      std::remove_if(
+          possible_transitions.begin(), possible_transitions.end(),
+          [&](auto t_idx) { return !canFire(input_n[t_idx], tokens); }),
+      possible_transitions.end());
 
   // sort transition list according to priority
-  std::sort(
-      possible_transition_list_n.begin(), possible_transition_list_n.end(),
-      [&](size_t a, size_t b) { return net.priority[a] > net.priority[b]; });
+  std::sort(possible_transitions.begin(), possible_transitions.end(),
+            [&](size_t a, size_t b) { return priority[a] > priority[b]; });
+}
 
+void Petri::fireTransitions() {
+  // find possibly active transitions
+  auto possible_transition_list_n =
+      possibleTransitions(tokens, net.input_n, net.p_to_ts_n);
+  // remove inactive transitions
+  updatePossibleTransitions(possible_transition_list_n, net.input_n,
+                            net.priority, tokens);
+
+  // loop
   while (!possible_transition_list_n.empty()) {
     const auto t_idx = possible_transition_list_n.front();
     deductMarking(net.input_n[t_idx]);
     if (isSynchronous(net.store[t_idx])) {
       fireSynchronous(t_idx);
       // add the output places-connected transitions as new possible
-      // transitions:
+      // transitions if they are not already in the list.
       for (const auto &[p, c] : net.output_n[t_idx]) {
         for (const auto &t : net.p_to_ts_n[p]) {
-          if (canFire(net.input_n[t], tokens)) {
+          if (std::find(possible_transition_list_n.begin(),
+                        possible_transition_list_n.end(),
+                        t) == possible_transition_list_n.end()) {
             possible_transition_list_n.push_back(t);
           }
         }
       }
-
-      // sort again
-      std::sort(possible_transition_list_n.begin(),
-                possible_transition_list_n.end(), [&](size_t a, size_t b) {
-                  return net.priority[a] > net.priority[b];
-                });
     } else {
       fireAsynchronous(t_idx);
     }
-    // remove transitions that are not active anymore because of the marking
-    // mutation;
-    remove_inactive_transitions_predicate(tokens);
+    updatePossibleTransitions(possible_transition_list_n, net.input_n,
+                              net.priority, tokens);
   }
 
   return;
@@ -218,7 +220,8 @@ Marking Petri::getMarking() const {
   marking.reserve(tokens.size());
   std::transform(tokens.cbegin(), tokens.cend(), std::back_inserter(marking),
                  [&](auto place_index) -> std::pair<std::string, std::string> {
-                   return {net.place[place_index.place], PLACEHOLDER_STRING};
+                   return {net.place[place_index.place],
+                           TokenLookup::map[place_index.color]};
                  });
   return marking;
 }

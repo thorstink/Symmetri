@@ -28,7 +28,7 @@ std::tuple<Net, Marking, PriorityTable> readGrml(
       if (type == "place") {
         // loop places & initial values
         std::string place_id;
-        uint16_t initial_marking;
+        uint16_t initial_marking = 0;
         for (XMLElement *attribute = child->FirstChildElement("attribute");
              attribute != NULL;
              attribute = attribute->NextSiblingElement("attribute")) {
@@ -44,7 +44,7 @@ std::tuple<Net, Marking, PriorityTable> readGrml(
           }
         }
         for (int i = 0; i < initial_marking; i++) {
-          place_initialMarking.push_back({place_id, PLACEHOLDER_STRING});
+          place_initialMarking.push_back({place_id, TokenLookup::Completed});
         }
         places.insert(place_id);
         id_lookup_table.insert({id, place_id});
@@ -87,16 +87,20 @@ std::tuple<Net, Marking, PriorityTable> readGrml(
         if (places.find(source_id) != places.end()) {
           // if the source is a place, tokens are consumed.
           if (state_net.find(target_id) != state_net.end()) {
-            state_net.find(target_id)->second.first.push_back(source_id);
+            state_net.find(target_id)->second.first.push_back(
+                {source_id, TokenLookup::Completed});
           } else {
-            state_net.insert({target_id, {{source_id}, {}}});
+            state_net.insert(
+                {target_id, {{{source_id, TokenLookup::Completed}}, {}}});
           }
         } else if (transitions.find(source_id) != transitions.end()) {
           // if the destination is a place, tokens are produced.
           if (state_net.find(source_id) != state_net.end()) {
-            state_net.find(source_id)->second.second.push_back(target_id);
+            state_net.find(source_id)->second.second.push_back(
+                {target_id, TokenLookup::Completed});
           } else {
-            state_net.insert({source_id, {{}, {target_id}}});
+            state_net.insert(
+                {source_id, {{}, {{target_id, TokenLookup::Completed}}}});
           }
         } else {
           throw std::runtime_error(std::string(
