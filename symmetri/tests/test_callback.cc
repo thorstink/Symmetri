@@ -26,14 +26,14 @@ class Foo {
 Token fire(const Foo&) { return state::Completed; }
 
 void resume(const Foo& f) {
-  REQUIRE(f.constructor == 1);
-  REQUIRE(f.copy_constructor == 0);
+  CHECK(f.constructor == 1);
+  CHECK(f.copy_constructor == 0);
 }
 
 TEST_CASE("Constructing is just as you expect") {
   Foo o("one_constructor");
-  REQUIRE(o.constructor == 1);
-  REQUIRE(o.copy_constructor == 0);
+  CHECK(o.constructor == 1);
+  CHECK(o.copy_constructor == 0);
 }
 
 TEST_CASE("Creating and and inserting is ok") {

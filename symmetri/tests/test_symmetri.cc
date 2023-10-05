@@ -37,8 +37,8 @@ TEST_CASE("Create a using the net constructor without end condition.") {
   auto res = fire(app);
   auto ev = getLog(app);
   // because there's no final marking, but the net is finite, it deadlocks.
-  REQUIRE(res == state::Deadlock);
-  REQUIRE(!ev.empty());
+  CHECK(res == state::Deadlock);
+  CHECK(!ev.empty());
 }
 
 TEST_CASE("Create a using the net constructor with end condition.") {
@@ -57,8 +57,8 @@ TEST_CASE("Create a using the net constructor with end condition.") {
   auto ev = getLog(app);
 
   // now there is an end condition.
-  REQUIRE(res == state::Completed);
-  REQUIRE(!ev.empty());
+  CHECK(res == state::Completed);
+  CHECK(!ev.empty());
 }
 
 TEST_CASE("Create a using pnml constructor.") {
@@ -75,8 +75,8 @@ TEST_CASE("Create a using pnml constructor.") {
   auto res = fire(app);
   auto ev = getLog(app);
   // and the result is properly completed.
-  REQUIRE(res == state::Completed);
-  REQUIRE(!ev.empty());
+  CHECK(res == state::Completed);
+  CHECK(!ev.empty());
 }
 
 TEST_CASE("Reuse an application with a new case_id.") {
@@ -85,16 +85,16 @@ TEST_CASE("Reuse an application with a new case_id.") {
   const auto new_id = "something_different0";
   auto stp = std::make_shared<TaskSystem>(1);
   PetriNet app(net, m0, {}, store, priority, initial_id, stp);
-  REQUIRE(!app.reuseApplication(initial_id));
-  REQUIRE(app.reuseApplication(new_id));
+  CHECK(!app.reuseApplication(initial_id));
+  CHECK(app.reuseApplication(new_id));
   // fire a transition so that there's an entry in the eventlog
   fire(app);
   auto eventlog = getLog(app);
   // double check that the eventlog is not empty
-  REQUIRE(!eventlog.empty());
+  CHECK(!eventlog.empty());
   // the eventlog should have a different case id.
   for (const auto& event : eventlog) {
-    REQUIRE(event.case_id == new_id);
+    CHECK(event.case_id == new_id);
   }
 }
 
@@ -106,7 +106,7 @@ TEST_CASE("Can not reuse an active application with a new case_id.") {
   PetriNet app(net, m0, {}, store, priority, initial_id, stp);
   stp->push([&]() mutable {
     // this should fail because we can not do this while everything is active.
-    REQUIRE(!app.reuseApplication(new_id));
+    CHECK(!app.reuseApplication(new_id));
   });
 
   fire(app);
@@ -137,9 +137,9 @@ TEST_CASE("Test pause and resume") {
     t1();
   });
   fire(app);
-  REQUIRE(check1 == check2);
-  REQUIRE(i.load() > check2);
-  REQUIRE(i.load() > check2 + 1);
+  CHECK(check1 == check2);
+  CHECK(i.load() > check2);
+  CHECK(i.load() > check2 + 1);
 }
 namespace symmetri {
 namespace state {
@@ -149,14 +149,14 @@ const static Token ExternalState(registerToken("ExternalState"));
 
 TEST_CASE("Types") {
   using namespace symmetri::state;
-  REQUIRE(Scheduled != ExternalState);
-  REQUIRE(Started != ExternalState);
-  REQUIRE(Completed != ExternalState);
-  REQUIRE(Deadlock != ExternalState);
-  REQUIRE(Paused != ExternalState);
-  REQUIRE(UserExit != ExternalState);
-  REQUIRE(ExternalState == ExternalState);
-  REQUIRE(printState(ExternalState) != "");
+  CHECK(Scheduled != ExternalState);
+  CHECK(Started != ExternalState);
+  CHECK(Completed != ExternalState);
+  CHECK(Deadlock != ExternalState);
+  CHECK(Paused != ExternalState);
+  CHECK(UserExit != ExternalState);
+  CHECK(ExternalState == ExternalState);
+  CHECK(printState(ExternalState) != "");
 }
 
 TEST_CASE("Print Types") {

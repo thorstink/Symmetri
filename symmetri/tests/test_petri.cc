@@ -47,14 +47,14 @@ TEST_CASE("Test equaliy of nets") {
   auto [net, store, priority, m0] = PetriTestNet();
   auto net2 = net;
   auto net3 = net;
-  REQUIRE(stateNetEquality(net, net2));
+  CHECK(stateNetEquality(net, net2));
   // change net
   net2.insert({"tx", {{}, {}}});
-  REQUIRE(!stateNetEquality(net, net2));
+  CHECK(!stateNetEquality(net, net2));
 
   // same transitions but different places.
   net3.at("t0").second.push_back({"px", TokenLookup::Completed});
-  REQUIRE(!stateNetEquality(net, net3));
+  CHECK(!stateNetEquality(net, net3));
 }
 
 TEST_CASE("Run one transition iteration in a petri net") {
@@ -70,34 +70,34 @@ TEST_CASE("Run one transition iteration in a petri net") {
   {
     Marking expected = {{"Pa", TokenLookup::Completed},
                         {"Pa", TokenLookup::Completed}};
-    REQUIRE(MarkingEquality(m.getMarking(), expected));
+    CHECK(MarkingEquality(m.getMarking(), expected));
   }
   // now there should be two reducers;
   Reducer r1, r2;
-  REQUIRE(m.reducer_queue->wait_dequeue_timed(r1, std::chrono::seconds(1)));
-  REQUIRE(m.reducer_queue->wait_dequeue_timed(r1, std::chrono::seconds(1)));
-  REQUIRE(m.reducer_queue->wait_dequeue_timed(r2, std::chrono::seconds(1)));
-  REQUIRE(m.reducer_queue->wait_dequeue_timed(r2, std::chrono::seconds(1)));
+  CHECK(m.reducer_queue->wait_dequeue_timed(r1, std::chrono::seconds(1)));
+  CHECK(m.reducer_queue->wait_dequeue_timed(r1, std::chrono::seconds(1)));
+  CHECK(m.reducer_queue->wait_dequeue_timed(r2, std::chrono::seconds(1)));
+  CHECK(m.reducer_queue->wait_dequeue_timed(r2, std::chrono::seconds(1)));
   // verify that t0 has actually ran twice.
-  REQUIRE(T0_COUNTER.load() == 2);
+  CHECK(T0_COUNTER.load() == 2);
   // the marking should still be the same.
   {
     Marking expected = {{"Pa", TokenLookup::Completed},
                         {"Pa", TokenLookup::Completed}};
-    REQUIRE(MarkingEquality(m.getMarking(), expected));
+    CHECK(MarkingEquality(m.getMarking(), expected));
   }
 
   // process the reducers
   r1(m);
   r2(m);
   // and now the post-conditions are processed:
-  REQUIRE(m.scheduled_callbacks.empty());
+  CHECK(m.scheduled_callbacks.empty());
   {
     Marking expected = {{"Pa", TokenLookup::Completed},
                         {"Pa", TokenLookup::Completed},
                         {"Pc", TokenLookup::Completed},
                         {"Pc", TokenLookup::Completed}};
-    REQUIRE(MarkingEquality(m.getMarking(), expected));
+    CHECK(MarkingEquality(m.getMarking(), expected));
   }
 }
 
@@ -124,10 +124,10 @@ TEST_CASE("Run until net dies") {
                       {"Pb", TokenLookup::Completed},
                       {"Pd", TokenLookup::Completed},
                       {"Pd", TokenLookup::Completed}};
-  REQUIRE(MarkingEquality(m.getMarking(), expected));
+  CHECK(MarkingEquality(m.getMarking(), expected));
 
-  REQUIRE(T0_COUNTER.load() == 4);
-  REQUIRE(T1_COUNTER.load() == 2);
+  CHECK(T0_COUNTER.load() == 4);
+  CHECK(T1_COUNTER.load() == 2);
 }
 
 TEST_CASE("Run until net dies with DirectMutations") {
@@ -154,7 +154,7 @@ TEST_CASE("Run until net dies with DirectMutations") {
                       {"Pd", TokenLookup::Completed},
                       {"Pd", TokenLookup::Completed}};
 
-  REQUIRE(MarkingEquality(m.getMarking(), expected));
+  CHECK(MarkingEquality(m.getMarking(), expected));
 }
 
 // TEST_CASE(
@@ -181,11 +181,11 @@ TEST_CASE("Run until net dies with DirectMutations") {
 //     fireable_transitions.end(),
 //                      a);
 //   };
-//   REQUIRE(find("a") != fireable_transitions.end());
-//   REQUIRE(find("b") != fireable_transitions.end());
-//   REQUIRE(find("c") != fireable_transitions.end());
-//   REQUIRE(find("d") != fireable_transitions.end());
-//   REQUIRE(find("e") == fireable_transitions.end());
+//   CHECK(find("a") != fireable_transitions.end());
+//   CHECK(find("b") != fireable_transitions.end());
+//   CHECK(find("c") != fireable_transitions.end());
+//   CHECK(find("d") != fireable_transitions.end());
+//   CHECK(find("e") == fireable_transitions.end());
 // }
 
 TEST_CASE("Step through transitions") {
@@ -210,19 +210,19 @@ TEST_CASE("Step through transitions") {
     Petri m(net, store, {}, m0, {}, "s", stp);
 
     // auto scheduled_callbacks = m.getActiveTransitions();
-    // REQUIRE(scheduled_callbacks.size() == 4);  // abcd
+    // CHECK(scheduled_callbacks.size() == 4);  // abcd
     m.tryFire("e");
     m.tryFire("b");
     m.tryFire("b");
     m.tryFire("c");
     m.tryFire("b");
     // there are no reducers ran, so this doesn't update.
-    REQUIRE(m.scheduled_callbacks.size() == 4);
+    CHECK(m.scheduled_callbacks.size() == 4);
     // there should be no markers left.
-    REQUIRE(m.getMarking().size() == 0);
+    CHECK(m.getMarking().size() == 0);
     // there should be nothing left to fire
     // scheduled_callbacks = m.getActiveTransitions();
-    // REQUIRE(scheduled_callbacks.size() == 0);
+    // CHECK(scheduled_callbacks.size() == 0);
     int j = 0;
     Reducer r;
     while (j < 2 * 4 &&
@@ -231,15 +231,15 @@ TEST_CASE("Step through transitions") {
       r(m);
     }
     // reducers update, there should be active transitions left.
-    REQUIRE(m.scheduled_callbacks.size() == 0);
+    CHECK(m.scheduled_callbacks.size() == 0);
   }
 
   // validate we only ran transition 3 times b, 1 time c and none of the others.
-  REQUIRE(hitmap.at("a") == 0);
-  REQUIRE(hitmap.at("b") == 3);
-  REQUIRE(hitmap.at("c") == 1);
-  REQUIRE(hitmap.at("d") == 0);
-  REQUIRE(hitmap.at("e") == 0);
+  CHECK(hitmap.at("a") == 0);
+  CHECK(hitmap.at("b") == 3);
+  CHECK(hitmap.at("c") == 1);
+  CHECK(hitmap.at("d") == 0);
+  CHECK(hitmap.at("e") == 0);
 }
 
 TEST_CASE("create fireable transitions shortlist") {

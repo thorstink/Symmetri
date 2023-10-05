@@ -16,7 +16,7 @@ TEST_CASE("Load p1.pnml net") {
                         {"P1", TokenLookup::Completed},
                         {"P2", TokenLookup::Completed},
                         {"P3", TokenLookup::Completed}};
-  REQUIRE(m0 == m_expected);
+  CHECK(m0 == m_expected);
 
   // for this particular net, the following transitions connect places:
   Net net_test;
@@ -41,7 +41,7 @@ TEST_CASE("Load p1.pnml net") {
   net_test["t4"] = {{{"P7", TokenLookup::Completed}},
                     {{"P8", TokenLookup::Completed}}};
 
-  REQUIRE(stateNetEquality(net_test, net));
+  CHECK(stateNetEquality(net_test, net));
 }
 
 TEST_CASE("Load p1.grml net") {
@@ -54,7 +54,7 @@ TEST_CASE("Load p1.grml net") {
                         {"P1", TokenLookup::Completed},
                         {"P2", TokenLookup::Completed},
                         {"P3", TokenLookup::Completed}};
-  REQUIRE(m0 == m_expected);
+  CHECK(m0 == m_expected);
 
   // for this particular net, the following transitions connect places:
   Net net_test;
@@ -82,9 +82,9 @@ TEST_CASE("Load p1.grml net") {
   // for this particular net the priorities are like this:
   PriorityTable priorities_gr = {{"t0", 2}};
 
-  REQUIRE(priorities_gr == priorities);
+  CHECK(priorities_gr == priorities);
 
-  REQUIRE(stateNetEquality(net_test, net));
+  CHECK(stateNetEquality(net_test, net));
 }
 
 TEST_CASE("Load p1_multi.pnml net") {
@@ -97,7 +97,7 @@ TEST_CASE("Load p1_multi.pnml net") {
   Marking m_expected = {{"P1", TokenLookup::Completed},
                         {"P2", TokenLookup::Completed},
                         {"P3", TokenLookup::Completed}};
-  REQUIRE(m0 == m_expected);
+  CHECK(m0 == m_expected);
 
   // for this particular net, the following transitions connect places:
   Net net_test;
@@ -120,7 +120,7 @@ TEST_CASE("Load p1_multi.pnml net") {
                      {"P3", TokenLookup::Completed}}};
   net_test["t4"] = {{{"P7", TokenLookup::Completed}},
                     {{"P8", TokenLookup::Completed}}};
-  REQUIRE(stateNetEquality(net_test, net));
+  CHECK(stateNetEquality(net_test, net));
 }
 
 TEST_CASE("Compose PT1.pnml and PT2.pnml nets") {
@@ -134,7 +134,7 @@ TEST_CASE("Compose PT1.pnml and PT2.pnml nets") {
 
   // for this compositions of nets, the initial marking is:
   Marking m_expected = {{"P0", TokenLookup::Completed}};
-  REQUIRE(m0 == m_expected);
+  CHECK(m0 == m_expected);
   // the compositions of these two nets, the following transitions connect
   // places:
   Net net_test;
@@ -142,7 +142,7 @@ TEST_CASE("Compose PT1.pnml and PT2.pnml nets") {
                     {{"P1", TokenLookup::Completed}}};
   net_test["T1"] = {{{"P1", TokenLookup::Completed}},
                     {{"P2", TokenLookup::Completed}}};
-  REQUIRE(stateNetEquality(net_test, net));
+  CHECK(stateNetEquality(net_test, net));
 
-  // REQUIRE(net_test == net);
+  // CHECK(net_test == net);
 }

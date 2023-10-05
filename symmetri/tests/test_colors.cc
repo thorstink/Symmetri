@@ -24,9 +24,9 @@ TEST_CASE("Test color.") {
   // t0 is enabled.
   m.fireTransitions();
   Reducer r1;
-  REQUIRE(m.reducer_queue->wait_dequeue_timed(r1, std::chrono::seconds(1)));
+  CHECK(m.reducer_queue->wait_dequeue_timed(r1, std::chrono::seconds(1)));
   r1(m);
-  REQUIRE(m.reducer_queue->wait_dequeue_timed(r1, std::chrono::seconds(1)));
+  CHECK(m.reducer_queue->wait_dequeue_timed(r1, std::chrono::seconds(1)));
   r1(m);
 
   const auto marking = m.getMarking();
@@ -36,6 +36,6 @@ TEST_CASE("Test color.") {
     for (auto [p, c] : marking) {
       std::cout << p << ", " << c << std::endl;
     }
-    REQUIRE(MarkingEquality(marking, expected));
+    CHECK(MarkingEquality(marking, expected));
   }
 }

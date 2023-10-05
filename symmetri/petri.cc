@@ -146,7 +146,8 @@ void Petri::fireAsynchronous(const size_t t) {
   });
 }
 
-void Petri::deductMarking(const SmallVectorInput &inputs) {
+void deductMarking(std::vector<AugmentedToken> &tokens,
+                   const SmallVectorInput &inputs) {
   for (const auto place : inputs) {
     // erase one by one. using std::remove_if would remove all tokens at
     // a particular place.
@@ -158,14 +159,14 @@ void Petri::tryFire(const Transition &t) {
   auto it = std::find(net.transition.begin(), net.transition.end(), t);
   const auto t_idx = std::distance(net.transition.begin(), it);
   if (canFire(net.input_n[t_idx], tokens)) {
-    deductMarking(net.input_n[t_idx]);
+    deductMarking(tokens, net.input_n[t_idx]);
     isSynchronous(net.store[t_idx]) ? fireSynchronous(t_idx)
                                     : fireAsynchronous(t_idx);
   }
 }
 
-void updatePossibleTransitions(
-    gch::small_vector<size_t, 32> &possible_transitions,
+gch::small_vector<size_t, 32> &&updatePossibleTransitions(
+    gch::small_vector<size_t, 32> &&possible_transitions,
     const std::vector<SmallVectorInput> &input_n,
     const std::vector<int8_t> &priority,
     const std::vector<AugmentedToken> &tokens) {
@@ -178,20 +179,20 @@ void updatePossibleTransitions(
   // sort transition list according to priority
   std::sort(possible_transitions.begin(), possible_transitions.end(),
             [&](size_t a, size_t b) { return priority[a] > priority[b]; });
+
+  return std::move(possible_transitions);
 }
 
 void Petri::fireTransitions() {
-  // find possibly active transitions
-  auto possible_transition_list_n =
-      possibleTransitions(tokens, net.input_n, net.p_to_ts_n);
-  // remove inactive transitions
-  updatePossibleTransitions(possible_transition_list_n, net.input_n,
-                            net.priority, tokens);
+  // find possibly active transitions && remove inactive transitions
+  auto possible_transition_list_n = updatePossibleTransitions(
+      possibleTransitions(tokens, net.input_n, net.p_to_ts_n), net.input_n,
+      net.priority, tokens);
 
   // loop
   while (!possible_transition_list_n.empty()) {
     const auto t_idx = possible_transition_list_n.front();
-    deductMarking(net.input_n[t_idx]);
+    deductMarking(tokens, net.input_n[t_idx]);
     if (isSynchronous(net.store[t_idx])) {
       fireSynchronous(t_idx);
       // add the output places-connected transitions as new possible
@@ -208,8 +209,9 @@ void Petri::fireTransitions() {
     } else {
       fireAsynchronous(t_idx);
     }
-    updatePossibleTransitions(possible_transition_list_n, net.input_n,
-                              net.priority, tokens);
+    possible_transition_list_n =
+        updatePossibleTransitions(std::move(possible_transition_list_n),
+                                  net.input_n, net.priority, tokens);
   }
 
   return;

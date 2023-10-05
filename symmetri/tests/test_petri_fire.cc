@@ -9,16 +9,16 @@ TEST_CASE("can fire") {
   // place 1 with color 1
   SmallVectorInput pre_conditions = {{1, 1}};
   std::vector<AugmentedToken> can_fire_marking = {{1, 1}};
-  REQUIRE(canFire(pre_conditions, can_fire_marking));
+  CHECK(canFire(pre_conditions, can_fire_marking));
 
   // wrong token type
   std::vector<AugmentedToken> can_not_fire_marking = {{1, 0}};
-  REQUIRE(!canFire(pre_conditions, can_not_fire_marking));
+  CHECK(!canFire(pre_conditions, can_not_fire_marking));
 
   // no tokens type
-  REQUIRE(!canFire(pre_conditions, {}));
+  CHECK(!canFire(pre_conditions, {}));
 }
 
 TEST_CASE("transitions with no inputs can not fire") {
-  REQUIRE(!canFire({}, {}));
+  CHECK(!canFire({}, {}));
 }

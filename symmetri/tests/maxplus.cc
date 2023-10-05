@@ -23,21 +23,21 @@ TEST_CASE("Matrices", "[MatrixXd]") {
   SECTION("max plus zero matrix") {
     MatrixXd ANS(3, 3);
     ANS << eps, eps, eps, eps, eps, eps, eps, eps, eps;
-    REQUIRE(ANS.isApprox(ZERO));
+    CHECK(ANS.isApprox(ZERO));
   }
   SECTION("max plus identity matrix") {
     MatrixXd ANS(3, 3);
     ANS << e, eps, eps, eps, e, eps, eps, eps, e;
-    REQUIRE(ANS.isApprox(I));
+    CHECK(ANS.isApprox(I));
   }
   SECTION("⊕-operator") {
-    SECTION("Sum") { REQUIRE((A + B).isApprox(ADD)); }
-    SECTION("Commutativity") { REQUIRE((A + B).isApprox(B + A)); }
-    SECTION("Associactivity") { REQUIRE(((A + B) + C).isApprox(A + (B + C))); }
-    SECTION("Idempotent") { REQUIRE((A + A).isApprox(A)); }
+    SECTION("Sum") { CHECK((A + B).isApprox(ADD)); }
+    SECTION("Commutativity") { CHECK((A + B).isApprox(B + A)); }
+    SECTION("Associactivity") { CHECK(((A + B) + C).isApprox(A + (B + C))); }
+    SECTION("Idempotent") { CHECK((A + A).isApprox(A)); }
     SECTION("A zero/neutral element 𝜀") {
-      REQUIRE((A + ZERO).isApprox(A));
-      REQUIRE((ZERO + A).isApprox(A));
+      CHECK((A + ZERO).isApprox(A));
+      CHECK((ZERO + A).isApprox(A));
     }
   }
   SECTION("⊗-operator") {
@@ -45,20 +45,20 @@ TEST_CASE("Matrices", "[MatrixXd]") {
     Q1 << e, eps, 3, 2;
     Q2 << -1, 11, 1, eps;
     ANS << -1, 11, 3, 14;
-    SECTION("Product 2x2") { REQUIRE((Q1 * Q2).isApprox(ANS)); }
+    SECTION("Product 2x2") { CHECK((Q1 * Q2).isApprox(ANS)); }
     Q3 << 1, 6, 2, 8, 3, 4;
     Q4 << 2, 5, 3, 3, 1, 6;
     ANS2 << 9, 9, 10, 13;
-    SECTION("Product 2x3 times 3x2") { REQUIRE((Q3 * Q4).isApprox(ANS2)); }
-    SECTION("Product 3x3") { REQUIRE((A * B).isApprox(MUL)); }
-    SECTION("Associativity") { REQUIRE(((A * B) * C).isApprox(A * (B * C))); }
+    SECTION("Product 2x3 times 3x2") { CHECK((Q3 * Q4).isApprox(ANS2)); }
+    SECTION("Product 3x3") { CHECK((A * B).isApprox(MUL)); }
+    SECTION("Associativity") { CHECK(((A * B) * C).isApprox(A * (B * C))); }
     SECTION("A neutral element 𝜀") {
-      REQUIRE((A * I).isApprox(A));
-      REQUIRE((I * A).isApprox(A));
+      CHECK((A * I).isApprox(A));
+      CHECK((I * A).isApprox(A));
     }
     SECTION("An absorbing element e (e is 0, not exp(1))") {
-      REQUIRE((A * ZERO).isApprox(ZERO));
-      REQUIRE((ZERO * A).isApprox(ZERO));
+      CHECK((A * ZERO).isApprox(ZERO));
+      CHECK((ZERO * A).isApprox(ZERO));
     }
     SECTION(
         "Multiplicative Inverse if x!=𝜀 then there exists a unique y with "
@@ -67,7 +67,7 @@ TEST_CASE("Matrices", "[MatrixXd]") {
     }
   }
   SECTION("Distributivity") {
-    REQUIRE((A * (B + C)).isApprox((A * B) + (A * C)));
+    CHECK((A * (B + C)).isApprox((A * B) + (A * C)));
   }
 
   SECTION("With vectors") {
@@ -77,24 +77,24 @@ TEST_CASE("Matrices", "[MatrixXd]") {
     Q << 2, 0, eps, 5;
     ANS1 << 4, 13;
     ANS2 << 8, 13;
-    REQUIRE((v1 * Q).isApprox(ANS1));
-    REQUIRE((Q * v2).isApprox(ANS2));
+    CHECK((v1 * Q).isApprox(ANS1));
+    CHECK((Q * v2).isApprox(ANS2));
   }
   SECTION("Scalar addition of matrix") {
     double d = 4;
     MatrixXd V(2, 1), ANS(2, 1);
     V << 2, 8;
     ANS << 4, 8;
-    REQUIRE((d + V).isApprox(ANS));
-    REQUIRE((V + d).isApprox(ANS));
+    CHECK((d + V).isApprox(ANS));
+    CHECK((V + d).isApprox(ANS));
   }
   SECTION("Scalar multiplication of matrix") {
     double d = 4;
     MatrixXd V(2, 1), ANS(2, 1);
     V << 2, 8;
     ANS << 6, 12;
-    REQUIRE((d * V).isApprox(ANS));
-    REQUIRE((V * d).isApprox(ANS));
+    CHECK((d * V).isApprox(ANS));
+    CHECK((V * d).isApprox(ANS));
   }
   SECTION("Taking powers") {
     MatrixXd A(3, 3), A2(3, 3), A3(3, 3), A4(3, 3);
@@ -103,22 +103,22 @@ TEST_CASE("Matrices", "[MatrixXd]") {
     A3 << 6, 7, 8, 8, 9, 10, 7, 8, 9;
     A4 << 9, 10, 11, 11, 12, 13, 10, 11, 12;
 
-    REQUIRE((A ^ 0).isApprox(I));
-    REQUIRE((A ^ 1).isApprox(A));
-    REQUIRE((A ^ 2).isApprox(A2));
-    REQUIRE((A ^ 3).isApprox(A3));
-    REQUIRE((A ^ 4).isApprox(A4));
+    CHECK((A ^ 0).isApprox(I));
+    CHECK((A ^ 1).isApprox(A));
+    CHECK((A ^ 2).isApprox(A2));
+    CHECK((A ^ 3).isApprox(A3));
+    CHECK((A ^ 4).isApprox(A4));
   }
   SECTION("Spectral stuff") {
     MatrixXd A(3, 3), B(2, 2), V(3, 1);
     A << 0, eps, 2, 2, 0, 4, 1, 2, 3;
-    REQUIRE(isIrreducible(A));
+    CHECK(isIrreducible(A));
     B << 1, eps, eps, 2;
-    REQUIRE(!isIrreducible(B));
+    CHECK(!isIrreducible(B));
 
     V << 3, 5, 4;
     double lambda = 3;
-    REQUIRE((A * V).isApprox(lambda * V));
+    CHECK((A * V).isApprox(lambda * V));
   }
   SECTION("Spectral stuff v2") {
     SECTION("ON LARGE SCALE MAX-PLUS ALGEBRA MODELS IN RAILWAY SYSTEMS") {
@@ -146,15 +146,15 @@ TEST_CASE("Matrices", "[MatrixXd]") {
       double lambda_est = c / (p - q);
 
       v_est = eigenvector(A, x0, p, q, c);
-      REQUIRE(lambda_est == Approx(lambda).epsilon(0.05));
+      CHECK(lambda_est == Approx(lambda).epsilon(0.05));
 
       std::cout << A << std::endl;
-      REQUIRE(v.isApprox(v_est, 0.05));
+      CHECK(v.isApprox(v_est, 0.05));
       std::cout << v.transpose() << std::endl;
       std::cout << v_est.transpose() << std::endl;
       std::cout << lambda << std::endl;
       // Proof is in the pudding
-      REQUIRE((A * v_est).isApprox(lambda_est * v_est, 0.05));
+      CHECK((A * v_est).isApprox(lambda_est * v_est, 0.05));
     }
     SECTION(
         "Max-plus algebra and max-plus linear discrete event systems: An "
@@ -169,11 +169,11 @@ TEST_CASE("Matrices", "[MatrixXd]") {
       v_est = eigenvector(A, x0, p, q, c);
       v_est2 = eigenvector(A, x0);
 
-      REQUIRE(lambda_est == Approx(lambda));
-      REQUIRE(v_est2.isApprox(v_est));
-      REQUIRE(v.isApprox(v_est));
+      CHECK(lambda_est == Approx(lambda));
+      CHECK(v_est2.isApprox(v_est));
+      CHECK(v.isApprox(v_est));
       // Proof is in the pudding
-      REQUIRE((A * v_est).isApprox(lambda_est * v_est));
+      CHECK((A * v_est).isApprox(lambda_est * v_est));
     }
     SECTION("2x2 eigen problem example") {
       MatrixXd A(2, 2), x0(2, 1), v(2, 1), v_est(2, 1);
@@ -188,10 +188,10 @@ TEST_CASE("Matrices", "[MatrixXd]") {
       std::cout << v_est.transpose() << std::endl;
       std::cout << lambda << std::endl;
 
-      REQUIRE(lambda_est == Approx(lambda));
-      // REQUIRE(v.isApprox(v_est));
+      CHECK(lambda_est == Approx(lambda));
+      // CHECK(v.isApprox(v_est));
       // Proof is in the pudding
-      REQUIRE((A * v_est).isApprox(lambda_est * v_est));
+      CHECK((A * v_est).isApprox(lambda_est * v_est));
     }
     SECTION("4x4 eigen problem example") {
       MatrixXd A(4, 4), x0(4, 1), v(4, 1), v_est(4, 1);
@@ -206,10 +206,10 @@ TEST_CASE("Matrices", "[MatrixXd]") {
       std::cout << v_est.transpose() << std::endl;
       std::cout << lambda << std::endl;
 
-      REQUIRE(lambda_est == Approx(lambda));
-      // REQUIRE(v.isApprox(v_est));
+      CHECK(lambda_est == Approx(lambda));
+      // CHECK(v.isApprox(v_est));
       // Proof is in the pudding
-      REQUIRE((A * v_est).isApprox(lambda_est * v_est));
+      CHECK((A * v_est).isApprox(lambda_est * v_est));
     }
   }
 }

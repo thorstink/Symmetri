@@ -93,6 +93,14 @@ Reducer scheduleCallback(
         &reducer_queue);
 
 /**
+ * @brief deducts the set input from the current token distribution
+ *
+ * @param inputs a vector representing the tokens to be removed
+ */
+void deductMarking(std::vector<AugmentedToken> &tokens,
+                   const SmallVectorInput &inputs);
+
+/**
  * @brief Petri is a data structure that encodes the Petri net and holds
  * pointers to the thread-pool and the reducer-queue. It is optimized for
  * calculating the active transition set and quick lookups in ordered vectors.
@@ -235,13 +243,6 @@ struct Petri {
       pool;  ///< A pointer to the threadpool used to defer Callbacks.
 
  private:
-  /**
-   * @brief deducts the set input from the current token distribution
-   *
-   * @param inputs a vector representing the tokens to be removed
-   */
-  void deductMarking(const SmallVectorInput &inputs);
-
   /**
    * @brief Runs the Callback associated with t immediately.
    *

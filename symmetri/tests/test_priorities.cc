@@ -39,10 +39,10 @@ TEST_CASE(
                    })->second;
     if (prio_t0 > prio_t1) {
       Marking expected = {{"Pb", TokenLookup::Completed}};
-      REQUIRE(MarkingEquality(m.getMarking(), expected));
+      CHECK(MarkingEquality(m.getMarking(), expected));
     } else {
       Marking expected = {{"Pc", TokenLookup::Completed}};
-      REQUIRE(MarkingEquality(m.getMarking(), expected));
+      CHECK(MarkingEquality(m.getMarking(), expected));
     }
   }
 }
@@ -73,10 +73,10 @@ TEST_CASE("Using DirectMutation does not queue reducers.") {
                    })->second;
     if (prio_t0 > prio_t1) {
       Marking expected = {{"Pb", TokenLookup::Completed}};
-      REQUIRE(MarkingEquality(m.getMarking(), expected));
+      CHECK(MarkingEquality(m.getMarking(), expected));
     } else {
       Marking expected = {{"Pc", TokenLookup::Completed}};
-      REQUIRE(MarkingEquality(m.getMarking(), expected));
+      CHECK(MarkingEquality(m.getMarking(), expected));
     }
   }
 }
