@@ -18,7 +18,7 @@ void petri0() {
 auto petri1() {
   auto inc = T1_COUNTER.load() + 1;
   T1_COUNTER.store(inc);
-  return symmetri::state::Completed;
+  return symmetri::Color::Success;
 }
 
 std::tuple<Net, Store, PriorityTable, Marking> PetriTestNet() {
@@ -26,20 +26,25 @@ std::tuple<Net, Store, PriorityTable, Marking> PetriTestNet() {
   T1_COUNTER.store(0);
 
   Net net = {{"t0",
-              {{{"Pa", TokenLookup::Completed}, {"Pb", TokenLookup::Completed}},
-               {{"Pc", TokenLookup::Completed}}}},
+              {{{"Pa", Color::toString(Color::Success)},
+                {"Pb", Color::toString(Color::Success)}},
+               {{"Pc", Color::toString(Color::Success)}}}},
              {"t1",
-              {{{"Pc", TokenLookup::Completed}, {"Pc", TokenLookup::Completed}},
-               {{"Pb", TokenLookup::Completed},
-                {"Pb", TokenLookup::Completed},
-                {"Pd", TokenLookup::Completed}}}}};
+              {{{"Pc", Color::toString(Color::Success)},
+                {"Pc", Color::toString(Color::Success)}},
+               {{"Pb", Color::toString(Color::Success)},
+                {"Pb", Color::toString(Color::Success)},
+                {"Pd", Color::toString(Color::Success)}}}}};
 
   Store store = {{"t0", &petri0}, {"t1", &petri1}};
   PriorityTable priority;
 
-  Marking m0 = {{"Pa", TokenLookup::Completed}, {"Pa", TokenLookup::Completed},
-                {"Pa", TokenLookup::Completed}, {"Pa", TokenLookup::Completed},
-                {"Pb", TokenLookup::Completed}, {"Pb", TokenLookup::Completed}};
+  Marking m0 = {{"Pa", Color::toString(Color::Success)},
+                {"Pa", Color::toString(Color::Success)},
+                {"Pa", Color::toString(Color::Success)},
+                {"Pa", Color::toString(Color::Success)},
+                {"Pb", Color::toString(Color::Success)},
+                {"Pb", Color::toString(Color::Success)}};
   return {net, store, priority, m0};
 }
 
@@ -53,7 +58,7 @@ TEST_CASE("Test equaliy of nets") {
   CHECK(!stateNetEquality(net, net2));
 
   // same transitions but different places.
-  net3.at("t0").second.push_back({"px", TokenLookup::Completed});
+  net3.at("t0").second.push_back({"px", Color::toString(Color::Success)});
   CHECK(!stateNetEquality(net, net3));
 }
 
@@ -68,8 +73,8 @@ TEST_CASE("Run one transition iteration in a petri net") {
   // t0 is dispatched but it's reducer has not yet run, so pre-conditions are
   // processed but post are not:
   {
-    Marking expected = {{"Pa", TokenLookup::Completed},
-                        {"Pa", TokenLookup::Completed}};
+    Marking expected = {{"Pa", Color::toString(Color::Success)},
+                        {"Pa", Color::toString(Color::Success)}};
     CHECK(MarkingEquality(m.getMarking(), expected));
   }
   // now there should be two reducers;
@@ -82,8 +87,8 @@ TEST_CASE("Run one transition iteration in a petri net") {
   CHECK(T0_COUNTER.load() == 2);
   // the marking should still be the same.
   {
-    Marking expected = {{"Pa", TokenLookup::Completed},
-                        {"Pa", TokenLookup::Completed}};
+    Marking expected = {{"Pa", Color::toString(Color::Success)},
+                        {"Pa", Color::toString(Color::Success)}};
     CHECK(MarkingEquality(m.getMarking(), expected));
   }
 
@@ -93,10 +98,10 @@ TEST_CASE("Run one transition iteration in a petri net") {
   // and now the post-conditions are processed:
   CHECK(m.scheduled_callbacks.empty());
   {
-    Marking expected = {{"Pa", TokenLookup::Completed},
-                        {"Pa", TokenLookup::Completed},
-                        {"Pc", TokenLookup::Completed},
-                        {"Pc", TokenLookup::Completed}};
+    Marking expected = {{"Pa", Color::toString(Color::Success)},
+                        {"Pa", Color::toString(Color::Success)},
+                        {"Pc", Color::toString(Color::Success)},
+                        {"Pc", Color::toString(Color::Success)}};
     CHECK(MarkingEquality(m.getMarking(), expected));
   }
 }
@@ -120,10 +125,10 @@ TEST_CASE("Run until net dies") {
   } while (m.scheduled_callbacks.size() > 0);
 
   // For this specific net we expect:
-  Marking expected = {{"Pb", TokenLookup::Completed},
-                      {"Pb", TokenLookup::Completed},
-                      {"Pd", TokenLookup::Completed},
-                      {"Pd", TokenLookup::Completed}};
+  Marking expected = {{"Pb", Color::toString(Color::Success)},
+                      {"Pb", Color::toString(Color::Success)},
+                      {"Pd", Color::toString(Color::Success)},
+                      {"Pd", Color::toString(Color::Success)}};
   CHECK(MarkingEquality(m.getMarking(), expected));
 
   CHECK(T0_COUNTER.load() == 4);
@@ -149,10 +154,10 @@ TEST_CASE("Run until net dies with DirectMutations") {
     }
   } while (m.scheduled_callbacks.size() > 0);
   // For this specific net we expect:
-  Marking expected = {{"Pb", TokenLookup::Completed},
-                      {"Pb", TokenLookup::Completed},
-                      {"Pd", TokenLookup::Completed},
-                      {"Pd", TokenLookup::Completed}};
+  Marking expected = {{"Pb", Color::toString(Color::Success)},
+                      {"Pb", Color::toString(Color::Success)},
+                      {"Pd", Color::toString(Color::Success)},
+                      {"Pd", Color::toString(Color::Success)}};
 
   CHECK(MarkingEquality(m.getMarking(), expected));
 }
@@ -191,11 +196,11 @@ TEST_CASE("Run until net dies with DirectMutations") {
 TEST_CASE("Step through transitions") {
   std::map<std::string, size_t> hitmap;
   {
-    Net net = {{"a", {{{"Pa", TokenLookup::Completed}}, {}}},
-               {"b", {{{"Pa", TokenLookup::Completed}}, {}}},
-               {"c", {{{"Pa", TokenLookup::Completed}}, {}}},
-               {"d", {{{"Pa", TokenLookup::Completed}}, {}}},
-               {"e", {{{"Pb", TokenLookup::Completed}}, {}}}};
+    Net net = {{"a", {{{"Pa", Color::toString(Color::Success)}}, {}}},
+               {"b", {{{"Pa", Color::toString(Color::Success)}}, {}}},
+               {"c", {{{"Pa", Color::toString(Color::Success)}}, {}}},
+               {"d", {{{"Pa", Color::toString(Color::Success)}}, {}}},
+               {"e", {{{"Pb", Color::toString(Color::Success)}}, {}}}};
     Store store;
     for (const auto& [t, dm] : net) {
       hitmap.insert({t, 0});
@@ -203,10 +208,10 @@ TEST_CASE("Step through transitions") {
     }
     auto stp = std::make_shared<TaskSystem>(1);
     // with this initial marking, all but transition e are possible.
-    Marking m0 = {{"Pa", TokenLookup::Completed},
-                  {"Pa", TokenLookup::Completed},
-                  {"Pa", TokenLookup::Completed},
-                  {"Pa", TokenLookup::Completed}};
+    Marking m0 = {{"Pa", Color::toString(Color::Success)},
+                  {"Pa", Color::toString(Color::Success)},
+                  {"Pa", Color::toString(Color::Success)},
+                  {"Pa", Color::toString(Color::Success)}};
     Petri m(net, store, {}, m0, {}, "s", stp);
 
     // auto scheduled_callbacks = m.getActiveTransitions();

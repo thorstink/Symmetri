@@ -75,7 +75,7 @@ symmetri::Token fire(const T &callback) {
     return callback();
   } else if constexpr (std::is_same_v<void, decltype(callback())>) {
     callback();
-    return symmetri::state::Completed;
+    return symmetri::Color::Success;
   }
 }
 

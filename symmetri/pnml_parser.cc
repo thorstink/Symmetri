@@ -32,7 +32,8 @@ std::tuple<Net, Marking> readPnml(const std::set<std::string> &files) {
                               ->FirstChildElement("text")
                               ->GetText());
       for (int i = 0; i < initial_marking; i++) {
-        place_initialMarking.push_back({place_id, TokenLookup::Completed});
+        place_initialMarking.push_back(
+            {place_id, Color::toString(Color::Success)});
       }
       places.insert(std::string(place_id));
     }
@@ -63,19 +64,21 @@ std::tuple<Net, Marking> readPnml(const std::set<std::string> &files) {
           // if the source is a place, tokens are consumed.
           if (state_net.find(target_id) != state_net.end()) {
             state_net.find(target_id)->second.first.push_back(
-                {source_id, TokenLookup::Completed});
+                {source_id, Color::toString(Color::Success)});
           } else {
             state_net.insert(
-                {target_id, {{{source_id, TokenLookup::Completed}}, {}}});
+                {target_id,
+                 {{{source_id, Color::toString(Color::Success)}}, {}}});
           }
         } else if (transitions.find(source_id) != transitions.end()) {
           // if the destination is a place, tokens are produced.
           if (state_net.find(source_id) != state_net.end()) {
             state_net.find(source_id)->second.second.push_back(
-                {target_id, TokenLookup::Completed});
+                {target_id, Color::toString(Color::Success)});
           } else {
             state_net.insert(
-                {source_id, {{}, {{target_id, TokenLookup::Completed}}}});
+                {source_id,
+                 {{}, {{target_id, Color::toString(Color::Success)}}}});
           }
         } else {
           const auto arc_id = child->Attribute("id");

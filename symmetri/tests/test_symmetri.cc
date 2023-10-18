@@ -11,20 +11,25 @@ auto t1() {}
 
 std::tuple<Net, Store, PriorityTable, Marking> SymmetriTestNet() {
   Net net = {{"t0",
-              {{{"Pa", TokenLookup::Completed}, {"Pb", TokenLookup::Completed}},
-               {{"Pc", TokenLookup::Completed}}}},
+              {{{"Pa", Color::toString(Color::Success)},
+                {"Pb", Color::toString(Color::Success)}},
+               {{"Pc", Color::toString(Color::Success)}}}},
              {"t1",
-              {{{"Pc", TokenLookup::Completed}, {"Pc", TokenLookup::Completed}},
-               {{"Pb", TokenLookup::Completed},
-                {"Pb", TokenLookup::Completed},
-                {"Pd", TokenLookup::Completed}}}}};
+              {{{"Pc", Color::toString(Color::Success)},
+                {"Pc", Color::toString(Color::Success)}},
+               {{"Pb", Color::toString(Color::Success)},
+                {"Pb", Color::toString(Color::Success)},
+                {"Pd", Color::toString(Color::Success)}}}}};
 
   Store store = {{"t0", &t0}, {"t1", &t1}};
   PriorityTable priority;
 
-  Marking m0 = {{"Pa", TokenLookup::Completed}, {"Pa", TokenLookup::Completed},
-                {"Pa", TokenLookup::Completed}, {"Pa", TokenLookup::Completed},
-                {"Pb", TokenLookup::Completed}, {"Pb", TokenLookup::Completed}};
+  Marking m0 = {{"Pa", Color::toString(Color::Success)},
+                {"Pa", Color::toString(Color::Success)},
+                {"Pa", Color::toString(Color::Success)},
+                {"Pa", Color::toString(Color::Success)},
+                {"Pb", Color::toString(Color::Success)},
+                {"Pb", Color::toString(Color::Success)}};
   return {net, store, priority, m0};
 }
 
@@ -37,17 +42,17 @@ TEST_CASE("Create a using the net constructor without end condition.") {
   auto res = fire(app);
   auto ev = getLog(app);
   // because there's no final marking, but the net is finite, it deadlocks.
-  CHECK(res == state::Deadlock);
+  CHECK(res == Color::Deadlock);
   CHECK(!ev.empty());
 }
 
 TEST_CASE("Create a using the net constructor with end condition.") {
   auto stp = std::make_shared<TaskSystem>(1);
 
-  Marking final_marking({{"Pb", TokenLookup::Completed},
-                         {"Pb", TokenLookup::Completed},
-                         {"Pd", TokenLookup::Completed},
-                         {"Pd", TokenLookup::Completed}});
+  Marking final_marking({{"Pb", Color::toString(Color::Success)},
+                         {"Pb", Color::toString(Color::Success)},
+                         {"Pd", Color::toString(Color::Success)},
+                         {"Pd", Color::toString(Color::Success)}});
 
   auto [net, store, priority, m0] = SymmetriTestNet();
   PetriNet app(net, m0, final_marking, store, priority, "test_net_with_end",
@@ -57,7 +62,7 @@ TEST_CASE("Create a using the net constructor with end condition.") {
   auto ev = getLog(app);
 
   // now there is an end condition.
-  CHECK(res == state::Completed);
+  CHECK(res == Color::Success);
   CHECK(!ev.empty());
 }
 
@@ -69,13 +74,13 @@ TEST_CASE("Create a using pnml constructor.") {
   // This store is appropriate for this net,
   Store store = symmetri::Store{{"T0", &t0}};
   PriorityTable priority;
-  Marking final_marking({{"P1", TokenLookup::Completed}});
+  Marking final_marking({{"P1", Color::toString(Color::Success)}});
   PetriNet app({pnml_file}, final_marking, store, priority, "success", stp);
   // so we can run it,
   auto res = fire(app);
   auto ev = getLog(app);
   // and the result is properly completed.
-  CHECK(res == state::Completed);
+  CHECK(res == Color::Success);
   CHECK(!ev.empty());
 }
 
@@ -114,14 +119,14 @@ TEST_CASE("Can not reuse an active application with a new case_id.") {
 
 TEST_CASE("Test pause and resume") {
   std::atomic<int> i = 0;
-  Net net = {
-      {"t0",
-       {{{"Pa", TokenLookup::Completed}}, {{"Pa", TokenLookup::Completed}}}},
-      {"t1", {{}, {{"Pb", TokenLookup::Completed}}}}};
+  Net net = {{"t0",
+              {{{"Pa", Color::toString(Color::Success)}},
+               {{"Pa", Color::toString(Color::Success)}}}},
+             {"t1", {{}, {{"Pb", Color::toString(Color::Success)}}}}};
   Store store = {{"t0", [&] { i++; }}, {"t1", [] {}}};
-  Marking m0 = {{"Pa", TokenLookup::Completed}};
+  Marking m0 = {{"Pa", Color::toString(Color::Success)}};
   auto stp = std::make_shared<TaskSystem>(2);
-  PetriNet app(net, m0, {{"Pb", TokenLookup::Completed}}, store, {},
+  PetriNet app(net, m0, {{"Pb", Color::toString(Color::Success)}}, store, {},
                "random_id", stp);
   int check1, check2;
   stp->push([&, app, t1 = app.registerTransitionCallback("t1")]() {
@@ -143,29 +148,39 @@ TEST_CASE("Test pause and resume") {
 }
 namespace symmetri {
 namespace state {
-const static Token ExternalState(registerToken("ExternalState"));
+const static Token ExternalState(Color::registerToken("ExternalState"));
 }
 }  // namespace symmetri
 
 TEST_CASE("Types") {
   using namespace symmetri::state;
-  CHECK(Scheduled != ExternalState);
-  CHECK(Started != ExternalState);
-  CHECK(Completed != ExternalState);
-  CHECK(Deadlock != ExternalState);
-  CHECK(Paused != ExternalState);
-  CHECK(UserExit != ExternalState);
+  CHECK(Color::Scheduled != ExternalState);
+  CHECK(Color::Started != ExternalState);
+  CHECK(Color::Success != ExternalState);
+  CHECK(Color::Deadlock != ExternalState);
+  CHECK(Color::Paused != ExternalState);
+  CHECK(Color::UserExit != ExternalState);
+  CHECK(Color::Error != ExternalState);
   CHECK(ExternalState == ExternalState);
-  CHECK(printState(ExternalState) != "");
+  CHECK(Color::toString(ExternalState) != "");
 }
 
 TEST_CASE("Print Types") {
   using namespace symmetri::state;
-  std::cout << printState(Scheduled) << ", " << Scheduled << std::endl;
-  std::cout << printState(Started) << ", " << Started << std::endl;
-  std::cout << printState(Completed) << ", " << Completed << std::endl;
-  std::cout << printState(Deadlock) << ", " << Deadlock << std::endl;
-  std::cout << printState(Paused) << ", " << Paused << std::endl;
-  std::cout << printState(UserExit) << ", " << UserExit << std::endl;
-  std::cout << printState(ExternalState) << ", " << ExternalState << std::endl;
+  std::cout << Color::toString(Color::Scheduled) << ", " << Color::Scheduled
+            << std::endl;
+  std::cout << Color::toString(Color::Started) << ", " << Color::Started
+            << std::endl;
+  std::cout << Color::toString(Color::Success) << ", " << Color::Success
+            << std::endl;
+  std::cout << Color::toString(Color::Deadlock) << ", " << Color::Deadlock
+            << std::endl;
+  std::cout << Color::toString(Color::Paused) << ", " << Color::Paused
+            << std::endl;
+  std::cout << Color::toString(Color::UserExit) << ", " << Color::UserExit
+            << std::endl;
+  std::cout << Color::toString(Color::Error) << ", " << Color::UserExit
+            << std::endl;
+  std::cout << Color::toString(ExternalState) << ", " << ExternalState
+            << std::endl;
 }

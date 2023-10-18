@@ -5,8 +5,8 @@
 #include "symmetri/utilities.hpp"
 using namespace symmetri;
 
-const static Token Blue(registerToken("Blue"));
-const static Token Red(registerToken("Red"));
+const static Token Blue(Color::registerToken("Blue"));
+const static Token Red(Color::registerToken("Red"));
 Token red() { return Red; }
 
 TEST_CASE("Test color.") {

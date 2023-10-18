@@ -25,12 +25,13 @@ void t() {
 }
 
 std::tuple<Net, Store, PriorityTable, Marking> BugsTestNet() {
-  Net net = {
-      {"t",
-       {{{"Pa", TokenLookup::Completed}}, {{"Pb", TokenLookup::Completed}}}}};
+  Net net = {{"t",
+              {{{"Pa", Color::toString(Color::Success)}},
+               {{"Pb", Color::toString(Color::Success)}}}}};
   Store store = {{"t", &t}};
   PriorityTable priority;
-  Marking m0 = {{"Pa", TokenLookup::Completed}, {"Pa", TokenLookup::Completed}};
+  Marking m0 = {{"Pa", Color::toString(Color::Success)},
+                {"Pa", Color::toString(Color::Success)}};
   return {net, store, priority, m0};
 }
 
@@ -59,7 +60,7 @@ TEST_CASE("Firing the same transition before it can complete should work") {
   m.reducer_queue->wait_dequeue_timed(r, std::chrono::milliseconds(250));
   r(m);
   {
-    Marking expected = {{"Pb", TokenLookup::Completed}};
+    Marking expected = {{"Pb", Color::toString(Color::Success)}};
     CHECK(MarkingEquality(m.getMarking(), expected));
   }
 
@@ -73,8 +74,8 @@ TEST_CASE("Firing the same transition before it can complete should work") {
   m.reducer_queue->wait_dequeue_timed(r, std::chrono::milliseconds(250));
   r(m);
   {
-    Marking expected = {{"Pb", TokenLookup::Completed},
-                        {"Pb", TokenLookup::Completed}};
+    Marking expected = {{"Pb", Color::toString(Color::Success)},
+                        {"Pb", Color::toString(Color::Success)}};
     CHECK(MarkingEquality(m.getMarking(), expected));
   }
 

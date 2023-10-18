@@ -23,7 +23,7 @@ class Foo {
   const int copy_constructor;
 };
 
-Token fire(const Foo&) { return state::Completed; }
+Token fire(const Foo&) { return Color::Success; }
 
 void resume(const Foo& f) {
   CHECK(f.constructor == 1);

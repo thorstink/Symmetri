@@ -14,18 +14,19 @@ void tAllowExitInput() {
 
 TEST_CASE("Test external input.") {
   {
-    Net net = {
-        {"t0", {{}, {{"Pb", TokenLookup::Completed}}}},
-        {"t1",
-         {{{"Pa", TokenLookup::Completed}}, {{"Pb", TokenLookup::Completed}}}},
-        {"t2",
-         {{{"Pb", TokenLookup::Completed}, {"Pb", TokenLookup::Completed}},
-          {{"Pc", TokenLookup::Completed}}}}};
+    Net net = {{"t0", {{}, {{"Pb", Color::toString(Color::Success)}}}},
+               {"t1",
+                {{{"Pa", Color::toString(Color::Success)}},
+                 {{"Pb", Color::toString(Color::Success)}}}},
+               {"t2",
+                {{{"Pb", Color::toString(Color::Success)},
+                  {"Pb", Color::toString(Color::Success)}},
+                 {{"Pc", Color::toString(Color::Success)}}}}};
     // we can omit t0, it will be auto-filled as {"t0", DirectMutation{}}
     Store store = {{"t1", &tAllowExitInput}, {"t2", DirectMutation{}}};
-    Marking m0 = {{"Pa", TokenLookup::Completed},
-                  {"Pa", TokenLookup::Completed}};
-    Marking final_m = {{"Pc", TokenLookup::Completed}};
+    Marking m0 = {{"Pa", Color::toString(Color::Success)},
+                  {"Pa", Color::toString(Color::Success)}};
+    Marking final_m = {{"Pc", Color::toString(Color::Success)}};
     auto stp = std::make_shared<TaskSystem>(3);
 
     PetriNet app(net, m0, final_m, store, {}, "test_net_ext_input", stp);
@@ -44,6 +45,6 @@ TEST_CASE("Test external input.") {
     auto res = fire(app);
 
     CHECK(can_continue);
-    CHECK(res == state::Completed);
+    CHECK(res == Color::Success);
   }
 }

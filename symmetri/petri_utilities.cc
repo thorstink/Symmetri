@@ -27,12 +27,12 @@ gch::small_vector<size_t, 32> possibleTransitions(
     for (size_t t : p_to_ts_n[place.place]) {
       const auto &inputs = input_n[t];
       // current colored place is an input of t
-      bool is_input =
-          std::find(inputs.cbegin(), inputs.cend(), place) != inputs.end();
+      const bool is_input =
+          std::find(inputs.cbegin(), inputs.cend(), place) != inputs.cend();
       // transition is not already considered:
-      bool is_unique = std::find(possible_transition_list_n.begin(),
-                                 possible_transition_list_n.end(),
-                                 t) == possible_transition_list_n.end();
+      const bool is_unique = std::find(possible_transition_list_n.cbegin(),
+                                       possible_transition_list_n.cend(),
+                                       t) == possible_transition_list_n.cend();
       if (is_unique && is_input) {
         possible_transition_list_n.push_back(t);
       }
@@ -47,16 +47,16 @@ Reducer createReducerForCallback(const size_t t_i, const Token result,
   return [=](Petri &model) {
     // if it is in the active transition set it means it is finished and we
     // should process it.
-    auto it = std::find(model.scheduled_callbacks.begin(),
-                        model.scheduled_callbacks.end(), t_i);
-    if (it != model.scheduled_callbacks.end()) {
+    const auto it = std::find(model.scheduled_callbacks.cbegin(),
+                              model.scheduled_callbacks.cend(), t_i);
+    if (it != model.scheduled_callbacks.cend()) {
       switch (result) {
-        case state::Scheduled:
-        case state::Started:
-        case state::Deadlock:
-        case state::UserExit:
-        case state::Paused:
-        case state::Error:
+        case Color::Scheduled:
+        case Color::Started:
+        case Color::Deadlock:
+        case Color::UserExit:
+        case Color::Paused:
+        case Color::Error:
           break;
         default: {
           const auto &place_list = model.net.output_n;
@@ -73,7 +73,7 @@ Reducer createReducerForCallback(const size_t t_i, const Token result,
     model.net.store[t_i](ev);
     const Transition &transition = model.net.transition[t_i];
     if (!ev.empty()) {
-      model.event_log.insert(model.event_log.end(), ev.begin(), ev.end());
+      model.event_log.insert(model.event_log.cend(), ev.begin(), ev.end());
     }
     model.event_log.push_back({model.case_id, transition, result, t_end});
   };
@@ -86,7 +86,7 @@ Reducer scheduleCallback(
   reducer_queue->enqueue(
       [start_time = Clock::now(), t_i](symmetri::Petri &model) {
         model.event_log.push_back({model.case_id, model.net.transition[t_i],
-                                   state::Started, start_time});
+                                   Color::Started, start_time});
       });
 
   return createReducerForCallback(t_i, ::fire(task), Clock::now());

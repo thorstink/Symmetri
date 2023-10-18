@@ -36,6 +36,6 @@ int main(int, char *argv[]) {
       "transition: "
       "{1} [ns], transitions per second: {2} [t/s]",
       trans_count, time_per_trans * 1e9, trans_per_second, delta_t);
-  spdlog::info("Token of this net: {0}", symmetri::printState(result));
-  return result == symmetri::state::Completed ? 0 : -1;
+  spdlog::info("Token of this net: {0}", symmetri::Color::toString(result));
+  return result == symmetri::Color::Success ? 0 : -1;
 }

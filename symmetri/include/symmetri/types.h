@@ -7,15 +7,13 @@
 #include <unordered_map>
 #include <vector>
 
-#include "result_factory.hpp"
+#include "colors.hpp"
 namespace symmetri {
 
 using Place = std::string;       ///< The string representation of the place the
                                  ///< Petri net definition
 using Transition = std::string;  ///< The string representation of the
                                  ///< transition the Petri net definition
-using Color = std::string;       ///< String representation for color
-
 using Clock =
     std::chrono::steady_clock;  ///< The clock definition in Symmetri is the
                                 ///< steady clock for monotonic reasons
@@ -37,16 +35,17 @@ using Eventlog = std::vector<Event>;  ///< The eventlog is simply a log of
 
 using Net = std::unordered_map<
     Transition,
-    std::pair<std::vector<std::pair<Place, Color>>,
-              std::vector<std::pair<Place, Color>>>>;  ///< This is the multiset
+    std::pair<
+        std::vector<std::pair<Place, std::string>>,
+        std::vector<std::pair<Place, std::string>>>>;  ///< This is the multiset
                                                        ///< definition of a
                                                        ///< Petri net. For each
                                                        ///< transition there is
                                                        ///< a pair of lists for
-                                                       ///< input and output
-                                                       ///< places
+                                                       ///< colored input and
+                                                       ///< output places
 
-using Marking = std::vector<std::pair<Place, Color>>;
+using Marking = std::vector<std::pair<Place, std::string>>;
 
 using PriorityTable =
     std::vector<std::pair<Transition, int8_t>>;  ///< Priority is limited from

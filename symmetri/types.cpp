@@ -4,12 +4,15 @@
 #include <numeric>
 namespace symmetri {
 
-Token registerToken(std::string s) {
-  auto token = state::ConstStringHash(s.c_str());
-  TokenLookup::map[token] = s;
-  return token;
+const std::string& Color::toString(symmetri::Token r) { return Color::map[r]; }
+
+const Token& Color::registerToken(const std::string& s) {
+  return Color::map.insert({impl::HashColor(s.c_str()), s}).first->first;
 }
-std::string printState(symmetri::Token r) { return TokenLookup::map[r]; }
+
+const std::unordered_map<Token, std::string>& Color::getColors() {
+  return Color::map;
+}
 
 bool stateNetEquality(const Net& net1, const Net& net2) {
   if (net1.size() != net2.size()) {
@@ -52,8 +55,8 @@ size_t calculateTrace(const Eventlog& event_log) noexcept {
       [](const auto& acc, const Event& n) {
         constexpr auto success = "o";
         constexpr auto fail = "x";
-        return n.state == state::Completed ? acc + n.transition + success
-                                           : acc + fail;
+        return n.state == Color::Success ? acc + n.transition + success
+                                         : acc + fail;
       }));
 }
 
