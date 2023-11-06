@@ -30,11 +30,12 @@ Net net = {{"foo", {{"B", "C"}, {"Z", "B"}}},
                 {"bar", {{"Z"}, {"B", "C"}}}};
 Store store = {{"foo", &foo}, {"bar", &bar}};
 PriorityTable priority = {};
-Marking m0 = {{"Z", 1}, {"B", 0}, {"C", 0}};
+Marking m0 = {{"Z",  Color::toString(Color::Success)}};
 auto pool = std::make_shared<symmetri::TaskSystem>(4);
 symmetri::PetriNet app(net, m0, {}, store, priority,
                           "test_net_without_end", pool);
-auto res = app.fire(); // run until done.
+auto result = fire(app); // run until done.
+auto log = getLog(app);
 ```
 
 - `net` is a multiset description of a Petri net
