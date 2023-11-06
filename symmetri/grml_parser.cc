@@ -28,7 +28,7 @@ std::tuple<Net, Marking, PriorityTable> readGrml(
       if (type == "place") {
         // loop places & initial values
         std::string place_id;
-        uint16_t initial_marking;
+        uint16_t initial_marking = 0;
         for (XMLElement *attribute = child->FirstChildElement("attribute");
              attribute != NULL;
              attribute = attribute->NextSiblingElement("attribute")) {
@@ -43,7 +43,10 @@ std::tuple<Net, Marking, PriorityTable> readGrml(
                               ->GetText());
           }
         }
-        place_initialMarking.insert({place_id, initial_marking});
+        for (int i = 0; i < initial_marking; i++) {
+          place_initialMarking.push_back(
+              {place_id, Color::toString(Color::Success)});
+        }
         places.insert(place_id);
         id_lookup_table.insert({id, place_id});
       } else if (type == "transition") {
@@ -76,6 +79,8 @@ std::tuple<Net, Marking, PriorityTable> readGrml(
           id_lookup_table[std::stoi(child->Attribute("source"))];
       const auto target_id =
           id_lookup_table[std::stoi(child->Attribute("target"))];
+      const auto color = child->Attribute("color");
+
       const auto multiplicity = std::stoi(child->FirstChildElement("attribute")
                                               ->FirstChildElement("attribute")
                                               ->FirstChildElement("attribute")
@@ -84,17 +89,23 @@ std::tuple<Net, Marking, PriorityTable> readGrml(
       for (int i = 0; i < multiplicity; i++) {
         if (places.find(source_id) != places.end()) {
           // if the source is a place, tokens are consumed.
+          const auto arc_color =
+              NULL == color ? Color::toString(Color::Success) : color;
           if (state_net.find(target_id) != state_net.end()) {
-            state_net.find(target_id)->second.first.push_back(source_id);
+            state_net.find(target_id)->second.first.push_back(
+                {source_id, arc_color});
           } else {
-            state_net.insert({target_id, {{source_id}, {}}});
+            state_net.insert({target_id, {{{source_id, arc_color}}, {}}});
           }
         } else if (transitions.find(source_id) != transitions.end()) {
           // if the destination is a place, tokens are produced.
           if (state_net.find(source_id) != state_net.end()) {
-            state_net.find(source_id)->second.second.push_back(target_id);
+            state_net.find(source_id)->second.second.push_back(
+                {target_id, Color::toString(Color::Success)});
           } else {
-            state_net.insert({source_id, {{}, {target_id}}});
+            state_net.insert(
+                {source_id,
+                 {{}, {{target_id, Color::toString(Color::Success)}}}});
           }
         } else {
           throw std::runtime_error(std::string(

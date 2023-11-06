@@ -19,10 +19,9 @@ using namespace symmetri;
  *
  */
 
-const static Result FooFail(
-    state::create<state::ConstStringHash("FooFail")>("FooFail"));
+const static Token FooFail(Color::registerToken("FooFail"));
 
-Result fire(const Foo &f) { return f.fire() ? FooFail : state::Completed; }
+Token fire(const Foo &f) { return f.fire() ? FooFail : Color::Success; }
 
 void cancel(const Foo &f) { f.cancel(); }
 
@@ -37,7 +36,7 @@ void resume(const Foo &f) { f.resume(); }
  */
 void printLog(const symmetri::Eventlog &eventlog) {
   for (const auto &[caseid, t, s, c] : eventlog) {
-    spdlog::info("EventLog: {0}, {1}, {2}, {3}", caseid, t, printState(s),
+    spdlog::info("EventLog: {0}, {1}, {2}, {3}", caseid, t, Color::toString(s),
                  c.time_since_epoch().count());
   }
 }
@@ -67,14 +66,19 @@ int main(int, char *argv[]) {
   // Here we create the first PetriNet based on composing pnml1 and pnml2
   // using flat composition. The associated transitions are two instance of
   // the Foo-class.
-  PetriNet subnet({pnml1, pnml2}, {{"P2", 1}},
+  PetriNet subnet({pnml1, pnml2}, {{"P2", Color::toString(Color::Success)}},
                   {{"T0", Foo("SubFoo")}, {"T1", Foo("SubBar")}}, {}, "SubNet",
                   pool);
 
   // We create another PetriNet by flatly composing all three petri nets.
   // Again we have 2 Foo-transitions, and the first transition (T0) is the
   // subnet. This show how you can also nest PetriNets.
-  PetriNet bignet({pnml1, pnml2, pnml3}, {{"P3", 5}},
+  PetriNet bignet({pnml1, pnml2, pnml3},
+                  {{"P3", Color::toString(Color::Success)},
+                   {"P3", Color::toString(Color::Success)},
+                   {"P3", Color::toString(Color::Success)},
+                   {"P3", Color::toString(Color::Success)},
+                   {"P3", Color::toString(Color::Success)}},
                   {{"T0", subnet}, {"T1", Foo("Bar")}, {"T2", Foo("Foo")}}, {},
                   "RootNet", pool);
 
@@ -124,8 +128,9 @@ int main(int, char *argv[]) {
   auto result = fire(bignet);
   running = false;
   // print the results and eventlog
-  spdlog::info("Result of this net: {0}", printState(result));
+  spdlog::info("Token of this net: {0}", Color::toString(result));
   const auto el = getLog(bignet);
+  auto marking = bignet.getMarking();
   printLog(el);
   gantt.join();  // clean up
   t.join();      // clean up

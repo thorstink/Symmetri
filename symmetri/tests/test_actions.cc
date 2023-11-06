@@ -12,7 +12,7 @@ TEST_CASE("Run the executor") {
   stp->push([&]() { ran.store(true); });
   // wait a little before shutting the thread pool down.
   std::this_thread::sleep_for(std::chrono::milliseconds(5));
-  REQUIRE(ran);
+  CHECK(ran);
 }
 
 TEST_CASE("Run the executor parallel tasks") {
@@ -39,7 +39,7 @@ TEST_CASE("Run the executor parallel tasks") {
   // block until both tasks finished
   while (!ran1.load() || !ran2.load()) {
   }
-  REQUIRE((ran1.load() && ran2.load()));
+  CHECK((ran1.load() && ran2.load()));
   REQUIRE_FALSE(main_thread == thread_id2);
   REQUIRE_FALSE(thread_id1 == main_thread);
 }

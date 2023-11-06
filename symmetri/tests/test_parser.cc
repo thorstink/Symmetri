@@ -1,6 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
 #include <filesystem>
-#include <iostream>
 
 #include "symmetri/parsers.h"
 #include "symmetri/utilities.hpp"
@@ -13,27 +12,36 @@ TEST_CASE("Load p1.pnml net") {
   const auto &[net, m0] = readPnml({pnml_file});
 
   // for this particular net, the initial marking is:
-  Marking m_test;
-  m_test["P0"] = 1;
-  m_test["P1"] = 1;
-  m_test["P2"] = 1;
-  m_test["P3"] = 1;
-  m_test["P4"] = 0;
-  m_test["P5"] = 0;
-  m_test["P6"] = 0;
-  m_test["P7"] = 0;
-  m_test["P8"] = 0;
-  REQUIRE(m_test == m0);
+  Marking m_expected = {{"P0", Color::toString(Color::Success)},
+                        {"P1", Color::toString(Color::Success)},
+                        {"P2", Color::toString(Color::Success)},
+                        {"P3", Color::toString(Color::Success)}};
+  CHECK(m0 == m_expected);
 
   // for this particular net, the following transitions connect places:
   Net net_test;
-  net_test["t0"] = {{"P0", "P3"}, {"P4", "P4", "P7"}};
-  net_test["t1"] = {{"P1", "P4", "P4"}, {"P5"}};
-  net_test["t2"] = {{"P2", "P5"}, {"P6"}};
-  net_test["t3"] = {{"P6", "P8"}, {"P0", "P1", "P2", "P3"}};
-  net_test["t4"] = {{"P7"}, {"P8"}};
+  net_test["t0"] = {{{"P0", Color::toString(Color::Success)},
+                     {"P3", Color::toString(Color::Success)}},
+                    {{"P4", Color::toString(Color::Success)},
+                     {"P4", Color::toString(Color::Success)},
+                     {"P7", Color::toString(Color::Success)}}};
+  net_test["t1"] = {{{"P1", Color::toString(Color::Success)},
+                     {"P4", Color::toString(Color::Success)},
+                     {"P4", Color::toString(Color::Success)}},
+                    {{"P5", Color::toString(Color::Success)}}};
+  net_test["t2"] = {{{"P2", Color::toString(Color::Success)},
+                     {"P5", Color::toString(Color::Success)}},
+                    {{"P6", Color::toString(Color::Success)}}};
+  net_test["t3"] = {{{"P6", Color::toString(Color::Success)},
+                     {"P8", Color::toString(Color::Success)}},
+                    {{"P0", Color::toString(Color::Success)},
+                     {"P1", Color::toString(Color::Success)},
+                     {"P2", Color::toString(Color::Success)},
+                     {"P3", Color::toString(Color::Success)}}};
+  net_test["t4"] = {{{"P7", Color::toString(Color::Success)}},
+                    {{"P8", Color::toString(Color::Success)}}};
 
-  REQUIRE(stateNetEquality(net_test, net));
+  CHECK(stateNetEquality(net_test, net));
 }
 
 TEST_CASE("Load p1.grml net") {
@@ -42,32 +50,41 @@ TEST_CASE("Load p1.grml net") {
   const auto &[net, m0, priorities] = readGrml({grml_file});
 
   // for this particular net, the initial marking is:
-  Marking m_test;
-  m_test["P0"] = 1;
-  m_test["P1"] = 1;
-  m_test["P2"] = 1;
-  m_test["P3"] = 1;
-  m_test["P4"] = 0;
-  m_test["P5"] = 0;
-  m_test["P6"] = 0;
-  m_test["P7"] = 0;
-  m_test["P8"] = 0;
-  REQUIRE(m_test == m0);
+  Marking m_expected = {{"P0", Color::toString(Color::Success)},
+                        {"P1", Color::toString(Color::Success)},
+                        {"P2", Color::toString(Color::Success)},
+                        {"P3", Color::toString(Color::Success)}};
+  CHECK(m0 == m_expected);
 
   // for this particular net, the following transitions connect places:
   Net net_test;
-  net_test["t0"] = {{"P0", "P3"}, {"P4", "P4", "P7"}};
-  net_test["t1"] = {{"P1", "P4", "P4"}, {"P5"}};
-  net_test["t2"] = {{"P2", "P5"}, {"P6"}};
-  net_test["t3"] = {{"P6", "P8"}, {"P0", "P1", "P2", "P3"}};
-  net_test["t4"] = {{"P7"}, {"P8"}};
+  net_test["t0"] = {{{"P0", Color::toString(Color::Success)},
+                     {"P3", Color::toString(Color::Success)}},
+                    {{"P4", Color::toString(Color::Success)},
+                     {"P4", Color::toString(Color::Success)},
+                     {"P7", Color::toString(Color::Success)}}};
+  net_test["t1"] = {{{"P1", Color::toString(Color::Success)},
+                     {"P4", Color::toString(Color::Success)},
+                     {"P4", Color::toString(Color::Success)}},
+                    {{"P5", Color::toString(Color::Success)}}};
+  net_test["t2"] = {{{"P2", Color::toString(Color::Success)},
+                     {"P5", Color::toString(Color::Success)}},
+                    {{"P6", Color::toString(Color::Success)}}};
+  net_test["t3"] = {{{"P6", Color::toString(Color::Success)},
+                     {"P8", Color::toString(Color::Success)}},
+                    {{"P0", Color::toString(Color::Success)},
+                     {"P1", Color::toString(Color::Success)},
+                     {"P2", Color::toString(Color::Success)},
+                     {"P3", Color::toString(Color::Success)}}};
+  net_test["t4"] = {{{"P7", Color::toString(Color::Success)}},
+                    {{"P8", Color::toString(Color::Success)}}};
 
   // for this particular net the priorities are like this:
   PriorityTable priorities_gr = {{"t0", 2}};
 
-  REQUIRE(priorities_gr == priorities);
+  CHECK(priorities_gr == priorities);
 
-  REQUIRE(stateNetEquality(net_test, net));
+  CHECK(stateNetEquality(net_test, net));
 }
 
 TEST_CASE("Load p1_multi.pnml net") {
@@ -77,27 +94,34 @@ TEST_CASE("Load p1_multi.pnml net") {
   const auto &[net, m0] = readPnml({pnml_file});
 
   // for this particular net, the initial marking is:
-  Marking m_test;
-  m_test["P0"] = 0;
-  m_test["P1"] = 1;
-  m_test["P2"] = 1;
-  m_test["P3"] = 1;
-  m_test["P4"] = 0;
-  m_test["P5"] = 0;
-  m_test["P6"] = 0;
-  m_test["P7"] = 0;
-  m_test["P8"] = 0;
-  REQUIRE(m_test == m0);
+  Marking m_expected = {{"P1", Color::toString(Color::Success)},
+                        {"P2", Color::toString(Color::Success)},
+                        {"P3", Color::toString(Color::Success)}};
+  CHECK(m0 == m_expected);
 
   // for this particular net, the following transitions connect places:
   Net net_test;
-  net_test["t0"] = {{"P0", "P3"}, {"P4", "P7"}};
-  net_test["t1"] = {{"P1", "P4"}, {"P5"}};
-  net_test["t2"] = {{"P2", "P5"}, {"P6"}};
+  net_test["t0"] = {{{"P0", Color::toString(Color::Success)},
+                     {"P3", Color::toString(Color::Success)}},
+                    {{"P4", Color::toString(Color::Success)},
+                     {"P7", Color::toString(Color::Success)}}};
+  net_test["t1"] = {{{"P1", Color::toString(Color::Success)},
+                     {"P4", Color::toString(Color::Success)}},
+                    {{"P5", Color::toString(Color::Success)}}};
+  net_test["t2"] = {{{"P2", Color::toString(Color::Success)},
+                     {"P5", Color::toString(Color::Success)}},
+                    {{"P6", Color::toString(Color::Success)}}};
   // in this variant of this net, the transition from P6 to t3 has weight 2.
-  net_test["t3"] = {{"P6", "P6", "P8"}, {"P0", "P1", "P2", "P3"}};
-  net_test["t4"] = {{"P7"}, {"P8"}};
-  REQUIRE(stateNetEquality(net_test, net));
+  net_test["t3"] = {{{"P6", Color::toString(Color::Success)},
+                     {"P6", Color::toString(Color::Success)},
+                     {"P8", Color::toString(Color::Success)}},
+                    {{"P0", Color::toString(Color::Success)},
+                     {"P1", Color::toString(Color::Success)},
+                     {"P2", Color::toString(Color::Success)},
+                     {"P3", Color::toString(Color::Success)}}};
+  net_test["t4"] = {{{"P7", Color::toString(Color::Success)}},
+                    {{"P8", Color::toString(Color::Success)}}};
+  CHECK(stateNetEquality(net_test, net));
 }
 
 TEST_CASE("Compose PT1.pnml and PT2.pnml nets") {
@@ -110,18 +134,16 @@ TEST_CASE("Compose PT1.pnml and PT2.pnml nets") {
   const auto &[net, m0] = readPnml({p1, p2});
 
   // for this compositions of nets, the initial marking is:
-  Marking m_test;
-  m_test["P0"] = 1;
-  m_test["P1"] = 0;
-  m_test["P2"] = 0;
-  REQUIRE(m_test == m0);
-
+  Marking m_expected = {{"P0", Color::toString(Color::Success)}};
+  CHECK(m0 == m_expected);
   // the compositions of these two nets, the following transitions connect
   // places:
   Net net_test;
-  net_test["T0"] = {{"P0"}, {"P1"}};
-  net_test["T1"] = {{"P1"}, {"P2"}};
-  REQUIRE(stateNetEquality(net_test, net));
+  net_test["T0"] = {{{"P0", Color::toString(Color::Success)}},
+                    {{"P1", Color::toString(Color::Success)}}};
+  net_test["T1"] = {{{"P1", Color::toString(Color::Success)}},
+                    {{"P2", Color::toString(Color::Success)}}};
+  CHECK(stateNetEquality(net_test, net));
 
-  // REQUIRE(net_test == net);
+  // CHECK(net_test == net);
 }

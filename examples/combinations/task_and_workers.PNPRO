@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- This project file has been saved by the New GreatSPN Editor, v.100 --><project name="Example" version="121">
+  <gspn name="TaskNet" show-color-cmd="false" show-fluid-cmd="false" show-timed-cmd="false" view-rates="false">
+    <nodes>
+      <place marking="2222" name="TaskBucket" x="9.0" y="6.0"/>
+    </nodes>
+    <edges/>
+  </gspn>
+  <gspn name="SingleProcessWorker" show-color-cmd="false" show-fluid-cmd="false" show-timed-cmd="false" view-rates="false">
+    <nodes>
+      <place name="TaskBucket" x="6.0" y="10.0"/>
+      <transition name="SingleStepProcessor" nservers-x="0.5" type="EXP" x="11.55" y="10.0"/>
+      <place name="TaskResult" x="16.0" y="10.0"/>
+      <transition name="ReturnFailedTasks" nservers-x="0.5" type="EXP" x="2.55" y="16.0"/>
+      <place name="SuccessfulTasks" x="22.0" y="4.0"/>
+      <transition name="releaseResourceAfterSuccess" nservers-x="0.5" type="EXP" x="16.55" y="4.0"/>
+      <place marking="1" name="ResourceSingleProcessor" x="11.0" y="4.0"/>
+    </nodes>
+    <edges>
+      <arc head="SingleStepProcessor" kind="INPUT" tail="TaskBucket"/>
+      <arc head="TaskResult" kind="OUTPUT" tail="SingleStepProcessor"/>
+      <arc head="SingleStepProcessor" kind="INPUT" tail="ResourceSingleProcessor"/>
+      <arc head="TaskBucket" kind="OUTPUT" tail="ReturnFailedTasks">
+        <point x="3.0" y="11.0"/>
+      </arc>
+      <arc head="ResourceSingleProcessor" kind="OUTPUT" tail="ReturnFailedTasks">
+        <point x="1.0" y="17.0"/>
+        <point x="1.0" y="5.0"/>
+      </arc>
+      <arc head="ResourceSingleProcessor" kind="OUTPUT" tail="releaseResourceAfterSuccess"/>
+      <arc head="SuccessfulTasks" kind="OUTPUT" tail="releaseResourceAfterSuccess">
+        <point x="21.0" y="5.0"/>
+      </arc>
+      <arc head="releaseResourceAfterSuccess" kind="INPUT" tail="TaskResult"/>
+      <arc head="ReturnFailedTasks" kind="INPUT" tail="TaskResult">
+        <point x="17.0" y="17.0"/>
+      </arc>
+    </edges>
+  </gspn>
+  <gspn name="DualProcessWorker" show-color-cmd="false" show-fluid-cmd="false" show-timed-cmd="false" view-rates="false">
+    <nodes>
+      <place name="TaskBucket" x="9.0" y="12.0"/>
+      <transition name="StepOne" nservers-x="0.5" type="EXP" x="13.55" y="12.0"/>
+      <place name="TaskResult" x="29.0" y="12.0"/>
+      <transition name="returnFailedTasksTwo" nservers-x="0.5" type="EXP" x="19.55" y="21.0"/>
+      <transition name="StepTwo" nservers-x="0.5" type="EXP" x="24.55" y="12.0"/>
+      <place name="IntermediateState" x="19.0" y="12.0"/>
+      <transition name="returnFailedTasksOne" nservers-x="0.5" type="EXP" x="19.55" y="17.0"/>
+      <place marking="1" name="ResourceDualProcessor" x="13.0" y="6.0"/>
+      <place name="P0" x="5.0" y="19.0"/>
+      <transition name="releaseResourceAfterFail" nservers-x="0.5" type="EXP" x="5.55" y="12.0"/>
+      <transition name="releaseResourceAfterSuccess" nservers-x="0.5" type="EXP" x="19.55" y="6.0"/>
+      <place name="SuccessfulTasks" x="19.0" y="1.0"/>
+    </nodes>
+    <edges>
+      <arc head="StepOne" kind="INPUT" tail="TaskBucket"/>
+      <arc head="IntermediateState" kind="OUTPUT" tail="StepOne"/>
+      <arc head="StepTwo" kind="INPUT" tail="IntermediateState"/>
+      <arc head="TaskResult" kind="OUTPUT" tail="StepTwo"/>
+      <arc head="returnFailedTasksOne" kind="INPUT" tail="IntermediateState"/>
+      <arc head="P0" kind="OUTPUT" tail="returnFailedTasksOne"/>
+      <arc head="P0" kind="OUTPUT" tail="returnFailedTasksTwo"/>
+      <arc head="releaseResourceAfterFail" kind="INPUT" tail="P0"/>
+      <arc head="ResourceDualProcessor" kind="OUTPUT" tail="releaseResourceAfterFail">
+        <point x="6.0" y="7.0"/>
+      </arc>
+      <arc head="ResourceDualProcessor" kind="OUTPUT" tail="releaseResourceAfterSuccess"/>
+      <arc head="releaseResourceAfterSuccess" kind="INPUT" tail="TaskResult">
+        <point x="30.0" y="7.0"/>
+      </arc>
+      <arc head="returnFailedTasksTwo" kind="INPUT" tail="TaskResult">
+        <point x="30.0" y="22.0"/>
+      </arc>
+      <arc head="StepOne" kind="INPUT" tail="ResourceDualProcessor"/>
+      <arc head="TaskBucket" kind="OUTPUT" tail="releaseResourceAfterFail"/>
+      <arc head="SuccessfulTasks" kind="OUTPUT" tail="releaseResourceAfterSuccess"/>
+    </edges>
+  </gspn>
+</project>

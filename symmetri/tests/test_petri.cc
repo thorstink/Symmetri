@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <iostream>
 #include <map>
 
 #include "petri.h"
@@ -17,20 +18,33 @@ void petri0() {
 auto petri1() {
   auto inc = T1_COUNTER.load() + 1;
   T1_COUNTER.store(inc);
-  return symmetri::state::Completed;
+  return symmetri::Color::Success;
 }
 
 std::tuple<Net, Store, PriorityTable, Marking> PetriTestNet() {
   T0_COUNTER.store(0);
   T1_COUNTER.store(0);
 
-  Net net = {{"t0", {{"Pa", "Pb"}, {"Pc"}}},
-             {"t1", {{"Pc", "Pc"}, {"Pb", "Pb", "Pd"}}}};
+  Net net = {{"t0",
+              {{{"Pa", Color::toString(Color::Success)},
+                {"Pb", Color::toString(Color::Success)}},
+               {{"Pc", Color::toString(Color::Success)}}}},
+             {"t1",
+              {{{"Pc", Color::toString(Color::Success)},
+                {"Pc", Color::toString(Color::Success)}},
+               {{"Pb", Color::toString(Color::Success)},
+                {"Pb", Color::toString(Color::Success)},
+                {"Pd", Color::toString(Color::Success)}}}}};
 
   Store store = {{"t0", &petri0}, {"t1", &petri1}};
   PriorityTable priority;
 
-  Marking m0 = {{"Pa", 4}, {"Pb", 2}, {"Pc", 0}, {"Pd", 0}};
+  Marking m0 = {{"Pa", Color::toString(Color::Success)},
+                {"Pa", Color::toString(Color::Success)},
+                {"Pa", Color::toString(Color::Success)},
+                {"Pa", Color::toString(Color::Success)},
+                {"Pb", Color::toString(Color::Success)},
+                {"Pb", Color::toString(Color::Success)}};
   return {net, store, priority, m0};
 }
 
@@ -38,14 +52,14 @@ TEST_CASE("Test equaliy of nets") {
   auto [net, store, priority, m0] = PetriTestNet();
   auto net2 = net;
   auto net3 = net;
-  REQUIRE(stateNetEquality(net, net2));
+  CHECK(stateNetEquality(net, net2));
   // change net
   net2.insert({"tx", {{}, {}}});
-  REQUIRE(!stateNetEquality(net, net2));
+  CHECK(!stateNetEquality(net, net2));
 
   // same transitions but different places.
-  net3.at("t0").second.push_back("px");
-  REQUIRE(!stateNetEquality(net, net3));
+  net3.at("t0").second.push_back({"px", Color::toString(Color::Success)});
+  CHECK(!stateNetEquality(net, net3));
 }
 
 TEST_CASE("Run one transition iteration in a petri net") {
@@ -58,26 +72,38 @@ TEST_CASE("Run one transition iteration in a petri net") {
   m.fireTransitions();
   // t0 is dispatched but it's reducer has not yet run, so pre-conditions are
   // processed but post are not:
-  REQUIRE(m.getMarking() == std::vector<symmetri::Place>{"Pa", "Pa"});
-
+  {
+    Marking expected = {{"Pa", Color::toString(Color::Success)},
+                        {"Pa", Color::toString(Color::Success)}};
+    CHECK(MarkingEquality(m.getMarking(), expected));
+  }
   // now there should be two reducers;
   Reducer r1, r2;
-  REQUIRE(m.reducer_queue->wait_dequeue_timed(r1, std::chrono::seconds(1)));
-  REQUIRE(m.reducer_queue->wait_dequeue_timed(r1, std::chrono::seconds(1)));
-  REQUIRE(m.reducer_queue->wait_dequeue_timed(r2, std::chrono::seconds(1)));
-  REQUIRE(m.reducer_queue->wait_dequeue_timed(r2, std::chrono::seconds(1)));
+  CHECK(m.reducer_queue->wait_dequeue_timed(r1, std::chrono::seconds(1)));
+  CHECK(m.reducer_queue->wait_dequeue_timed(r1, std::chrono::seconds(1)));
+  CHECK(m.reducer_queue->wait_dequeue_timed(r2, std::chrono::seconds(1)));
+  CHECK(m.reducer_queue->wait_dequeue_timed(r2, std::chrono::seconds(1)));
   // verify that t0 has actually ran twice.
-  REQUIRE(T0_COUNTER.load() == 2);
+  CHECK(T0_COUNTER.load() == 2);
   // the marking should still be the same.
-  REQUIRE(m.getMarking() == std::vector<symmetri::Place>{"Pa", "Pa"});
+  {
+    Marking expected = {{"Pa", Color::toString(Color::Success)},
+                        {"Pa", Color::toString(Color::Success)}};
+    CHECK(MarkingEquality(m.getMarking(), expected));
+  }
 
   // process the reducers
   r1(m);
   r2(m);
   // and now the post-conditions are processed:
-  REQUIRE(m.scheduled_callbacks.empty());
-  REQUIRE(MarkingEquality(
-      m.getMarking(), std::vector<symmetri::Place>{"Pa", "Pa", "Pc", "Pc"}));
+  CHECK(m.scheduled_callbacks.empty());
+  {
+    Marking expected = {{"Pa", Color::toString(Color::Success)},
+                        {"Pa", Color::toString(Color::Success)},
+                        {"Pc", Color::toString(Color::Success)},
+                        {"Pc", Color::toString(Color::Success)}};
+    CHECK(MarkingEquality(m.getMarking(), expected));
+  }
 }
 
 TEST_CASE("Run until net dies") {
@@ -99,25 +125,26 @@ TEST_CASE("Run until net dies") {
   } while (m.scheduled_callbacks.size() > 0);
 
   // For this specific net we expect:
-  REQUIRE(MarkingEquality(
-      m.getMarking(), std::vector<symmetri::Place>{"Pb", "Pb", "Pd", "Pd"}));
+  Marking expected = {{"Pb", Color::toString(Color::Success)},
+                      {"Pb", Color::toString(Color::Success)},
+                      {"Pd", Color::toString(Color::Success)},
+                      {"Pd", Color::toString(Color::Success)}};
+  CHECK(MarkingEquality(m.getMarking(), expected));
 
-  REQUIRE(T0_COUNTER.load() == 4);
-  REQUIRE(T1_COUNTER.load() == 2);
+  CHECK(T0_COUNTER.load() == 4);
+  CHECK(T1_COUNTER.load() == 2);
 }
 
-TEST_CASE("Run until net dies with nullptr") {
+TEST_CASE("Run until net dies with DirectMutations") {
   using namespace moodycamel;
 
   auto [net, store, priority, m0] = PetriTestNet();
   // we can pass an empty story, and DirectMutation will be used for the
   // undefined transitions
-  store = {};
   auto stp = std::make_shared<TaskSystem>(1);
-  Petri m(net, store, priority, m0, {}, "s", stp);
+  Petri m(net, {}, priority, m0, {}, "s", stp);
 
   Reducer r;
-  Callback a([] {});
   // we need to enqueue one 'no-operation' to start the live net.
   m.reducer_queue->enqueue([](Petri&) {});
   do {
@@ -126,10 +153,13 @@ TEST_CASE("Run until net dies with nullptr") {
       m.fireTransitions();
     }
   } while (m.scheduled_callbacks.size() > 0);
-
   // For this specific net we expect:
-  REQUIRE(MarkingEquality(
-      m.getMarking(), std::vector<symmetri::Place>{"Pb", "Pb", "Pd", "Pd"}));
+  Marking expected = {{"Pb", Color::toString(Color::Success)},
+                      {"Pb", Color::toString(Color::Success)},
+                      {"Pd", Color::toString(Color::Success)},
+                      {"Pd", Color::toString(Color::Success)}};
+
+  CHECK(MarkingEquality(m.getMarking(), expected));
 }
 
 // TEST_CASE(
@@ -156,21 +186,21 @@ TEST_CASE("Run until net dies with nullptr") {
 //     fireable_transitions.end(),
 //                      a);
 //   };
-//   REQUIRE(find("a") != fireable_transitions.end());
-//   REQUIRE(find("b") != fireable_transitions.end());
-//   REQUIRE(find("c") != fireable_transitions.end());
-//   REQUIRE(find("d") != fireable_transitions.end());
-//   REQUIRE(find("e") == fireable_transitions.end());
+//   CHECK(find("a") != fireable_transitions.end());
+//   CHECK(find("b") != fireable_transitions.end());
+//   CHECK(find("c") != fireable_transitions.end());
+//   CHECK(find("d") != fireable_transitions.end());
+//   CHECK(find("e") == fireable_transitions.end());
 // }
 
 TEST_CASE("Step through transitions") {
   std::map<std::string, size_t> hitmap;
   {
-    Net net = {{"a", {{"Pa"}, {}}},
-               {"b", {{"Pa"}, {}}},
-               {"c", {{"Pa"}, {}}},
-               {"d", {{"Pa"}, {}}},
-               {"e", {{"Pb"}, {}}}};
+    Net net = {{"a", {{{"Pa", Color::toString(Color::Success)}}, {}}},
+               {"b", {{{"Pa", Color::toString(Color::Success)}}, {}}},
+               {"c", {{{"Pa", Color::toString(Color::Success)}}, {}}},
+               {"d", {{{"Pa", Color::toString(Color::Success)}}, {}}},
+               {"e", {{{"Pb", Color::toString(Color::Success)}}, {}}}};
     Store store;
     for (const auto& [t, dm] : net) {
       hitmap.insert({t, 0});
@@ -178,23 +208,26 @@ TEST_CASE("Step through transitions") {
     }
     auto stp = std::make_shared<TaskSystem>(1);
     // with this initial marking, all but transition e are possible.
-    Marking m0 = {{"Pa", 4}};
+    Marking m0 = {{"Pa", Color::toString(Color::Success)},
+                  {"Pa", Color::toString(Color::Success)},
+                  {"Pa", Color::toString(Color::Success)},
+                  {"Pa", Color::toString(Color::Success)}};
     Petri m(net, store, {}, m0, {}, "s", stp);
 
     // auto scheduled_callbacks = m.getActiveTransitions();
-    // REQUIRE(scheduled_callbacks.size() == 4);  // abcd
+    // CHECK(scheduled_callbacks.size() == 4);  // abcd
     m.tryFire("e");
     m.tryFire("b");
     m.tryFire("b");
     m.tryFire("c");
     m.tryFire("b");
     // there are no reducers ran, so this doesn't update.
-    REQUIRE(m.scheduled_callbacks.size() == 4);
+    CHECK(m.scheduled_callbacks.size() == 4);
     // there should be no markers left.
-    REQUIRE(m.getMarking().size() == 0);
+    CHECK(m.getMarking().size() == 0);
     // there should be nothing left to fire
     // scheduled_callbacks = m.getActiveTransitions();
-    // REQUIRE(scheduled_callbacks.size() == 0);
+    // CHECK(scheduled_callbacks.size() == 0);
     int j = 0;
     Reducer r;
     while (j < 2 * 4 &&
@@ -203,13 +236,19 @@ TEST_CASE("Step through transitions") {
       r(m);
     }
     // reducers update, there should be active transitions left.
-    REQUIRE(m.scheduled_callbacks.size() == 0);
+    CHECK(m.scheduled_callbacks.size() == 0);
   }
 
   // validate we only ran transition 3 times b, 1 time c and none of the others.
-  REQUIRE(hitmap.at("a") == 0);
-  REQUIRE(hitmap.at("b") == 3);
-  REQUIRE(hitmap.at("c") == 1);
-  REQUIRE(hitmap.at("d") == 0);
-  REQUIRE(hitmap.at("e") == 0);
+  CHECK(hitmap.at("a") == 0);
+  CHECK(hitmap.at("b") == 3);
+  CHECK(hitmap.at("c") == 1);
+  CHECK(hitmap.at("d") == 0);
+  CHECK(hitmap.at("e") == 0);
+}
+
+TEST_CASE("create fireable transitions shortlist") {
+  auto [net, store, priority, m0] = PetriTestNet();
+  auto stp = std::make_shared<TaskSystem>(1);
+  Petri m(net, store, priority, m0, {}, "s", stp);
 }

@@ -31,8 +31,10 @@ std::tuple<Net, Marking> readPnml(const std::set<std::string> &files) {
               : std::stoi(child->FirstChildElement("initialMarking")
                               ->FirstChildElement("text")
                               ->GetText());
-
-      place_initialMarking.insert({place_id, initial_marking});
+      for (int i = 0; i < initial_marking; i++) {
+        place_initialMarking.push_back(
+            {place_id, Color::toString(Color::Success)});
+      }
       places.insert(std::string(place_id));
     }
 
@@ -48,9 +50,10 @@ std::tuple<Net, Marking> readPnml(const std::set<std::string> &files) {
          child != NULL; child = child->NextSiblingElement("arc")) {
       // do something with each child element
 
-      auto source_id = child->Attribute("source");
-      auto target_id = child->Attribute("target");
-      auto multiplicity =
+      const auto source_id = child->Attribute("source");
+      const auto target_id = child->Attribute("target");
+      const auto color = child->Attribute("color");
+      const auto multiplicity =
           (child->FirstChildElement("inscription") == nullptr)
               ? 1
               : std::stoi(child->FirstChildElement("inscription")
@@ -60,17 +63,23 @@ std::tuple<Net, Marking> readPnml(const std::set<std::string> &files) {
       for (int i = 0; i < multiplicity; i++) {
         if (places.find(source_id) != places.end()) {
           // if the source is a place, tokens are consumed.
+          auto arc_color =
+              NULL == color ? Color::toString(Color::Success) : color;
           if (state_net.find(target_id) != state_net.end()) {
-            state_net.find(target_id)->second.first.push_back(source_id);
+            state_net.find(target_id)->second.first.push_back(
+                {source_id, arc_color});
           } else {
-            state_net.insert({target_id, {{source_id}, {}}});
+            state_net.insert({target_id, {{{source_id, arc_color}}, {}}});
           }
         } else if (transitions.find(source_id) != transitions.end()) {
           // if the destination is a place, tokens are produced.
           if (state_net.find(source_id) != state_net.end()) {
-            state_net.find(source_id)->second.second.push_back(target_id);
+            state_net.find(source_id)->second.second.push_back(
+                {target_id, Color::toString(Color::Success)});
           } else {
-            state_net.insert({source_id, {{}, {target_id}}});
+            state_net.insert(
+                {source_id,
+                 {{}, {{target_id, Color::toString(Color::Success)}}}});
           }
         } else {
           const auto arc_id = child->Attribute("id");

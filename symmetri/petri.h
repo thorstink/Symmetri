@@ -2,20 +2,31 @@
 
 /** @file petri.h */
 
-#include <blockingconcurrentqueue.h>
-
 #include <functional>
 #include <memory>
 #include <optional>
 
+#include "queue/blockingconcurrentqueue.h"
 #include "small_vector.hpp"
 #include "symmetri/callback.h"
 #include "symmetri/tasks.h"
 #include "symmetri/types.h"
 
 namespace symmetri {
-
+struct AugmentedToken {
+  size_t place, color;
+};
+inline bool operator==(const AugmentedToken &lhs, const AugmentedToken &rhs) {
+  return lhs.place == rhs.place && lhs.color == rhs.color;
+}
+inline bool operator<(const AugmentedToken &lhs, const AugmentedToken &rhs) {
+  return lhs.place < rhs.place && lhs.color < rhs.color;
+}
+inline bool operator>(const AugmentedToken &lhs, const AugmentedToken &rhs) {
+  return lhs.place > rhs.place && lhs.color > rhs.color;
+}
 using SmallVector = gch::small_vector<size_t, 4>;
+using SmallVectorInput = gch::small_vector<AugmentedToken, 4>;
 using Store = std::unordered_map<Transition, Callback>;
 
 /**
@@ -38,7 +49,8 @@ size_t toIndex(const std::vector<std::string> &m, const std::string &s);
  * @return gch::small_vector<size_t, 32>
  */
 gch::small_vector<size_t, 32> possibleTransitions(
-    const std::vector<size_t> &tokens,
+    const std::vector<AugmentedToken> &tokens,
+    const std::vector<SmallVectorInput> &input_n,
     const std::vector<SmallVector> &p_to_ts_n);
 
 /**
@@ -51,7 +63,8 @@ gch::small_vector<size_t, 32> possibleTransitions(
  * @return true if the pre-conditions are met
  * @return false otherwise
  */
-bool canFire(const SmallVector &pre, const std::vector<size_t> &tokens);
+bool canFire(const SmallVectorInput &pre,
+             const std::vector<AugmentedToken> &tokens);
 
 /**
  * @brief Forward declaration of the Petri-class
@@ -77,6 +90,14 @@ Reducer scheduleCallback(
     size_t t_idx, const Callback &task,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducer_queue);
+
+/**
+ * @brief deducts the set input from the current token distribution
+ *
+ * @param inputs a vector representing the tokens to be removed
+ */
+void deductMarking(std::vector<AugmentedToken> &tokens,
+                   const SmallVectorInput &inputs);
 
 /**
  * @brief Petri is a data structure that encodes the Petri net and holds
@@ -116,7 +137,7 @@ struct Petri {
    * @param marking
    * @return std::vector<size_t>
    */
-  std::vector<size_t> toTokens(const Marking &marking) const noexcept;
+  std::vector<AugmentedToken> toTokens(const Marking &marking) const noexcept;
 
   /**
    * @brief Get the current marking. It is represented by a vector of places:
@@ -126,7 +147,7 @@ struct Petri {
    *
    * @return std::vector<Place>
    */
-  std::vector<Place> getMarking() const;
+  Marking getMarking() const;
 
   /**
    * @brief get the current eventlog, also copies in all child eventlogs of
@@ -156,27 +177,33 @@ struct Petri {
      * @brief (ordered) list of string representation of transitions
      *
      */
-    std::vector<Transition> transition;
+    std::vector<std::string> transition;
 
     /**
      * @brief (ordered) list of string representation of places
      *
      */
-    std::vector<Place> place;
+    std::vector<std::string> place;
+
+    /**
+     * @brief (ordered) list of string representation of colors
+     *
+     */
+    std::vector<std::string> color;
 
     /**
      * @brief list of list of inputs to transitions. This vector is indexed like
      * `transition`.
      *
      */
-    std::vector<SmallVector> input_n;
+    std::vector<SmallVectorInput> input_n;
 
     /**
      * @brief list of list of outputs of transitions. This vector is indexed
      * like `transition`.
      *
      */
-    std::vector<SmallVector> output_n;
+    std::vector<SmallVectorInput> output_n;
 
     /**
      * @brief list of list of transitions that have places as inputs. This
@@ -200,12 +227,12 @@ struct Petri {
     std::vector<Callback> store;
   } net;  ///< Is a data-oriented design of a Petri net
 
-  std::vector<size_t> initial_tokens;       ///< The initial marking
-  std::vector<size_t> tokens;               ///< The current marking
-  std::vector<size_t> final_marking;        ///< The final marking
-  std::vector<size_t> scheduled_callbacks;  ///< List of active transitions
-  Eventlog event_log;                       ///< The most actual event_log
-  Result state;                             ///< The current state of the Petri
+  std::vector<AugmentedToken> initial_tokens;  ///< The initial marking
+  std::vector<AugmentedToken> tokens;          ///< The current marking
+  std::vector<AugmentedToken> final_marking;   ///< The final marking
+  std::vector<size_t> scheduled_callbacks;     ///< List of active transitions
+  Eventlog event_log;                          ///< The most actual event_log
+  Token state;          ///< The current state of the Petri
   std::string case_id;  ///< The unique identifier for this Petri-run
   std::atomic<std::optional<unsigned int>>
       thread_id_;  ///< The id of the thread from which the Petri is fired.
@@ -215,13 +242,6 @@ struct Petri {
       pool;  ///< A pointer to the threadpool used to defer Callbacks.
 
  private:
-  /**
-   * @brief deducts the set input from the current token distribution
-   *
-   * @param inputs a vector representing the tokens to be removed
-   */
-  void deductMarking(const SmallVector &inputs);
-
   /**
    * @brief Runs the Callback associated with t immediately.
    *

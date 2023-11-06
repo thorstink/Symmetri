@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "result_factory.hpp"
+#include "colors.hpp"
 namespace symmetri {
 
 using Place = std::string;       ///< The string representation of the place the
@@ -18,18 +18,6 @@ using Clock =
     std::chrono::steady_clock;  ///< The clock definition in Symmetri is the
                                 ///< steady clock for monotonic reasons
 
-namespace state {
-const static Result Scheduled(
-    create<ConstStringHash("Scheduled")>("Scheduled"));
-const static Result Started(create<ConstStringHash("Started")>("Started"));
-const static Result Completed(
-    create<ConstStringHash("Completed")>("Completed"));
-const static Result Deadlock(create<ConstStringHash("Deadlock")>("Deadlock"));
-const static Result UserExit(create<ConstStringHash("UserExit")>("UserExit"));
-const static Result Paused(create<ConstStringHash("Paused")>("Paused"));
-const static Result Error(create<ConstStringHash("Error")>("Error"));
-};  // namespace state
-
 /**
  * @brief This struct defines a subset of data that we associate with the
  * result of firing a transition.
@@ -38,7 +26,7 @@ const static Result Error(create<ConstStringHash("Error")>("Error"));
 struct Event {
   std::string case_id;      ///< The case_id of this event
   std::string transition;   ///< The transition that generated the event
-  Result state;             ///< The result of the event
+  Token state;              ///< The result of the event
   Clock::time_point stamp;  ///< The timestamp of the event
 };
 
@@ -47,14 +35,18 @@ using Eventlog = std::vector<Event>;  ///< The eventlog is simply a log of
 
 using Net = std::unordered_map<
     Transition,
-    std::pair<std::vector<Place>,
-              std::vector<Place>>>;  ///< This is the multiset definition
-                                     ///< of a Petri net. For each transition
-                                     ///< there is a pair of lists for input and
-                                     ///< output transitions
-using Marking =
-    std::unordered_map<Place,
-                       uint16_t>;  ///< The marking is limited from 0 to 65535
+    std::pair<
+        std::vector<std::pair<Place, std::string>>,
+        std::vector<std::pair<Place, std::string>>>>;  ///< This is the multiset
+                                                       ///< definition of a
+                                                       ///< Petri net. For each
+                                                       ///< transition there is
+                                                       ///< a pair of lists for
+                                                       ///< colored input and
+                                                       ///< output places
+
+using Marking = std::vector<std::pair<Place, std::string>>;
+
 using PriorityTable =
     std::vector<std::pair<Transition, int8_t>>;  ///< Priority is limited from
                                                  ///< -128 to 127
