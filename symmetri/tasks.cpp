@@ -1,6 +1,6 @@
 #include "symmetri/tasks.h"
 
-#include <blockingconcurrentqueue.h>
+#include "queue/blockingconcurrentqueue.h"
 
 namespace symmetri {
 

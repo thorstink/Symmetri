@@ -2,12 +2,11 @@
 
 /** @file petri.h */
 
-#include <blockingconcurrentqueue.h>
-
 #include <functional>
 #include <memory>
 #include <optional>
 
+#include "queue/blockingconcurrentqueue.h"
 #include "small_vector.hpp"
 #include "symmetri/callback.h"
 #include "symmetri/tasks.h"

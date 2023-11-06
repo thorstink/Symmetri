@@ -107,7 +107,8 @@ symmetri::Token fire(const PetriNet &app) {
   }
   // start!
   m.fireTransitions();
-  while ((m.state == Color::Started || m.state == Color::Paused) &&
+  while (!symmetri::MarkingReached(m.tokens, m.final_marking) &&
+         (m.state == Color::Started || m.state == Color::Paused) &&
          m.reducer_queue->wait_dequeue_timed(f, -1)) {
     do {
       f(m);

@@ -1,0 +1,191 @@
+<?xml version="1.0"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+	<!-- Written by GreatSPN Editor. -->
+	<net id="DualProcessWorker" type="http://www.pnml.org/version-2009/grammar/ptnet">
+		<name>
+			<text>DualProcessWorker</text>
+		</name>
+		<page id="page0">
+			<name>
+				<text>DefaultPage</text>
+			</name>
+			<!-- List of places -->
+			<place id="TaskBucket">
+				<name>
+					<graphics>
+						<offset x="0" y="15"/>
+					</graphics>
+					<text>TaskBucket</text>
+				</name>
+				<graphics>
+					<position x="80" y="120"/>
+				</graphics>
+			</place>
+			<place id="TaskResult">
+				<name>
+					<graphics>
+						<offset x="0" y="15"/>
+					</graphics>
+					<text>TaskResult</text>
+				</name>
+				<graphics>
+					<position x="290" y="120"/>
+				</graphics>
+			</place>
+			<place id="IntermediateState">
+				<name>
+					<graphics>
+						<offset x="0" y="15"/>
+					</graphics>
+					<text>IntermediateState</text>
+				</name>
+				<graphics>
+					<position x="190" y="120"/>
+				</graphics>
+			</place>
+			<place id="ResourceDualProcessor">
+				<name>
+					<graphics>
+						<offset x="0" y="15"/>
+					</graphics>
+					<text>ResourceDualProcessor</text>
+				</name>
+				<graphics>
+					<position x="130" y="60"/>
+				</graphics>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<place id="P0">
+				<name>
+					<graphics>
+						<offset x="0" y="15"/>
+					</graphics>
+					<text>P0</text>
+				</name>
+				<graphics>
+					<position x="130" y="190"/>
+				</graphics>
+			</place>
+			<place id="SuccessfulTasks">
+				<name>
+					<graphics>
+						<offset x="0" y="15"/>
+					</graphics>
+					<text>SuccessfulTasks</text>
+				</name>
+				<graphics>
+					<position x="190" y="10"/>
+				</graphics>
+			</place>
+			<!-- List of transitions -->
+			<transition id="StepOne">
+				<name>
+					<graphics>
+						<offset x="0" y="-15"/>
+					</graphics>
+					<text>StepOne</text>
+				</name>
+				<graphics>
+					<position x="135" y="120"/>
+				</graphics>
+			</transition>
+			<transition id="returnFailedTasksTwo">
+				<name>
+					<graphics>
+						<offset x="0" y="-15"/>
+					</graphics>
+					<text>returnFailedTasksTwo</text>
+				</name>
+				<graphics>
+					<position x="195" y="210"/>
+				</graphics>
+			</transition>
+			<transition id="StepTwo">
+				<name>
+					<graphics>
+						<offset x="0" y="-15"/>
+					</graphics>
+					<text>StepTwo</text>
+				</name>
+				<graphics>
+					<position x="245" y="120"/>
+				</graphics>
+			</transition>
+			<transition id="returnFailedTasksOne">
+				<name>
+					<graphics>
+						<offset x="0" y="-15"/>
+					</graphics>
+					<text>returnFailedTasksOne</text>
+				</name>
+				<graphics>
+					<position x="195" y="170"/>
+				</graphics>
+			</transition>
+			<transition id="releaseResourceAfterFail">
+				<name>
+					<graphics>
+						<offset x="0" y="-15"/>
+					</graphics>
+					<text>releaseResourceAfterFail</text>
+				</name>
+				<graphics>
+					<position x="55" y="190"/>
+				</graphics>
+			</transition>
+			<transition id="releaseResourceAfterSuccess">
+				<name>
+					<graphics>
+						<offset x="0" y="-15"/>
+					</graphics>
+					<text>releaseResourceAfterSuccess</text>
+				</name>
+				<graphics>
+					<position x="195" y="60"/>
+				</graphics>
+			</transition>
+			<!-- List of arcs -->
+			<arc id="id1" source="TaskBucket" target="StepOne">
+			</arc>
+			<arc id="id2" source="StepOne" target="IntermediateState">
+			</arc>
+			<arc id="id3" source="IntermediateState" target="StepTwo">
+			</arc>
+			<arc id="id4" source="StepTwo" target="TaskResult">
+			</arc>
+			<arc id="id5" source="IntermediateState" target="returnFailedTasksOne" color="Red">
+			</arc>
+			<arc id="id6" source="returnFailedTasksOne" target="P0">
+			</arc>
+			<arc id="id7" source="returnFailedTasksTwo" target="P0">
+			</arc>
+			<arc id="id8" source="P0" target="releaseResourceAfterFail">
+			</arc>
+			<arc id="id9" source="releaseResourceAfterFail" target="ResourceDualProcessor">
+				<graphics>
+					<position x="60" y="70"/>
+				</graphics>
+			</arc>
+			<arc id="id10" source="releaseResourceAfterSuccess" target="ResourceDualProcessor">
+			</arc>
+			<arc id="id11" source="TaskResult" target="releaseResourceAfterSuccess">
+				<graphics>
+					<position x="300" y="70"/>
+				</graphics>
+			</arc>
+			<arc id="id12" source="TaskResult" target="returnFailedTasksTwo" color="Red">
+				<graphics>
+					<position x="300" y="220"/>
+				</graphics>
+			</arc>
+			<arc id="id13" source="ResourceDualProcessor" target="StepOne">
+			</arc>
+			<arc id="id14" source="releaseResourceAfterFail" target="TaskBucket">
+			</arc>
+			<arc id="id15" source="releaseResourceAfterSuccess" target="SuccessfulTasks">
+			</arc>
+		</page>
+	</net>
+</pnml>

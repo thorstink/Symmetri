@@ -1,0 +1,128 @@
+<?xml version="1.0"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+	<!-- Written by GreatSPN Editor. -->
+	<net id="SingleProcessWorker" type="http://www.pnml.org/version-2009/grammar/ptnet">
+		<name>
+			<text>SingleProcessWorker</text>
+		</name>
+		<page id="page0">
+			<name>
+				<text>DefaultPage</text>
+			</name>
+			<!-- List of places -->
+			<place id="TaskBucket">
+				<name>
+					<graphics>
+						<offset x="0" y="15"/>
+					</graphics>
+					<text>TaskBucket</text>
+				</name>
+				<graphics>
+					<position x="60" y="100"/>
+				</graphics>
+			</place>
+			<place id="TaskResult">
+				<name>
+					<graphics>
+						<offset x="0" y="15"/>
+					</graphics>
+					<text>TaskResult</text>
+				</name>
+				<graphics>
+					<position x="160" y="100"/>
+				</graphics>
+			</place>
+			<place id="SuccessfulTasks">
+				<name>
+					<graphics>
+						<offset x="0" y="15"/>
+					</graphics>
+					<text>SuccessfulTasks</text>
+				</name>
+				<graphics>
+					<position x="220" y="40"/>
+				</graphics>
+			</place>
+			<place id="ResourceSingleProcessor">
+				<name>
+					<graphics>
+						<offset x="0" y="15"/>
+					</graphics>
+					<text>ResourceSingleProcessor</text>
+				</name>
+				<graphics>
+					<position x="110" y="40"/>
+				</graphics>
+				<initialMarking>
+					<text>1</text>
+				</initialMarking>
+			</place>
+			<!-- List of transitions -->
+			<transition id="SingleStepProcessor">
+				<name>
+					<graphics>
+						<offset x="0" y="-15"/>
+					</graphics>
+					<text>SingleStepProcessor</text>
+				</name>
+				<graphics>
+					<position x="115" y="100"/>
+				</graphics>
+			</transition>
+			<transition id="ReturnFailedTasks">
+				<name>
+					<graphics>
+						<offset x="0" y="-15"/>
+					</graphics>
+					<text>ReturnFailedTasks</text>
+				</name>
+				<graphics>
+					<position x="25" y="160"/>
+				</graphics>
+			</transition>
+			<transition id="releaseResourceAfterSuccess">
+				<name>
+					<graphics>
+						<offset x="0" y="-15"/>
+					</graphics>
+					<text>releaseResourceAfterSuccess</text>
+				</name>
+				<graphics>
+					<position x="165" y="40"/>
+				</graphics>
+			</transition>
+			<!-- List of arcs -->
+			<arc id="id1" source="TaskBucket" target="SingleStepProcessor">
+			</arc>
+			<arc id="id2" source="SingleStepProcessor" target="TaskResult">
+			</arc>
+			<arc id="id3" source="ResourceSingleProcessor" target="SingleStepProcessor">
+			</arc>
+			<arc id="id4" source="ReturnFailedTasks" target="TaskBucket">
+				<graphics>
+					<position x="30" y="110"/>
+				</graphics>
+			</arc>
+			<arc id="id5" source="ReturnFailedTasks" target="ResourceSingleProcessor">
+				<graphics>
+					<position x="10" y="170"/>
+					<position x="10" y="50"/>
+				</graphics>
+			</arc>
+			<arc id="id6" source="releaseResourceAfterSuccess" target="ResourceSingleProcessor">
+			</arc>
+			<arc id="id7" source="releaseResourceAfterSuccess" target="SuccessfulTasks">
+				<graphics>
+					<position x="210" y="50"/>
+				</graphics>
+			</arc>
+			<arc id="id8" source="TaskResult" target="releaseResourceAfterSuccess">
+			</arc>
+			<arc id="id9" source="TaskResult" target="ReturnFailedTasks"  color="Red">
+				<graphics>
+					<position x="170" y="170"/>
+				</graphics>
+			</arc>
+		</page>
+	</net>
+</pnml>

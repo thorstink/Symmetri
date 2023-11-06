@@ -130,9 +130,21 @@ void Petri::fireSynchronous(const size_t t) {
   event_log.push_back({case_id, transition, Color::Started, Clock::now()});
   auto result = ::fire(task);
   event_log.push_back({case_id, transition, result, Clock::now()});
-  if (result == Color::Success) {
-    tokens.insert(tokens.begin(), lookup_t.begin(), lookup_t.end());
-  }
+  switch (result) {
+    case Color::Scheduled:
+    case Color::Started:
+    case Color::Deadlock:
+    case Color::UserExit:
+    case Color::Paused:
+    case Color::Error:
+      break;
+    default: {
+      tokens.reserve(tokens.size() + lookup_t.size());
+      for (const auto &[p, c] : lookup_t) {
+        tokens.push_back({p, result});
+      }
+    }
+  };
 }
 
 void Petri::fireAsynchronous(const size_t t) {

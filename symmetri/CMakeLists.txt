@@ -1,20 +1,6 @@
-include(FetchContent)
-
-FetchContent_Declare(
-  concurrentqueue
-  GIT_REPOSITORY    https://github.com/cameron314/concurrentqueue
-  GIT_TAG           master
-)
-
-# FetchContent_MakeAvailable(concurrentqueue)
-# https://stackoverflow.com/questions/65527126/disable-install-for-fetchcontent
-FetchContent_GetProperties(concurrentqueue)
-if(NOT concurrentqueue_POPULATED)
-  FetchContent_Populate(concurrentqueue)
-  add_subdirectory(${concurrentqueue_SOURCE_DIR} ${concurrentqueue_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif()
-
 include_directories(include submodules)
+
+set(CMAKE_INSTALL_INCLUDEDIR include)
 
 #lib
 add_library(${PROJECT_NAME} SHARED
@@ -29,7 +15,7 @@ add_library(${PROJECT_NAME} SHARED
   submodules/tinyxml2/tinyxml2.cpp
 )
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
-target_link_libraries(${PROJECT_NAME} PUBLIC pthread PRIVATE concurrentqueue)
+target_link_libraries(${PROJECT_NAME} PUBLIC pthread)
 
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME})

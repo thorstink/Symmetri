@@ -59,9 +59,9 @@ Reducer createReducerForCallback(const size_t t_i, const Token result,
         case Color::Error:
           break;
         default: {
-          const auto &place_list = model.net.output_n;
-          model.tokens.reserve(model.tokens.size() + place_list[t_i].size());
-          for (const auto &[p, c] : place_list[t_i]) {
+          const auto &place_list = model.net.output_n[t_i];
+          model.tokens.reserve(model.tokens.size() + place_list.size());
+          for (const auto &[p, c] : place_list) {
             model.tokens.push_back({p, result});
           }
         }
