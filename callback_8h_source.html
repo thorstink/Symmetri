@@ -105,7 +105,7 @@ $(document).ready(function(){initNavTree('callback_8h_source.html',''); initResi
 <div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
 <div class="line"><a id="l00014" name="l00014"></a><span class="lineno"><a class="line" href="structDirectMutation.html">   14</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structDirectMutation.html">DirectMutation</a> {};</div>
 <div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="keywordtype">bool</span> isSynchronous(<span class="keyword">const</span> <a class="code hl_struct" href="structDirectMutation.html">DirectMutation</a> &amp;);</div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>symmetri::Result fire(<span class="keyword">const</span> <a class="code hl_struct" href="structDirectMutation.html">DirectMutation</a> &amp;);</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>symmetri::Token fire(<span class="keyword">const</span> <a class="code hl_struct" href="structDirectMutation.html">DirectMutation</a> &amp;);</div>
 <div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span> </div>
 <div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
 <div class="foldopen" id="foldopen00028" data-start="{" data-end="}">
@@ -125,12 +125,12 @@ $(document).ready(function(){initNavTree('callback_8h_source.html',''); initResi
 <div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span> </div>
 <div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
 <div class="foldopen" id="foldopen00073" data-start="{" data-end="}">
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno"><a class="line" href="callback_8h.html#a44f6550766a5a34f4b7319aaa8800ce2">   73</a></span>symmetri::Result fire(<span class="keyword">const</span> T &amp;callback) {</div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>  <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (std::is_same_v&lt;symmetri::Result, <span class="keyword">decltype</span>(callback())&gt;) {</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno"><a class="line" href="callback_8h.html#a64b089e5d45179a249cc51095bdb842f">   73</a></span>symmetri::Token fire(<span class="keyword">const</span> T &amp;callback) {</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>  <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (std::is_same_v&lt;symmetri::Token, <span class="keyword">decltype</span>(callback())&gt;) {</div>
 <div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>    <span class="keywordflow">return</span> callback();</div>
 <div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (std::is_same_v&lt;void, <span class="keyword">decltype</span>(callback())&gt;) {</div>
 <div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    callback();</div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    <span class="keywordflow">return</span> symmetri::state::Completed;</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    <span class="keywordflow">return</span> symmetri::Color::Success;</div>
 <div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>  }</div>
 <div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>}</div>
 </div>
@@ -153,9 +153,9 @@ $(document).ready(function(){initNavTree('callback_8h_source.html',''); initResi
 <div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>      : self_(std::make_shared&lt;model&lt;<a class="code hl_typedef" href="types_8h.html#a8fe8303eaca537c6edd9f8918f534a8a">Transition</a>&gt;&gt;(std::move(cb))) {}</div>
 </div>
 <div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span> </div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>  Result operator()()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> this-&gt;self_-&gt;fire_(); }</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>  Token operator()()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> this-&gt;self_-&gt;fire_(); }</div>
 <div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>  <span class="keywordtype">void</span> operator()(Eventlog &amp;el)<span class="keyword"> const </span>{ el = this-&gt;self_-&gt;get_log_(); }</div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>  <span class="keyword">friend</span> Result fire(<span class="keyword">const</span> Callback &amp;cb) { <span class="keywordflow">return</span> cb.self_-&gt;fire_(); }</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>  <span class="keyword">friend</span> Token fire(<span class="keyword">const</span> Callback &amp;cb) { <span class="keywordflow">return</span> cb.self_-&gt;fire_(); }</div>
 <div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>  <span class="keyword">friend</span> <a class="code hl_typedef" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">Eventlog</a> getLog(<span class="keyword">const</span> Callback &amp;cb) { <span class="keywordflow">return</span> cb.self_-&gt;get_log_(); }</div>
 <div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>  <span class="keyword">friend</span> <span class="keywordtype">bool</span> isSynchronous(<span class="keyword">const</span> Callback &amp;cb) {</div>
 <div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>    <span class="keywordflow">return</span> cb.self_-&gt;is_synchronous_();</div>
@@ -167,7 +167,7 @@ $(document).ready(function(){initNavTree('callback_8h_source.html',''); initResi
 <div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span> <span class="keyword">private</span>:</div>
 <div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>  <span class="keyword">struct </span>concept_t {</div>
 <div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>    <span class="keyword">virtual</span> ~concept_t() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>    <span class="keyword">virtual</span> Result fire_() <span class="keyword">const</span> = 0;</div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>    <span class="keyword">virtual</span> Token fire_() <span class="keyword">const</span> = 0;</div>
 <div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>    <span class="keyword">virtual</span> <a class="code hl_typedef" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">Eventlog</a> get_log_() <span class="keyword">const</span> = 0;</div>
 <div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> cancel_() <span class="keyword">const</span> = 0;</div>
 <div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> pause_() <span class="keyword">const</span> = 0;</div>
@@ -178,7 +178,7 @@ $(document).ready(function(){initNavTree('callback_8h_source.html',''); initResi
 <div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> Transition&gt;</div>
 <div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>  <span class="keyword">struct </span>model final : concept_t {</div>
 <div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>    model(Transition &amp;&amp;x) : transition_(std::move(x)) {}</div>
-<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>    Result fire_()<span class="keyword"> const override </span>{ <span class="keywordflow">return</span> fire(transition_); }</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>    Token fire_()<span class="keyword"> const override </span>{ <span class="keywordflow">return</span> fire(transition_); }</div>
 <div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>    <a class="code hl_typedef" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">Eventlog</a> get_log_()<span class="keyword"> const override </span>{ <span class="keywordflow">return</span> <a class="code hl_function" href="callback_8h.html#a50727ced7d06e94ad3d1f1a4c543ce4b">getLog</a>(transition_); }</div>
 <div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>    <span class="keywordtype">void</span> cancel_()<span class="keyword"> const override </span>{ <span class="keywordflow">return</span> <a class="code hl_function" href="callback_8h.html#a2ad37ca1722b24acfd83ac544fb80bb7">cancel</a>(transition_); }</div>
 <div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>    <span class="keywordtype">bool</span> is_synchronous_()<span class="keyword"> const override </span>{ <span class="keywordflow">return</span> isSynchronous(transition_); }</div>
@@ -200,7 +200,7 @@ $(document).ready(function(){initNavTree('callback_8h_source.html',''); initResi
 <div class="ttc" id="aclasssymmetri_1_1Callback_html_a54584257689336b694016538e651640d"><div class="ttname"><a href="classsymmetri_1_1Callback.html#a54584257689336b694016538e651640d">symmetri::Callback::Callback</a></div><div class="ttdeci">Callback(Transition cb)</div><div class="ttdoc">Construct a new Callback object.</div><div class="ttdef"><b>Definition</b> callback.h:115</div></div>
 <div class="ttc" id="astructDirectMutation_html"><div class="ttname"><a href="structDirectMutation.html">DirectMutation</a></div><div class="ttdoc">A DirectMutation is a synchronous Callback that always completes.</div><div class="ttdef"><b>Definition</b> callback.h:14</div></div>
 <div class="ttc" id="atypes_8h_html"><div class="ttname"><a href="types_8h.html">types.h</a></div></div>
-<div class="ttc" id="atypes_8h_html_a3cd7dcce5ab97a0890ab078f83435933"><div class="ttname"><a href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">symmetri::Eventlog</a></div><div class="ttdeci">std::vector&lt; Event &gt; Eventlog</div><div class="ttdef"><b>Definition</b> types.h:46</div></div>
+<div class="ttc" id="atypes_8h_html_a3cd7dcce5ab97a0890ab078f83435933"><div class="ttname"><a href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">symmetri::Eventlog</a></div><div class="ttdeci">std::vector&lt; Event &gt; Eventlog</div><div class="ttdef"><b>Definition</b> types.h:34</div></div>
 <div class="ttc" id="atypes_8h_html_a8fe8303eaca537c6edd9f8918f534a8a"><div class="ttname"><a href="types_8h.html#a8fe8303eaca537c6edd9f8918f534a8a">symmetri::Transition</a></div><div class="ttdeci">std::string Transition</div><div class="ttdef"><b>Definition</b> types.h:16</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->

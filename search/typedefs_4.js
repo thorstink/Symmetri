@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['place_0',['Place',['../types_8h.html#a181d179e36dbac2555bce020cd71157c',1,'symmetri']]],
-  ['prioritytable_1',['PriorityTable',['../types_8h.html#a72b6ac5e27222e448aa05c547d275a4e',1,'symmetri']]]
+  ['reducer_0',['Reducer',['../petri_8h.html#a6434bd1832596983e4d74f3c5ceac58a',1,'symmetri']]]
 ];

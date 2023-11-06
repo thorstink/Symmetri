@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['of_20transitions_0',['Failure at the level of transitions',['../md_docs_2symmetri__nets.html#autotoc_md4',1,'']]],
-  ['output_5fn_1',['output_n',['../structsymmetri_1_1Petri.html#a83b3dd8d3659e2467726568152f73ac9',1,'symmetri::Petri']]]
+  ['markingequality_0',['MarkingEquality',['../utilities_8hpp.html#a663f9de17f04a2b8e0d290e47e1dc92d',1,'symmetri']]],
+  ['markingreached_1',['MarkingReached',['../utilities_8hpp.html#a418009feff8440061b68e708f273021b',1,'symmetri']]],
+  ['max_5falign_5ft_2',['max_align_t',['../unionmoodycamel_1_1details_1_1max__align__t.html',1,'moodycamel::details']]]
 ];

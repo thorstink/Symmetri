@@ -1,5 +1,8 @@
 var searchData=
 [
-  ['getlog_0',['getlog',['../classPetriNet.html#a09cba8979e82efba2f76e5ab6810c13b',1,'PetriNet::getLog'],['../structsymmetri_1_1Petri.html#a4d1bf8dce13f9200dbb31d859838713c',1,'symmetri::Petri::getLog()'],['../callback_8h.html#a50727ced7d06e94ad3d1f1a4c543ce4b',1,'getLog(const T &amp;):&#160;callback.h'],['../symmetri_8h.html#a9f6227b64a19b86e89a5bf3d50125827',1,'getLog(const PetriNet &amp;):&#160;symmetri.cc']]],
-  ['getmarking_1',['getmarking',['../classPetriNet.html#a2eb6e004131a61ed08e424f968bd06cd',1,'PetriNet::getMarking()'],['../structsymmetri_1_1Petri.html#a6ba02d0dd15f81c7f3ebcad102907865',1,'symmetri::Petri::getMarking()']]]
+  ['failure_20at_20the_20level_20of_20transitions_0',['Failure at the level of transitions',['../md_docs_2symmetri__nets.html#autotoc_md4',1,'']]],
+  ['final_5fmarking_1',['final_marking',['../structsymmetri_1_1Petri.html#abecb436860f487c3dc96b03d19098654',1,'symmetri::Petri']]],
+  ['fire_2',['fire',['../classPetriNet.html#a1e0204360173021d2daae9a2bb175def',1,'PetriNet::fire'],['../callback_8h.html#a64b089e5d45179a249cc51095bdb842f',1,'fire(const T &amp;callback):&#160;callback.h'],['../symmetri_8h.html#a347981a37ecfbb4e9b44e284f122f43b',1,'fire(const PetriNet &amp;):&#160;symmetri.cc']]],
+  ['firetransitions_3',['fireTransitions',['../structsymmetri_1_1Petri.html#af463c39b83fe0a7eebd288bf29c3479d',1,'symmetri::Petri']]],
+  ['from_20abroad_4',['Input from abroad',['../md_docs_2symmetri__nets.html#autotoc_md5',1,'']]]
 ];

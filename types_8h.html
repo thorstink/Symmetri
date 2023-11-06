@@ -91,8 +91,7 @@ $(document).ready(function(){initNavTree('types_8h.html',''); initResizable(); }
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
-<a href="#typedef-members">Typedefs</a> &#124;
-<a href="#func-members">Functions</a>  </div>
+<a href="#typedef-members">Typedefs</a>  </div>
   <div class="headertitle"><div class="title">types.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -100,7 +99,7 @@ $(document).ready(function(){initNavTree('types_8h.html',''); initResizable(); }
 <code>#include &lt;string&gt;</code><br />
 <code>#include &lt;unordered_map&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
-<code>#include &quot;result_factory.hpp&quot;</code><br />
+<code>#include &quot;colors.hpp&quot;</code><br />
 </div>
 <p><a href="types_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
@@ -120,38 +119,13 @@ Typedefs</h2></td></tr>
 <tr class="separator:a06ab7524db7cb41e0643d2a762601668"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3cd7dcce5ab97a0890ab078f83435933" id="r_a3cd7dcce5ab97a0890ab078f83435933"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">symmetri::Eventlog</a> = std::vector&lt; <a class="el" href="structsymmetri_1_1Event.html">Event</a> &gt;</td></tr>
 <tr class="separator:a3cd7dcce5ab97a0890ab078f83435933"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaf5836a8a69a85660fcbfed848d48119" id="r_aaf5836a8a69a85660fcbfed848d48119"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="types_8h.html#aaf5836a8a69a85660fcbfed848d48119">symmetri::Net</a> = std::unordered_map&lt; <a class="el" href="types_8h.html#a8fe8303eaca537c6edd9f8918f534a8a">Transition</a>, std::pair&lt; std::vector&lt; <a class="el" href="types_8h.html#a181d179e36dbac2555bce020cd71157c">Place</a> &gt;, std::vector&lt; <a class="el" href="types_8h.html#a181d179e36dbac2555bce020cd71157c">Place</a> &gt; &gt; &gt;</td></tr>
-<tr class="separator:aaf5836a8a69a85660fcbfed848d48119"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ace4e9beabc165a0973a34974eba1c4cb" id="r_ace4e9beabc165a0973a34974eba1c4cb"><td class="memItemLeft" align="right" valign="top"><a id="ace4e9beabc165a0973a34974eba1c4cb" name="ace4e9beabc165a0973a34974eba1c4cb"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>symmetri::Marking</b> = std::unordered_map&lt; <a class="el" href="types_8h.html#a181d179e36dbac2555bce020cd71157c">Place</a>, uint16_t &gt;</td></tr>
-<tr class="memdesc:ace4e9beabc165a0973a34974eba1c4cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">The marking is limited from 0 to 65535. <br /></td></tr>
-<tr class="separator:ace4e9beabc165a0973a34974eba1c4cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a527c52fb978f7db2f63833d76042be6e" id="r_a527c52fb978f7db2f63833d76042be6e"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="types_8h.html#a527c52fb978f7db2f63833d76042be6e">symmetri::Net</a> = std::unordered_map&lt; <a class="el" href="types_8h.html#a8fe8303eaca537c6edd9f8918f534a8a">Transition</a>, std::pair&lt; std::vector&lt; std::pair&lt; <a class="el" href="types_8h.html#a181d179e36dbac2555bce020cd71157c">Place</a>, std::string &gt; &gt;, std::vector&lt; std::pair&lt; <a class="el" href="types_8h.html#a181d179e36dbac2555bce020cd71157c">Place</a>, std::string &gt; &gt; &gt; &gt;</td></tr>
+<tr class="separator:a527c52fb978f7db2f63833d76042be6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aecaa5a8574352dd83b54809df54346f1" id="r_aecaa5a8574352dd83b54809df54346f1"><td class="memItemLeft" align="right" valign="top"><a id="aecaa5a8574352dd83b54809df54346f1" name="aecaa5a8574352dd83b54809df54346f1"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>symmetri::Marking</b> = std::vector&lt; std::pair&lt; <a class="el" href="types_8h.html#a181d179e36dbac2555bce020cd71157c">Place</a>, std::string &gt; &gt;</td></tr>
+<tr class="separator:aecaa5a8574352dd83b54809df54346f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a72b6ac5e27222e448aa05c547d275a4e" id="r_a72b6ac5e27222e448aa05c547d275a4e"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="types_8h.html#a72b6ac5e27222e448aa05c547d275a4e">symmetri::PriorityTable</a> = std::vector&lt; std::pair&lt; <a class="el" href="types_8h.html#a8fe8303eaca537c6edd9f8918f534a8a">Transition</a>, int8_t &gt; &gt;</td></tr>
 <tr class="separator:a72b6ac5e27222e448aa05c547d275a4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
-Functions</h2></td></tr>
-<tr class="memitem:a3d757687c2afd08e45dc08afd244f939" id="r_a3d757687c2afd08e45dc08afd244f939"><td class="memItemLeft" align="right" valign="top"><a id="a3d757687c2afd08e45dc08afd244f939" name="a3d757687c2afd08e45dc08afd244f939"></a>
-static const Result&#160;</td><td class="memItemRight" valign="bottom"><b>symmetri::state::Scheduled</b> (create&lt; ConstStringHash(&quot;Scheduled&quot;)&gt;(&quot;Scheduled&quot;))</td></tr>
-<tr class="separator:a3d757687c2afd08e45dc08afd244f939"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a332ea68c2ec76ac68512ff248963beb5" id="r_a332ea68c2ec76ac68512ff248963beb5"><td class="memItemLeft" align="right" valign="top"><a id="a332ea68c2ec76ac68512ff248963beb5" name="a332ea68c2ec76ac68512ff248963beb5"></a>
-static const Result&#160;</td><td class="memItemRight" valign="bottom"><b>symmetri::state::Started</b> (create&lt; ConstStringHash(&quot;Started&quot;)&gt;(&quot;Started&quot;))</td></tr>
-<tr class="separator:a332ea68c2ec76ac68512ff248963beb5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8e46e0f7a491f9227f8d3ab5f8d60bd9" id="r_a8e46e0f7a491f9227f8d3ab5f8d60bd9"><td class="memItemLeft" align="right" valign="top"><a id="a8e46e0f7a491f9227f8d3ab5f8d60bd9" name="a8e46e0f7a491f9227f8d3ab5f8d60bd9"></a>
-static const Result&#160;</td><td class="memItemRight" valign="bottom"><b>symmetri::state::Completed</b> (create&lt; ConstStringHash(&quot;Completed&quot;)&gt;(&quot;Completed&quot;))</td></tr>
-<tr class="separator:a8e46e0f7a491f9227f8d3ab5f8d60bd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9a2ee437d29ca24eabeee3409f4b4c59" id="r_a9a2ee437d29ca24eabeee3409f4b4c59"><td class="memItemLeft" align="right" valign="top"><a id="a9a2ee437d29ca24eabeee3409f4b4c59" name="a9a2ee437d29ca24eabeee3409f4b4c59"></a>
-static const Result&#160;</td><td class="memItemRight" valign="bottom"><b>symmetri::state::Deadlock</b> (create&lt; ConstStringHash(&quot;Deadlock&quot;)&gt;(&quot;Deadlock&quot;))</td></tr>
-<tr class="separator:a9a2ee437d29ca24eabeee3409f4b4c59"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac8195cb8f16abdeade9f500d2a397f2d" id="r_ac8195cb8f16abdeade9f500d2a397f2d"><td class="memItemLeft" align="right" valign="top"><a id="ac8195cb8f16abdeade9f500d2a397f2d" name="ac8195cb8f16abdeade9f500d2a397f2d"></a>
-static const Result&#160;</td><td class="memItemRight" valign="bottom"><b>symmetri::state::UserExit</b> (create&lt; ConstStringHash(&quot;UserExit&quot;)&gt;(&quot;UserExit&quot;))</td></tr>
-<tr class="separator:ac8195cb8f16abdeade9f500d2a397f2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a835609a0fc34bb74a41278c00e51d9a4" id="r_a835609a0fc34bb74a41278c00e51d9a4"><td class="memItemLeft" align="right" valign="top"><a id="a835609a0fc34bb74a41278c00e51d9a4" name="a835609a0fc34bb74a41278c00e51d9a4"></a>
-static const Result&#160;</td><td class="memItemRight" valign="bottom"><b>symmetri::state::Paused</b> (create&lt; ConstStringHash(&quot;Paused&quot;)&gt;(&quot;Paused&quot;))</td></tr>
-<tr class="separator:a835609a0fc34bb74a41278c00e51d9a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a67b9bb6744b97a5f0d9377feeb13a7bc" id="r_a67b9bb6744b97a5f0d9377feeb13a7bc"><td class="memItemLeft" align="right" valign="top"><a id="a67b9bb6744b97a5f0d9377feeb13a7bc" name="a67b9bb6744b97a5f0d9377feeb13a7bc"></a>
-static const Result&#160;</td><td class="memItemRight" valign="bottom"><b>symmetri::state::Error</b> (create&lt; ConstStringHash(&quot;Error&quot;)&gt;(&quot;Error&quot;))</td></tr>
-<tr class="separator:a67b9bb6744b97a5f0d9377feeb13a7bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Typedef Documentation</h2>
 <a id="a06ab7524db7cb41e0643d2a762601668" name="a06ab7524db7cb41e0643d2a762601668"></a>
@@ -184,18 +158,18 @@ static const Result&#160;</td><td class="memItemRight" valign="bottom"><b>symmet
 
 </div>
 </div>
-<a id="aaf5836a8a69a85660fcbfed848d48119" name="aaf5836a8a69a85660fcbfed848d48119"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaf5836a8a69a85660fcbfed848d48119">&#9670;&#160;</a></span>Net</h2>
+<a id="a527c52fb978f7db2f63833d76042be6e" name="a527c52fb978f7db2f63833d76042be6e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a527c52fb978f7db2f63833d76042be6e">&#9670;&#160;</a></span>Net</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">using <a class="el" href="types_8h.html#aaf5836a8a69a85660fcbfed848d48119">symmetri::Net</a> = typedef std::unordered_map&lt; Transition, std::pair&lt;std::vector&lt;Place&gt;, std::vector&lt;Place&gt; &gt;&gt;</td>
+          <td class="memname">using <a class="el" href="types_8h.html#a527c52fb978f7db2f63833d76042be6e">symmetri::Net</a> = typedef std::unordered_map&lt; Transition, std::pair&lt; std::vector&lt;std::pair&lt;Place, std::string&gt; &gt;, std::vector&lt;std::pair&lt;Place, std::string&gt; &gt;&gt; &gt;</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>This is the multiset definition of a Petri net. For each transition there is a pair of lists for input and output transitions </p>
+<p>This is the multiset definition of a Petri net. For each transition there is a pair of lists for colored input and output places </p>
 
 </div>
 </div>

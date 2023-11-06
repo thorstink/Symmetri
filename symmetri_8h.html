@@ -119,9 +119,9 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>symmetri::Store</b> 
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a1472be983ff7e0daedbaa3569742dc24" id="r_a1472be983ff7e0daedbaa3569742dc24"><td class="memItemLeft" align="right" valign="top">symmetri::Result&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symmetri_8h.html#a1472be983ff7e0daedbaa3569742dc24">fire</a> (const <a class="el" href="classPetriNet.html">PetriNet</a> &amp;)</td></tr>
-<tr class="memdesc:a1472be983ff7e0daedbaa3569742dc24"><td class="mdescLeft">&#160;</td><td class="mdescRight">The fire specialization for a <a class="el" href="classPetriNet.html" title="PetriNet exposes the possible constructors to create PetriNets.">PetriNet</a> runs the Petri net until it completes, deadlocks or is preempted. It returns an event log along with the result state.  <br /></td></tr>
-<tr class="separator:a1472be983ff7e0daedbaa3569742dc24"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a347981a37ecfbb4e9b44e284f122f43b" id="r_a347981a37ecfbb4e9b44e284f122f43b"><td class="memItemLeft" align="right" valign="top">symmetri::Token&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symmetri_8h.html#a347981a37ecfbb4e9b44e284f122f43b">fire</a> (const <a class="el" href="classPetriNet.html">PetriNet</a> &amp;)</td></tr>
+<tr class="memdesc:a347981a37ecfbb4e9b44e284f122f43b"><td class="mdescLeft">&#160;</td><td class="mdescRight">The fire specialization for a <a class="el" href="classPetriNet.html" title="PetriNet exposes the possible constructors to create PetriNets.">PetriNet</a> runs the Petri net until it completes, deadlocks or is preempted. It returns an event log along with the result state.  <br /></td></tr>
+<tr class="separator:a347981a37ecfbb4e9b44e284f122f43b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae0901e63f9f0343793437999a5b797de" id="r_ae0901e63f9f0343793437999a5b797de"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symmetri_8h.html#ae0901e63f9f0343793437999a5b797de">cancel</a> (const <a class="el" href="classPetriNet.html">PetriNet</a> &amp;)</td></tr>
 <tr class="memdesc:ae0901e63f9f0343793437999a5b797de"><td class="mdescLeft">&#160;</td><td class="mdescRight">The cancel specialization for a <a class="el" href="classPetriNet.html" title="PetriNet exposes the possible constructors to create PetriNets.">PetriNet</a> breaks the PetriNets' internal loop. It will not queue any new Callbacks and it will cancel all child Callbacks that are running. The cancel function will return before the <a class="el" href="classPetriNet.html" title="PetriNet exposes the possible constructors to create PetriNets.">PetriNet</a> is preempted completely.  <br /></td></tr>
 <tr class="separator:ae0901e63f9f0343793437999a5b797de"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -155,18 +155,18 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>resume</b> (const <a 
 </div><div class="memdoc">
 
 <p>The cancel specialization for a <a class="el" href="classPetriNet.html" title="PetriNet exposes the possible constructors to create PetriNets.">PetriNet</a> breaks the PetriNets' internal loop. It will not queue any new Callbacks and it will cancel all child Callbacks that are running. The cancel function will return before the <a class="el" href="classPetriNet.html" title="PetriNet exposes the possible constructors to create PetriNets.">PetriNet</a> is preempted completely. </p>
-<dl class="section return"><dt>Returns</dt><dd>symmetri::Result </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>symmetri::Token </dd></dl>
 
 </div>
 </div>
-<a id="a1472be983ff7e0daedbaa3569742dc24" name="a1472be983ff7e0daedbaa3569742dc24"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1472be983ff7e0daedbaa3569742dc24">&#9670;&#160;</a></span>fire()</h2>
+<a id="a347981a37ecfbb4e9b44e284f122f43b" name="a347981a37ecfbb4e9b44e284f122f43b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a347981a37ecfbb4e9b44e284f122f43b">&#9670;&#160;</a></span>fire()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">symmetri::Result fire </td>
+          <td class="memname">symmetri::Token fire </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="classPetriNet.html">PetriNet</a> &amp;&#160;</td>
           <td class="paramname"><em>app</em></td><td>)</td>
@@ -176,7 +176,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>resume</b> (const <a 
 </div><div class="memdoc">
 
 <p>The fire specialization for a <a class="el" href="classPetriNet.html" title="PetriNet exposes the possible constructors to create PetriNets.">PetriNet</a> runs the Petri net until it completes, deadlocks or is preempted. It returns an event log along with the result state. </p>
-<dl class="section return"><dt>Returns</dt><dd>symmetri::Result </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>symmetri::Token </dd></dl>
 
 </div>
 </div>

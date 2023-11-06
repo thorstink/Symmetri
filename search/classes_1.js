@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['directmutation_0',['DirectMutation',['../structDirectMutation.html',1,'']]]
+  ['augmentedtoken_0',['AugmentedToken',['../structsymmetri_1_1AugmentedToken.html',1,'symmetri']]]
 ];

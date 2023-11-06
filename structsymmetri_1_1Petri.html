@@ -104,7 +104,7 @@ $(document).ready(function(){initNavTree('structsymmetri_1_1Petri.html',''); ini
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a70cb95e9e4c6174f7d0077612a2aceba" id="r_a70cb95e9e4c6174f7d0077612a2aceba"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a70cb95e9e4c6174f7d0077612a2aceba">Petri</a> (const <a class="el" href="types_8h.html#aaf5836a8a69a85660fcbfed848d48119">Net</a> &amp;_net, const <a class="el" href="symmetri_8h.html#a2a05ae317a7c345328e0e0d90561649a">Store</a> &amp;_store, const <a class="el" href="types_8h.html#a72b6ac5e27222e448aa05c547d275a4e">PriorityTable</a> &amp;_priority, const <a class="el" href="types_8h.html#ace4e9beabc165a0973a34974eba1c4cb">Marking</a> &amp;_initial_tokens, const <a class="el" href="types_8h.html#ace4e9beabc165a0973a34974eba1c4cb">Marking</a> &amp;_final_marking, const std::string &amp;_case_id, std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> &gt; stp)</td></tr>
+<tr class="memitem:a70cb95e9e4c6174f7d0077612a2aceba" id="r_a70cb95e9e4c6174f7d0077612a2aceba"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a70cb95e9e4c6174f7d0077612a2aceba">Petri</a> (const <a class="el" href="types_8h.html#a527c52fb978f7db2f63833d76042be6e">Net</a> &amp;_net, const <a class="el" href="symmetri_8h.html#a2a05ae317a7c345328e0e0d90561649a">Store</a> &amp;_store, const <a class="el" href="types_8h.html#a72b6ac5e27222e448aa05c547d275a4e">PriorityTable</a> &amp;_priority, const Marking &amp;_initial_tokens, const Marking &amp;_final_marking, const std::string &amp;_case_id, std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> &gt; stp)</td></tr>
 <tr class="memdesc:a70cb95e9e4c6174f7d0077612a2aceba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> from a multiset description of a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> net, a lookup table for the transitions, optional priorities and an initial marking. A lot of conversion work is done in the constructor, so you should avoid creating Models during the run-time of a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> application.  <br /></td></tr>
 <tr class="separator:a70cb95e9e4c6174f7d0077612a2aceba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af06c0fd2c25ea0610c98ece6e2652ff4" id="r_af06c0fd2c25ea0610c98ece6e2652ff4"><td class="memItemLeft" align="right" valign="top"><a id="af06c0fd2c25ea0610c98ece6e2652ff4" name="af06c0fd2c25ea0610c98ece6e2652ff4"></a>
@@ -119,12 +119,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ae6128893f9d546e56191ac54edd14385" id="r_ae6128893f9d546e56191ac54edd14385"><td class="memItemLeft" align="right" valign="top"><a id="ae6128893f9d546e56191ac54edd14385" name="ae6128893f9d546e56191ac54edd14385"></a>
 <a class="el" href="structsymmetri_1_1Petri.html">Petri</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="structsymmetri_1_1Petri.html">Petri</a> &amp;&amp;) noexcept=delete</td></tr>
 <tr class="separator:ae6128893f9d546e56191ac54edd14385"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a70d476d1cb8cdc7658aff4ccbdfdc2ce" id="r_a70d476d1cb8cdc7658aff4ccbdfdc2ce"><td class="memItemLeft" align="right" valign="top">std::vector&lt; size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a70d476d1cb8cdc7658aff4ccbdfdc2ce">toTokens</a> (const <a class="el" href="types_8h.html#ace4e9beabc165a0973a34974eba1c4cb">Marking</a> &amp;marking) const noexcept</td></tr>
-<tr class="memdesc:a70d476d1cb8cdc7658aff4ccbdfdc2ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">outputs the marking as a vector of tokens; e.g. [1 1 1 0 5] means 3 tokens in place 1, 1 token in place 0 and 1 token in place 5.  <br /></td></tr>
-<tr class="separator:a70d476d1cb8cdc7658aff4ccbdfdc2ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6ba02d0dd15f81c7f3ebcad102907865" id="r_a6ba02d0dd15f81c7f3ebcad102907865"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="types_8h.html#a181d179e36dbac2555bce020cd71157c">Place</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a6ba02d0dd15f81c7f3ebcad102907865">getMarking</a> () const</td></tr>
-<tr class="memdesc:a6ba02d0dd15f81c7f3ebcad102907865"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current marking. It is represented by a vector of places: every occurance of a place in this vectors implies a token in that place. This representation does not show the empty places explicitly; if a place is not in this vector you can assume it has no token.  <br /></td></tr>
-<tr class="separator:a6ba02d0dd15f81c7f3ebcad102907865"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e76fcc186384956938477f8cd3ba174" id="r_a1e76fcc186384956938477f8cd3ba174"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structsymmetri_1_1AugmentedToken.html">AugmentedToken</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a1e76fcc186384956938477f8cd3ba174">toTokens</a> (const Marking &amp;marking) const noexcept</td></tr>
+<tr class="memdesc:a1e76fcc186384956938477f8cd3ba174"><td class="mdescLeft">&#160;</td><td class="mdescRight">outputs the marking as a vector of tokens; e.g. [1 1 1 0 5] means 3 tokens in place 1, 1 token in place 0 and 1 token in place 5.  <br /></td></tr>
+<tr class="separator:a1e76fcc186384956938477f8cd3ba174"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a880bf9aeb3b773009a4d31f1e35d3bba" id="r_a880bf9aeb3b773009a4d31f1e35d3bba"><td class="memItemLeft" align="right" valign="top">Marking&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a880bf9aeb3b773009a4d31f1e35d3bba">getMarking</a> () const</td></tr>
+<tr class="memdesc:a880bf9aeb3b773009a4d31f1e35d3bba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current marking. It is represented by a vector of places: every occurance of a place in this vectors implies a token in that place. This representation does not show the empty places explicitly; if a place is not in this vector you can assume it has no token.  <br /></td></tr>
+<tr class="separator:a880bf9aeb3b773009a4d31f1e35d3bba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4d1bf8dce13f9200dbb31d859838713c" id="r_a4d1bf8dce13f9200dbb31d859838713c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">Eventlog</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a4d1bf8dce13f9200dbb31d859838713c">getLog</a> () const</td></tr>
 <tr class="memdesc:a4d1bf8dce13f9200dbb31d859838713c"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the current eventlog, also copies in all child eventlogs of active petri nets.  <br /></td></tr>
 <tr class="separator:a4d1bf8dce13f9200dbb31d859838713c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -141,22 +141,26 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:ac53b15cfc29df54238168bf9ff62a6b7" id="r_ac53b15cfc29df54238168bf9ff62a6b7"><td class="memItemLeft" ><a id="ac53b15cfc29df54238168bf9ff62a6b7" name="ac53b15cfc29df54238168bf9ff62a6b7"></a>
 struct {&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1c6118bd3f9bff209cfc08eb304f3ed4" id="r_a1c6118bd3f9bff209cfc08eb304f3ed4"><td class="memItemLeft" >
-&#160;&#160;&#160;std::vector&lt; <a class="el" href="types_8h.html#a8fe8303eaca537c6edd9f8918f534a8a">Transition</a> &gt;&#160;&#160;&#160;<b>transition</b>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
-<tr class="memdesc:a1c6118bd3f9bff209cfc08eb304f3ed4"><td class="mdescLeft">&#160;</td><td class="mdescRight">(ordered) list of string representation of transitions <br /></td></tr>
-<tr class="separator:a1c6118bd3f9bff209cfc08eb304f3ed4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a253bb67c8f6d1ee1455b758767da9f90" id="r_a253bb67c8f6d1ee1455b758767da9f90"><td class="memItemLeft" >
-&#160;&#160;&#160;std::vector&lt; <a class="el" href="types_8h.html#a181d179e36dbac2555bce020cd71157c">Place</a> &gt;&#160;&#160;&#160;<b>place</b>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
-<tr class="memdesc:a253bb67c8f6d1ee1455b758767da9f90"><td class="mdescLeft">&#160;</td><td class="mdescRight">(ordered) list of string representation of places <br /></td></tr>
-<tr class="separator:a253bb67c8f6d1ee1455b758767da9f90"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa74c88d535e255f4f59338722446209e" id="r_aa74c88d535e255f4f59338722446209e"><td class="memItemLeft" >
-&#160;&#160;&#160;std::vector&lt; SmallVector &gt;&#160;&#160;&#160;<b>input_n</b>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
-<tr class="memdesc:aa74c88d535e255f4f59338722446209e"><td class="mdescLeft">&#160;</td><td class="mdescRight">list of list of inputs to transitions. This vector is indexed like <code>transition</code>. <br /></td></tr>
-<tr class="separator:aa74c88d535e255f4f59338722446209e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9540e548624d09846a61e6da5539b7f0" id="r_a9540e548624d09846a61e6da5539b7f0"><td class="memItemLeft" >
-&#160;&#160;&#160;std::vector&lt; SmallVector &gt;&#160;&#160;&#160;<b>output_n</b>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
-<tr class="memdesc:a9540e548624d09846a61e6da5539b7f0"><td class="mdescLeft">&#160;</td><td class="mdescRight">list of list of outputs of transitions. This vector is indexed like <code>transition</code>. <br /></td></tr>
-<tr class="separator:a9540e548624d09846a61e6da5539b7f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf80436255079d03026b62748c7d99e6" id="r_acf80436255079d03026b62748c7d99e6"><td class="memItemLeft" >
+&#160;&#160;&#160;std::vector&lt; std::string &gt;&#160;&#160;&#160;<b>transition</b>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+<tr class="memdesc:acf80436255079d03026b62748c7d99e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">(ordered) list of string representation of transitions <br /></td></tr>
+<tr class="separator:acf80436255079d03026b62748c7d99e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afe654da10d7c8d5e30c9d06024df3ed8" id="r_afe654da10d7c8d5e30c9d06024df3ed8"><td class="memItemLeft" >
+&#160;&#160;&#160;std::vector&lt; std::string &gt;&#160;&#160;&#160;<b>place</b>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+<tr class="memdesc:afe654da10d7c8d5e30c9d06024df3ed8"><td class="mdescLeft">&#160;</td><td class="mdescRight">(ordered) list of string representation of places <br /></td></tr>
+<tr class="separator:afe654da10d7c8d5e30c9d06024df3ed8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a776d34da59a09097215c26e585003c53" id="r_a776d34da59a09097215c26e585003c53"><td class="memItemLeft" >
+&#160;&#160;&#160;std::vector&lt; std::string &gt;&#160;&#160;&#160;<b>color</b>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+<tr class="memdesc:a776d34da59a09097215c26e585003c53"><td class="mdescLeft">&#160;</td><td class="mdescRight">(ordered) list of string representation of colors <br /></td></tr>
+<tr class="separator:a776d34da59a09097215c26e585003c53"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad558dcce221ccea628e10f479af9d80f" id="r_ad558dcce221ccea628e10f479af9d80f"><td class="memItemLeft" >
+&#160;&#160;&#160;std::vector&lt; SmallVectorInput &gt;&#160;&#160;&#160;<b>input_n</b>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+<tr class="memdesc:ad558dcce221ccea628e10f479af9d80f"><td class="mdescLeft">&#160;</td><td class="mdescRight">list of list of inputs to transitions. This vector is indexed like <code>transition</code>. <br /></td></tr>
+<tr class="separator:ad558dcce221ccea628e10f479af9d80f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4efc52c12bd67432ff2ce3141a181ca9" id="r_a4efc52c12bd67432ff2ce3141a181ca9"><td class="memItemLeft" >
+&#160;&#160;&#160;std::vector&lt; SmallVectorInput &gt;&#160;&#160;&#160;<b>output_n</b>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+<tr class="memdesc:a4efc52c12bd67432ff2ce3141a181ca9"><td class="mdescLeft">&#160;</td><td class="mdescRight">list of list of outputs of transitions. This vector is indexed like <code>transition</code>. <br /></td></tr>
+<tr class="separator:a4efc52c12bd67432ff2ce3141a181ca9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a89d479778269f1f7d7a18aa84633b5e2" id="r_a89d479778269f1f7d7a18aa84633b5e2"><td class="memItemLeft" >
 &#160;&#160;&#160;std::vector&lt; SmallVector &gt;&#160;&#160;&#160;<b>p_to_ts_n</b>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
 <tr class="memdesc:a89d479778269f1f7d7a18aa84633b5e2"><td class="mdescLeft">&#160;</td><td class="mdescRight">list of list of transitions that have places as inputs. This vector is index like <code>place</code> <br /></td></tr>
@@ -172,18 +176,18 @@ struct {&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
 <tr class="memitem:ac53b15cfc29df54238168bf9ff62a6b7" id="r_ac53b15cfc29df54238168bf9ff62a6b7"><td class="memItemLeft" valign="top">}&#160;</td><td class="memItemRight" valign="bottom"><b>net</b>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
 <tr class="memdesc:ac53b15cfc29df54238168bf9ff62a6b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Is a data-oriented design of a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> net. <br /></td></tr>
 <tr class="separator:ac53b15cfc29df54238168bf9ff62a6b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aac13a2908be24860708dc89e5f88a538" id="r_aac13a2908be24860708dc89e5f88a538"><td class="memItemLeft" align="right" valign="top"><a id="aac13a2908be24860708dc89e5f88a538" name="aac13a2908be24860708dc89e5f88a538"></a>
-std::vector&lt; size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>initial_tokens</b></td></tr>
-<tr class="memdesc:aac13a2908be24860708dc89e5f88a538"><td class="mdescLeft">&#160;</td><td class="mdescRight">The initial marking. <br /></td></tr>
-<tr class="separator:aac13a2908be24860708dc89e5f88a538"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a290c26f41d3caf965e15ed6bead554c8" id="r_a290c26f41d3caf965e15ed6bead554c8"><td class="memItemLeft" align="right" valign="top"><a id="a290c26f41d3caf965e15ed6bead554c8" name="a290c26f41d3caf965e15ed6bead554c8"></a>
-std::vector&lt; size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>tokens</b></td></tr>
-<tr class="memdesc:a290c26f41d3caf965e15ed6bead554c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">The current marking. <br /></td></tr>
-<tr class="separator:a290c26f41d3caf965e15ed6bead554c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5fd0dd00ff166fd75a96bfac20591ff3" id="r_a5fd0dd00ff166fd75a96bfac20591ff3"><td class="memItemLeft" align="right" valign="top"><a id="a5fd0dd00ff166fd75a96bfac20591ff3" name="a5fd0dd00ff166fd75a96bfac20591ff3"></a>
-std::vector&lt; size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>final_marking</b></td></tr>
-<tr class="memdesc:a5fd0dd00ff166fd75a96bfac20591ff3"><td class="mdescLeft">&#160;</td><td class="mdescRight">The final marking. <br /></td></tr>
-<tr class="separator:a5fd0dd00ff166fd75a96bfac20591ff3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a30687d1a0a6b177d10bb9c675bcd38ee" id="r_a30687d1a0a6b177d10bb9c675bcd38ee"><td class="memItemLeft" align="right" valign="top"><a id="a30687d1a0a6b177d10bb9c675bcd38ee" name="a30687d1a0a6b177d10bb9c675bcd38ee"></a>
+std::vector&lt; <a class="el" href="structsymmetri_1_1AugmentedToken.html">AugmentedToken</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>initial_tokens</b></td></tr>
+<tr class="memdesc:a30687d1a0a6b177d10bb9c675bcd38ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">The initial marking. <br /></td></tr>
+<tr class="separator:a30687d1a0a6b177d10bb9c675bcd38ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a91b8baf5aee3b8164258402cbe5f62b9" id="r_a91b8baf5aee3b8164258402cbe5f62b9"><td class="memItemLeft" align="right" valign="top"><a id="a91b8baf5aee3b8164258402cbe5f62b9" name="a91b8baf5aee3b8164258402cbe5f62b9"></a>
+std::vector&lt; <a class="el" href="structsymmetri_1_1AugmentedToken.html">AugmentedToken</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>tokens</b></td></tr>
+<tr class="memdesc:a91b8baf5aee3b8164258402cbe5f62b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">The current marking. <br /></td></tr>
+<tr class="separator:a91b8baf5aee3b8164258402cbe5f62b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abecb436860f487c3dc96b03d19098654" id="r_abecb436860f487c3dc96b03d19098654"><td class="memItemLeft" align="right" valign="top"><a id="abecb436860f487c3dc96b03d19098654" name="abecb436860f487c3dc96b03d19098654"></a>
+std::vector&lt; <a class="el" href="structsymmetri_1_1AugmentedToken.html">AugmentedToken</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>final_marking</b></td></tr>
+<tr class="memdesc:abecb436860f487c3dc96b03d19098654"><td class="mdescLeft">&#160;</td><td class="mdescRight">The final marking. <br /></td></tr>
+<tr class="separator:abecb436860f487c3dc96b03d19098654"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a59c2f2806009fbe724afbb24b424747f" id="r_a59c2f2806009fbe724afbb24b424747f"><td class="memItemLeft" align="right" valign="top"><a id="a59c2f2806009fbe724afbb24b424747f" name="a59c2f2806009fbe724afbb24b424747f"></a>
 std::vector&lt; size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>scheduled_callbacks</b></td></tr>
 <tr class="memdesc:a59c2f2806009fbe724afbb24b424747f"><td class="mdescLeft">&#160;</td><td class="mdescRight">List of active transitions. <br /></td></tr>
@@ -192,10 +196,10 @@ std::vector&lt; size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><
 <a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">Eventlog</a>&#160;</td><td class="memItemRight" valign="bottom"><b>event_log</b></td></tr>
 <tr class="memdesc:a7a974c0807e4ada7be5fc8f228bab2a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">The most actual event_log. <br /></td></tr>
 <tr class="separator:a7a974c0807e4ada7be5fc8f228bab2a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab72c4c40bf5c2239e050b6897157cf44" id="r_ab72c4c40bf5c2239e050b6897157cf44"><td class="memItemLeft" align="right" valign="top"><a id="ab72c4c40bf5c2239e050b6897157cf44" name="ab72c4c40bf5c2239e050b6897157cf44"></a>
-Result&#160;</td><td class="memItemRight" valign="bottom"><b>state</b></td></tr>
-<tr class="memdesc:ab72c4c40bf5c2239e050b6897157cf44"><td class="mdescLeft">&#160;</td><td class="mdescRight">The current state of the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a>. <br /></td></tr>
-<tr class="separator:ab72c4c40bf5c2239e050b6897157cf44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc135716ad53a105112f46477d70a8a2" id="r_abc135716ad53a105112f46477d70a8a2"><td class="memItemLeft" align="right" valign="top"><a id="abc135716ad53a105112f46477d70a8a2" name="abc135716ad53a105112f46477d70a8a2"></a>
+Token&#160;</td><td class="memItemRight" valign="bottom"><b>state</b></td></tr>
+<tr class="memdesc:abc135716ad53a105112f46477d70a8a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">The current state of the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a>. <br /></td></tr>
+<tr class="separator:abc135716ad53a105112f46477d70a8a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa2acc8bf32bcd39c86f5eb029586c34b" id="r_aa2acc8bf32bcd39c86f5eb029586c34b"><td class="memItemLeft" align="right" valign="top"><a id="aa2acc8bf32bcd39c86f5eb029586c34b" name="aa2acc8bf32bcd39c86f5eb029586c34b"></a>
 std::string&#160;</td><td class="memItemRight" valign="bottom"><b>case_id</b></td></tr>
 <tr class="memdesc:aa2acc8bf32bcd39c86f5eb029586c34b"><td class="mdescLeft">&#160;</td><td class="mdescRight">The unique identifier for this Petri-run. <br /></td></tr>
@@ -205,7 +209,7 @@ std::atomic&lt; std::optional&lt; unsigned int &gt; &gt;&#160;</td><td class="me
 <tr class="memdesc:a864a4c4579ab08691e5e62ec0c254586"><td class="mdescLeft">&#160;</td><td class="mdescRight">The id of the thread from which the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> is fired. <br /></td></tr>
 <tr class="separator:a864a4c4579ab08691e5e62ec0c254586"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad12b7a5a2f3341fc17154c3c65f0d00f" id="r_ad12b7a5a2f3341fc17154c3c65f0d00f"><td class="memItemLeft" align="right" valign="top"><a id="ad12b7a5a2f3341fc17154c3c65f0d00f" name="ad12b7a5a2f3341fc17154c3c65f0d00f"></a>
-std::shared_ptr&lt; moodycamel::BlockingConcurrentQueue&lt; <a class="el" href="petri_8h.html#a6434bd1832596983e4d74f3c5ceac58a">Reducer</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>reducer_queue</b></td></tr>
+std::shared_ptr&lt; <a class="el" href="classmoodycamel_1_1BlockingConcurrentQueue.html">moodycamel::BlockingConcurrentQueue</a>&lt; <a class="el" href="petri_8h.html#a6434bd1832596983e4d74f3c5ceac58a">Reducer</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>reducer_queue</b></td></tr>
 <tr class="separator:ad12b7a5a2f3341fc17154c3c65f0d00f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0bb51fc485b5813c4a66f234952c9e86" id="r_a0bb51fc485b5813c4a66f234952c9e86"><td class="memItemLeft" align="right" valign="top"><a id="a0bb51fc485b5813c4a66f234952c9e86" name="a0bb51fc485b5813c4a66f234952c9e86"></a>
 std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pool</b></td></tr>
@@ -227,7 +231,7 @@ std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSy
         <tr>
           <td class="memname">symmetri::Petri::Petri </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="types_8h.html#aaf5836a8a69a85660fcbfed848d48119">Net</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="types_8h.html#a527c52fb978f7db2f63833d76042be6e">Net</a> &amp;&#160;</td>
           <td class="paramname"><em>_net</em>, </td>
         </tr>
         <tr>
@@ -245,13 +249,13 @@ std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSy
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="types_8h.html#ace4e9beabc165a0973a34974eba1c4cb">Marking</a> &amp;&#160;</td>
+          <td class="paramtype">const Marking &amp;&#160;</td>
           <td class="paramname"><em>_initial_tokens</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="types_8h.html#ace4e9beabc165a0973a34974eba1c4cb">Marking</a> &amp;&#160;</td>
+          <td class="paramtype">const Marking &amp;&#160;</td>
           <td class="paramname"><em>_final_marking</em>, </td>
         </tr>
         <tr>
@@ -316,14 +320,14 @@ std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSy
 
 </div>
 </div>
-<a id="a6ba02d0dd15f81c7f3ebcad102907865" name="a6ba02d0dd15f81c7f3ebcad102907865"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6ba02d0dd15f81c7f3ebcad102907865">&#9670;&#160;</a></span>getMarking()</h2>
+<a id="a880bf9aeb3b773009a4d31f1e35d3bba" name="a880bf9aeb3b773009a4d31f1e35d3bba"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a880bf9aeb3b773009a4d31f1e35d3bba">&#9670;&#160;</a></span>getMarking()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt; <a class="el" href="types_8h.html#a181d179e36dbac2555bce020cd71157c">Place</a> &gt; symmetri::Petri::getMarking </td>
+          <td class="memname">Marking symmetri::Petri::getMarking </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -336,8 +340,8 @@ std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSy
 
 </div>
 </div>
-<a id="a70d476d1cb8cdc7658aff4ccbdfdc2ce" name="a70d476d1cb8cdc7658aff4ccbdfdc2ce"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a70d476d1cb8cdc7658aff4ccbdfdc2ce">&#9670;&#160;</a></span>toTokens()</h2>
+<a id="a1e76fcc186384956938477f8cd3ba174" name="a1e76fcc186384956938477f8cd3ba174"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1e76fcc186384956938477f8cd3ba174">&#9670;&#160;</a></span>toTokens()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -346,9 +350,9 @@ std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSy
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt; size_t &gt; symmetri::Petri::toTokens </td>
+          <td class="memname">std::vector&lt; <a class="el" href="structsymmetri_1_1AugmentedToken.html">AugmentedToken</a> &gt; symmetri::Petri::toTokens </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="types_8h.html#ace4e9beabc165a0973a34974eba1c4cb">Marking</a> &amp;&#160;</td>
+          <td class="paramtype">const Marking &amp;&#160;</td>
           <td class="paramname"><em>marking</em></td><td>)</td>
           <td> const</td>
         </tr>
