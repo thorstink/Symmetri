@@ -20,8 +20,10 @@ int main(int, char *argv[]) {
        {"ResourceDualProcessor", Color::toString(Color::Success)}},
       {{"SuccessfulTasks", Color::toString(Color::Success)},
        {"ResourceDualProcessor", Color::toString(Color::Success)}},
-      {{"StepOne", Foo{0.75, 1ms}}, {"StepTwo", Foo{0.75, 2ms}}}, {},
-      "child_net", pool);
+      {}, "child_net", pool);
+
+  child_net.registerTransitionCallback("StepOne", Foo{0.75, 1ms});
+  child_net.registerTransitionCallback("StepTwo", Foo{0.75, 2ms});
 
   // for the parent net:
   const auto read = readPnml({tasks, single_step_processor});
@@ -29,9 +31,9 @@ int main(int, char *argv[]) {
   const Marking initial_marking = std::get<Marking>(read);
   const auto goal_marking = getGoal(initial_marking);
 
-  PetriNet parent_net(net, initial_marking, goal_marking,
-                      {{"SingleStepProcessor", child_net}}, {}, "parent_net",
+  PetriNet parent_net(net, initial_marking, goal_marking, {}, "parent_net",
                       pool);
+  parent_net.registerTransitionCallback("SingleStepProcessor", child_net);
 
   // run!
   auto now = Clock::now();

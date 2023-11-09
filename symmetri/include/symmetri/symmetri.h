@@ -3,7 +3,6 @@
 /** @file symmetri.h */
 
 #include <set>
-#include <unordered_map>
 
 #include "symmetri/callback.h"
 #include "symmetri/tasks.h"
@@ -59,13 +58,6 @@ void resume(const PetriNet &);
 symmetri::Eventlog getLog(const PetriNet &);
 
 namespace symmetri {
-/**
- * @brief A Store is a mapping from Transitions, represented by a string that is
- * also used for their identification in the petri-net, to a PolyTask. A
- * PolyTask may contain side-effects.
- *
- */
-using Store = std::unordered_map<Transition, Callback>;
 
 /**
  * @brief Forward declaration for the implementation of the PetriNet class.
@@ -88,13 +80,12 @@ class PetriNet final {
    *
    * @param path_to_pnml
    * @param final_marking
-   * @param store
    * @param priority
    * @param case_id
    * @param stp
    */
   PetriNet(const std::set<std::string> &path_to_pnml,
-           const symmetri::Marking &final_marking, const symmetri::Store &store,
+           const symmetri::Marking &final_marking,
            const symmetri::PriorityTable &priority, const std::string &case_id,
            std::shared_ptr<symmetri::TaskSystem> stp);
 
@@ -104,13 +95,11 @@ class PetriNet final {
    *
    * @param path_to_grml
    * @param final_marking
-   * @param store
    * @param case_id
    * @param stp
    */
   PetriNet(const std::set<std::string> &path_to_grml,
-           const symmetri::Marking &final_marking, const symmetri::Store &store,
-           const std::string &case_id,
+           const symmetri::Marking &final_marking, const std::string &case_id,
            std::shared_ptr<symmetri::TaskSystem> stp);
 
   /**
@@ -119,13 +108,12 @@ class PetriNet final {
    * @param net
    * @param m0
    * @param final_marking
-   * @param store
    * @param priority
    * @param case_id
    * @param stp
    */
   PetriNet(const symmetri::Net &net, const symmetri::Marking &m0,
-           const symmetri::Marking &final_marking, const symmetri::Store &store,
+           const symmetri::Marking &final_marking,
            const symmetri::PriorityTable &priority, const std::string &case_id,
            std::shared_ptr<symmetri::TaskSystem> stp);
 
@@ -139,6 +127,9 @@ class PetriNet final {
    */
   std::function<void()> registerTransitionCallback(
       const std::string &transition) const noexcept;
+
+  void registerTransitionCallback(const std::string &transition,
+                                  const symmetri::Callback &) const noexcept;
 
   /**
    * @brief Get the Marking object. This function is thread-safe and be called

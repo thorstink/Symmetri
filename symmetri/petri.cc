@@ -9,7 +9,7 @@ symmetri::Token fire(const DirectMutation &) {
 namespace symmetri {
 std::tuple<std::vector<std::string>, std::vector<std::string>,
            std::vector<std::string>, std::vector<Callback>>
-convert(const Net &_net, const Store &_store) {
+convert(const Net &_net) {
   const auto transition_count = _net.size();
   std::vector<std::string> transitions;
   std::vector<std::string> places;
@@ -22,11 +22,7 @@ convert(const Net &_net, const Store &_store) {
   store.reserve(transition_count);
   for (const auto &[t, io] : _net) {
     transitions.push_back(t);
-    // if the transition is not in the store, a DirectMutation-callback is used
-    // by default
-    auto callback =
-        _store.find(t) != _store.end() ? _store.at(t) : DirectMutation{};
-    store.push_back(callback);
+    store.push_back(DirectMutation{});
     for (const auto &p : io.first) {
       places.push_back(p.first);
     }
@@ -90,10 +86,9 @@ std::vector<int8_t> createPriorityLookup(
   return priority;
 }
 
-Petri::Petri(const Net &_net, const Store &_store,
-             const PriorityTable &_priority, const Marking &_initial_tokens,
-             const Marking &_final_marking, const std::string &_case_id,
-             std::shared_ptr<TaskSystem> stp)
+Petri::Petri(const Net &_net, const PriorityTable &_priority,
+             const Marking &_initial_tokens, const Marking &_final_marking,
+             const std::string &_case_id, std::shared_ptr<TaskSystem> stp)
     : event_log({}),
       state(Color::Scheduled),
       case_id(_case_id),
@@ -102,8 +97,7 @@ Petri::Petri(const Net &_net, const Store &_store,
           std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(128)),
       pool(stp) {
   event_log.reserve(1000);
-  std::tie(net.transition, net.place, net.color, net.store) =
-      convert(_net, _store);
+  std::tie(net.transition, net.place, net.color, net.store) = convert(_net);
   std::tie(net.input_n, net.output_n) =
       populateIoLookups(_net, net.place, net.color);
   net.p_to_ts_n = createReversePlaceToTransitionLookup(

@@ -21,7 +21,7 @@ auto petri1() {
   return symmetri::Color::Success;
 }
 
-std::tuple<Net, Store, PriorityTable, Marking> PetriTestNet() {
+std::tuple<Net, PriorityTable, Marking> PetriTestNet() {
   T0_COUNTER.store(0);
   T1_COUNTER.store(0);
 
@@ -36,7 +36,6 @@ std::tuple<Net, Store, PriorityTable, Marking> PetriTestNet() {
                 {"Pb", Color::toString(Color::Success)},
                 {"Pd", Color::toString(Color::Success)}}}}};
 
-  Store store = {{"t0", &petri0}, {"t1", &petri1}};
   PriorityTable priority;
 
   Marking m0 = {{"Pa", Color::toString(Color::Success)},
@@ -45,11 +44,11 @@ std::tuple<Net, Store, PriorityTable, Marking> PetriTestNet() {
                 {"Pa", Color::toString(Color::Success)},
                 {"Pb", Color::toString(Color::Success)},
                 {"Pb", Color::toString(Color::Success)}};
-  return {net, store, priority, m0};
+  return {net, priority, m0};
 }
 
 TEST_CASE("Test equaliy of nets") {
-  auto [net, store, priority, m0] = PetriTestNet();
+  auto [net, priority, m0] = PetriTestNet();
   auto net2 = net;
   auto net3 = net;
   CHECK(stateNetEquality(net, net2));
@@ -63,10 +62,12 @@ TEST_CASE("Test equaliy of nets") {
 }
 
 TEST_CASE("Run one transition iteration in a petri net") {
-  auto [net, store, priority, m0] = PetriTestNet();
+  auto [net, priority, m0] = PetriTestNet();
 
   auto stp = std::make_shared<TaskSystem>(1);
-  Petri m(net, store, priority, m0, {}, "s", stp);
+  Petri m(net, priority, m0, {}, "s", stp);
+  m.net.registerTransitionCallback("t0", &petri0);
+  m.net.registerTransitionCallback("t1", &petri1);
 
   // t0 is enabled.
   m.fireTransitions();
@@ -109,9 +110,11 @@ TEST_CASE("Run one transition iteration in a petri net") {
 TEST_CASE("Run until net dies") {
   using namespace moodycamel;
 
-  auto [net, store, priority, m0] = PetriTestNet();
+  auto [net, priority, m0] = PetriTestNet();
   auto stp = std::make_shared<TaskSystem>(1);
-  Petri m(net, store, priority, m0, {}, "s", stp);
+  Petri m(net, priority, m0, {}, "s", stp);
+  m.net.registerTransitionCallback("t0", &petri0);
+  m.net.registerTransitionCallback("t1", &petri1);
 
   Reducer r;
   Callback a([] {});
@@ -138,11 +141,11 @@ TEST_CASE("Run until net dies") {
 TEST_CASE("Run until net dies with DirectMutations") {
   using namespace moodycamel;
 
-  auto [net, store, priority, m0] = PetriTestNet();
+  auto [net, priority, m0] = PetriTestNet();
   // we can pass an empty story, and DirectMutation will be used for the
   // undefined transitions
   auto stp = std::make_shared<TaskSystem>(1);
-  Petri m(net, {}, priority, m0, {}, "s", stp);
+  Petri m(net, priority, m0, {}, "s", stp);
 
   Reducer r;
   // we need to enqueue one 'no-operation' to start the live net.
@@ -162,37 +165,6 @@ TEST_CASE("Run until net dies with DirectMutations") {
   CHECK(MarkingEquality(m.getMarking(), expected));
 }
 
-// TEST_CASE(
-//     "getFireableTransitions return a vector of unique of unique fireable "
-//     "transitions") {
-//   Net net = {{"a", {{"Pa"}, {}}},
-//              {"b", {{"Pa"}, {}}},
-//              {"c", {{"Pa"}, {}}},
-//              {"d", {{"Pa"}, {}}},
-//              {"e", {{"Pb"}, {}}}};
-
-//   Store store;
-//   for (auto [t, dm] : net) {
-//     store.insert({t, DirectMutation{}});
-//   }
-//   // with this initial marking, all but transition e are possible.
-//   Marking m0 = {{"Pa", 1}};
-//   auto stp = std::make_shared<TaskSystem>(1);
-
-//   Petri m(net, store, {}, m0, {}, "s", stp);
-//   auto fireable_transitions = m.getFireableTransitions();
-//   auto find = [&](auto a) {
-//     return std::find(fireable_transitions.begin(),
-//     fireable_transitions.end(),
-//                      a);
-//   };
-//   CHECK(find("a") != fireable_transitions.end());
-//   CHECK(find("b") != fireable_transitions.end());
-//   CHECK(find("c") != fireable_transitions.end());
-//   CHECK(find("d") != fireable_transitions.end());
-//   CHECK(find("e") == fireable_transitions.end());
-// }
-
 TEST_CASE("Step through transitions") {
   std::map<std::string, size_t> hitmap;
   {
@@ -201,18 +173,17 @@ TEST_CASE("Step through transitions") {
                {"c", {{{"Pa", Color::toString(Color::Success)}}, {}}},
                {"d", {{{"Pa", Color::toString(Color::Success)}}, {}}},
                {"e", {{{"Pb", Color::toString(Color::Success)}}, {}}}};
-    Store store;
-    for (const auto& [t, dm] : net) {
-      hitmap.insert({t, 0});
-      store.insert({t, [&, t = t] { hitmap[t] += 1; }});
-    }
     auto stp = std::make_shared<TaskSystem>(1);
     // with this initial marking, all but transition e are possible.
     Marking m0 = {{"Pa", Color::toString(Color::Success)},
                   {"Pa", Color::toString(Color::Success)},
                   {"Pa", Color::toString(Color::Success)},
                   {"Pa", Color::toString(Color::Success)}};
-    Petri m(net, store, {}, m0, {}, "s", stp);
+    Petri m(net, {}, m0, {}, "s", stp);
+    for (const auto& [t, dm] : net) {
+      hitmap.insert({t, 0});
+      m.net.registerTransitionCallback(t, [&, t = t] { hitmap[t] += 1; });
+    }
 
     // auto scheduled_callbacks = m.getActiveTransitions();
     // CHECK(scheduled_callbacks.size() == 4);  // abcd
@@ -248,7 +219,7 @@ TEST_CASE("Step through transitions") {
 }
 
 TEST_CASE("create fireable transitions shortlist") {
-  auto [net, store, priority, m0] = PetriTestNet();
+  auto [net, priority, m0] = PetriTestNet();
   auto stp = std::make_shared<TaskSystem>(1);
-  Petri m(net, store, priority, m0, {}, "s", stp);
+  Petri m(net, priority, m0, {}, "s", stp);
 }

@@ -9,7 +9,7 @@ using namespace symmetri;
 void t0() {}
 auto t1() {}
 
-std::tuple<Net, Store, PriorityTable, Marking> SymmetriTestNet() {
+std::tuple<Net, PriorityTable, Marking> SymmetriTestNet() {
   Net net = {{"t0",
               {{{"Pa", Color::toString(Color::Success)},
                 {"Pb", Color::toString(Color::Success)}},
@@ -21,7 +21,6 @@ std::tuple<Net, Store, PriorityTable, Marking> SymmetriTestNet() {
                 {"Pb", Color::toString(Color::Success)},
                 {"Pd", Color::toString(Color::Success)}}}}};
 
-  Store store = {{"t0", &t0}, {"t1", &t1}};
   PriorityTable priority;
 
   Marking m0 = {{"Pa", Color::toString(Color::Success)},
@@ -30,14 +29,16 @@ std::tuple<Net, Store, PriorityTable, Marking> SymmetriTestNet() {
                 {"Pa", Color::toString(Color::Success)},
                 {"Pb", Color::toString(Color::Success)},
                 {"Pb", Color::toString(Color::Success)}};
-  return {net, store, priority, m0};
+  return {net, priority, m0};
 }
 
 TEST_CASE("Create a using the net constructor without end condition.") {
-  auto [net, store, priority, m0] = SymmetriTestNet();
+  auto [net, priority, m0] = SymmetriTestNet();
   auto stp = std::make_shared<TaskSystem>(1);
 
-  PetriNet app(net, m0, {}, store, priority, "test_net_without_end", stp);
+  PetriNet app(net, m0, {}, priority, "test_net_without_end", stp);
+  app.registerTransitionCallback("t0", &t0);
+  app.registerTransitionCallback("t1", &t1);
   // we can run the net
   auto res = fire(app);
   auto ev = getLog(app);
@@ -54,9 +55,10 @@ TEST_CASE("Create a using the net constructor with end condition.") {
                          {"Pd", Color::toString(Color::Success)},
                          {"Pd", Color::toString(Color::Success)}});
 
-  auto [net, store, priority, m0] = SymmetriTestNet();
-  PetriNet app(net, m0, final_marking, store, priority, "test_net_with_end",
-               stp);
+  auto [net, priority, m0] = SymmetriTestNet();
+  PetriNet app(net, m0, final_marking, priority, "test_net_with_end", stp);
+  app.registerTransitionCallback("t0", &t0);
+  app.registerTransitionCallback("t1", &t1);
   // we can run the net
   auto res = fire(app);
   auto ev = getLog(app);
@@ -71,11 +73,10 @@ TEST_CASE("Create a using pnml constructor.") {
       "../../../symmetri/tests/assets/PT1.pnml");
 
   auto stp = std::make_shared<TaskSystem>(1);
-  // This store is appropriate for this net,
-  Store store = symmetri::Store{{"T0", &t0}};
   PriorityTable priority;
   Marking final_marking({{"P1", Color::toString(Color::Success)}});
-  PetriNet app({pnml_file}, final_marking, store, priority, "success", stp);
+  PetriNet app({pnml_file}, final_marking, priority, "success", stp);
+  app.registerTransitionCallback("T0", &t0);
   // so we can run it,
   auto res = fire(app);
   auto ev = getLog(app);
@@ -85,11 +86,14 @@ TEST_CASE("Create a using pnml constructor.") {
 }
 
 TEST_CASE("Reuse an application with a new case_id.") {
-  auto [net, store, priority, m0] = SymmetriTestNet();
+  auto [net, priority, m0] = SymmetriTestNet();
   const auto initial_id = "initial0";
   const auto new_id = "something_different0";
   auto stp = std::make_shared<TaskSystem>(1);
-  PetriNet app(net, m0, {}, store, priority, initial_id, stp);
+  PetriNet app(net, m0, {}, priority, initial_id, stp);
+  app.registerTransitionCallback("t0", &t0);
+  app.registerTransitionCallback("t1", &t1);
+
   CHECK(!app.reuseApplication(initial_id));
   CHECK(app.reuseApplication(new_id));
   // fire a transition so that there's an entry in the eventlog
@@ -104,16 +108,18 @@ TEST_CASE("Reuse an application with a new case_id.") {
 }
 
 TEST_CASE("Can not reuse an active application with a new case_id.") {
-  auto [net, store, priority, m0] = SymmetriTestNet();
+  auto [net, priority, m0] = SymmetriTestNet();
   const auto initial_id = "initial1";
   const auto new_id = "something_different1";
   auto stp = std::make_shared<TaskSystem>(1);
-  PetriNet app(net, m0, {}, store, priority, initial_id, stp);
+  PetriNet app(net, m0, {}, priority, initial_id, stp);
+  app.registerTransitionCallback(
+      "t0", [] { std::this_thread::sleep_for(std::chrono::milliseconds(5)); });
+  app.registerTransitionCallback("t1", &t1);
   stp->push([&]() mutable {
     // this should fail because we can not do this while everything is active.
     CHECK(!app.reuseApplication(new_id));
   });
-
   fire(app);
 }
 
@@ -123,11 +129,12 @@ TEST_CASE("Test pause and resume") {
               {{{"Pa", Color::toString(Color::Success)}},
                {{"Pa", Color::toString(Color::Success)}}}},
              {"t1", {{}, {{"Pb", Color::toString(Color::Success)}}}}};
-  Store store = {{"t0", [&] { i++; }}, {"t1", [] {}}};
   Marking m0 = {{"Pa", Color::toString(Color::Success)}};
   auto stp = std::make_shared<TaskSystem>(2);
-  PetriNet app(net, m0, {{"Pb", Color::toString(Color::Success)}}, store, {},
+  PetriNet app(net, m0, {{"Pb", Color::toString(Color::Success)}}, {},
                "random_id", stp);
+  app.registerTransitionCallback("t0", [&] { i++; });
+  app.registerTransitionCallback("t1", [] {});
   int check1, check2;
   stp->push([&, app, t1 = app.registerTransitionCallback("t1")]() {
     const auto dt = std::chrono::milliseconds(5);

@@ -11,12 +11,13 @@ Token red() { return Red; }
 
 TEST_CASE("Test color.") {
   Net net = {{{"t0"}, {{{"p1", "Blue"}}, {{"p2", "Red"}}}}};
-  Store store = {{"t0", &red}};
   PriorityTable priority;
   Marking m0 = {{"p1", "Blue"}};
   Marking mgoal = {{"p1", "Red"}};
   auto stp = std::make_shared<TaskSystem>(1);
-  Petri m(net, store, priority, m0, mgoal, "s", stp);
+  Petri m(net, priority, m0, mgoal, "s", stp);
+
+  m.net.registerTransitionCallback("t0", &red);
 
   for (auto [p, c] : m.getMarking()) {
     std::cout << p << ", " << c << std::endl;

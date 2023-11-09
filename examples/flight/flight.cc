@@ -66,9 +66,10 @@ int main(int, char *argv[]) {
   // Here we create the first PetriNet based on composing pnml1 and pnml2
   // using flat composition. The associated transitions are two instance of
   // the Foo-class.
-  PetriNet subnet({pnml1, pnml2}, {{"P2", Color::toString(Color::Success)}},
-                  {{"T0", Foo("SubFoo")}, {"T1", Foo("SubBar")}}, {}, "SubNet",
-                  pool);
+  PetriNet subnet({pnml1, pnml2}, {{"P2", Color::toString(Color::Success)}}, {},
+                  "SubNet", pool);
+  subnet.registerTransitionCallback("T0", Foo("SubFoo"));
+  subnet.registerTransitionCallback("T1", Foo("SubBar"));
 
   // We create another PetriNet by flatly composing all three petri nets.
   // Again we have 2 Foo-transitions, and the first transition (T0) is the
@@ -79,9 +80,10 @@ int main(int, char *argv[]) {
                    {"P3", Color::toString(Color::Success)},
                    {"P3", Color::toString(Color::Success)},
                    {"P3", Color::toString(Color::Success)}},
-                  {{"T0", subnet}, {"T1", Foo("Bar")}, {"T2", Foo("Foo")}}, {},
                   "RootNet", pool);
-
+  bignet.registerTransitionCallback("T0", subnet);
+  bignet.registerTransitionCallback("T1", Foo("Bar"));
+  bignet.registerTransitionCallback("T2", Foo("Foo"));
   // a flag to check if we are running
   std::atomic<bool> running(true);
 

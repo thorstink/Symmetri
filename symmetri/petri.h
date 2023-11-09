@@ -27,7 +27,6 @@ inline bool operator>(const AugmentedToken &lhs, const AugmentedToken &rhs) {
 }
 using SmallVector = gch::small_vector<size_t, 4>;
 using SmallVectorInput = gch::small_vector<AugmentedToken, 4>;
-using Store = std::unordered_map<Transition, Callback>;
 
 /**
  * @brief a small helper function to get the index representation of a place or
@@ -113,17 +112,15 @@ struct Petri {
    * avoid creating Models during the run-time of a Petri application.
    *
    * @param _net
-   * @param _store
    * @param _priority
    * @param _initial_tokens
    * @param _final_marking
    * @param _case_id
    * @param stp
    */
-  explicit Petri(const Net &_net, const Store &_store,
-                 const PriorityTable &_priority, const Marking &_initial_tokens,
-                 const Marking &_final_marking, const std::string &_case_id,
-                 std::shared_ptr<TaskSystem> stp);
+  explicit Petri(const Net &_net, const PriorityTable &_priority,
+                 const Marking &_initial_tokens, const Marking &_final_marking,
+                 const std::string &_case_id, std::shared_ptr<TaskSystem> stp);
   ~Petri() noexcept = default;
   Petri(Petri const &) = delete;
   Petri(Petri &&) noexcept = delete;
@@ -225,6 +222,14 @@ struct Petri {
      *
      */
     std::vector<Callback> store;
+
+    void registerTransitionCallback(const std::string &t,
+                                    const symmetri::Callback &cb) noexcept {
+      if (std::find(transition.begin(), transition.end(), t) !=
+          transition.end()) {
+        store[toIndex(transition, t)] = cb;
+      }
+    }
   } net;  ///< Is a data-oriented design of a Petri net
 
   std::vector<AugmentedToken> initial_tokens;  ///< The initial marking

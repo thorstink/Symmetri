@@ -29,30 +29,30 @@ unsigned int getThreadId() {
 using namespace symmetri;
 
 PetriNet::PetriNet(const std::set<std::string> &files,
-                   const Marking &final_marking, const Store &store,
+                   const Marking &final_marking,
                    const PriorityTable &priorities, const std::string &case_id,
                    std::shared_ptr<TaskSystem> stp)
     : impl([&] {
         const auto [net, m0] = readPnml(files);
-        return std::make_shared<Petri>(net, store, priorities, m0,
-                                       final_marking, case_id, stp);
+        return std::make_shared<Petri>(net, priorities, m0, final_marking,
+                                       case_id, stp);
       }()) {}
 
 PetriNet::PetriNet(const std::set<std::string> &files,
-                   const Marking &final_marking, const Store &store,
-                   const std::string &case_id, std::shared_ptr<TaskSystem> stp)
+                   const Marking &final_marking, const std::string &case_id,
+                   std::shared_ptr<TaskSystem> stp)
     : impl([&] {
         const auto [net, m0, priorities] = readGrml(files);
-        return std::make_shared<Petri>(net, store, priorities, m0,
-                                       final_marking, case_id, stp);
+        return std::make_shared<Petri>(net, priorities, m0, final_marking,
+                                       case_id, stp);
       }()) {}
 
 PetriNet::PetriNet(const Net &net, const Marking &m0,
-                   const Marking &final_marking, const Store &store,
+                   const Marking &final_marking,
                    const PriorityTable &priorities, const std::string &case_id,
                    std::shared_ptr<TaskSystem> stp)
-    : impl(std::make_shared<Petri>(net, store, priorities, m0, final_marking,
-                                   case_id, stp)) {}
+    : impl(std::make_shared<Petri>(net, priorities, m0, final_marking, case_id,
+                                   stp)) {}
 
 std::function<void()> PetriNet::registerTransitionCallback(
     const Transition &transition) const noexcept {
@@ -68,6 +68,12 @@ std::function<void()> PetriNet::registerTransitionCallback(
       });
     }
   };
+}
+
+void PetriNet::registerTransitionCallback(
+    const std::string &transition,
+    const symmetri::Callback &cb) const noexcept {
+  impl->net.registerTransitionCallback(transition, cb);
 }
 
 Marking PetriNet::getMarking() const noexcept {
