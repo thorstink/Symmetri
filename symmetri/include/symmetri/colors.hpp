@@ -3,12 +3,18 @@
 #include <unordered_map>
 namespace symmetri {
 
-using Token = unsigned int;
+using Token = uint32_t;
 
 namespace impl {
+/**
+ * @brief this creates a hash for a token-color. It is probably not the best way
+ * to get a unique integer for a string.
+ *
+ * @param input
+ * @return Token constexpr
+ */
 Token constexpr HashColor(char const* input) {
-  return *input ? static_cast<unsigned int>(*input) + 33 * HashColor(input + 1)
-                : 5381;
+  return *input ? static_cast<Token>(*input) + 33 * HashColor(input + 1) : 5381;
 }
 
 }  // namespace impl
