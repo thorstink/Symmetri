@@ -1,5 +1,5 @@
 // This is an example of how to use the petri-net library: In this example we
-// have a net where transition t50 can be triggered by inputing the character
+// have a net where transition t50 can be triggered by inputting the character
 // '1' through std::cin (the keyboard). When t50 is triggered, the net becomes
 // live. This example has no ' final marking ' (goal marking), so it' ll run
 // forever until the user hits ctrl-c.
@@ -46,9 +46,9 @@ int main(int, char *argv[]) {
   auto pool = std::make_shared<symmetri::TaskSystem>(1);
 
   // This is the construction of the class that executes the functions in the
-  // store based on the petri net. You can specifiy a final marking, the amount
+  // store based on the petri net. You can specify a final marking, the amount
   // of threads it can use (maximum amount of stuff it can do in parallel) and a
-  // name so the net is easy to identifiy in a log.
+  // name so the net is easy to identify in a log.
   PetriNet net({petri_net}, {}, {}, "CASE_X", pool);
 
   auto result =
@@ -64,7 +64,7 @@ int main(int, char *argv[]) {
     oldt = c.time_since_epoch().count();
   }
 
-  // return the result! in linux is enverything went well, you typically return
+  // return the result! in linux is everything went well, you typically return
   // 0.
   return result == symmetri::Color::Success ? 0 : -1;
 }
