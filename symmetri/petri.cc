@@ -44,13 +44,11 @@ populateIoLookups(const Net &_net, const std::vector<Place> &ordered_places,
   for (const auto &[t, io] : _net) {
     SmallVectorInput q_in, q_out;
     for (const auto &p : io.first) {
-      q_in.push_back({toIndex(ordered_places, p.first),
-                      impl::HashColor(p.second.c_str())});
+      q_in.push_back({toIndex(ordered_places, p.first), p.second});
     }
     input_n.push_back(q_in);
     for (const auto &p : io.second) {
-      q_out.push_back({toIndex(ordered_places, p.first),
-                       impl::HashColor(p.second.c_str())});
+      q_out.push_back({toIndex(ordered_places, p.first), p.second});
     }
     output_n.push_back(q_out);
   }
@@ -112,7 +110,7 @@ std::vector<AugmentedToken> Petri::toTokens(
     const Marking &marking) const noexcept {
   std::vector<AugmentedToken> tokens;
   for (const auto &[p, c] : marking) {
-    tokens.push_back({toIndex(net.place, p), impl::HashColor(c.c_str())});
+    tokens.push_back({toIndex(net.place, p), c});
   }
   return tokens;
 }
@@ -226,9 +224,8 @@ Marking Petri::getMarking() const {
   Marking marking;
   marking.reserve(tokens.size());
   std::transform(tokens.cbegin(), tokens.cend(), std::back_inserter(marking),
-                 [&](auto place_index) -> std::pair<std::string, std::string> {
-                   return {net.place[place_index.place],
-                           Color::getColors().at(place_index.color)};
+                 [&](auto place_index) -> std::pair<std::string, Token> {
+                   return {net.place[place_index.place], place_index.color};
                  });
   return marking;
 }

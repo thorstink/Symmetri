@@ -73,7 +73,9 @@ std::function<void()> PetriNet::registerTransitionCallback(
 void PetriNet::registerTransitionCallback(
     const std::string &transition,
     const symmetri::Callback &cb) const noexcept {
-  impl->net.registerTransitionCallback(transition, cb);
+  if (!impl->thread_id_.load().has_value()) {
+    impl->net.registerTransitionCallback(transition, cb);
+  }
 }
 
 Marking PetriNet::getMarking() const noexcept {

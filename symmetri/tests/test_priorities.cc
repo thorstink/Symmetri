@@ -13,13 +13,9 @@ TEST_CASE(
   std::list<PriorityTable> priorities = {{{"t0", 1}, {"t1", 0}},
                                          {{"t0", 0}, {"t1", 1}}};
   for (auto priority : priorities) {
-    Net net = {{"t0",
-                {{{"Pa", Color::toString(Color::Success)}},
-                 {{"Pb", Color::toString(Color::Success)}}}},
-               {"t1",
-                {{{"Pa", Color::toString(Color::Success)}},
-                 {{"Pc", Color::toString(Color::Success)}}}}};
-    Marking m0 = {{"Pa", Color::toString(Color::Success)}};
+    Net net = {{"t0", {{{"Pa", Color::Success}}, {{"Pb", Color::Success}}}},
+               {"t1", {{{"Pa", Color::Success}}, {{"Pc", Color::Success}}}}};
+    Marking m0 = {{"Pa", Color::Success}};
     auto stp = std::make_shared<TaskSystem>(1);
 
     auto m = Petri(net, priority, m0, {}, "s", stp);
@@ -40,10 +36,10 @@ TEST_CASE(
                      return e.first == "t1";
                    })->second;
     if (prio_t0 > prio_t1) {
-      Marking expected = {{"Pb", Color::toString(Color::Success)}};
+      Marking expected = {{"Pb", Color::Success}};
       CHECK(MarkingEquality(m.getMarking(), expected));
     } else {
-      Marking expected = {{"Pc", Color::toString(Color::Success)}};
+      Marking expected = {{"Pc", Color::Success}};
       CHECK(MarkingEquality(m.getMarking(), expected));
     }
   }
@@ -53,14 +49,10 @@ TEST_CASE("Using DirectMutation does not queue reducers.") {
   std::list<PriorityTable> priorities = {{{"t0", 1}, {"t1", 0}},
                                          {{"t0", 0}, {"t1", 1}}};
   for (auto priority : priorities) {
-    Net net = {{"t0",
-                {{{"Pa", Color::toString(Color::Success)}},
-                 {{"Pb", Color::toString(Color::Success)}}}},
-               {"t1",
-                {{{"Pa", Color::toString(Color::Success)}},
-                 {{"Pc", Color::toString(Color::Success)}}}}};
+    Net net = {{"t0", {{{"Pa", Color::Success}}, {{"Pb", Color::Success}}}},
+               {"t1", {{{"Pa", Color::Success}}, {{"Pc", Color::Success}}}}};
 
-    Marking m0 = {{"Pa", Color::toString(Color::Success)}};
+    Marking m0 = {{"Pa", Color::Success}};
     auto stp = std::make_shared<TaskSystem>(1);
 
     auto m = Petri(net, priority, m0, {}, "s", stp);
@@ -73,10 +65,10 @@ TEST_CASE("Using DirectMutation does not queue reducers.") {
                      return e.first == "t1";
                    })->second;
     if (prio_t0 > prio_t1) {
-      Marking expected = {{"Pb", Color::toString(Color::Success)}};
+      Marking expected = {{"Pb", Color::Success}};
       CHECK(MarkingEquality(m.getMarking(), expected));
     } else {
-      Marking expected = {{"Pc", Color::toString(Color::Success)}};
+      Marking expected = {{"Pc", Color::Success}};
       CHECK(MarkingEquality(m.getMarking(), expected));
     }
   }

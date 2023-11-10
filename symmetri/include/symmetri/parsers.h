@@ -13,7 +13,9 @@ namespace symmetri {
  * and returns _one_ Net, initial marking and table containing transitions with
  * their respective priority if it is not 1. If a place's initial marking is
  * defined in multiple nets, the initial marking in the last processed net is
- * used. Note that this is kind of random because a set orders the files.
+ * used. Note that this is kind of random because a set orders the files. It
+ * will also register tokens for the color attributes that are in the arcs that
+ * go from a place to a transition.
  *
  * @param grml-files
  * @return std::tuple<symmetri::Net, symmetri::Marking,symmetri::PriorityTable>
@@ -26,20 +28,14 @@ std::tuple<symmetri::Net, symmetri::Marking, symmetri::PriorityTable> readGrml(
  * and returns _one_ Net and initial marking. If the net has priorities, these
  * will not be included in the net. If a place's initial marking is defined in
  * multiple nets, the initial marking in the last processed net is used. Note
- * that this is kind of random because a set orders the files.
+ * that this is kind of random because a set orders the files. It will also
+ * register tokens for the color attributes that are in the arcs that go from a
+ * place to a transition.
  *
  * @param files
  * @return std::tuple<symmetri::Net, symmetri::Marking>
  */
 std::tuple<symmetri::Net, symmetri::Marking> readPnml(
     const std::set<std::string> &files);
-
-/**
- * @brief a function to generate a Mermaid gantt-chart from an eventlog.
- *
- * @param el
- * @return std::string
- */
-std::string mermaidFromEventlog(symmetri::Eventlog el);
 
 }  // namespace symmetri

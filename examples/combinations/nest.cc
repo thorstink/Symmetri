@@ -14,13 +14,12 @@ int main(int, char *argv[]) {
 
   auto pool = std::make_shared<TaskSystem>(2);
   // the child net
-  PetriNet child_net(
-      std::get<Net>(readPnml({dual_step_processor})),
-      {{"TaskBucket", Color::toString(Color::Success)},
-       {"ResourceDualProcessor", Color::toString(Color::Success)}},
-      {{"SuccessfulTasks", Color::toString(Color::Success)},
-       {"ResourceDualProcessor", Color::toString(Color::Success)}},
-      {}, "child_net", pool);
+  PetriNet child_net(std::get<Net>(readPnml({dual_step_processor})),
+                     {{"TaskBucket", Color::Success},
+                      {"ResourceDualProcessor", Color::Success}},
+                     {{"SuccessfulTasks", Color::Success},
+                      {"ResourceDualProcessor", Color::Success}},
+                     {}, "child_net", pool);
 
   child_net.registerTransitionCallback("StepOne", Foo{0.75, 1ms});
   child_net.registerTransitionCallback("StepTwo", Foo{0.75, 2ms});

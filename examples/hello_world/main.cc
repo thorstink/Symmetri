@@ -29,9 +29,10 @@ symmetri::Token helloResult() {
   return symmetri::Color::Success;
 }
 
-// Tokens with custom colors can be create like this:
+// Tokens with custom colors can be created like this:
 const static symmetri::Token CustomToken(
     symmetri::Color::registerToken("ACustomTokenColor"));
+
 // which can be used as a result like any other ordinary token;
 symmetri::Token returnCustomToken() { return CustomToken; }
 

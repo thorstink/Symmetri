@@ -29,7 +29,7 @@ using namespace symmetri;
 Net net = {{"foo", {{"B", "C"}, {"Z", "B"}}},
                 {"bar", {{"Z"}, {"B", "C"}}}};
 PriorityTable priority = {};
-Marking m0 = {{"Z",  Color::toString(Color::Success)}};
+Marking m0 = {{"Z",  Color::Success}};
 auto pool = std::make_shared<symmetri::TaskSystem>(4);
 symmetri::PetriNet app(net, m0, {}, {}, priority,
                           "test_net_without_end", pool);

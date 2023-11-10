@@ -11,24 +11,19 @@ auto t1() {}
 
 std::tuple<Net, PriorityTable, Marking> SymmetriTestNet() {
   Net net = {{"t0",
-              {{{"Pa", Color::toString(Color::Success)},
-                {"Pb", Color::toString(Color::Success)}},
-               {{"Pc", Color::toString(Color::Success)}}}},
+              {{{"Pa", Color::Success}, {"Pb", Color::Success}},
+               {{"Pc", Color::Success}}}},
              {"t1",
-              {{{"Pc", Color::toString(Color::Success)},
-                {"Pc", Color::toString(Color::Success)}},
-               {{"Pb", Color::toString(Color::Success)},
-                {"Pb", Color::toString(Color::Success)},
-                {"Pd", Color::toString(Color::Success)}}}}};
+              {{{"Pc", Color::Success}, {"Pc", Color::Success}},
+               {{"Pb", Color::Success},
+                {"Pb", Color::Success},
+                {"Pd", Color::Success}}}}};
 
   PriorityTable priority;
 
-  Marking m0 = {{"Pa", Color::toString(Color::Success)},
-                {"Pa", Color::toString(Color::Success)},
-                {"Pa", Color::toString(Color::Success)},
-                {"Pa", Color::toString(Color::Success)},
-                {"Pb", Color::toString(Color::Success)},
-                {"Pb", Color::toString(Color::Success)}};
+  Marking m0 = {{"Pa", Color::Success}, {"Pa", Color::Success},
+                {"Pa", Color::Success}, {"Pa", Color::Success},
+                {"Pb", Color::Success}, {"Pb", Color::Success}};
   return {net, priority, m0};
 }
 
@@ -50,10 +45,10 @@ TEST_CASE("Create a using the net constructor without end condition.") {
 TEST_CASE("Create a using the net constructor with end condition.") {
   auto stp = std::make_shared<TaskSystem>(1);
 
-  Marking final_marking({{"Pb", Color::toString(Color::Success)},
-                         {"Pb", Color::toString(Color::Success)},
-                         {"Pd", Color::toString(Color::Success)},
-                         {"Pd", Color::toString(Color::Success)}});
+  Marking final_marking({{"Pb", Color::Success},
+                         {"Pb", Color::Success},
+                         {"Pd", Color::Success},
+                         {"Pd", Color::Success}});
 
   auto [net, priority, m0] = SymmetriTestNet();
   PetriNet app(net, m0, final_marking, priority, "test_net_with_end", stp);
@@ -74,7 +69,7 @@ TEST_CASE("Create a using pnml constructor.") {
 
   auto stp = std::make_shared<TaskSystem>(1);
   PriorityTable priority;
-  Marking final_marking({{"P1", Color::toString(Color::Success)}});
+  Marking final_marking({{"P1", Color::Success}});
   PetriNet app({pnml_file}, final_marking, priority, "success", stp);
   app.registerTransitionCallback("T0", &t0);
   // so we can run it,
@@ -125,14 +120,11 @@ TEST_CASE("Can not reuse an active application with a new case_id.") {
 
 TEST_CASE("Test pause and resume") {
   std::atomic<int> i = 0;
-  Net net = {{"t0",
-              {{{"Pa", Color::toString(Color::Success)}},
-               {{"Pa", Color::toString(Color::Success)}}}},
-             {"t1", {{}, {{"Pb", Color::toString(Color::Success)}}}}};
-  Marking m0 = {{"Pa", Color::toString(Color::Success)}};
+  Net net = {{"t0", {{{"Pa", Color::Success}}, {{"Pa", Color::Success}}}},
+             {"t1", {{}, {{"Pb", Color::Success}}}}};
+  Marking m0 = {{"Pa", Color::Success}};
   auto stp = std::make_shared<TaskSystem>(2);
-  PetriNet app(net, m0, {{"Pb", Color::toString(Color::Success)}}, {},
-               "random_id", stp);
+  PetriNet app(net, m0, {{"Pb", Color::Success}}, {}, "random_id", stp);
   app.registerTransitionCallback("t0", [&] { i++; });
   app.registerTransitionCallback("t1", [] {});
   int check1, check2;
@@ -178,8 +170,7 @@ TEST_CASE("Print Types") {
             << std::endl;
   std::cout << Color::toString(Color::Started) << ", " << Color::Started
             << std::endl;
-  std::cout << Color::toString(Color::Success) << ", " << Color::Success
-            << std::endl;
+  std::cout << Color::Success << ", " << Color::Success << std::endl;
   std::cout << Color::toString(Color::Deadlock) << ", " << Color::Deadlock
             << std::endl;
   std::cout << Color::toString(Color::Paused) << ", " << Color::Paused

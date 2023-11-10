@@ -9,6 +9,7 @@
 #include "transition.hpp"
 
 using namespace symmetri;
+
 /**
  * @brief We want to use the Foo class with Symmetri; Foo has nice
  * functionalities such as Pause and Resume and it can also get
@@ -66,8 +67,7 @@ int main(int, char *argv[]) {
   // Here we create the first PetriNet based on composing pnml1 and pnml2
   // using flat composition. The associated transitions are two instance of
   // the Foo-class.
-  PetriNet subnet({pnml1, pnml2}, {{"P2", Color::toString(Color::Success)}}, {},
-                  "SubNet", pool);
+  PetriNet subnet({pnml1, pnml2}, {{"P2", Color::Success}}, {}, "SubNet", pool);
   subnet.registerTransitionCallback("T0", Foo("SubFoo"));
   subnet.registerTransitionCallback("T1", Foo("SubBar"));
 
@@ -75,28 +75,18 @@ int main(int, char *argv[]) {
   // Again we have 2 Foo-transitions, and the first transition (T0) is the
   // subnet. This show how you can also nest PetriNets.
   PetriNet bignet({pnml1, pnml2, pnml3},
-                  {{"P3", Color::toString(Color::Success)},
-                   {"P3", Color::toString(Color::Success)},
-                   {"P3", Color::toString(Color::Success)},
-                   {"P3", Color::toString(Color::Success)},
-                   {"P3", Color::toString(Color::Success)}},
+                  {{"P3", Color::Success},
+                   {"P3", Color::Success},
+                   {"P3", Color::Success},
+                   {"P3", Color::Success},
+                   {"P3", Color::Success}},
                   "RootNet", pool);
+
   bignet.registerTransitionCallback("T0", subnet);
   bignet.registerTransitionCallback("T1", Foo("Bar"));
   bignet.registerTransitionCallback("T2", Foo("Foo"));
   // a flag to check if we are running
   std::atomic<bool> running(true);
-
-  // a thread that polls the eventlog and writes it to a file
-  auto gantt = std::thread([&] {
-    while (running) {
-      std::this_thread::sleep_for(std::chrono::seconds(3));
-      if (!running) {
-        break;
-      }
-      // writeMermaidHtmlToFile(symmetri::mermaidFromEventlog(getLog(bignet)));
-    }
-  });
 
   // Parallel to the PetriNet execution, we run a thread through which we
   // can get some keyboard input for interaction
@@ -134,8 +124,6 @@ int main(int, char *argv[]) {
   const auto el = getLog(bignet);
   auto marking = bignet.getMarking();
   printLog(el);
-  gantt.join();  // clean up
-  t.join();      // clean up
-  // writeMermaidHtmlToFile(symmetri::mermaidFromEventlog(el));
+  t.join();  // clean up
   return 0;
 }

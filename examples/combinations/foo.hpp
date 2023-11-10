@@ -17,7 +17,7 @@ symmetri::Marking getGoal(const symmetri::Marking &initial_marking) {
   auto goal = initial_marking;
   for (auto &[p, c] : goal) {
     p = (p == "TaskBucket") ? "SuccessfulTasks" : p;
-    c = symmetri::Color::toString(symmetri::Color::Success);
+    c = symmetri::Color::Success;
   }
   return goal;
 }

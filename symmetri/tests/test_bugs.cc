@@ -25,12 +25,9 @@ void t() {
 }
 
 std::tuple<Net, PriorityTable, Marking> BugsTestNet() {
-  Net net = {{"t",
-              {{{"Pa", Color::toString(Color::Success)}},
-               {{"Pb", Color::toString(Color::Success)}}}}};
+  Net net = {{"t", {{{"Pa", Color::Success}}, {{"Pb", Color::Success}}}}};
   PriorityTable priority;
-  Marking m0 = {{"Pa", Color::toString(Color::Success)},
-                {"Pa", Color::toString(Color::Success)}};
+  Marking m0 = {{"Pa", Color::Success}, {"Pa", Color::Success}};
   return {net, priority, m0};
 }
 
@@ -61,7 +58,7 @@ TEST_CASE("Firing the same transition before it can complete should work") {
   m.reducer_queue->wait_dequeue_timed(r, std::chrono::milliseconds(250));
   r(m);
   {
-    Marking expected = {{"Pb", Color::toString(Color::Success)}};
+    Marking expected = {{"Pb", Color::Success}};
     CHECK(MarkingEquality(m.getMarking(), expected));
   }
 
@@ -75,8 +72,7 @@ TEST_CASE("Firing the same transition before it can complete should work") {
   m.reducer_queue->wait_dequeue_timed(r, std::chrono::milliseconds(250));
   r(m);
   {
-    Marking expected = {{"Pb", Color::toString(Color::Success)},
-                        {"Pb", Color::toString(Color::Success)}};
+    Marking expected = {{"Pb", Color::Success}, {"Pb", Color::Success}};
     CHECK(MarkingEquality(m.getMarking(), expected));
   }
 
