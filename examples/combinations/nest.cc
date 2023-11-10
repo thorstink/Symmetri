@@ -15,11 +15,11 @@ int main(int, char *argv[]) {
   auto pool = std::make_shared<TaskSystem>(2);
   // the child net
   PetriNet child_net(std::get<Net>(readPnml({dual_step_processor})),
+                     "child_net", pool,
                      {{"TaskBucket", Color::Success},
                       {"ResourceDualProcessor", Color::Success}},
                      {{"SuccessfulTasks", Color::Success},
-                      {"ResourceDualProcessor", Color::Success}},
-                     {}, "child_net", pool);
+                      {"ResourceDualProcessor", Color::Success}});
 
   child_net.registerTransitionCallback("StepOne", Foo{0.75, 1ms});
   child_net.registerTransitionCallback("StepTwo", Foo{0.75, 2ms});
@@ -29,9 +29,7 @@ int main(int, char *argv[]) {
   const Net net = std::get<Net>(read);
   const Marking initial_marking = std::get<Marking>(read);
   const auto goal_marking = getGoal(initial_marking);
-
-  PetriNet parent_net(net, initial_marking, goal_marking, {}, "parent_net",
-                      pool);
+  PetriNet parent_net(net, "parent_net", pool, initial_marking, goal_marking);
   parent_net.registerTransitionCallback("SingleStepProcessor", child_net);
 
   // run!

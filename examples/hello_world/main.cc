@@ -50,7 +50,7 @@ int main(int, char *argv[]) {
   // store based on the petri net. You can specify a final marking, the amount
   // of threads it can use (maximum amount of stuff it can do in parallel) and a
   // name so the net is easy to identify in a log.
-  PetriNet net({petri_net}, {}, {}, "CASE_X", pool);
+  PetriNet net({petri_net}, "CASE_X", pool);
 
   auto result =
       fire(net);  // This function blocks until either

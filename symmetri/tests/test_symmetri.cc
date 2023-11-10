@@ -28,10 +28,11 @@ std::tuple<Net, PriorityTable, Marking> SymmetriTestNet() {
 }
 
 TEST_CASE("Create a using the net constructor without end condition.") {
-  auto [net, priority, m0] = SymmetriTestNet();
+  auto [net, priority, initial_marking] = SymmetriTestNet();
   auto stp = std::make_shared<TaskSystem>(1);
-
-  PetriNet app(net, m0, {}, priority, "test_net_without_end", stp);
+  Marking goal_marking = {};
+  PetriNet app(net, "test_net_without_end", stp, initial_marking, goal_marking,
+               priority);
   app.registerTransitionCallback("t0", &t0);
   app.registerTransitionCallback("t1", &t1);
   // we can run the net
@@ -44,14 +45,13 @@ TEST_CASE("Create a using the net constructor without end condition.") {
 
 TEST_CASE("Create a using the net constructor with end condition.") {
   auto stp = std::make_shared<TaskSystem>(1);
-
-  Marking final_marking({{"Pb", Color::Success},
-                         {"Pb", Color::Success},
-                         {"Pd", Color::Success},
-                         {"Pd", Color::Success}});
-
-  auto [net, priority, m0] = SymmetriTestNet();
-  PetriNet app(net, m0, final_marking, priority, "test_net_with_end", stp);
+  auto [net, priority, initial_marking] = SymmetriTestNet();
+  Marking goal_marking({{"Pb", Color::Success},
+                        {"Pb", Color::Success},
+                        {"Pd", Color::Success},
+                        {"Pd", Color::Success}});
+  PetriNet app(net, "test_net_with_end", stp, initial_marking, goal_marking,
+               priority);
   app.registerTransitionCallback("t0", &t0);
   app.registerTransitionCallback("t1", &t1);
   // we can run the net
@@ -70,7 +70,8 @@ TEST_CASE("Create a using pnml constructor.") {
   auto stp = std::make_shared<TaskSystem>(1);
   PriorityTable priority;
   Marking final_marking({{"P1", Color::Success}});
-  PetriNet app({pnml_file}, final_marking, priority, "success", stp);
+  const auto case_id = "success";
+  PetriNet app({pnml_file}, case_id, stp, final_marking, priority);
   app.registerTransitionCallback("T0", &t0);
   // so we can run it,
   auto res = fire(app);
@@ -81,11 +82,12 @@ TEST_CASE("Create a using pnml constructor.") {
 }
 
 TEST_CASE("Reuse an application with a new case_id.") {
-  auto [net, priority, m0] = SymmetriTestNet();
+  auto [net, priority, initial_marking] = SymmetriTestNet();
+  Marking goal_marking = {};
   const auto initial_id = "initial0";
   const auto new_id = "something_different0";
   auto stp = std::make_shared<TaskSystem>(1);
-  PetriNet app(net, m0, {}, priority, initial_id, stp);
+  PetriNet app(net, initial_id, stp, initial_marking, goal_marking, priority);
   app.registerTransitionCallback("t0", &t0);
   app.registerTransitionCallback("t1", &t1);
 
@@ -103,11 +105,12 @@ TEST_CASE("Reuse an application with a new case_id.") {
 }
 
 TEST_CASE("Can not reuse an active application with a new case_id.") {
-  auto [net, priority, m0] = SymmetriTestNet();
+  auto [net, priority, initial_marking] = SymmetriTestNet();
+  Marking goal_marking = {};
   const auto initial_id = "initial1";
   const auto new_id = "something_different1";
   auto stp = std::make_shared<TaskSystem>(1);
-  PetriNet app(net, m0, {}, priority, initial_id, stp);
+  PetriNet app(net, initial_id, stp, initial_marking, goal_marking, priority);
   app.registerTransitionCallback(
       "t0", [] { std::this_thread::sleep_for(std::chrono::milliseconds(5)); });
   app.registerTransitionCallback("t1", &t1);
@@ -122,9 +125,10 @@ TEST_CASE("Test pause and resume") {
   std::atomic<int> i = 0;
   Net net = {{"t0", {{{"Pa", Color::Success}}, {{"Pa", Color::Success}}}},
              {"t1", {{}, {{"Pb", Color::Success}}}}};
-  Marking m0 = {{"Pa", Color::Success}};
   auto stp = std::make_shared<TaskSystem>(2);
-  PetriNet app(net, m0, {{"Pb", Color::Success}}, {}, "random_id", stp);
+  Marking initial_marking = {{"Pa", Color::Success}};
+  Marking goal_marking = {{"Pb", Color::Success}};
+  PetriNet app(net, "random_id", stp, initial_marking, goal_marking);
   app.registerTransitionCallback("t0", [&] { i++; });
   app.registerTransitionCallback("t1", [] {});
   int check1, check2;

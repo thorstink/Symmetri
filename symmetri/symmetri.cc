@@ -1,5 +1,6 @@
 #include "symmetri/symmetri.h"
 
+#include <filesystem>
 #include <functional>
 #include <future>
 #include <memory>
@@ -29,30 +30,29 @@ unsigned int getThreadId() {
 using namespace symmetri;
 
 PetriNet::PetriNet(const std::set<std::string> &files,
+                   const std::string &case_id, std::shared_ptr<TaskSystem> stp,
                    const Marking &final_marking,
-                   const PriorityTable &priorities, const std::string &case_id,
-                   std::shared_ptr<TaskSystem> stp)
+                   const PriorityTable &priorities)
     : impl([&] {
-        const auto [net, m0] = readPnml(files);
-        return std::make_shared<Petri>(net, priorities, m0, final_marking,
-                                       case_id, stp);
+        // get the first file;
+        const std::filesystem::path pn_file = *files.begin();
+        if (pn_file.extension() == ".pnml") {
+          const auto [net, m0] = readPnml(files);
+          return std::make_shared<Petri>(net, priorities, m0, final_marking,
+                                         case_id, stp);
+        } else {
+          const auto [net, m0, specific_priorities] = readGrml(files);
+          return std::make_shared<Petri>(net, specific_priorities, m0,
+                                         final_marking, case_id, stp);
+        }
       }()) {}
 
-PetriNet::PetriNet(const std::set<std::string> &files,
-                   const Marking &final_marking, const std::string &case_id,
-                   std::shared_ptr<TaskSystem> stp)
-    : impl([&] {
-        const auto [net, m0, priorities] = readGrml(files);
-        return std::make_shared<Petri>(net, priorities, m0, final_marking,
-                                       case_id, stp);
-      }()) {}
-
-PetriNet::PetriNet(const Net &net, const Marking &m0,
-                   const Marking &final_marking,
-                   const PriorityTable &priorities, const std::string &case_id,
-                   std::shared_ptr<TaskSystem> stp)
-    : impl(std::make_shared<Petri>(net, priorities, m0, final_marking, case_id,
-                                   stp)) {}
+PetriNet::PetriNet(const Net &net, const std::string &case_id,
+                   std::shared_ptr<TaskSystem> stp,
+                   const Marking &initial_marking, const Marking &final_marking,
+                   const PriorityTable &priorities)
+    : impl(std::make_shared<Petri>(net, priorities, initial_marking,
+                                   final_marking, case_id, stp)) {}
 
 std::function<void()> PetriNet::registerTransitionCallback(
     const Transition &transition) const noexcept {

@@ -20,11 +20,11 @@ TEST_CASE("Test external input.") {
                 {{{"Pb", Color::Success}, {"Pb", Color::Success}},
                  {{"Pc", Color::Success}}}}};
 
-    Marking m0 = {{"Pa", Color::Success}, {"Pa", Color::Success}};
-    Marking final_m = {{"Pc", Color::Success}};
+    Marking initial_marking = {{"Pa", Color::Success}, {"Pa", Color::Success}};
+    Marking goal_marking = {{"Pc", Color::Success}};
     auto stp = std::make_shared<TaskSystem>(3);
 
-    PetriNet app(net, m0, final_m, {}, "test_net_ext_input", stp);
+    PetriNet app(net, "test_net_ext_input", stp, initial_marking, goal_marking);
     app.registerTransitionCallback("t1", &tAllowExitInput);
 
     // enqueue a trigger;

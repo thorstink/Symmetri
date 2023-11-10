@@ -21,7 +21,7 @@ int main(int, char *argv[]) {
   const Marking initial_marking = std::get<Marking>(read);
   const auto goal_marking = getGoal(initial_marking);
 
-  PetriNet petri(net, initial_marking, goal_marking, {}, "composed_net", pool);
+  PetriNet petri(net, "composed_net", pool, initial_marking, goal_marking);
 
   petri.registerTransitionCallback("SingleStepProcessor", Foo{0.75, 3ms});
   petri.registerTransitionCallback("StepOne", Foo{0.75, 1ms});

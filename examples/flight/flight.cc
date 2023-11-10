@@ -67,21 +67,21 @@ int main(int, char *argv[]) {
   // Here we create the first PetriNet based on composing pnml1 and pnml2
   // using flat composition. The associated transitions are two instance of
   // the Foo-class.
-  PetriNet subnet({pnml1, pnml2}, {{"P2", Color::Success}}, {}, "SubNet", pool);
+  Marking sub_goal_marking = {{"P2", Color::Success}};
+  std::set<std::string> pnmls = {pnml1, pnml2};
+  PetriNet subnet(pnmls, "SubNet", pool, sub_goal_marking);
   subnet.registerTransitionCallback("T0", Foo("SubFoo"));
   subnet.registerTransitionCallback("T1", Foo("SubBar"));
 
   // We create another PetriNet by flatly composing all three petri nets.
   // Again we have 2 Foo-transitions, and the first transition (T0) is the
   // subnet. This show how you can also nest PetriNets.
-  PetriNet bignet({pnml1, pnml2, pnml3},
-                  {{"P3", Color::Success},
-                   {"P3", Color::Success},
-                   {"P3", Color::Success},
-                   {"P3", Color::Success},
-                   {"P3", Color::Success}},
-                  "RootNet", pool);
-
+  Marking big_goal_marking = {{"P3", Color::Success},
+                              {"P3", Color::Success},
+                              {"P3", Color::Success},
+                              {"P3", Color::Success},
+                              {"P3", Color::Success}};
+  PetriNet bignet({pnml1, pnml2, pnml3}, "RootNet", pool, big_goal_marking);
   bignet.registerTransitionCallback("T0", subnet);
   bignet.registerTransitionCallback("T1", Foo("Bar"));
   bignet.registerTransitionCallback("T2", Foo("Foo"));

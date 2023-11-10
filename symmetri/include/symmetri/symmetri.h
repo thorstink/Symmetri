@@ -76,31 +76,21 @@ struct Petri;
 class PetriNet final {
  public:
   /**
-   * @brief Construct a new PetriNet object from a set of paths to pnml-files
+   * @brief Construct a new PetriNet object from a set of paths to pnml- or
+   * grml-files. Since PNML-files do not have priorities; you can optionally add
+   * a priority table manually.
    *
    * @param path_to_pnml
+   * @param case_id
+   * @param stp
    * @param final_marking
    * @param priority
-   * @param case_id
-   * @param stp
    */
   PetriNet(const std::set<std::string> &path_to_pnml,
-           const symmetri::Marking &final_marking,
-           const symmetri::PriorityTable &priority, const std::string &case_id,
-           std::shared_ptr<symmetri::TaskSystem> stp);
-
-  /**
-   * @brief Construct a new PetriNet object from a set of paths to
-   * grml-files. Grml fils already have priority, so they are not needed.
-   *
-   * @param path_to_grml
-   * @param final_marking
-   * @param case_id
-   * @param stp
-   */
-  PetriNet(const std::set<std::string> &path_to_grml,
-           const symmetri::Marking &final_marking, const std::string &case_id,
-           std::shared_ptr<symmetri::TaskSystem> stp);
+           const std::string &case_id,
+           std::shared_ptr<symmetri::TaskSystem> stp,
+           const symmetri::Marking &final_marking = {},
+           const symmetri::PriorityTable &priority = {});
 
   /**
    * @brief Construct a new PetriNet object from a net and initial marking
@@ -112,10 +102,11 @@ class PetriNet final {
    * @param case_id
    * @param stp
    */
-  PetriNet(const symmetri::Net &net, const symmetri::Marking &m0,
-           const symmetri::Marking &final_marking,
-           const symmetri::PriorityTable &priority, const std::string &case_id,
-           std::shared_ptr<symmetri::TaskSystem> stp);
+  PetriNet(const symmetri::Net &net, const std::string &case_id,
+           std::shared_ptr<symmetri::TaskSystem> stp,
+           const symmetri::Marking &initial_marking,
+           const symmetri::Marking &final_marking = {},
+           const symmetri::PriorityTable &priority = {});
 
   /**
    * @brief register transition gives a handle to manually force a transition to
