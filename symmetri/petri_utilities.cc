@@ -53,10 +53,10 @@ Reducer createReducerForCallback(const size_t t_i, const Token result,
       switch (result) {
         case Color::Scheduled:
         case Color::Started:
-        case Color::Deadlock:
-        case Color::UserExit:
+        case Color::Deadlocked:
+        case Color::Canceled:
         case Color::Paused:
-        case Color::Error:
+        case Color::Failed:
           break;
         default: {
           const auto &place_list = model.net.output_n[t_i];
@@ -68,14 +68,7 @@ Reducer createReducerForCallback(const size_t t_i, const Token result,
       };
       model.scheduled_callbacks.erase(it);
     };
-    // get the log
-    Eventlog ev;
-    model.net.store[t_i](ev);
-    const Transition &transition = model.net.transition[t_i];
-    if (!ev.empty()) {
-      model.event_log.insert(model.event_log.cend(), ev.begin(), ev.end());
-    }
-    model.event_log.push_back({model.case_id, transition, result, t_end});
+    model.log.push_back({t_i, result, t_end});
   };
 }
 
@@ -85,11 +78,10 @@ Reducer scheduleCallback(
         &reducer_queue) {
   reducer_queue->enqueue(
       [start_time = Clock::now(), t_i](symmetri::Petri &model) {
-        model.event_log.push_back({model.case_id, model.net.transition[t_i],
-                                   Color::Started, start_time});
+        model.log.push_back({t_i, Color::Started, start_time});
       });
 
-  return createReducerForCallback(t_i, ::fire(task), Clock::now());
+  return createReducerForCallback(t_i, fire(task), Clock::now());
 }
 
 }  // namespace symmetri

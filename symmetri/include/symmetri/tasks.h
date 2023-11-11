@@ -11,7 +11,7 @@
 namespace symmetri {
 
 /**
- * @brief forward deceleration of the internal TaskQueue
+ * @brief forward declaration of the internal TaskQueue
  *
  */
 class TaskQueue;
@@ -45,7 +45,7 @@ class TaskSystem {
   TaskSystem& operator=(TaskSystem&&) noexcept = delete;
 
   /**
-   * @brief push allows to put almost anything as "payload" for a transition.
+   * @brief push tasks the the queue for later execution on the thread pool.
    *
    * @param p
    */

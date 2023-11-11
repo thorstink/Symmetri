@@ -1,5 +1,6 @@
 #include "symmetri/symmetri.h"
 
+#include <filesystem>
 #include <functional>
 #include <future>
 #include <memory>
@@ -29,45 +30,55 @@ unsigned int getThreadId() {
 using namespace symmetri;
 
 PetriNet::PetriNet(const std::set<std::string> &files,
-                   const Marking &final_marking, const Store &store,
-                   const PriorityTable &priorities, const std::string &case_id,
-                   std::shared_ptr<TaskSystem> stp)
+                   const std::string &case_id, std::shared_ptr<TaskSystem> stp,
+                   const Marking &final_marking,
+                   const PriorityTable &priorities)
     : impl([&] {
-        const auto [net, m0] = readPnml(files);
-        return std::make_shared<Petri>(net, store, priorities, m0,
-                                       final_marking, case_id, stp);
+        // get the first file;
+        const std::filesystem::path pn_file = *files.begin();
+        if (pn_file.extension() == ".pnml") {
+          const auto [net, m0] = readPnml(files);
+          return std::make_shared<Petri>(net, priorities, m0, final_marking,
+                                         case_id, stp);
+        } else {
+          const auto [net, m0, specific_priorities] = readGrml(files);
+          return std::make_shared<Petri>(net, specific_priorities, m0,
+                                         final_marking, case_id, stp);
+        }
       }()) {}
 
-PetriNet::PetriNet(const std::set<std::string> &files,
-                   const Marking &final_marking, const Store &store,
-                   const std::string &case_id, std::shared_ptr<TaskSystem> stp)
-    : impl([&] {
-        const auto [net, m0, priorities] = readGrml(files);
-        return std::make_shared<Petri>(net, store, priorities, m0,
-                                       final_marking, case_id, stp);
-      }()) {}
+PetriNet::PetriNet(const Net &net, const std::string &case_id,
+                   std::shared_ptr<TaskSystem> stp,
+                   const Marking &initial_marking, const Marking &final_marking,
+                   const PriorityTable &priorities)
+    : impl(std::make_shared<Petri>(net, priorities, initial_marking,
+                                   final_marking, case_id, stp)) {}
 
-PetriNet::PetriNet(const Net &net, const Marking &m0,
-                   const Marking &final_marking, const Store &store,
-                   const PriorityTable &priorities, const std::string &case_id,
-                   std::shared_ptr<TaskSystem> stp)
-    : impl(std::make_shared<Petri>(net, store, priorities, m0, final_marking,
-                                   case_id, stp)) {}
-
-std::function<void()> PetriNet::registerTransitionCallback(
+std::function<void()> PetriNet::getInputTransitionHandle(
     const Transition &transition) const noexcept {
-  return [transition, this] {
-    if (impl->thread_id_.load()) {
-      impl->reducer_queue->enqueue([=](Petri &m) {
-        if (m.thread_id_.load()) {
-          const auto t_index = toIndex(m.net.transition, transition);
+  const auto t_index = toIndex(impl->net.transition, transition);
+  // if the transition has input places, you can not register a callback like
+  // this, we simply return a non-functioning handle.
+  if (!impl->net.input_n[t_index].empty()) {
+    return []() -> void {};
+  } else {
+    return [t_index, this]() -> void {
+      if (impl->thread_id_.load()) {
+        impl->reducer_queue->enqueue([=](Petri &m) {
           m.scheduled_callbacks.push_back(t_index);
           m.reducer_queue->enqueue(
               scheduleCallback(t_index, m.net.store[t_index], m.reducer_queue));
-        }
-      });
-    }
-  };
+        });
+      }
+    };
+  }
+}
+
+void PetriNet::registerCallback(const std::string &transition,
+                                const symmetri::Callback &cb) const noexcept {
+  if (!impl->thread_id_.load().has_value()) {
+    impl->net.registerCallback(transition, cb);
+  }
 }
 
 Marking PetriNet::getMarking() const noexcept {
@@ -92,23 +103,20 @@ bool PetriNet::reuseApplication(const std::string &new_case_id) {
 
 symmetri::Token fire(const PetriNet &app) {
   if (app.impl->thread_id_.load().has_value()) {
-    return symmetri::Color::Error;
+    return symmetri::Color::Failed;
   }
   auto &m = *app.impl;
   m.thread_id_.store(symmetri::getThreadId());
-
-  // we are running!
-  m.event_log.clear();
   m.scheduled_callbacks.clear();
   m.tokens = m.initial_tokens;
   m.state = Color::Started;
   symmetri::Reducer f;
   while (m.reducer_queue->try_dequeue(f)) { /* get rid of old reducers  */
   }
+
   // start!
-  m.fireTransitions();
-  while (!symmetri::MarkingReached(m.tokens, m.final_marking) &&
-         (m.state == Color::Started || m.state == Color::Paused) &&
+  m.reducer_queue->enqueue([=](Petri &) {});
+  while ((m.state == Color::Started || m.state == Color::Paused) &&
          m.reducer_queue->wait_dequeue_timed(f, -1)) {
     do {
       f(m);
@@ -123,7 +131,9 @@ symmetri::Token fire(const PetriNet &app) {
       m.fireTransitions();
       // if there's nothing to fire; we deadlocked
       if (m.scheduled_callbacks.size() == 0) {
-        m.state = Color::Deadlock;
+        m.state = Color::Deadlocked;
+      } else if (symmetri::MarkingReached(m.tokens, m.final_marking)) {
+        m.state = Color::Success;
       }
     }
   }
@@ -145,14 +155,10 @@ symmetri::Token fire(const PetriNet &app) {
 
 void cancel(const PetriNet &app) {
   app.impl->reducer_queue->enqueue([=](Petri &model) {
-    model.state = Color::UserExit;
-    // populate that eventlog with child eventlog and possible
-    // cancelations.
+    model.state = Color::Canceled;
     for (const auto transition_index : model.scheduled_callbacks) {
       cancel(model.net.store.at(transition_index));
-      model.event_log.push_back({model.case_id,
-                                 model.net.transition[transition_index],
-                                 Color::UserExit, Clock::now()});
+      model.log.push_back({transition_index, Color::Canceled, Clock::now()});
     }
   });
 }
@@ -180,9 +186,9 @@ Eventlog getLog(const PetriNet &app) {
     std::promise<Eventlog> el;
     std::future<Eventlog> el_getter = el.get_future();
     app.impl->reducer_queue->enqueue(
-        [&](Petri &model) { el.set_value(model.getLog()); });
+        [&](Petri &model) { el.set_value(model.getLogInternal()); });
     return el_getter.get();
   } else {
-    return app.impl->getLog();
+    return app.impl->getLogInternal();
   }
 }

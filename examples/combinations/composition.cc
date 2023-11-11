@@ -16,16 +16,16 @@ int main(int, char *argv[]) {
 
   const auto read =
       readPnml({tasks, single_step_processor, dual_step_processor});
-  const Store store{{"SingleStepProcessor", Foo{0.75, 3ms}},
-                    {"StepOne", Foo{0.75, 1ms}},
-                    {"StepTwo", Foo{0.75, 2ms}}};
 
   const Net net = std::get<Net>(read);
   const Marking initial_marking = std::get<Marking>(read);
   const auto goal_marking = getGoal(initial_marking);
 
-  PetriNet petri(net, initial_marking, goal_marking, store, {}, "composed_net",
-                 pool);
+  PetriNet petri(net, "composed_net", pool, initial_marking, goal_marking);
+
+  petri.registerCallback("SingleStepProcessor", Foo{0.75, 3ms});
+  petri.registerCallback("StepOne", Foo{0.75, 1ms});
+  petri.registerCallback("StepTwo", Foo{0.75, 2ms});
 
   auto now = Clock::now();
   auto result = fire(petri);

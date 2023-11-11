@@ -9,7 +9,6 @@ add_library(${PROJECT_NAME} SHARED
   petri_utilities.cc
   pnml_parser.cc
   grml_parser.cc
-  eventlog_parsers.cc
   types.cpp
   symmetri.cc
   submodules/tinyxml2/tinyxml2.cpp

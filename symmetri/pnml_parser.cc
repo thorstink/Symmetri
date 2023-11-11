@@ -1,9 +1,10 @@
 #include <map>
 #include <stdexcept>
+#include <string>
 
+#include "symmetri/colors.hpp"
 #include "symmetri/parsers.h"
 #include "tinyxml2/tinyxml2.h"
-
 using namespace tinyxml2;
 
 namespace symmetri {
@@ -32,8 +33,7 @@ std::tuple<Net, Marking> readPnml(const std::set<std::string> &files) {
                               ->FirstChildElement("text")
                               ->GetText());
       for (int i = 0; i < initial_marking; i++) {
-        place_initialMarking.push_back(
-            {place_id, Color::toString(Color::Success)});
+        place_initialMarking.push_back({place_id, Color::Success});
       }
       places.insert(std::string(place_id));
     }
@@ -63,8 +63,8 @@ std::tuple<Net, Marking> readPnml(const std::set<std::string> &files) {
       for (int i = 0; i < multiplicity; i++) {
         if (places.find(source_id) != places.end()) {
           // if the source is a place, tokens are consumed.
-          auto arc_color =
-              NULL == color ? Color::toString(Color::Success) : color;
+          const auto arc_color =
+              NULL == color ? Color::Success : Color::registerToken(color);
           if (state_net.find(target_id) != state_net.end()) {
             state_net.find(target_id)->second.first.push_back(
                 {source_id, arc_color});
@@ -75,11 +75,9 @@ std::tuple<Net, Marking> readPnml(const std::set<std::string> &files) {
           // if the destination is a place, tokens are produced.
           if (state_net.find(source_id) != state_net.end()) {
             state_net.find(source_id)->second.second.push_back(
-                {target_id, Color::toString(Color::Success)});
+                {target_id, Color::Success});
           } else {
-            state_net.insert(
-                {source_id,
-                 {{}, {{target_id, Color::toString(Color::Success)}}}});
+            state_net.insert({source_id, {{}, {{target_id, Color::Success}}}});
           }
         } else {
           const auto arc_id = child->Attribute("id");

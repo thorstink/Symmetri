@@ -1,7 +1,5 @@
 #include "petri.h"
-
 bool isSynchronous(const DirectMutation &) { return true; }
-
 symmetri::Token fire(const DirectMutation &) {
   return symmetri::Color::Success;
 }
@@ -9,7 +7,7 @@ symmetri::Token fire(const DirectMutation &) {
 namespace symmetri {
 std::tuple<std::vector<std::string>, std::vector<std::string>,
            std::vector<std::string>, std::vector<Callback>>
-convert(const Net &_net, const Store &_store) {
+convert(const Net &_net) {
   const auto transition_count = _net.size();
   std::vector<std::string> transitions;
   std::vector<std::string> places;
@@ -22,11 +20,7 @@ convert(const Net &_net, const Store &_store) {
   store.reserve(transition_count);
   for (const auto &[t, io] : _net) {
     transitions.push_back(t);
-    // if the transition is not in the store, a DirectMutation-callback is used
-    // by default
-    auto callback =
-        _store.find(t) != _store.end() ? _store.at(t) : DirectMutation{};
-    store.push_back(callback);
+    store.push_back(DirectMutation{});
     for (const auto &p : io.first) {
       places.push_back(p.first);
     }
@@ -48,13 +42,11 @@ populateIoLookups(const Net &_net, const std::vector<Place> &ordered_places,
   for (const auto &[t, io] : _net) {
     SmallVectorInput q_in, q_out;
     for (const auto &p : io.first) {
-      q_in.push_back({toIndex(ordered_places, p.first),
-                      impl::HashColor(p.second.c_str())});
+      q_in.push_back({toIndex(ordered_places, p.first), p.second});
     }
     input_n.push_back(q_in);
     for (const auto &p : io.second) {
-      q_out.push_back({toIndex(ordered_places, p.first),
-                       impl::HashColor(p.second.c_str())});
+      q_out.push_back({toIndex(ordered_places, p.first), p.second});
     }
     output_n.push_back(q_out);
   }
@@ -90,20 +82,21 @@ std::vector<int8_t> createPriorityLookup(
   return priority;
 }
 
-Petri::Petri(const Net &_net, const Store &_store,
-             const PriorityTable &_priority, const Marking &_initial_tokens,
-             const Marking &_final_marking, const std::string &_case_id,
-             std::shared_ptr<TaskSystem> stp)
-    : event_log({}),
+Petri::Petri(const Net &_net, const PriorityTable &_priority,
+             const Marking &_initial_tokens, const Marking &_final_marking,
+             const std::string &_case_id, std::shared_ptr<TaskSystem> stp)
+    : log({}),
       state(Color::Scheduled),
       case_id(_case_id),
       thread_id_(std::nullopt),
       reducer_queue(
           std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(128)),
       pool(stp) {
-  event_log.reserve(1000);
-  std::tie(net.transition, net.place, net.color, net.store) =
-      convert(_net, _store);
+  log.reserve(1000);
+  tokens.reserve(100);
+  scheduled_callbacks.reserve(10);
+
+  std::tie(net.transition, net.place, net.color, net.store) = convert(_net);
   std::tie(net.input_n, net.output_n) =
       populateIoLookups(_net, net.place, net.color);
   net.p_to_ts_n = createReversePlaceToTransitionLookup(
@@ -118,25 +111,26 @@ std::vector<AugmentedToken> Petri::toTokens(
     const Marking &marking) const noexcept {
   std::vector<AugmentedToken> tokens;
   for (const auto &[p, c] : marking) {
-    tokens.push_back({toIndex(net.place, p), impl::HashColor(c.c_str())});
+    tokens.push_back({toIndex(net.place, p), c});
   }
   return tokens;
 }
 
 void Petri::fireSynchronous(const size_t t) {
   const auto &task = net.store[t];
-  const auto &transition = net.transition[t];
   const auto &lookup_t = net.output_n[t];
-  event_log.push_back({case_id, transition, Color::Started, Clock::now()});
-  auto result = ::fire(task);
-  event_log.push_back({case_id, transition, result, Clock::now()});
+  const auto now = Clock::now();
+  log.push_back({t, Color::Started, now});
+  auto result = fire(task);
+  log.push_back({t, result, now});
+
   switch (result) {
     case Color::Scheduled:
     case Color::Started:
-    case Color::Deadlock:
-    case Color::UserExit:
+    case Color::Deadlocked:
+    case Color::Canceled:
     case Color::Paused:
-    case Color::Error:
+    case Color::Failed:
       break;
     default: {
       tokens.reserve(tokens.size() + lookup_t.size());
@@ -149,9 +143,9 @@ void Petri::fireSynchronous(const size_t t) {
 
 void Petri::fireAsynchronous(const size_t t) {
   const auto &task = net.store[t];
-  const auto &transition = net.transition[t];
   scheduled_callbacks.push_back(t);
-  event_log.push_back({case_id, transition, Color::Scheduled, Clock::now()});
+  log.push_back({t, Color::Scheduled, Clock::now()});
+
   pool->push([=] {
     reducer_queue->enqueue(scheduleCallback(t, task, reducer_queue));
   });
@@ -232,22 +226,30 @@ Marking Petri::getMarking() const {
   Marking marking;
   marking.reserve(tokens.size());
   std::transform(tokens.cbegin(), tokens.cend(), std::back_inserter(marking),
-                 [&](auto place_index) -> std::pair<std::string, std::string> {
-                   return {net.place[place_index.place],
-                           Color::getColors().at(place_index.color)};
+                 [&](auto place_index) -> std::pair<std::string, Token> {
+                   return {net.place[place_index.place], place_index.color};
                  });
   return marking;
 }
 
-Eventlog Petri::getLog() const {
-  Eventlog eventlog = event_log;
+Eventlog Petri::getLogInternal() const {
+  Eventlog eventlog;
+  eventlog.reserve(log.size());
+  for (const auto &[t_i, result, time] : log) {
+    eventlog.push_back({case_id, net.transition[t_i], result, time});
+  }
+
   // get event log from parent nets:
-  for (size_t pt_idx : scheduled_callbacks) {
-    auto sub_el = ::getLog(net.store[pt_idx]);
+  for (const auto &cb : net.store) {
+    Eventlog sub_el = getLog(cb);
     if (!sub_el.empty()) {
       eventlog.insert(eventlog.end(), sub_el.begin(), sub_el.end());
     }
   }
+
+  std::sort(eventlog.begin(), eventlog.end(),
+            [](const auto &a, const auto &b) { return a.stamp < b.stamp; });
+
   return eventlog;
 }
 

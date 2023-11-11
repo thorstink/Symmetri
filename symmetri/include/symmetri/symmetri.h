@@ -3,7 +3,6 @@
 /** @file symmetri.h */
 
 #include <set>
-#include <unordered_map>
 
 #include "symmetri/callback.h"
 #include "symmetri/tasks.h"
@@ -59,13 +58,6 @@ void resume(const PetriNet &);
 symmetri::Eventlog getLog(const PetriNet &);
 
 namespace symmetri {
-/**
- * @brief A Store is a mapping from Transitions, represented by a string that is
- * also used for their identification in the petri-net, to a PolyTask. A
- * PolyTask may contain side-effects.
- *
- */
-using Store = std::unordered_map<Transition, Callback>;
 
 /**
  * @brief Forward declaration for the implementation of the PetriNet class.
@@ -84,34 +76,21 @@ struct Petri;
 class PetriNet final {
  public:
   /**
-   * @brief Construct a new PetriNet object from a set of paths to pnml-files
+   * @brief Construct a new PetriNet object from a set of paths to pnml- or
+   * grml-files. Since PNML-files do not have priorities; you can optionally add
+   * a priority table manually.
    *
    * @param path_to_pnml
-   * @param final_marking
-   * @param store
-   * @param priority
    * @param case_id
    * @param stp
+   * @param final_marking
+   * @param priority
    */
   PetriNet(const std::set<std::string> &path_to_pnml,
-           const symmetri::Marking &final_marking, const symmetri::Store &store,
-           const symmetri::PriorityTable &priority, const std::string &case_id,
-           std::shared_ptr<symmetri::TaskSystem> stp);
-
-  /**
-   * @brief Construct a new PetriNet object from a set of paths to
-   * grml-files. Grml fils already have priority, so they are not needed.
-   *
-   * @param path_to_grml
-   * @param final_marking
-   * @param store
-   * @param case_id
-   * @param stp
-   */
-  PetriNet(const std::set<std::string> &path_to_grml,
-           const symmetri::Marking &final_marking, const symmetri::Store &store,
            const std::string &case_id,
-           std::shared_ptr<symmetri::TaskSystem> stp);
+           std::shared_ptr<symmetri::TaskSystem> stp,
+           const symmetri::Marking &final_marking = {},
+           const symmetri::PriorityTable &priority = {});
 
   /**
    * @brief Construct a new PetriNet object from a net and initial marking
@@ -119,26 +98,37 @@ class PetriNet final {
    * @param net
    * @param m0
    * @param final_marking
-   * @param store
    * @param priority
    * @param case_id
    * @param stp
    */
-  PetriNet(const symmetri::Net &net, const symmetri::Marking &m0,
-           const symmetri::Marking &final_marking, const symmetri::Store &store,
-           const symmetri::PriorityTable &priority, const std::string &case_id,
-           std::shared_ptr<symmetri::TaskSystem> stp);
+  PetriNet(const symmetri::Net &net, const std::string &case_id,
+           std::shared_ptr<symmetri::TaskSystem> stp,
+           const symmetri::Marking &initial_marking,
+           const symmetri::Marking &final_marking = {},
+           const symmetri::PriorityTable &priority = {});
 
   /**
-   * @brief register transition gives a handle to manually force a transition to
-   * fire. It returns a callable handle that will schedule a reducer for the
-   * transition, generating tokens.
+   * @brief By registering a input transition you get a handle to manually force
+   * a transition to fire. It returns a callable handle that will schedule a
+   * reducer for the transition, generating tokens. This only works for
+   * transitions that have no input places.
    *
    * @param transition the name of transition
    * @return std::function<void()>
    */
-  std::function<void()> registerTransitionCallback(
+  std::function<void()> getInputTransitionHandle(
       const std::string &transition) const noexcept;
+
+  /**
+   * @brief The default transition payload (DirectMutation) is overload by the
+   * Callback supplied for a specific transition.
+   *
+   * @param transition the name of transition
+   * @param cb the callback
+   */
+  void registerCallback(const std::string &transition,
+                        const symmetri::Callback &cb) const noexcept;
 
   /**
    * @brief Get the Marking object. This function is thread-safe and be called
