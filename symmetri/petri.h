@@ -236,8 +236,8 @@ struct Petri {
      */
     std::vector<Callback> store;
 
-    void registerTransitionCallback(const std::string &t,
-                                    const symmetri::Callback &cb) noexcept {
+    void registerCallback(const std::string &t,
+                          const symmetri::Callback &cb) noexcept {
       if (std::find(transition.begin(), transition.end(), t) !=
           transition.end()) {
         store[toIndex(transition, t)] = cb;

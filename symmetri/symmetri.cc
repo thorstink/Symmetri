@@ -54,27 +54,30 @@ PetriNet::PetriNet(const Net &net, const std::string &case_id,
     : impl(std::make_shared<Petri>(net, priorities, initial_marking,
                                    final_marking, case_id, stp)) {}
 
-std::function<void()> PetriNet::registerTransitionCallback(
+std::function<void()> PetriNet::getInputTransitionHandle(
     const Transition &transition) const noexcept {
-  return [transition, this] {
-    if (impl->thread_id_.load()) {
-      impl->reducer_queue->enqueue([=](Petri &m) {
-        if (m.thread_id_.load()) {
-          const auto t_index = toIndex(m.net.transition, transition);
+  const auto t_index = toIndex(impl->net.transition, transition);
+  // if the transition has input places, you can not register a callback like
+  // this, we simply return a non-functioning handle.
+  if (!impl->net.input_n[t_index].empty()) {
+    return []() -> void {};
+  } else {
+    return [t_index, this]() -> void {
+      if (impl->thread_id_.load()) {
+        impl->reducer_queue->enqueue([=](Petri &m) {
           m.scheduled_callbacks.push_back(t_index);
           m.reducer_queue->enqueue(
               scheduleCallback(t_index, m.net.store[t_index], m.reducer_queue));
-        }
-      });
-    }
-  };
+        });
+      }
+    };
+  }
 }
 
-void PetriNet::registerTransitionCallback(
-    const std::string &transition,
-    const symmetri::Callback &cb) const noexcept {
+void PetriNet::registerCallback(const std::string &transition,
+                                const symmetri::Callback &cb) const noexcept {
   if (!impl->thread_id_.load().has_value()) {
-    impl->net.registerTransitionCallback(transition, cb);
+    impl->net.registerCallback(transition, cb);
   }
 }
 

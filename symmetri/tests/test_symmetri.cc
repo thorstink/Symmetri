@@ -33,8 +33,8 @@ TEST_CASE("Create a using the net constructor without end condition.") {
   Marking goal_marking = {};
   PetriNet app(net, "test_net_without_end", stp, initial_marking, goal_marking,
                priority);
-  app.registerTransitionCallback("t0", &t0);
-  app.registerTransitionCallback("t1", &t1);
+  app.registerCallback("t0", &t0);
+  app.registerCallback("t1", &t1);
   // we can run the net
   auto res = fire(app);
   auto ev = getLog(app);
@@ -52,8 +52,8 @@ TEST_CASE("Create a using the net constructor with end condition.") {
                         {"Pd", Color::Success}});
   PetriNet app(net, "test_net_with_end", stp, initial_marking, goal_marking,
                priority);
-  app.registerTransitionCallback("t0", &t0);
-  app.registerTransitionCallback("t1", &t1);
+  app.registerCallback("t0", &t0);
+  app.registerCallback("t1", &t1);
   // we can run the net
   auto res = fire(app);
   auto ev = getLog(app);
@@ -72,7 +72,7 @@ TEST_CASE("Create a using pnml constructor.") {
   Marking final_marking({{"P1", Color::Success}});
   const auto case_id = "success";
   PetriNet app({pnml_file}, case_id, stp, final_marking, priority);
-  app.registerTransitionCallback("T0", &t0);
+  app.registerCallback("T0", &t0);
   // so we can run it,
   auto res = fire(app);
   auto ev = getLog(app);
@@ -88,8 +88,8 @@ TEST_CASE("Reuse an application with a new case_id.") {
   const auto new_id = "something_different0";
   auto stp = std::make_shared<TaskSystem>(1);
   PetriNet app(net, initial_id, stp, initial_marking, goal_marking, priority);
-  app.registerTransitionCallback("t0", &t0);
-  app.registerTransitionCallback("t1", &t1);
+  app.registerCallback("t0", &t0);
+  app.registerCallback("t1", &t1);
 
   CHECK(!app.reuseApplication(initial_id));
   CHECK(app.reuseApplication(new_id));
@@ -111,9 +111,9 @@ TEST_CASE("Can not reuse an active application with a new case_id.") {
   const auto new_id = "something_different1";
   auto stp = std::make_shared<TaskSystem>(1);
   PetriNet app(net, initial_id, stp, initial_marking, goal_marking, priority);
-  app.registerTransitionCallback(
+  app.registerCallback(
       "t0", [] { std::this_thread::sleep_for(std::chrono::milliseconds(5)); });
-  app.registerTransitionCallback("t1", &t1);
+  app.registerCallback("t1", &t1);
   stp->push([&]() mutable {
     // this should fail because we can not do this while everything is active.
     CHECK(!app.reuseApplication(new_id));
@@ -129,10 +129,9 @@ TEST_CASE("Test pause and resume") {
   Marking initial_marking = {{"Pa", Color::Success}};
   Marking goal_marking = {{"Pb", Color::Success}};
   PetriNet app(net, "random_id", stp, initial_marking, goal_marking);
-  app.registerTransitionCallback("t0", [&] { i++; });
-  app.registerTransitionCallback("t1", [] {});
+  app.registerCallback("t0", [&] { i++; });
   int check1, check2;
-  stp->push([&, app, t1 = app.registerTransitionCallback("t1")]() {
+  stp->push([&, app, t1 = app.getInputTransitionHandle("t1")]() {
     const auto dt = std::chrono::milliseconds(5);
     std::this_thread::sleep_for(dt);
     pause(app);

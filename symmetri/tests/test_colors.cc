@@ -17,7 +17,7 @@ TEST_CASE("Test color.") {
   auto stp = std::make_shared<TaskSystem>(1);
   Petri m(net, priority, m0, mgoal, "s", stp);
 
-  m.net.registerTransitionCallback("t0", &red);
+  m.net.registerCallback("t0", &red);
 
   for (auto [p, c] : m.getMarking()) {
     std::cout << p << ", " << c << std::endl;

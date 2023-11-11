@@ -23,9 +23,9 @@ int main(int, char *argv[]) {
 
   PetriNet petri(net, "composed_net", pool, initial_marking, goal_marking);
 
-  petri.registerTransitionCallback("SingleStepProcessor", Foo{0.75, 3ms});
-  petri.registerTransitionCallback("StepOne", Foo{0.75, 1ms});
-  petri.registerTransitionCallback("StepTwo", Foo{0.75, 2ms});
+  petri.registerCallback("SingleStepProcessor", Foo{0.75, 3ms});
+  petri.registerCallback("StepOne", Foo{0.75, 1ms});
+  petri.registerCallback("StepTwo", Foo{0.75, 2ms});
 
   auto now = Clock::now();
   auto result = fire(petri);

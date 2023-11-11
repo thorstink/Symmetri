@@ -25,10 +25,10 @@ TEST_CASE("Test external input.") {
     auto stp = std::make_shared<TaskSystem>(3);
 
     PetriNet app(net, "test_net_ext_input", stp, initial_marking, goal_marking);
-    app.registerTransitionCallback("t1", &tAllowExitInput);
+    app.registerCallback("t1", &tAllowExitInput);
 
     // enqueue a trigger;
-    stp->push([trigger = app.registerTransitionCallback("t0")]() {
+    stp->push([trigger = app.getInputTransitionHandle("t0")]() {
       // sleep a bit so it gets triggered _after_ the net started. Otherwise the
       // net would deadlock
       while (!can_continue.load()) {

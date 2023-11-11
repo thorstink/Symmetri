@@ -19,8 +19,8 @@ TEST_CASE(
     auto stp = std::make_shared<TaskSystem>(1);
 
     auto m = Petri(net, priority, m0, {}, "s", stp);
-    m.net.registerTransitionCallback("t0", [] {});
-    m.net.registerTransitionCallback("t1", [] {});
+    m.net.registerCallback("t0", [] {});
+    m.net.registerCallback("t1", [] {});
     m.fireTransitions();
     Reducer r;
 

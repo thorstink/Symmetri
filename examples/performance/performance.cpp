@@ -15,8 +15,7 @@ int main(int argc, char *argv[]) {
   PetriNet petri = [=] {
     if (argc > 1) {
       const auto pnml = std::string(argv[1]);
-      PetriNet petri({pnml}, "benchmark", pool);
-      return petri;
+      return PetriNet({pnml}, "benchmark", pool);
     } else {
       Net net = {{"t0",
                   {{{"Pa", Color::Success}, {"Pb", Color::Success}},
@@ -33,9 +32,9 @@ int main(int argc, char *argv[]) {
                               {"Pc", Color::Success},
                               {"Pc", Color::Success}};
 
-      PetriNet petri(net, "benchmark", pool, initial_marking, goal_marking, {});
-      petri.registerTransitionCallback("t0", Simple{});
-      petri.registerTransitionCallback("t1", Simple{});
+      PetriNet petri(net, "benchmark", pool, initial_marking, goal_marking);
+      petri.registerCallback("t0", Simple{});
+      petri.registerCallback("t1", Simple{});
       return petri;
     }
   }();

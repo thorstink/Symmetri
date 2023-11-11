@@ -109,18 +109,26 @@ class PetriNet final {
            const symmetri::PriorityTable &priority = {});
 
   /**
-   * @brief register transition gives a handle to manually force a transition to
-   * fire. It returns a callable handle that will schedule a reducer for the
-   * transition, generating tokens.
+   * @brief By registering a input transition you get a handle to manually force
+   * a transition to fire. It returns a callable handle that will schedule a
+   * reducer for the transition, generating tokens. This only works for
+   * transitions that have no input places.
    *
    * @param transition the name of transition
    * @return std::function<void()>
    */
-  std::function<void()> registerTransitionCallback(
+  std::function<void()> getInputTransitionHandle(
       const std::string &transition) const noexcept;
 
-  void registerTransitionCallback(const std::string &transition,
-                                  const symmetri::Callback &) const noexcept;
+  /**
+   * @brief The default transition payload (DirectMutation) is overload by the
+   * Callback supplied for a specific transition.
+   *
+   * @param transition the name of transition
+   * @param cb the callback
+   */
+  void registerCallback(const std::string &transition,
+                        const symmetri::Callback &cb) const noexcept;
 
   /**
    * @brief Get the Marking object. This function is thread-safe and be called

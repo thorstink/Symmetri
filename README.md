@@ -28,13 +28,12 @@ This Petri net can be described using Symmetri:
 using namespace symmetri;
 Net net = {{"foo", {{"B", "C"}, {"Z", "B"}}},
                 {"bar", {{"Z"}, {"B", "C"}}}};
-PriorityTable priority = {};
-Marking m0 = {{"Z",  Color::Success}};
+Marking initial = {{"Z",  Color::Success}};
+Marking goal = {};
 auto pool = std::make_shared<symmetri::TaskSystem>(4);
-symmetri::PetriNet app(net, m0, {}, {}, priority,
-                          "test_net_without_end", pool);
-app.registerTransitionCallback("foo", &foo);
-app.registerTransitionCallback("bar", &bar);
+symmetri::PetriNet app(net,"test_net_without_end", pool, initial, goal);
+app.registerCallback("foo", &foo);
+app.registerCallback("bar", &bar);
 
 auto result = fire(app); // run until done.
 auto log = getLog(app);

@@ -61,8 +61,8 @@ TEST_CASE("Run one transition iteration in a petri net") {
 
   auto stp = std::make_shared<TaskSystem>(1);
   Petri m(net, priority, m0, {}, "s", stp);
-  m.net.registerTransitionCallback("t0", &petri0);
-  m.net.registerTransitionCallback("t1", &petri1);
+  m.net.registerCallback("t0", &petri0);
+  m.net.registerCallback("t1", &petri1);
 
   // t0 is enabled.
   m.fireTransitions();
@@ -106,8 +106,8 @@ TEST_CASE("Run until net dies") {
   auto [net, priority, m0] = PetriTestNet();
   auto stp = std::make_shared<TaskSystem>(1);
   Petri m(net, priority, m0, {}, "s", stp);
-  m.net.registerTransitionCallback("t0", &petri0);
-  m.net.registerTransitionCallback("t1", &petri1);
+  m.net.registerCallback("t0", &petri0);
+  m.net.registerCallback("t1", &petri1);
 
   Reducer r;
   Callback a([] {});
@@ -175,7 +175,7 @@ TEST_CASE("Step through transitions") {
     Petri m(net, {}, m0, {}, "s", stp);
     for (const auto& [t, dm] : net) {
       hitmap.insert({t, 0});
-      m.net.registerTransitionCallback(t, [&, t = t] { hitmap[t] += 1; });
+      m.net.registerCallback(t, [&, t = t] { hitmap[t] += 1; });
     }
 
     // auto scheduled_callbacks = m.getActiveTransitions();

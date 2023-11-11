@@ -35,7 +35,7 @@ TEST_CASE("Firing the same transition before it can complete should work") {
   auto [net, priority, m0] = BugsTestNet();
   auto stp = std::make_shared<TaskSystem>(2);
   Petri m(net, priority, m0, {}, "s", stp);
-  m.net.registerTransitionCallback("t", &t);
+  m.net.registerCallback("t", &t);
 
   CHECK(m.scheduled_callbacks.empty());
   m.fireTransitions();
