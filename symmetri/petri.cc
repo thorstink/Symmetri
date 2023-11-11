@@ -85,14 +85,14 @@ std::vector<int8_t> createPriorityLookup(
 Petri::Petri(const Net &_net, const PriorityTable &_priority,
              const Marking &_initial_tokens, const Marking &_final_marking,
              const std::string &_case_id, std::shared_ptr<TaskSystem> stp)
-    : event_log_small({}),
+    : log({}),
       state(Color::Scheduled),
       case_id(_case_id),
       thread_id_(std::nullopt),
       reducer_queue(
           std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(128)),
       pool(stp) {
-  event_log_small.reserve(1000);
+  log.reserve(1000);
   tokens.reserve(100);
   scheduled_callbacks.reserve(10);
 
@@ -120,17 +120,17 @@ void Petri::fireSynchronous(const size_t t) {
   const auto &task = net.store[t];
   const auto &lookup_t = net.output_n[t];
   const auto now = Clock::now();
-  event_log_small.push_back({t, Color::Started, now});
+  log.push_back({t, Color::Started, now});
   auto result = fire(task);
-  event_log_small.push_back({t, result, now});
+  log.push_back({t, result, now});
 
   switch (result) {
     case Color::Scheduled:
     case Color::Started:
-    case Color::Deadlock:
-    case Color::UserExit:
+    case Color::Deadlocked:
+    case Color::Canceled:
     case Color::Paused:
-    case Color::Error:
+    case Color::Failed:
       break;
     default: {
       tokens.reserve(tokens.size() + lookup_t.size());
@@ -144,7 +144,7 @@ void Petri::fireSynchronous(const size_t t) {
 void Petri::fireAsynchronous(const size_t t) {
   const auto &task = net.store[t];
   scheduled_callbacks.push_back(t);
-  event_log_small.push_back({t, Color::Scheduled, Clock::now()});
+  log.push_back({t, Color::Scheduled, Clock::now()});
 
   pool->push([=] {
     reducer_queue->enqueue(scheduleCallback(t, task, reducer_queue));
@@ -234,8 +234,8 @@ Marking Petri::getMarking() const {
 
 Eventlog Petri::getLogInternal() const {
   Eventlog eventlog;
-  eventlog.reserve(event_log_small.size());
-  for (const auto &[t_i, result, time] : event_log_small) {
+  eventlog.reserve(log.size());
+  for (const auto &[t_i, result, time] : log) {
     eventlog.push_back({case_id, net.transition[t_i], result, time});
   }
 

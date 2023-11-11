@@ -1,6 +1,7 @@
 #include <symmetri/symmetri.h>
 
 #include <iostream>
+#include <symmetri/utilities.hpp>
 struct Simple {};
 int i = 0;
 bool isSynchronous(const Simple &) { return true; }
@@ -46,6 +47,7 @@ int main(int argc, char *argv[]) {
             << std::chrono::duration_cast<std::chrono::microseconds>(end -
                                                                      begin)
                    .count()
+            << ", execution trace: " << calculateTrace(getLog(petri))
             << std::endl;
   return result == symmetri::Color::Success ? 0 : -1;
 }

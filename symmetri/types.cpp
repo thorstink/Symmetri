@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <numeric>
+
+#include "symmetri/colors.hpp"
 namespace symmetri {
 
 const std::string& Color::toString(symmetri::Token r) { return Color::map[r]; }
@@ -53,10 +55,7 @@ size_t calculateTrace(const Eventlog& event_log) noexcept {
   return std::hash<std::string>{}(std::accumulate(
       event_log.begin(), event_log.end(), std::string(""),
       [](const auto& acc, const Event& n) {
-        constexpr auto success = "o";
-        constexpr auto fail = "x";
-        return n.state == Color::Success ? acc + n.transition + success
-                                         : acc + fail;
+        return acc + n.case_id + n.transition + Color::toString(n.state);
       }));
 }
 

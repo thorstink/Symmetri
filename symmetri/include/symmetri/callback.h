@@ -140,7 +140,7 @@ class Callback {
   /**
    * @brief A transition is defined by the concept that it is runnable,
    * cancellable, pauseable and resumable. It can also be synchronous or
-   * asynchronous.
+   * asynchronous and queried for logs.
    *
    * @tparam T the actual Callback contain business logic
    */

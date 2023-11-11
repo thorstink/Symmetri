@@ -20,9 +20,9 @@
 void helloWorld() { std::this_thread::sleep_for(std::chrono::seconds(1)); }
 
 // If you want to specify 'success' or 'failure' you can return a
-// "Token". It can be {Started, Success, Deadlock, UserExit, Error} or a user
+// "Token". It can be {Started, Success, Deadlocked, Canceled, Failed} or a user
 // defined Token. See next example. and in the case of defining your own
-// function it makes sense to return either "Success" or "Error". The Other
+// function it makes sense to return either "Success" or "Failed". The Other
 // states re meant when the function is a nested petri-net.
 symmetri::Token helloResult() {
   std::this_thread::sleep_for(std::chrono::seconds(1));

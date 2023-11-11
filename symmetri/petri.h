@@ -13,6 +13,11 @@
 #include "symmetri/types.h"
 
 namespace symmetri {
+/**
+ * @brief AugmentedToken describes a token with a color in a
+ * particular place.
+ *
+ */
 struct AugmentedToken {
   size_t place, color;
 };
@@ -27,7 +32,7 @@ inline bool operator>(const AugmentedToken &lhs, const AugmentedToken &rhs) {
 }
 
 /**
- * @brief uses allocation free types
+ * @brief a minimal event representation.
  *
  */
 struct SmallEvent {
@@ -36,9 +41,22 @@ struct SmallEvent {
   Clock::time_point stamp;  ///< The timestamp of the event
 };
 
+/**
+ * @brief a list of events
+ *
+ */
 using SmallLog = std::vector<SmallEvent>;
 
+/**
+ * @brief General purpose stack-allocated mini vector for indices
+ *
+ */
 using SmallVector = gch::small_vector<size_t, 4>;
+
+/**
+ * @brief General purpose stack-allocated mini vector for colored markings
+ *
+ */
 using SmallVectorInput = gch::small_vector<AugmentedToken, 4>;
 
 /**
@@ -249,13 +267,17 @@ struct Petri {
   std::vector<AugmentedToken> tokens;          ///< The current marking
   std::vector<AugmentedToken> final_marking;   ///< The final marking
   std::vector<size_t> scheduled_callbacks;     ///< List of active transitions
-  SmallLog event_log_small;                    ///< The most actual event_log
+  SmallLog log;         ///< The most up to date event_log
   Token state;          ///< The current state of the Petri
   std::string case_id;  ///< The unique identifier for this Petri-run
   std::atomic<std::optional<unsigned int>>
       thread_id_;  ///< The id of the thread from which the Petri is fired.
 
-  std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>> reducer_queue;
+  std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
+      reducer_queue;  ///< A pointer to the reducer queue. It is a shared
+                      ///< pointer because it needs to be captured by Reducers
+                      ///< which are executed later, guaranteeing the queue is
+                      ///< not destroyed while in use.
   std::shared_ptr<TaskSystem>
       pool;  ///< A pointer to the threadpool used to defer Callbacks.
 

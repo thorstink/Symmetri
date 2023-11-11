@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "colors.hpp"
+#include "symmetri/colors.hpp"
 namespace symmetri {
 using Place = std::string;       ///< The string representation of the place the
                                  ///< Petri net definition

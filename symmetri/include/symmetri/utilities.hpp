@@ -77,8 +77,8 @@ bool stateNetEquality(const Net& net1, const Net& net2);
 
 /**
  * @brief Calculates a hash given an event log. This hash is only influenced by
- * the order of the completions of transitions and if the output of those
- * transitions is Success, or something else.
+ * the order of the completions of transitions, the tokens the transitions
+ * return and the case_id of the net the transition is fired from.
  *
  * @param event_log An eventlog, can both be from a terminated or a still active
  * net.

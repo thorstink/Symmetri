@@ -103,7 +103,7 @@ bool PetriNet::reuseApplication(const std::string &new_case_id) {
 
 symmetri::Token fire(const PetriNet &app) {
   if (app.impl->thread_id_.load().has_value()) {
-    return symmetri::Color::Error;
+    return symmetri::Color::Failed;
   }
   auto &m = *app.impl;
   m.thread_id_.store(symmetri::getThreadId());
@@ -131,7 +131,7 @@ symmetri::Token fire(const PetriNet &app) {
       m.fireTransitions();
       // if there's nothing to fire; we deadlocked
       if (m.scheduled_callbacks.size() == 0) {
-        m.state = Color::Deadlock;
+        m.state = Color::Deadlocked;
       } else if (symmetri::MarkingReached(m.tokens, m.final_marking)) {
         m.state = Color::Success;
       }
@@ -155,11 +155,10 @@ symmetri::Token fire(const PetriNet &app) {
 
 void cancel(const PetriNet &app) {
   app.impl->reducer_queue->enqueue([=](Petri &model) {
-    model.state = Color::UserExit;
+    model.state = Color::Canceled;
     for (const auto transition_index : model.scheduled_callbacks) {
       cancel(model.net.store.at(transition_index));
-      model.event_log_small.push_back(
-          {transition_index, Color::UserExit, Clock::now()});
+      model.log.push_back({transition_index, Color::Canceled, Clock::now()});
     }
   });
 }

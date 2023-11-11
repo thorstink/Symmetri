@@ -39,7 +39,7 @@ TEST_CASE("Create a using the net constructor without end condition.") {
   auto res = fire(app);
   auto ev = getLog(app);
   // because there's no final marking, but the net is finite, it deadlocks.
-  CHECK(res == Color::Deadlock);
+  CHECK(res == Color::Deadlocked);
   CHECK(!ev.empty());
 }
 
@@ -159,10 +159,10 @@ TEST_CASE("Types") {
   CHECK(Color::Scheduled != ExternalState);
   CHECK(Color::Started != ExternalState);
   CHECK(Color::Success != ExternalState);
-  CHECK(Color::Deadlock != ExternalState);
+  CHECK(Color::Deadlocked != ExternalState);
   CHECK(Color::Paused != ExternalState);
-  CHECK(Color::UserExit != ExternalState);
-  CHECK(Color::Error != ExternalState);
+  CHECK(Color::Canceled != ExternalState);
+  CHECK(Color::Failed != ExternalState);
   CHECK(ExternalState == ExternalState);
   CHECK(Color::toString(ExternalState) != "");
 }
@@ -174,13 +174,13 @@ TEST_CASE("Print Types") {
   std::cout << Color::toString(Color::Started) << ", " << Color::Started
             << std::endl;
   std::cout << Color::Success << ", " << Color::Success << std::endl;
-  std::cout << Color::toString(Color::Deadlock) << ", " << Color::Deadlock
+  std::cout << Color::toString(Color::Deadlocked) << ", " << Color::Deadlocked
             << std::endl;
   std::cout << Color::toString(Color::Paused) << ", " << Color::Paused
             << std::endl;
-  std::cout << Color::toString(Color::UserExit) << ", " << Color::UserExit
+  std::cout << Color::toString(Color::Canceled) << ", " << Color::Canceled
             << std::endl;
-  std::cout << Color::toString(Color::Error) << ", " << Color::UserExit
+  std::cout << Color::toString(Color::Failed) << ", " << Color::Canceled
             << std::endl;
   std::cout << Color::toString(ExternalState) << ", " << ExternalState
             << std::endl;
