@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['hash_5f32_5for_5f64_0',['hash_32_or_64',['../structmoodycamel_1_1details_1_1hash__32__or__64.html',1,'moodycamel::details']]]
+  ['taskqueue_0',['TaskQueue',['../classsymmetri_1_1TaskQueue.html',1,'symmetri']]],
+  ['tasksystem_1',['TaskSystem',['../classsymmetri_1_1TaskSystem.html',1,'symmetri']]]
 ];

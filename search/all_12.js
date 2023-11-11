@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['utilities_2ehpp_0',['utilities.hpp',['../utilities_8hpp.html',1,'']]]
+  ['vanilla_20cmake_3a_0',['Vanilla CMake:',['../md_docs_2symmetri__lib.html#autotoc_md9',1,'']]]
 ];

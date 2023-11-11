@@ -110,6 +110,10 @@ $(document).ready(function(){initNavTree('petri_8h.html',''); initResizable(); }
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1AugmentedToken.html">symmetri::AugmentedToken</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structsymmetri_1_1AugmentedToken.html" title="AugmentedToken describes a token with a color in a particular place.">AugmentedToken</a> describes a token with a color in a particular place.  <a href="structsymmetri_1_1AugmentedToken.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1SmallEvent.html">symmetri::SmallEvent</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">a minimal event representation.  <a href="structsymmetri_1_1SmallEvent.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html">symmetri::Petri</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> is a data structure that encodes the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> net and holds pointers to the thread-pool and the reducer-queue. It is optimized for calculating the active transition set and quick lookups in ordered vectors.  <a href="structsymmetri_1_1Petri.html#details">More...</a><br /></td></tr>
@@ -117,11 +121,17 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
 Typedefs</h2></td></tr>
+<tr class="memitem:a2ddc5ab6f6b7ba3b133d13fc1de493ad" id="r_a2ddc5ab6f6b7ba3b133d13fc1de493ad"><td class="memItemLeft" align="right" valign="top"><a id="a2ddc5ab6f6b7ba3b133d13fc1de493ad" name="a2ddc5ab6f6b7ba3b133d13fc1de493ad"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>symmetri::SmallLog</b> = std::vector&lt; <a class="el" href="structsymmetri_1_1SmallEvent.html">SmallEvent</a> &gt;</td></tr>
+<tr class="memdesc:a2ddc5ab6f6b7ba3b133d13fc1de493ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">a list of events <br /></td></tr>
+<tr class="separator:a2ddc5ab6f6b7ba3b133d13fc1de493ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6391ade94d5fe6e7d4d10249803b2186" id="r_a6391ade94d5fe6e7d4d10249803b2186"><td class="memItemLeft" align="right" valign="top"><a id="a6391ade94d5fe6e7d4d10249803b2186" name="a6391ade94d5fe6e7d4d10249803b2186"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>symmetri::SmallVector</b> = gch::small_vector&lt; size_t, 4 &gt;</td></tr>
+<tr class="memdesc:a6391ade94d5fe6e7d4d10249803b2186"><td class="mdescLeft">&#160;</td><td class="mdescRight">General purpose stack-allocated mini vector for indices. <br /></td></tr>
 <tr class="separator:a6391ade94d5fe6e7d4d10249803b2186"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad57d63947afb8be62061af41eb2a1be4" id="r_ad57d63947afb8be62061af41eb2a1be4"><td class="memItemLeft" align="right" valign="top"><a id="ad57d63947afb8be62061af41eb2a1be4" name="ad57d63947afb8be62061af41eb2a1be4"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>symmetri::SmallVectorInput</b> = gch::small_vector&lt; <a class="el" href="structsymmetri_1_1AugmentedToken.html">AugmentedToken</a>, 4 &gt;</td></tr>
+<tr class="memdesc:ad57d63947afb8be62061af41eb2a1be4"><td class="mdescLeft">&#160;</td><td class="mdescRight">General purpose stack-allocated mini vector for colored markings. <br /></td></tr>
 <tr class="separator:ad57d63947afb8be62061af41eb2a1be4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6434bd1832596983e4d74f3c5ceac58a" id="r_a6434bd1832596983e4d74f3c5ceac58a"><td class="memItemLeft" align="right" valign="top"><a id="a6434bd1832596983e4d74f3c5ceac58a" name="a6434bd1832596983e4d74f3c5ceac58a"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>symmetri::Reducer</b> = std::function&lt; void(<a class="el" href="structsymmetri_1_1Petri.html">Petri</a> &amp;)&gt;</td></tr>
@@ -142,16 +152,16 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>symmetri::operator&gt
 <tr class="memitem:acf5def1daa631f8fae536487ba1e09da" id="r_acf5def1daa631f8fae536487ba1e09da"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="petri_8h.html#acf5def1daa631f8fae536487ba1e09da">symmetri::toIndex</a> (const std::vector&lt; std::string &gt; &amp;m, const std::string &amp;s)</td></tr>
 <tr class="memdesc:acf5def1daa631f8fae536487ba1e09da"><td class="mdescLeft">&#160;</td><td class="mdescRight">a small helper function to get the index representation of a place or transition.  <br /></td></tr>
 <tr class="separator:acf5def1daa631f8fae536487ba1e09da"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1cb4eeb2182b21d2440d6cbacd142319" id="r_a1cb4eeb2182b21d2440d6cbacd142319"><td class="memItemLeft" align="right" valign="top">gch::small_vector&lt; size_t, 32 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="petri_8h.html#a1cb4eeb2182b21d2440d6cbacd142319">symmetri::possibleTransitions</a> (const std::vector&lt; <a class="el" href="structsymmetri_1_1AugmentedToken.html">AugmentedToken</a> &gt; &amp;tokens, const std::vector&lt; SmallVectorInput &gt; &amp;input_n, const std::vector&lt; SmallVector &gt; &amp;p_to_ts_n)</td></tr>
+<tr class="memitem:a1cb4eeb2182b21d2440d6cbacd142319" id="r_a1cb4eeb2182b21d2440d6cbacd142319"><td class="memItemLeft" align="right" valign="top">gch::small_vector&lt; size_t, 32 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="petri_8h.html#a1cb4eeb2182b21d2440d6cbacd142319">symmetri::possibleTransitions</a> (const std::vector&lt; <a class="el" href="structsymmetri_1_1AugmentedToken.html">AugmentedToken</a> &gt; &amp;tokens, const std::vector&lt; <a class="el" href="petri_8h.html#ad57d63947afb8be62061af41eb2a1be4">SmallVectorInput</a> &gt; &amp;input_n, const std::vector&lt; <a class="el" href="petri_8h.html#a6391ade94d5fe6e7d4d10249803b2186">SmallVector</a> &gt; &amp;p_to_ts_n)</td></tr>
 <tr class="memdesc:a1cb4eeb2182b21d2440d6cbacd142319"><td class="mdescLeft">&#160;</td><td class="mdescRight">calculates a list of possible transitions given the current token-distribution. It returns a list of transitions sorted by priority. The first element being the high priority.  <br /></td></tr>
 <tr class="separator:a1cb4eeb2182b21d2440d6cbacd142319"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa54f0115dcbfddc296b8026e5b20eba9" id="r_aa54f0115dcbfddc296b8026e5b20eba9"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="petri_8h.html#aa54f0115dcbfddc296b8026e5b20eba9">symmetri::canFire</a> (const SmallVectorInput &amp;pre, const std::vector&lt; <a class="el" href="structsymmetri_1_1AugmentedToken.html">AugmentedToken</a> &gt; &amp;tokens)</td></tr>
+<tr class="memitem:aa54f0115dcbfddc296b8026e5b20eba9" id="r_aa54f0115dcbfddc296b8026e5b20eba9"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="petri_8h.html#aa54f0115dcbfddc296b8026e5b20eba9">symmetri::canFire</a> (const <a class="el" href="petri_8h.html#ad57d63947afb8be62061af41eb2a1be4">SmallVectorInput</a> &amp;pre, const std::vector&lt; <a class="el" href="structsymmetri_1_1AugmentedToken.html">AugmentedToken</a> &gt; &amp;tokens)</td></tr>
 <tr class="memdesc:aa54f0115dcbfddc296b8026e5b20eba9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Takes a vector of input places (pre-conditions) and the current token distribution to determine whether the pre-conditions are met, e.g. the transition is active.  <br /></td></tr>
 <tr class="separator:aa54f0115dcbfddc296b8026e5b20eba9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac060e9bc61910ac40043e943551ace37" id="r_ac060e9bc61910ac40043e943551ace37"><td class="memItemLeft" align="right" valign="top"><a class="el" href="petri_8h.html#a6434bd1832596983e4d74f3c5ceac58a">Reducer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="petri_8h.html#ac060e9bc61910ac40043e943551ace37">symmetri::scheduleCallback</a> (size_t t_idx, const <a class="el" href="classsymmetri_1_1Callback.html">Callback</a> &amp;task, const std::shared_ptr&lt; <a class="el" href="classmoodycamel_1_1BlockingConcurrentQueue.html">moodycamel::BlockingConcurrentQueue</a>&lt; <a class="el" href="petri_8h.html#a6434bd1832596983e4d74f3c5ceac58a">Reducer</a> &gt; &gt; &amp;reducer_queue)</td></tr>
+<tr class="memitem:ac060e9bc61910ac40043e943551ace37" id="r_ac060e9bc61910ac40043e943551ace37"><td class="memItemLeft" align="right" valign="top"><a class="el" href="petri_8h.html#a6434bd1832596983e4d74f3c5ceac58a">Reducer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="petri_8h.html#ac060e9bc61910ac40043e943551ace37">symmetri::scheduleCallback</a> (size_t t_idx, const <a class="el" href="classsymmetri_1_1Callback.html">Callback</a> &amp;task, const std::shared_ptr&lt; moodycamel::BlockingConcurrentQueue&lt; <a class="el" href="petri_8h.html#a6434bd1832596983e4d74f3c5ceac58a">Reducer</a> &gt; &gt; &amp;reducer_queue)</td></tr>
 <tr class="memdesc:ac060e9bc61910ac40043e943551ace37"><td class="mdescLeft">&#160;</td><td class="mdescRight">Schedules the callback associated with transition t_idx/transition. It returns a reducer which is to be executed <em>after</em> <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> task completed.  <br /></td></tr>
 <tr class="separator:ac060e9bc61910ac40043e943551ace37"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3f109f073ff7ea1783625f65015abda4" id="r_a3f109f073ff7ea1783625f65015abda4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="petri_8cc.html#a3f109f073ff7ea1783625f65015abda4">symmetri::deductMarking</a> (std::vector&lt; <a class="el" href="structsymmetri_1_1AugmentedToken.html">AugmentedToken</a> &gt; &amp;tokens, const SmallVectorInput &amp;inputs)</td></tr>
+<tr class="memitem:a3f109f073ff7ea1783625f65015abda4" id="r_a3f109f073ff7ea1783625f65015abda4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="petri_8cc.html#a3f109f073ff7ea1783625f65015abda4">symmetri::deductMarking</a> (std::vector&lt; <a class="el" href="structsymmetri_1_1AugmentedToken.html">AugmentedToken</a> &gt; &amp;tokens, const <a class="el" href="petri_8h.html#ad57d63947afb8be62061af41eb2a1be4">SmallVectorInput</a> &amp;inputs)</td></tr>
 <tr class="memdesc:a3f109f073ff7ea1783625f65015abda4"><td class="mdescLeft">&#160;</td><td class="mdescRight">deducts the set input from the current token distribution  <br /></td></tr>
 <tr class="separator:a3f109f073ff7ea1783625f65015abda4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -165,7 +175,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>symmetri::operator&gt
         <tr>
           <td class="memname">bool symmetri::canFire </td>
           <td>(</td>
-          <td class="paramtype">const SmallVectorInput &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="petri_8h.html#ad57d63947afb8be62061af41eb2a1be4">SmallVectorInput</a> &amp;&#160;</td>
           <td class="paramname"><em>pre</em>, </td>
         </tr>
         <tr>
@@ -211,7 +221,7 @@ false otherwise </dd></dl>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const SmallVectorInput &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="petri_8h.html#ad57d63947afb8be62061af41eb2a1be4">SmallVectorInput</a> &amp;&#160;</td>
           <td class="paramname"><em>inputs</em>&#160;</td>
         </tr>
         <tr>
@@ -247,13 +257,13 @@ false otherwise </dd></dl>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::vector&lt; SmallVectorInput &gt; &amp;&#160;</td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="petri_8h.html#ad57d63947afb8be62061af41eb2a1be4">SmallVectorInput</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>input_n</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::vector&lt; SmallVector &gt; &amp;&#160;</td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="petri_8h.html#a6391ade94d5fe6e7d4d10249803b2186">SmallVector</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>p_to_ts_n</em>&#160;</td>
         </tr>
         <tr>
@@ -297,7 +307,7 @@ false otherwise </dd></dl>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::shared_ptr&lt; <a class="el" href="classmoodycamel_1_1BlockingConcurrentQueue.html">moodycamel::BlockingConcurrentQueue</a>&lt; <a class="el" href="petri_8h.html#a6434bd1832596983e4d74f3c5ceac58a">Reducer</a> &gt; &gt; &amp;&#160;</td>
+          <td class="paramtype">const std::shared_ptr&lt; moodycamel::BlockingConcurrentQueue&lt; <a class="el" href="petri_8h.html#a6434bd1832596983e4d74f3c5ceac58a">Reducer</a> &gt; &gt; &amp;&#160;</td>
           <td class="paramname"><em>reducer_queue</em>&#160;</td>
         </tr>
         <tr>

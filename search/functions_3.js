@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['issynchronous_0',['isSynchronous',['../callback_8h.html#ac4208bc719ab00e75b1c56ed8f95697c',1,'callback.h']]]
+  ['hashcolor_0',['HashColor',['../colors_8hpp.html#a3937c3102022843b2c699d197bcbb9d8',1,'symmetri::impl']]]
 ];

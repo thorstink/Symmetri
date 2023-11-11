@@ -1,10 +1,10 @@
 var classPetriNet =
 [
-    [ "PetriNet", "classPetriNet.html#aae92fa16da7283f32f660651983b7556", null ],
-    [ "PetriNet", "classPetriNet.html#ae013ef6c9832eff4c9f7276595256a38", null ],
-    [ "PetriNet", "classPetriNet.html#a0846678248d4d0dee2030ea74a76976d", null ],
+    [ "PetriNet", "classPetriNet.html#af6972736ea95d98537f038123bde7330", null ],
+    [ "PetriNet", "classPetriNet.html#a1fb403c8701dfc8ce1673cfca1d7a54c", null ],
+    [ "getInputTransitionHandle", "classPetriNet.html#a478a121fd01f2365327aeab284a08f9c", null ],
     [ "getMarking", "classPetriNet.html#adac0e8d305d90ff58da395aae650c33a", null ],
-    [ "registerTransitionCallback", "classPetriNet.html#abfed0c7666355e77106f384b4ecbf834", null ],
+    [ "registerCallback", "classPetriNet.html#aa8c6a9951038158548a1bc07691386a1", null ],
     [ "reuseApplication", "classPetriNet.html#a5479eef4115a5b3c4a6d94ce75f88732", null ],
     [ "cancel", "classPetriNet.html#a952725a53aedcb679faff915c2f152ce", null ],
     [ "fire", "classPetriNet.html#a1e0204360173021d2daae9a2bb175def", null ],

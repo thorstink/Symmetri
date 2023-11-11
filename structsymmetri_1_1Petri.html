@@ -104,9 +104,9 @@ $(document).ready(function(){initNavTree('structsymmetri_1_1Petri.html',''); ini
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a70cb95e9e4c6174f7d0077612a2aceba" id="r_a70cb95e9e4c6174f7d0077612a2aceba"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a70cb95e9e4c6174f7d0077612a2aceba">Petri</a> (const <a class="el" href="types_8h.html#a527c52fb978f7db2f63833d76042be6e">Net</a> &amp;_net, const <a class="el" href="symmetri_8h.html#a2a05ae317a7c345328e0e0d90561649a">Store</a> &amp;_store, const <a class="el" href="types_8h.html#a72b6ac5e27222e448aa05c547d275a4e">PriorityTable</a> &amp;_priority, const Marking &amp;_initial_tokens, const Marking &amp;_final_marking, const std::string &amp;_case_id, std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> &gt; stp)</td></tr>
-<tr class="memdesc:a70cb95e9e4c6174f7d0077612a2aceba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> from a multiset description of a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> net, a lookup table for the transitions, optional priorities and an initial marking. A lot of conversion work is done in the constructor, so you should avoid creating Models during the run-time of a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> application.  <br /></td></tr>
-<tr class="separator:a70cb95e9e4c6174f7d0077612a2aceba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a99d1a73aa6fda929e301ba29de2f0714" id="r_a99d1a73aa6fda929e301ba29de2f0714"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a99d1a73aa6fda929e301ba29de2f0714">Petri</a> (const <a class="el" href="types_8h.html#a8a7a9c8b346d56b747e1394bdc2d6c9c">Net</a> &amp;_net, const <a class="el" href="types_8h.html#a72b6ac5e27222e448aa05c547d275a4e">PriorityTable</a> &amp;_priority, const Marking &amp;_initial_tokens, const Marking &amp;_final_marking, const std::string &amp;_case_id, std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> &gt; stp)</td></tr>
+<tr class="memdesc:a99d1a73aa6fda929e301ba29de2f0714"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> from a multiset description of a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> net, a lookup table for the transitions, optional priorities and an initial marking. A lot of conversion work is done in the constructor, so you should avoid creating Models during the run-time of a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> application.  <br /></td></tr>
+<tr class="separator:a99d1a73aa6fda929e301ba29de2f0714"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af06c0fd2c25ea0610c98ece6e2652ff4" id="r_af06c0fd2c25ea0610c98ece6e2652ff4"><td class="memItemLeft" align="right" valign="top"><a id="af06c0fd2c25ea0610c98ece6e2652ff4" name="af06c0fd2c25ea0610c98ece6e2652ff4"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Petri</b> (<a class="el" href="structsymmetri_1_1Petri.html">Petri</a> const &amp;)=delete</td></tr>
 <tr class="separator:af06c0fd2c25ea0610c98ece6e2652ff4"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -125,9 +125,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a880bf9aeb3b773009a4d31f1e35d3bba" id="r_a880bf9aeb3b773009a4d31f1e35d3bba"><td class="memItemLeft" align="right" valign="top">Marking&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a880bf9aeb3b773009a4d31f1e35d3bba">getMarking</a> () const</td></tr>
 <tr class="memdesc:a880bf9aeb3b773009a4d31f1e35d3bba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current marking. It is represented by a vector of places: every occurance of a place in this vectors implies a token in that place. This representation does not show the empty places explicitly; if a place is not in this vector you can assume it has no token.  <br /></td></tr>
 <tr class="separator:a880bf9aeb3b773009a4d31f1e35d3bba"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4d1bf8dce13f9200dbb31d859838713c" id="r_a4d1bf8dce13f9200dbb31d859838713c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">Eventlog</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a4d1bf8dce13f9200dbb31d859838713c">getLog</a> () const</td></tr>
-<tr class="memdesc:a4d1bf8dce13f9200dbb31d859838713c"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the current eventlog, also copies in all child eventlogs of active petri nets.  <br /></td></tr>
-<tr class="separator:a4d1bf8dce13f9200dbb31d859838713c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac136748694672816d62f96e5d7ed9275" id="r_ac136748694672816d62f96e5d7ed9275"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">Eventlog</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#ac136748694672816d62f96e5d7ed9275">getLogInternal</a> () const</td></tr>
+<tr class="memdesc:ac136748694672816d62f96e5d7ed9275"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the current eventlog, also copies in all child eventlogs of active petri nets.  <br /></td></tr>
+<tr class="separator:ac136748694672816d62f96e5d7ed9275"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0cb5d70572c4ab7be99b37f3376b4b9b" id="r_a0cb5d70572c4ab7be99b37f3376b4b9b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a0cb5d70572c4ab7be99b37f3376b4b9b">tryFire</a> (const <a class="el" href="types_8h.html#a8fe8303eaca537c6edd9f8918f534a8a">Transition</a> &amp;t)</td></tr>
 <tr class="memdesc:a0cb5d70572c4ab7be99b37f3376b4b9b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Try to fire a single transition. Does nothing if t is not active.  <br /></td></tr>
 <tr class="separator:a0cb5d70572c4ab7be99b37f3376b4b9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -154,15 +154,15 @@ struct {&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
 <tr class="memdesc:a776d34da59a09097215c26e585003c53"><td class="mdescLeft">&#160;</td><td class="mdescRight">(ordered) list of string representation of colors <br /></td></tr>
 <tr class="separator:a776d34da59a09097215c26e585003c53"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad558dcce221ccea628e10f479af9d80f" id="r_ad558dcce221ccea628e10f479af9d80f"><td class="memItemLeft" >
-&#160;&#160;&#160;std::vector&lt; SmallVectorInput &gt;&#160;&#160;&#160;<b>input_n</b>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+&#160;&#160;&#160;std::vector&lt; <a class="el" href="petri_8h.html#ad57d63947afb8be62061af41eb2a1be4">SmallVectorInput</a> &gt;&#160;&#160;&#160;<b>input_n</b>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
 <tr class="memdesc:ad558dcce221ccea628e10f479af9d80f"><td class="mdescLeft">&#160;</td><td class="mdescRight">list of list of inputs to transitions. This vector is indexed like <code>transition</code>. <br /></td></tr>
 <tr class="separator:ad558dcce221ccea628e10f479af9d80f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4efc52c12bd67432ff2ce3141a181ca9" id="r_a4efc52c12bd67432ff2ce3141a181ca9"><td class="memItemLeft" >
-&#160;&#160;&#160;std::vector&lt; SmallVectorInput &gt;&#160;&#160;&#160;<b>output_n</b>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+&#160;&#160;&#160;std::vector&lt; <a class="el" href="petri_8h.html#ad57d63947afb8be62061af41eb2a1be4">SmallVectorInput</a> &gt;&#160;&#160;&#160;<b>output_n</b>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
 <tr class="memdesc:a4efc52c12bd67432ff2ce3141a181ca9"><td class="mdescLeft">&#160;</td><td class="mdescRight">list of list of outputs of transitions. This vector is indexed like <code>transition</code>. <br /></td></tr>
 <tr class="separator:a4efc52c12bd67432ff2ce3141a181ca9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a89d479778269f1f7d7a18aa84633b5e2" id="r_a89d479778269f1f7d7a18aa84633b5e2"><td class="memItemLeft" >
-&#160;&#160;&#160;std::vector&lt; SmallVector &gt;&#160;&#160;&#160;<b>p_to_ts_n</b>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+&#160;&#160;&#160;std::vector&lt; <a class="el" href="petri_8h.html#a6391ade94d5fe6e7d4d10249803b2186">SmallVector</a> &gt;&#160;&#160;&#160;<b>p_to_ts_n</b>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
 <tr class="memdesc:a89d479778269f1f7d7a18aa84633b5e2"><td class="mdescLeft">&#160;</td><td class="mdescRight">list of list of transitions that have places as inputs. This vector is index like <code>place</code> <br /></td></tr>
 <tr class="separator:a89d479778269f1f7d7a18aa84633b5e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a14ee21a4027857fa4e92205f0d0b2d81" id="r_a14ee21a4027857fa4e92205f0d0b2d81"><td class="memItemLeft" >
@@ -192,10 +192,10 @@ std::vector&lt; <a class="el" href="structsymmetri_1_1AugmentedToken.html">Augme
 std::vector&lt; size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>scheduled_callbacks</b></td></tr>
 <tr class="memdesc:a59c2f2806009fbe724afbb24b424747f"><td class="mdescLeft">&#160;</td><td class="mdescRight">List of active transitions. <br /></td></tr>
 <tr class="separator:a59c2f2806009fbe724afbb24b424747f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a974c0807e4ada7be5fc8f228bab2a8" id="r_a7a974c0807e4ada7be5fc8f228bab2a8"><td class="memItemLeft" align="right" valign="top"><a id="a7a974c0807e4ada7be5fc8f228bab2a8" name="a7a974c0807e4ada7be5fc8f228bab2a8"></a>
-<a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">Eventlog</a>&#160;</td><td class="memItemRight" valign="bottom"><b>event_log</b></td></tr>
-<tr class="memdesc:a7a974c0807e4ada7be5fc8f228bab2a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">The most actual event_log. <br /></td></tr>
-<tr class="separator:a7a974c0807e4ada7be5fc8f228bab2a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a480b5841ccff81ba112a8759cfdbd103" id="r_a480b5841ccff81ba112a8759cfdbd103"><td class="memItemLeft" align="right" valign="top"><a id="a480b5841ccff81ba112a8759cfdbd103" name="a480b5841ccff81ba112a8759cfdbd103"></a>
+<a class="el" href="petri_8h.html#a2ddc5ab6f6b7ba3b133d13fc1de493ad">SmallLog</a>&#160;</td><td class="memItemRight" valign="bottom"><b>log</b></td></tr>
+<tr class="memdesc:a480b5841ccff81ba112a8759cfdbd103"><td class="mdescLeft">&#160;</td><td class="mdescRight">The most up to date event_log. <br /></td></tr>
+<tr class="separator:a480b5841ccff81ba112a8759cfdbd103"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abc135716ad53a105112f46477d70a8a2" id="r_abc135716ad53a105112f46477d70a8a2"><td class="memItemLeft" align="right" valign="top"><a id="abc135716ad53a105112f46477d70a8a2" name="abc135716ad53a105112f46477d70a8a2"></a>
 Token&#160;</td><td class="memItemRight" valign="bottom"><b>state</b></td></tr>
 <tr class="memdesc:abc135716ad53a105112f46477d70a8a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">The current state of the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a>. <br /></td></tr>
@@ -208,8 +208,7 @@ std::string&#160;</td><td class="memItemRight" valign="bottom"><b>case_id</b></t
 std::atomic&lt; std::optional&lt; unsigned int &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>thread_id_</b></td></tr>
 <tr class="memdesc:a864a4c4579ab08691e5e62ec0c254586"><td class="mdescLeft">&#160;</td><td class="mdescRight">The id of the thread from which the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> is fired. <br /></td></tr>
 <tr class="separator:a864a4c4579ab08691e5e62ec0c254586"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad12b7a5a2f3341fc17154c3c65f0d00f" id="r_ad12b7a5a2f3341fc17154c3c65f0d00f"><td class="memItemLeft" align="right" valign="top"><a id="ad12b7a5a2f3341fc17154c3c65f0d00f" name="ad12b7a5a2f3341fc17154c3c65f0d00f"></a>
-std::shared_ptr&lt; <a class="el" href="classmoodycamel_1_1BlockingConcurrentQueue.html">moodycamel::BlockingConcurrentQueue</a>&lt; <a class="el" href="petri_8h.html#a6434bd1832596983e4d74f3c5ceac58a">Reducer</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>reducer_queue</b></td></tr>
+<tr class="memitem:ad12b7a5a2f3341fc17154c3c65f0d00f" id="r_ad12b7a5a2f3341fc17154c3c65f0d00f"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; moodycamel::BlockingConcurrentQueue&lt; <a class="el" href="petri_8h.html#a6434bd1832596983e4d74f3c5ceac58a">Reducer</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#ad12b7a5a2f3341fc17154c3c65f0d00f">reducer_queue</a></td></tr>
 <tr class="separator:ad12b7a5a2f3341fc17154c3c65f0d00f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0bb51fc485b5813c4a66f234952c9e86" id="r_a0bb51fc485b5813c4a66f234952c9e86"><td class="memItemLeft" align="right" valign="top"><a id="a0bb51fc485b5813c4a66f234952c9e86" name="a0bb51fc485b5813c4a66f234952c9e86"></a>
 std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pool</b></td></tr>
@@ -219,8 +218,8 @@ std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSy
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> is a data structure that encodes the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> net and holds pointers to the thread-pool and the reducer-queue. It is optimized for calculating the active transition set and quick lookups in ordered vectors. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a70cb95e9e4c6174f7d0077612a2aceba" name="a70cb95e9e4c6174f7d0077612a2aceba"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a70cb95e9e4c6174f7d0077612a2aceba">&#9670;&#160;</a></span>Petri()</h2>
+<a id="a99d1a73aa6fda929e301ba29de2f0714" name="a99d1a73aa6fda929e301ba29de2f0714"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a99d1a73aa6fda929e301ba29de2f0714">&#9670;&#160;</a></span>Petri()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -231,14 +230,8 @@ std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSy
         <tr>
           <td class="memname">symmetri::Petri::Petri </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="types_8h.html#a527c52fb978f7db2f63833d76042be6e">Net</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="types_8h.html#a8a7a9c8b346d56b747e1394bdc2d6c9c">Net</a> &amp;&#160;</td>
           <td class="paramname"><em>_net</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="symmetri_8h.html#a2a05ae317a7c345328e0e0d90561649a">Store</a> &amp;&#160;</td>
-          <td class="paramname"><em>_store</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -287,7 +280,6 @@ std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSy
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">_net</td><td></td></tr>
-    <tr><td class="paramname">_store</td><td></td></tr>
     <tr><td class="paramname">_priority</td><td></td></tr>
     <tr><td class="paramname">_initial_tokens</td><td></td></tr>
     <tr><td class="paramname">_final_marking</td><td></td></tr>
@@ -300,14 +292,14 @@ std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSy
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a4d1bf8dce13f9200dbb31d859838713c" name="a4d1bf8dce13f9200dbb31d859838713c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4d1bf8dce13f9200dbb31d859838713c">&#9670;&#160;</a></span>getLog()</h2>
+<a id="ac136748694672816d62f96e5d7ed9275" name="ac136748694672816d62f96e5d7ed9275"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac136748694672816d62f96e5d7ed9275">&#9670;&#160;</a></span>getLogInternal()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">Eventlog</a> symmetri::Petri::getLog </td>
+          <td class="memname"><a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">Eventlog</a> symmetri::Petri::getLogInternal </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -398,6 +390,22 @@ std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSy
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<h2 class="groupheader">Member Data Documentation</h2>
+<a id="ad12b7a5a2f3341fc17154c3c65f0d00f" name="ad12b7a5a2f3341fc17154c3c65f0d00f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad12b7a5a2f3341fc17154c3c65f0d00f">&#9670;&#160;</a></span>reducer_queue</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::shared_ptr&lt;moodycamel::BlockingConcurrentQueue&lt;<a class="el" href="petri_8h.html#a6434bd1832596983e4d74f3c5ceac58a">Reducer</a>&gt; &gt; symmetri::Petri::reducer_queue</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A pointer to the reducer queue. It is a shared pointer because it needs to be captured by Reducers which are executed later, guaranteeing the queue is not destroyed while in use. </p>
 
 </div>
 </div>

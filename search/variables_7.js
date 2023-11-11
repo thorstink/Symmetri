@@ -1,7 +1,8 @@
 var searchData=
 [
-  ['scheduled_5fcallbacks_0',['scheduled_callbacks',['../structsymmetri_1_1Petri.html#a59c2f2806009fbe724afbb24b424747f',1,'symmetri::Petri']]],
-  ['stamp_1',['stamp',['../structsymmetri_1_1Event.html#a51e5b4b01acd062d8f09eb9c335017d3',1,'symmetri::Event']]],
-  ['state_2',['state',['../structsymmetri_1_1Event.html#a155bb01a390f1310a79a2e1593c3cf93',1,'symmetri::Event::state'],['../structsymmetri_1_1Petri.html#abc135716ad53a105112f46477d70a8a2',1,'symmetri::Petri::state']]],
-  ['store_3',['store',['../structsymmetri_1_1Petri.html#a98b178983eb29ef8b8bd9e5ab6325761',1,'symmetri::Petri']]]
+  ['p_5fto_5fts_5fn_0',['p_to_ts_n',['../structsymmetri_1_1Petri.html#acce08a024318e75c10a3fb49781acb19',1,'symmetri::Petri']]],
+  ['paused_1',['Paused',['../classsymmetri_1_1Color.html#ab75c7bd1ac9eb8164930c57f5872c62b',1,'symmetri::Color']]],
+  ['place_2',['place',['../structsymmetri_1_1Petri.html#a68db44e962507349f96b3323b2244097',1,'symmetri::Petri']]],
+  ['pool_3',['pool',['../structsymmetri_1_1Petri.html#a0bb51fc485b5813c4a66f234952c9e86',1,'symmetri::Petri']]],
+  ['priority_4',['priority',['../structsymmetri_1_1Petri.html#a2e33926169e42620cb062b341dbab51d',1,'symmetri::Petri']]]
 ];

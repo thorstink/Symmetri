@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['directmutation_0',['DirectMutation',['../structDirectMutation.html',1,'']]]
+  ['petri_0',['Petri',['../structsymmetri_1_1Petri.html',1,'symmetri']]],
+  ['petrinet_1',['PetriNet',['../classPetriNet.html',1,'']]]
 ];

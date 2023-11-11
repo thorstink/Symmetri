@@ -1,7 +1,6 @@
 var symmetri_8h =
 [
     [ "PetriNet", "classPetriNet.html", "classPetriNet" ],
-    [ "Store", "symmetri_8h.html#a2a05ae317a7c345328e0e0d90561649a", null ],
     [ "cancel", "symmetri_8h.html#ae0901e63f9f0343793437999a5b797de", null ],
     [ "fire", "symmetri_8h.html#a347981a37ecfbb4e9b44e284f122f43b", null ],
     [ "getLog", "symmetri_8h.html#a9f6227b64a19b86e89a5bf3d50125827", null ],

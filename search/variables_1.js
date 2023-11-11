@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['event_5flog_0',['event_log',['../structsymmetri_1_1Petri.html#a7a974c0807e4ada7be5fc8f228bab2a8',1,'symmetri::Petri']]]
+  ['deadlocked_0',['Deadlocked',['../classsymmetri_1_1Color.html#ae6744c78e3f2be0ea0e5bf8239235696',1,'symmetri::Color']]]
 ];

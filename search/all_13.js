@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['vanilla_20cmake_3a_0',['Vanilla CMake:',['../md_docs_2symmetri__lib.html#autotoc_md9',1,'']]]
+  ['workspace_0',['In a Colcon-workspace',['../md_docs_2symmetri__lib.html#autotoc_md10',1,'']]]
 ];
