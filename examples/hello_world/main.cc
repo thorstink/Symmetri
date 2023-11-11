@@ -65,7 +65,7 @@ int main(int, char *argv[]) {
     oldt = c.time_since_epoch().count();
   }
 
-  // return the result! in linux is everything went well, you typically return
-  // 0.
+  // return the result! If everything went well, you typically return
+  // 0 as exit code.
   return result == symmetri::Color::Success ? 0 : -1;
 }

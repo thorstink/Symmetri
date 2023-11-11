@@ -104,19 +104,16 @@ symmetri::Token fire(const PetriNet &app) {
   }
   auto &m = *app.impl;
   m.thread_id_.store(symmetri::getThreadId());
-
-  // we are running!
-  m.event_log.clear();
   m.scheduled_callbacks.clear();
   m.tokens = m.initial_tokens;
   m.state = Color::Started;
   symmetri::Reducer f;
   while (m.reducer_queue->try_dequeue(f)) { /* get rid of old reducers  */
   }
+
   // start!
-  m.fireTransitions();
-  while (!symmetri::MarkingReached(m.tokens, m.final_marking) &&
-         (m.state == Color::Started || m.state == Color::Paused) &&
+  m.reducer_queue->enqueue([=](Petri &) {});
+  while ((m.state == Color::Started || m.state == Color::Paused) &&
          m.reducer_queue->wait_dequeue_timed(f, -1)) {
     do {
       f(m);
@@ -132,6 +129,8 @@ symmetri::Token fire(const PetriNet &app) {
       // if there's nothing to fire; we deadlocked
       if (m.scheduled_callbacks.size() == 0) {
         m.state = Color::Deadlock;
+      } else if (symmetri::MarkingReached(m.tokens, m.final_marking)) {
+        m.state = Color::Success;
       }
     }
   }
