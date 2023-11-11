@@ -25,6 +25,19 @@ inline bool operator<(const AugmentedToken &lhs, const AugmentedToken &rhs) {
 inline bool operator>(const AugmentedToken &lhs, const AugmentedToken &rhs) {
   return lhs.place > rhs.place && lhs.color > rhs.color;
 }
+
+/**
+ * @brief uses allocation free types
+ *
+ */
+struct SmallEvent {
+  size_t transition;        ///< The transition that generated the event
+  Token state;              ///< The result of the event
+  Clock::time_point stamp;  ///< The timestamp of the event
+};
+
+using SmallLog = std::vector<SmallEvent>;
+
 using SmallVector = gch::small_vector<size_t, 4>;
 using SmallVectorInput = gch::small_vector<AugmentedToken, 4>;
 
@@ -152,7 +165,7 @@ struct Petri {
    *
    * @return Eventlog
    */
-  Eventlog getLog() const;
+  Eventlog getLogInternal() const;
 
   /**
    * @brief Try to fire a single transition. Does nothing if t is not active.
@@ -236,7 +249,7 @@ struct Petri {
   std::vector<AugmentedToken> tokens;          ///< The current marking
   std::vector<AugmentedToken> final_marking;   ///< The final marking
   std::vector<size_t> scheduled_callbacks;     ///< List of active transitions
-  Eventlog event_log;                          ///< The most actual event_log
+  SmallLog event_log_small;                    ///< The most actual event_log
   Token state;          ///< The current state of the Petri
   std::string case_id;  ///< The unique identifier for this Petri-run
   std::atomic<std::optional<unsigned int>>

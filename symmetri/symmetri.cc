@@ -153,13 +153,10 @@ symmetri::Token fire(const PetriNet &app) {
 void cancel(const PetriNet &app) {
   app.impl->reducer_queue->enqueue([=](Petri &model) {
     model.state = Color::UserExit;
-    // populate that eventlog with child eventlog and possible
-    // cancelations.
     for (const auto transition_index : model.scheduled_callbacks) {
       cancel(model.net.store.at(transition_index));
-      model.event_log.push_back({model.case_id,
-                                 model.net.transition[transition_index],
-                                 Color::UserExit, Clock::now()});
+      model.event_log_small.push_back(
+          {transition_index, Color::UserExit, Clock::now()});
     }
   });
 }
@@ -187,9 +184,9 @@ Eventlog getLog(const PetriNet &app) {
     std::promise<Eventlog> el;
     std::future<Eventlog> el_getter = el.get_future();
     app.impl->reducer_queue->enqueue(
-        [&](Petri &model) { el.set_value(model.getLog()); });
+        [&](Petri &model) { el.set_value(model.getLogInternal()); });
     return el_getter.get();
   } else {
-    return app.impl->getLog();
+    return app.impl->getLogInternal();
   }
 }

@@ -9,7 +9,6 @@
 
 #include "colors.hpp"
 namespace symmetri {
-
 using Place = std::string;       ///< The string representation of the place the
                                  ///< Petri net definition
 using Transition = std::string;  ///< The string representation of the

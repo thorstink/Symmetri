@@ -1,7 +1,5 @@
 #include "petri.h"
-
 bool isSynchronous(const DirectMutation &) { return true; }
-
 symmetri::Token fire(const DirectMutation &) {
   return symmetri::Color::Success;
 }
@@ -87,14 +85,17 @@ std::vector<int8_t> createPriorityLookup(
 Petri::Petri(const Net &_net, const PriorityTable &_priority,
              const Marking &_initial_tokens, const Marking &_final_marking,
              const std::string &_case_id, std::shared_ptr<TaskSystem> stp)
-    : event_log({}),
+    : event_log_small({}),
       state(Color::Scheduled),
       case_id(_case_id),
       thread_id_(std::nullopt),
       reducer_queue(
           std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(128)),
       pool(stp) {
-  event_log.reserve(1000);
+  event_log_small.reserve(1000);
+  tokens.reserve(100);
+  scheduled_callbacks.reserve(10);
+
   std::tie(net.transition, net.place, net.color, net.store) = convert(_net);
   std::tie(net.input_n, net.output_n) =
       populateIoLookups(_net, net.place, net.color);
@@ -117,11 +118,12 @@ std::vector<AugmentedToken> Petri::toTokens(
 
 void Petri::fireSynchronous(const size_t t) {
   const auto &task = net.store[t];
-  const auto &transition = net.transition[t];
   const auto &lookup_t = net.output_n[t];
-  event_log.push_back({case_id, transition, Color::Started, Clock::now()});
-  auto result = ::fire(task);
-  event_log.push_back({case_id, transition, result, Clock::now()});
+  const auto now = Clock::now();
+  event_log_small.push_back({t, Color::Started, now});
+  auto result = fire(task);
+  event_log_small.push_back({t, result, now});
+
   switch (result) {
     case Color::Scheduled:
     case Color::Started:
@@ -141,9 +143,9 @@ void Petri::fireSynchronous(const size_t t) {
 
 void Petri::fireAsynchronous(const size_t t) {
   const auto &task = net.store[t];
-  const auto &transition = net.transition[t];
   scheduled_callbacks.push_back(t);
-  event_log.push_back({case_id, transition, Color::Scheduled, Clock::now()});
+  event_log_small.push_back({t, Color::Scheduled, Clock::now()});
+
   pool->push([=] {
     reducer_queue->enqueue(scheduleCallback(t, task, reducer_queue));
   });
@@ -230,15 +232,24 @@ Marking Petri::getMarking() const {
   return marking;
 }
 
-Eventlog Petri::getLog() const {
-  Eventlog eventlog = event_log;
+Eventlog Petri::getLogInternal() const {
+  Eventlog eventlog;
+  eventlog.reserve(event_log_small.size());
+  for (const auto &[t_i, result, time] : event_log_small) {
+    eventlog.push_back({case_id, net.transition[t_i], result, time});
+  }
+
   // get event log from parent nets:
-  for (size_t pt_idx : scheduled_callbacks) {
-    auto sub_el = ::getLog(net.store[pt_idx]);
+  for (const auto &cb : net.store) {
+    Eventlog sub_el = getLog(cb);
     if (!sub_el.empty()) {
       eventlog.insert(eventlog.end(), sub_el.begin(), sub_el.end());
     }
   }
+
+  std::sort(eventlog.begin(), eventlog.end(),
+            [](const auto &a, const auto &b) { return a.stamp < b.stamp; });
+
   return eventlog;
 }
 

@@ -10,26 +10,35 @@ symmetri::Token fire(const Simple &) {
 }
 using namespace symmetri;
 
-int main() {
-  Net net = {{"t0",
-              {{{"Pa", Color::Success}, {"Pb", Color::Success}},
-               {{"Pc", Color::Success}}}},
-             {"t1",
-              {{{"Pc", Color::Success}, {"Pc", Color::Success}},
-               {{"Pb", Color::Success}, {"Pb", Color::Success}}}}};
-  Marking initial_marking = {{"Pa", Color::Success}, {"Pa", Color::Success},
-                             {"Pa", Color::Success}, {"Pa", Color::Success},
-                             {"Pb", Color::Success}, {"Pb", Color::Success}};
-  Marking goal_marking = {{"Pb", Color::Success},
-                          {"Pb", Color::Success},
-                          {"Pc", Color::Success},
-                          {"Pc", Color::Success}};
-
+int main(int argc, char *argv[]) {
   auto pool = std::make_shared<TaskSystem>(1);
+  PetriNet petri = [=] {
+    if (argc > 1) {
+      const auto pnml = std::string(argv[1]);
+      PetriNet petri({pnml}, "benchmark", pool);
+      return petri;
+    } else {
+      Net net = {{"t0",
+                  {{{"Pa", Color::Success}, {"Pb", Color::Success}},
+                   {{"Pc", Color::Success}}}},
+                 {"t1",
+                  {{{"Pc", Color::Success}, {"Pc", Color::Success}},
+                   {{"Pb", Color::Success}, {"Pb", Color::Success}}}}};
+      Marking initial_marking = {
+          {"Pa", Color::Success}, {"Pa", Color::Success},
+          {"Pa", Color::Success}, {"Pa", Color::Success},
+          {"Pb", Color::Success}, {"Pb", Color::Success}};
+      Marking goal_marking = {{"Pb", Color::Success},
+                              {"Pb", Color::Success},
+                              {"Pc", Color::Success},
+                              {"Pc", Color::Success}};
 
-  PetriNet petri(net, "benchmark", pool, initial_marking, goal_marking, {});
-  petri.registerTransitionCallback("t0", Simple{});
-  petri.registerTransitionCallback("t1", Simple{});
+      PetriNet petri(net, "benchmark", pool, initial_marking, goal_marking, {});
+      petri.registerTransitionCallback("t0", Simple{});
+      petri.registerTransitionCallback("t1", Simple{});
+      return petri;
+    }
+  }();
   const auto begin = Clock::now();
   std::cout << "start" << std::endl;
   const auto result = fire(petri);
