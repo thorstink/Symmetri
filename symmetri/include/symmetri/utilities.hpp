@@ -33,7 +33,7 @@ bool MarkingEquality(const std::vector<T>& m1, const std::vector<T>& m2) {
 }
 
 /**
- * @brief Checks if marking is at least a subset of final_marking. Note
+ * @brief Checks if marking is at least a subset of goal_marking. Note
  * that this uses a different type for Marking compared to the Marking
  * type used to construct a net (an unordered map of strings). In this
  * format the amount of tokens in a particular place is represented by how often
@@ -49,18 +49,18 @@ bool MarkingEquality(const std::vector<T>& m1, const std::vector<T>& m2) {
  */
 template <typename T>
 bool MarkingReached(const std::vector<T>& marking,
-                    const std::vector<T>& final_marking) {
-  if (final_marking.empty()) {
+                    const std::vector<T>& goal_marking) {
+  if (goal_marking.empty()) {
     return false;
   }
-  auto unique = final_marking;
+  auto unique = goal_marking;
   std::sort(unique.begin(), unique.end());
   auto last = std::unique(unique.begin(), unique.end());
   unique.erase(last, unique.end());
 
   return std::all_of(std::begin(unique), std::end(unique), [&](const auto& p) {
     return std::count(marking.begin(), marking.end(), p) ==
-           std::count(final_marking.begin(), final_marking.end(), p);
+           std::count(goal_marking.begin(), goal_marking.end(), p);
   });
 }
 
@@ -80,10 +80,10 @@ bool stateNetEquality(const Net& net1, const Net& net2);
  * the order of the completions of transitions, the tokens the transitions
  * return and the case_id of the net the transition is fired from.
  *
- * @param event_log An eventlog, can both be from a terminated or a still active
+ * @param log An eventlog, can both be from a terminated or a still active
  * net.
  * @return size_t The hashed result.
  */
-size_t calculateTrace(const Eventlog& event_log) noexcept;
+size_t calculateTrace(const Eventlog& log) noexcept;
 
 }  // namespace symmetri

@@ -1,6 +1,7 @@
 #include "petri.h"
-bool isSynchronous(const DirectMutation &) { return true; }
-symmetri::Token fire(const DirectMutation &) {
+
+bool isSynchronous(const symmetri::DirectMutation &) { return true; }
+symmetri::Token fire(const symmetri::DirectMutation &) {
   return symmetri::Color::Success;
 }
 
@@ -84,14 +85,15 @@ std::vector<int8_t> createPriorityLookup(
 
 Petri::Petri(const Net &_net, const PriorityTable &_priority,
              const Marking &_initial_tokens, const Marking &_final_marking,
-             const std::string &_case_id, std::shared_ptr<TaskSystem> stp)
+             const std::string &_case_id,
+             std::shared_ptr<TaskSystem> threadpool)
     : log({}),
       state(Color::Scheduled),
       case_id(_case_id),
       thread_id_(std::nullopt),
       reducer_queue(
           std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(128)),
-      pool(stp) {
+      pool(threadpool) {
   log.reserve(1000);
   tokens.reserve(100);
   scheduled_callbacks.reserve(10);

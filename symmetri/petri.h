@@ -147,11 +147,12 @@ struct Petri {
    * @param _initial_tokens
    * @param _final_marking
    * @param _case_id
-   * @param stp
+   * @param threadpool
    */
   explicit Petri(const Net &_net, const PriorityTable &_priority,
                  const Marking &_initial_tokens, const Marking &_final_marking,
-                 const std::string &_case_id, std::shared_ptr<TaskSystem> stp);
+                 const std::string &_case_id,
+                 std::shared_ptr<TaskSystem> threadpool);
   ~Petri() noexcept = default;
   Petri(Petri const &) = delete;
   Petri(Petri &&) noexcept = delete;

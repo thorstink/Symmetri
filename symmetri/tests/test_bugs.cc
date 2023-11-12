@@ -33,8 +33,8 @@ std::tuple<Net, PriorityTable, Marking> BugsTestNet() {
 
 TEST_CASE("Firing the same transition before it can complete should work") {
   auto [net, priority, m0] = BugsTestNet();
-  auto stp = std::make_shared<TaskSystem>(2);
-  Petri m(net, priority, m0, {}, "s", stp);
+  auto threadpool = std::make_shared<TaskSystem>(2);
+  Petri m(net, priority, m0, {}, "s", threadpool);
   m.net.registerCallback("t", &t);
 
   CHECK(m.scheduled_callbacks.empty());

@@ -49,4 +49,62 @@ using PriorityTable =
     std::vector<std::pair<Transition, int8_t>>;  ///< Priority is limited from
                                                  ///< -128 to 127
 
+struct DirectMutation {};
+class PetriNet;
+
 }  // namespace symmetri
+/**
+ * @brief A DirectMutation is a synchronous Callback that always
+ * completes.
+ *
+ */
+bool isSynchronous(const symmetri::DirectMutation &);
+
+/**
+ * @brief fire for a direct mutation does no work at all.
+ *
+ * @return symmetri::Token
+ */
+symmetri::Token fire(const symmetri::DirectMutation &);
+
+/**
+ * @brief The fire specialization for a PetriNet runs the Petri net until it
+ * completes, deadlocks or is preempted. It returns an event log along with the
+ * result state.
+ *
+ * @return symmetri::Token
+ */
+symmetri::Token fire(const symmetri::PetriNet &);
+
+/**
+ * @brief The cancel specialization for a PetriNet breaks the PetriNets'
+ * internal loop. It will not queue any new Callbacks and it will cancel all
+ * child Callbacks that are running. The cancel function will return before the
+ * PetriNet is preempted completely.
+ *
+ * @return symmetri::Token
+ */
+void cancel(const symmetri::PetriNet &);
+
+/**
+ * @brief The pause specialization for a PetriNet prevents new fire-able
+ * Callbacks from being scheduled. It will also pause all child Callbacks that
+ * are running. The pause function will return before the PetriNet will pause.
+ *
+ */
+void pause(const symmetri::PetriNet &);
+
+/**
+ * @brief The resume specialization for a PetriNet undoes pause and puts the
+ * PetriNet back in a normal state where all fireable Callback are scheduled for
+ * execution. The resume function will return before the PetriNet will resume.
+ *
+ */
+void resume(const symmetri::PetriNet &);
+
+/**
+ * @brief Get the Log object
+ *
+ * @return symmetri::Eventlog
+ */
+symmetri::Eventlog getLog(const symmetri::PetriNet &);

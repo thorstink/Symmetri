@@ -25,12 +25,9 @@ unsigned int getThreadId() {
       std::hash<std::thread::id>()(std::this_thread::get_id()));
 }
 
-}  // namespace symmetri
-
-using namespace symmetri;
-
 PetriNet::PetriNet(const std::set<std::string> &files,
-                   const std::string &case_id, std::shared_ptr<TaskSystem> stp,
+                   const std::string &case_id,
+                   std::shared_ptr<TaskSystem> threadpool,
                    const Marking &final_marking,
                    const PriorityTable &priorities)
     : impl([&] {
@@ -39,20 +36,20 @@ PetriNet::PetriNet(const std::set<std::string> &files,
         if (pn_file.extension() == ".pnml") {
           const auto [net, m0] = readPnml(files);
           return std::make_shared<Petri>(net, priorities, m0, final_marking,
-                                         case_id, stp);
+                                         case_id, threadpool);
         } else {
           const auto [net, m0, specific_priorities] = readGrml(files);
           return std::make_shared<Petri>(net, specific_priorities, m0,
-                                         final_marking, case_id, stp);
+                                         final_marking, case_id, threadpool);
         }
       }()) {}
 
 PetriNet::PetriNet(const Net &net, const std::string &case_id,
-                   std::shared_ptr<TaskSystem> stp,
+                   std::shared_ptr<TaskSystem> threadpool,
                    const Marking &initial_marking, const Marking &final_marking,
                    const PriorityTable &priorities)
     : impl(std::make_shared<Petri>(net, priorities, initial_marking,
-                                   final_marking, case_id, stp)) {}
+                                   final_marking, case_id, threadpool)) {}
 
 std::function<void()> PetriNet::getInputTransitionHandle(
     const Transition &transition) const noexcept {
@@ -100,6 +97,10 @@ bool PetriNet::reuseApplication(const std::string &new_case_id) {
   }
   return false;
 }
+
+}  // namespace symmetri
+
+using namespace symmetri;
 
 symmetri::Token fire(const PetriNet &app) {
   if (app.impl->thread_id_.load().has_value()) {

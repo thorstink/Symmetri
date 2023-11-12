@@ -22,13 +22,14 @@ TEST_CASE("Test external input.") {
 
     Marking initial_marking = {{"Pa", Color::Success}, {"Pa", Color::Success}};
     Marking goal_marking = {{"Pc", Color::Success}};
-    auto stp = std::make_shared<TaskSystem>(3);
+    auto threadpool = std::make_shared<TaskSystem>(3);
 
-    PetriNet app(net, "test_net_ext_input", stp, initial_marking, goal_marking);
+    PetriNet app(net, "test_net_ext_input", threadpool, initial_marking,
+                 goal_marking);
     app.registerCallback("t1", &tAllowExitInput);
 
     // enqueue a trigger;
-    stp->push([trigger = app.getInputTransitionHandle("t0")]() {
+    threadpool->push([trigger = app.getInputTransitionHandle("t0")]() {
       // sleep a bit so it gets triggered _after_ the net started. Otherwise the
       // net would deadlock
       while (!can_continue.load()) {

@@ -7,15 +7,6 @@
 #include "symmetri/types.h"
 
 /**
- * @brief A DirectMutation is a synchronous Callback that always
- * completes.
- *
- */
-struct DirectMutation {};
-bool isSynchronous(const DirectMutation &);
-symmetri::Token fire(const DirectMutation &);
-
-/**
  * @brief Checks if the callback is synchronous. Synchronous callbacks are
  * immediately executed inside the Petri net executor. Asynchronous callbacks
  * are deferred to the TaskSystem.

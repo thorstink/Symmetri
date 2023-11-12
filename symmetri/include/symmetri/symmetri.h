@@ -8,55 +8,6 @@
 #include "symmetri/tasks.h"
 #include "symmetri/types.h"
 
-/**
- * @brief The PetriNet class is a class that can create, configure and
- * run a Petri net.
- *
- */
-class PetriNet;
-
-/**
- * @brief The fire specialization for a PetriNet runs the Petri net until it
- * completes, deadlocks or is preempted. It returns an event log along with the
- * result state.
- *
- * @return symmetri::Token
- */
-symmetri::Token fire(const PetriNet &);
-
-/**
- * @brief The cancel specialization for a PetriNet breaks the PetriNets'
- * internal loop. It will not queue any new Callbacks and it will cancel all
- * child Callbacks that are running. The cancel function will return before the
- * PetriNet is preempted completely.
- *
- * @return symmetri::Token
- */
-void cancel(const PetriNet &);
-
-/**
- * @brief The pause specialization for a PetriNet prevents new fire-able
- * Callbacks from being scheduled. It will also pause all child Callbacks that
- * are running. The pause function will return before the PetriNet will pause.
- *
- */
-void pause(const PetriNet &);
-
-/**
- * @brief The resume specialization for a PetriNet undoes pause and puts the
- * PetriNet back in a normal state where all fireable Callback are scheduled for
- * execution. The resume function will return before the PetriNet will resume.
- *
- */
-void resume(const PetriNet &);
-
-/**
- * @brief Get the Log object
- *
- * @return symmetri::Eventlog
- */
-symmetri::Eventlog getLog(const PetriNet &);
-
 namespace symmetri {
 
 /**
@@ -67,8 +18,6 @@ namespace symmetri {
  */
 struct Petri;
 
-}  // namespace symmetri
-
 /**
  * @brief PetriNet exposes the possible constructors to create PetriNets.
  *
@@ -76,37 +25,37 @@ struct Petri;
 class PetriNet final {
  public:
   /**
-   * @brief Construct a new PetriNet object from a set of paths to pnml- or
-   * grml-files. Since PNML-files do not have priorities; you can optionally add
+   * @brief Construct a new PetriNet object from a set of paths to PNML- or
+   * GRML-files. Since PNML-files do not have priorities; you can optionally add
    * a priority table manually.
    *
-   * @param path_to_pnml
+   * @param petri_net_xmls
    * @param case_id
-   * @param stp
-   * @param final_marking
-   * @param priority
+   * @param threadpool
+   * @param goal_marking
+   * @param priorities
    */
-  PetriNet(const std::set<std::string> &path_to_pnml,
+  PetriNet(const std::set<std::string> &petri_net_xmls,
            const std::string &case_id,
-           std::shared_ptr<symmetri::TaskSystem> stp,
-           const symmetri::Marking &final_marking = {},
-           const symmetri::PriorityTable &priority = {});
+           std::shared_ptr<symmetri::TaskSystem> threadpool,
+           const symmetri::Marking &goal_marking = {},
+           const symmetri::PriorityTable &priorities = {});
 
   /**
    * @brief Construct a new PetriNet object from a net and initial marking
    *
    * @param net
-   * @param m0
-   * @param final_marking
-   * @param priority
    * @param case_id
-   * @param stp
+   * @param threadpool
+   * @param initial_marking
+   * @param goal_marking
+   * @param priorities
    */
   PetriNet(const symmetri::Net &net, const std::string &case_id,
-           std::shared_ptr<symmetri::TaskSystem> stp,
+           std::shared_ptr<symmetri::TaskSystem> threadpool,
            const symmetri::Marking &initial_marking,
-           const symmetri::Marking &final_marking = {},
-           const symmetri::PriorityTable &priority = {});
+           const symmetri::Marking &goal_marking = {},
+           const symmetri::PriorityTable &priorities = {});
 
   /**
    * @brief By registering a input transition you get a handle to manually force
@@ -125,10 +74,10 @@ class PetriNet final {
    * Callback supplied for a specific transition.
    *
    * @param transition the name of transition
-   * @param cb the callback
+   * @param callback the callback
    */
   void registerCallback(const std::string &transition,
-                        const symmetri::Callback &cb) const noexcept;
+                        const symmetri::Callback &callback) const noexcept;
 
   /**
    * @brief Get the Marking object. This function is thread-safe and be called
@@ -160,3 +109,5 @@ class PetriNet final {
       impl;  ///< Pointer to the implementation, all
              ///< information is stored in Petri
 };
+
+}  // namespace symmetri
