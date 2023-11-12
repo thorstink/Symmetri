@@ -3,8 +3,6 @@
 
 #include "symmetri/callback.h"
 
-using namespace symmetri;
-
 class Foo {
  public:
   Foo(std::string name) : name(name), constructor(1), copy_constructor(0) {
@@ -23,12 +21,14 @@ class Foo {
   const int copy_constructor;
 };
 
-Token fire(const Foo&) { return Color::Success; }
+symmetri::Token fire(const Foo&) { return symmetri::Color::Success; }
 
 void resume(const Foo& f) {
   CHECK(f.constructor == 1);
   CHECK(f.copy_constructor == 0);
 }
+
+using namespace symmetri;
 
 TEST_CASE("Constructing is just as you expect") {
   Foo o("one_constructor");

@@ -49,10 +49,15 @@ using PriorityTable =
     std::vector<std::pair<Transition, int8_t>>;  ///< Priority is limited from
                                                  ///< -128 to 127
 
+/**
+ * @brief A DirectMutation is a synchronous no-operation function. It simply
+ * mutates the mutation on the petri net executor loop. This way the deferring
+ * to the threadpool and back to the petri net loop is avoided.
+ *
+ */
 struct DirectMutation {};
 class PetriNet;
 
-}  // namespace symmetri
 /**
  * @brief A DirectMutation is a synchronous Callback that always
  * completes.
@@ -108,3 +113,5 @@ void resume(const symmetri::PetriNet &);
  * @return symmetri::Eventlog
  */
 symmetri::Eventlog getLog(const symmetri::PetriNet &);
+
+}  // namespace symmetri

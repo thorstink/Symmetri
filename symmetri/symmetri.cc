@@ -71,10 +71,11 @@ std::function<void()> PetriNet::getInputTransitionHandle(
   }
 }
 
-void PetriNet::registerCallback(const std::string &transition,
-                                const symmetri::Callback &cb) const noexcept {
+void PetriNet::registerCallback(
+    const std::string &transition,
+    const symmetri::Callback &callback) const noexcept {
   if (!impl->thread_id_.load().has_value()) {
-    impl->net.registerCallback(transition, cb);
+    impl->net.registerCallback(transition, callback);
   }
 }
 
@@ -97,10 +98,6 @@ bool PetriNet::reuseApplication(const std::string &new_case_id) {
   }
   return false;
 }
-
-}  // namespace symmetri
-
-using namespace symmetri;
 
 symmetri::Token fire(const PetriNet &app) {
   if (app.impl->thread_id_.load().has_value()) {
@@ -193,3 +190,5 @@ Eventlog getLog(const PetriNet &app) {
     return app.impl->getLogInternal();
   }
 }
+
+}  // namespace symmetri

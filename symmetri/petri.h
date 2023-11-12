@@ -32,7 +32,7 @@ inline bool operator>(const AugmentedToken &lhs, const AugmentedToken &rhs) {
 }
 
 /**
- * @brief a minimal event representation.
+ * @brief a minimal Event representation.
  *
  */
 struct SmallEvent {
@@ -256,10 +256,10 @@ struct Petri {
     std::vector<Callback> store;
 
     void registerCallback(const std::string &t,
-                          const symmetri::Callback &cb) noexcept {
+                          const symmetri::Callback &callback) noexcept {
       if (std::find(transition.begin(), transition.end(), t) !=
           transition.end()) {
-        store[toIndex(transition, t)] = cb;
+        store[toIndex(transition, t)] = callback;
       }
     }
   } net;  ///< Is a data-oriented design of a Petri net

@@ -6,6 +6,8 @@
 
 #include "symmetri/types.h"
 
+namespace symmetri {
+
 /**
  * @brief Checks if the callback is synchronous. Synchronous callbacks are
  * immediately executed inside the Petri net executor. Asynchronous callbacks
@@ -81,8 +83,6 @@ symmetri::Eventlog getLog(const T &) {
   return {};
 }
 
-namespace symmetri {
-
 /**
  * @brief Callback is a wrapper around any type that you to tie to a
  * transition. Typically this is an invokable object, such as a function, that
@@ -101,21 +101,29 @@ class Callback {
   /**
    * @brief Construct a new Callback object
    *
-   * @param cb is the Callback instance
+   * @param callback is the Callback instance
    */
-  Callback(Transition cb)
-      : self_(std::make_shared<model<Transition>>(std::move(cb))) {}
+  Callback(Transition callback)
+      : self_(std::make_shared<model<Transition>>(std::move(callback))) {}
 
-  Token operator()() const { return this->self_->fire_(); }
-  void operator()(Eventlog &el) const { el = this->self_->get_log_(); }
-  friend Token fire(const Callback &cb) { return cb.self_->fire_(); }
-  friend Eventlog getLog(const Callback &cb) { return cb.self_->get_log_(); }
-  friend bool isSynchronous(const Callback &cb) {
-    return cb.self_->is_synchronous_();
+  friend Token fire(const Callback &callback) {
+    return callback.self_->fire_();
   }
-  friend void cancel(const Callback &cb) { return cb.self_->cancel_(); }
-  friend void pause(const Callback &cb) { return cb.self_->pause_(); }
-  friend void resume(const Callback &cb) { return cb.self_->resume_(); }
+  friend Eventlog getLog(const Callback &callback) {
+    return callback.self_->get_log_();
+  }
+  friend bool isSynchronous(const Callback &callback) {
+    return callback.self_->is_synchronous_();
+  }
+  friend void cancel(const Callback &callback) {
+    return callback.self_->cancel_();
+  }
+  friend void pause(const Callback &callback) {
+    return callback.self_->pause_();
+  }
+  friend void resume(const Callback &callback) {
+    return callback.self_->resume_();
+  }
 
  private:
   struct concept_t {

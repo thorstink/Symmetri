@@ -19,7 +19,9 @@ namespace symmetri {
 struct Petri;
 
 /**
- * @brief PetriNet exposes the possible constructors to create PetriNets.
+ * @brief PetriNet exposes the possible constructors to create PetriNets. It
+ * also allows the user to register a Callback to a transition, or to get a
+ * handle for input-transitions.
  *
  */
 class PetriNet final {
@@ -98,11 +100,11 @@ class PetriNet final {
    */
   bool reuseApplication(const std::string &case_id);
 
-  friend symmetri::Token(::fire)(const PetriNet &);
-  friend void(::cancel)(const PetriNet &);
-  friend void(::pause)(const PetriNet &);
-  friend void(::resume)(const PetriNet &);
-  friend symmetri::Eventlog(::getLog)(const PetriNet &);
+  friend symmetri::Token(symmetri::fire)(const PetriNet &);
+  friend void(symmetri::cancel)(const PetriNet &);
+  friend void(symmetri::pause)(const PetriNet &);
+  friend void(symmetri::resume)(const PetriNet &);
+  friend symmetri::Eventlog(symmetri::getLog)(const PetriNet &);
 
  private:
   const std::shared_ptr<symmetri::Petri>

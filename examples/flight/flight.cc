@@ -1,14 +1,12 @@
 #include <spdlog/spdlog.h>
+#include <symmetri/parsers.h>
+#include <symmetri/symmetri.h>
 
 #include <fstream>
 #include <iostream>
+#include <symmetri/utilities.hpp>
 
-#include "symmetri/parsers.h"
-#include "symmetri/symmetri.h"
-#include "symmetri/utilities.hpp"
 #include "transition.hpp"
-
-using namespace symmetri;
 
 /**
  * @brief We want to use the Foo class with Symmetri; Foo has nice
@@ -19,10 +17,11 @@ using namespace symmetri;
  * all - if nothing is defined, a default version is used.
  *
  */
+const static symmetri::Token FooFail(symmetri::Color::registerToken("FooFail"));
 
-const static Token FooFail(Color::registerToken("FooFail"));
-
-Token fire(const Foo &f) { return f.fire() ? FooFail : Color::Success; }
+symmetri::Token fire(const Foo &f) {
+  return f.fire() ? FooFail : symmetri::Color::Success;
+}
 
 void cancel(const Foo &f) { f.cancel(); }
 
@@ -37,21 +36,14 @@ void resume(const Foo &f) { f.resume(); }
  */
 void printLog(const symmetri::Eventlog &eventlog) {
   for (const auto &[caseid, t, s, c] : eventlog) {
-    spdlog::info("EventLog: {0}, {1}, {2}, {3}", caseid, t, Color::toString(s),
-                 c.time_since_epoch().count());
+    spdlog::info("EventLog: {0}, {1}, {2}, {3}", caseid, t,
+                 symmetri::Color::toString(s), c.time_since_epoch().count());
   }
 }
 
-void writeMermaidHtmlToFile(const std::string &mermaid) {
-  std::ofstream mermaid_file;
-  mermaid_file.open("examples/flight/mermaid.html");
-  mermaid_file << "<div class=\"mermaid\">" + mermaid + "</div>";
-  mermaid_file.close();
-
-  return;
-}
-
 int main(int, char *argv[]) {
+  using namespace symmetri;
+
   spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] %v");
 
   // We get some paths to PNML-files

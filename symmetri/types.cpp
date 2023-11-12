@@ -6,6 +6,11 @@
 #include "symmetri/colors.hpp"
 namespace symmetri {
 
+bool isSynchronous(const symmetri::DirectMutation&) { return true; }
+symmetri::Token fire(const symmetri::DirectMutation&) {
+  return symmetri::Color::Success;
+}
+
 const std::string& Color::toString(symmetri::Token r) { return Color::map[r]; }
 
 const Token& Color::registerToken(const std::string& s) {

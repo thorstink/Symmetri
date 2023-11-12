@@ -4,7 +4,17 @@
 
 namespace symmetri {
 
+/**
+ * @brief An alias for the implementation. In this case
+ * moodycamel::BlockingConcurrentQueue.
+ *
+ */
 using Queue = moodycamel::BlockingConcurrentQueue<TaskSystem::Task>;
+
+/**
+ * @brief TaskQueue is an inheritance based alias for a lock-free queue.
+ *
+ */
 class TaskQueue : public Queue {
   using Queue::Queue;
 };

@@ -32,7 +32,7 @@ std::tuple<symmetri::Net, symmetri::Marking, symmetri::PriorityTable> readGrml(
  * register tokens for the color attributes that are in the arcs that go from a
  * place to a transition.
  *
- * @param files
+ * @param pnml-files
  * @return std::tuple<symmetri::Net, symmetri::Marking>
  */
 std::tuple<symmetri::Net, symmetri::Marking> readPnml(

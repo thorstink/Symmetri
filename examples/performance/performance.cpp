@@ -9,9 +9,9 @@ symmetri::Token fire(const Simple &) {
   i++;
   return symmetri::Color::Success;
 }
-using namespace symmetri;
 
 int main(int argc, char *argv[]) {
+  using namespace symmetri;
   auto pool = std::make_shared<TaskSystem>(1);
   PetriNet petri = [=] {
     if (argc > 1) {

@@ -1,10 +1,5 @@
 #include "petri.h"
 
-bool isSynchronous(const symmetri::DirectMutation &) { return true; }
-symmetri::Token fire(const symmetri::DirectMutation &) {
-  return symmetri::Color::Success;
-}
-
 namespace symmetri {
 std::tuple<std::vector<std::string>, std::vector<std::string>,
            std::vector<std::string>, std::vector<Callback>>
@@ -242,8 +237,8 @@ Eventlog Petri::getLogInternal() const {
   }
 
   // get event log from parent nets:
-  for (const auto &cb : net.store) {
-    Eventlog sub_el = getLog(cb);
+  for (const auto &callback : net.store) {
+    Eventlog sub_el = getLog(callback);
     if (!sub_el.empty()) {
       eventlog.insert(eventlog.end(), sub_el.begin(), sub_el.end());
     }
