@@ -43,7 +43,10 @@ using Net = std::unordered_map<
                                                        ///< colored input and
                                                        ///< output places
 
-using Marking = std::vector<std::pair<Place, Token>>;
+using Marking =
+    std::vector<std::pair<Place, Token>>;  ///< The Marking is a vector pairs in
+                                           ///< which the Place describes in
+                                           ///< which place the Token is.
 
 using PriorityTable =
     std::vector<std::pair<Transition, int8_t>>;  ///< Priority is limited from

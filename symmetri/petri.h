@@ -3,7 +3,6 @@
 /** @file petri.h */
 
 #include <functional>
-#include <memory>
 #include <optional>
 
 #include "externals/blockingconcurrentqueue.h"
