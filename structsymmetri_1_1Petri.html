@@ -97,16 +97,16 @@ $(document).ready(function(){initNavTree('structsymmetri_1_1Petri.html',''); ini
 </div><!--header-->
 <div class="contents">
 
-<p><a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> is a data structure that encodes the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> net and holds pointers to the thread-pool and the reducer-queue. It is optimized for calculating the active transition set and quick lookups in ordered vectors.  
+<p><a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> is a data structure that encodes the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> net and holds pointers to the thread-pool and the reducer-queue. It is optimized for calculating the active transition set and dispatching a <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> to the <a class="el" href="classsymmetri_1_1TaskSystem.html" title="Create a TaskSystem object. The only way to create a TaskSystem is through this factory....">TaskSystem</a>.  
  <a href="structsymmetri_1_1Petri.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="petri_8h_source.html">petri.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a99d1a73aa6fda929e301ba29de2f0714" id="r_a99d1a73aa6fda929e301ba29de2f0714"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a99d1a73aa6fda929e301ba29de2f0714">Petri</a> (const <a class="el" href="types_8h.html#a8a7a9c8b346d56b747e1394bdc2d6c9c">Net</a> &amp;_net, const <a class="el" href="types_8h.html#a72b6ac5e27222e448aa05c547d275a4e">PriorityTable</a> &amp;_priority, const Marking &amp;_initial_tokens, const Marking &amp;_final_marking, const std::string &amp;_case_id, std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> &gt; stp)</td></tr>
-<tr class="memdesc:a99d1a73aa6fda929e301ba29de2f0714"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> from a multiset description of a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> net, a lookup table for the transitions, optional priorities and an initial marking. A lot of conversion work is done in the constructor, so you should avoid creating Models during the run-time of a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> application.  <br /></td></tr>
-<tr class="separator:a99d1a73aa6fda929e301ba29de2f0714"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:add1cba1dbec90538b151ad4db87b52eb" id="r_add1cba1dbec90538b151ad4db87b52eb"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#add1cba1dbec90538b151ad4db87b52eb">Petri</a> (const <a class="el" href="types_8h.html#a8a7a9c8b346d56b747e1394bdc2d6c9c">Net</a> &amp;_net, const <a class="el" href="types_8h.html#a72b6ac5e27222e448aa05c547d275a4e">PriorityTable</a> &amp;_priority, const <a class="el" href="types_8h.html#a8319494c5f8f855b564a56f18a6db012">Marking</a> &amp;_initial_tokens, const <a class="el" href="types_8h.html#a8319494c5f8f855b564a56f18a6db012">Marking</a> &amp;_final_marking, const std::string &amp;_case_id, std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> &gt; threadpool)</td></tr>
+<tr class="memdesc:add1cba1dbec90538b151ad4db87b52eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> from a multiset description of a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> net, a lookup table for the transitions, optional priorities and an initial marking. A lot of conversion work is done in the constructor, so you should avoid creating Models during the run-time of a <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> application.  <br /></td></tr>
+<tr class="separator:add1cba1dbec90538b151ad4db87b52eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af06c0fd2c25ea0610c98ece6e2652ff4" id="r_af06c0fd2c25ea0610c98ece6e2652ff4"><td class="memItemLeft" align="right" valign="top"><a id="af06c0fd2c25ea0610c98ece6e2652ff4" name="af06c0fd2c25ea0610c98ece6e2652ff4"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Petri</b> (<a class="el" href="structsymmetri_1_1Petri.html">Petri</a> const &amp;)=delete</td></tr>
 <tr class="separator:af06c0fd2c25ea0610c98ece6e2652ff4"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -119,10 +119,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ae6128893f9d546e56191ac54edd14385" id="r_ae6128893f9d546e56191ac54edd14385"><td class="memItemLeft" align="right" valign="top"><a id="ae6128893f9d546e56191ac54edd14385" name="ae6128893f9d546e56191ac54edd14385"></a>
 <a class="el" href="structsymmetri_1_1Petri.html">Petri</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="structsymmetri_1_1Petri.html">Petri</a> &amp;&amp;) noexcept=delete</td></tr>
 <tr class="separator:ae6128893f9d546e56191ac54edd14385"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1e76fcc186384956938477f8cd3ba174" id="r_a1e76fcc186384956938477f8cd3ba174"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structsymmetri_1_1AugmentedToken.html">AugmentedToken</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a1e76fcc186384956938477f8cd3ba174">toTokens</a> (const Marking &amp;marking) const noexcept</td></tr>
+<tr class="memitem:a1e76fcc186384956938477f8cd3ba174" id="r_a1e76fcc186384956938477f8cd3ba174"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structsymmetri_1_1AugmentedToken.html">AugmentedToken</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a1e76fcc186384956938477f8cd3ba174">toTokens</a> (const <a class="el" href="types_8h.html#a8319494c5f8f855b564a56f18a6db012">Marking</a> &amp;marking) const noexcept</td></tr>
 <tr class="memdesc:a1e76fcc186384956938477f8cd3ba174"><td class="mdescLeft">&#160;</td><td class="mdescRight">outputs the marking as a vector of tokens; e.g. [1 1 1 0 5] means 3 tokens in place 1, 1 token in place 0 and 1 token in place 5.  <br /></td></tr>
 <tr class="separator:a1e76fcc186384956938477f8cd3ba174"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a880bf9aeb3b773009a4d31f1e35d3bba" id="r_a880bf9aeb3b773009a4d31f1e35d3bba"><td class="memItemLeft" align="right" valign="top">Marking&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a880bf9aeb3b773009a4d31f1e35d3bba">getMarking</a> () const</td></tr>
+<tr class="memitem:a880bf9aeb3b773009a4d31f1e35d3bba" id="r_a880bf9aeb3b773009a4d31f1e35d3bba"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a8319494c5f8f855b564a56f18a6db012">Marking</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#a880bf9aeb3b773009a4d31f1e35d3bba">getMarking</a> () const</td></tr>
 <tr class="memdesc:a880bf9aeb3b773009a4d31f1e35d3bba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current marking. It is represented by a vector of places: every occurance of a place in this vectors implies a token in that place. This representation does not show the empty places explicitly; if a place is not in this vector you can assume it has no token.  <br /></td></tr>
 <tr class="separator:a880bf9aeb3b773009a4d31f1e35d3bba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac136748694672816d62f96e5d7ed9275" id="r_ac136748694672816d62f96e5d7ed9275"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">Eventlog</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsymmetri_1_1Petri.html#ac136748694672816d62f96e5d7ed9275">getLogInternal</a> () const</td></tr>
@@ -216,10 +216,10 @@ std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSy
 <tr class="separator:a0bb51fc485b5813c4a66f234952c9e86"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p><a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> is a data structure that encodes the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> net and holds pointers to the thread-pool and the reducer-queue. It is optimized for calculating the active transition set and quick lookups in ordered vectors. </p>
+<div class="textblock"><p><a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> is a data structure that encodes the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> net and holds pointers to the thread-pool and the reducer-queue. It is optimized for calculating the active transition set and dispatching a <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> to the <a class="el" href="classsymmetri_1_1TaskSystem.html" title="Create a TaskSystem object. The only way to create a TaskSystem is through this factory....">TaskSystem</a>. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a99d1a73aa6fda929e301ba29de2f0714" name="a99d1a73aa6fda929e301ba29de2f0714"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a99d1a73aa6fda929e301ba29de2f0714">&#9670;&#160;</a></span>Petri()</h2>
+<a id="add1cba1dbec90538b151ad4db87b52eb" name="add1cba1dbec90538b151ad4db87b52eb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#add1cba1dbec90538b151ad4db87b52eb">&#9670;&#160;</a></span>Petri()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -242,13 +242,13 @@ std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSy
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const Marking &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="types_8h.html#a8319494c5f8f855b564a56f18a6db012">Marking</a> &amp;&#160;</td>
           <td class="paramname"><em>_initial_tokens</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const Marking &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="types_8h.html#a8319494c5f8f855b564a56f18a6db012">Marking</a> &amp;&#160;</td>
           <td class="paramname"><em>_final_marking</em>, </td>
         </tr>
         <tr>
@@ -261,7 +261,7 @@ std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSy
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> &gt;&#160;</td>
-          <td class="paramname"><em>stp</em>&#160;</td>
+          <td class="paramname"><em>threadpool</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -284,7 +284,7 @@ std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSy
     <tr><td class="paramname">_initial_tokens</td><td></td></tr>
     <tr><td class="paramname">_final_marking</td><td></td></tr>
     <tr><td class="paramname">_case_id</td><td></td></tr>
-    <tr><td class="paramname">stp</td><td></td></tr>
+    <tr><td class="paramname">threadpool</td><td></td></tr>
   </table>
   </dd>
 </dl>
@@ -319,7 +319,7 @@ std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSy
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">Marking symmetri::Petri::getMarking </td>
+          <td class="memname"><a class="el" href="types_8h.html#a8319494c5f8f855b564a56f18a6db012">Marking</a> symmetri::Petri::getMarking </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -344,7 +344,7 @@ std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSy
         <tr>
           <td class="memname">std::vector&lt; <a class="el" href="structsymmetri_1_1AugmentedToken.html">AugmentedToken</a> &gt; symmetri::Petri::toTokens </td>
           <td>(</td>
-          <td class="paramtype">const Marking &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="types_8h.html#a8319494c5f8f855b564a56f18a6db012">Marking</a> &amp;&#160;</td>
           <td class="paramname"><em>marking</em></td><td>)</td>
           <td> const</td>
         </tr>
@@ -411,7 +411,7 @@ std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSy
 </div>
 <hr/>The documentation for this struct was generated from the following files:<ul>
 <li>symmetri/<a class="el" href="petri_8h_source.html">petri.h</a></li>
-<li>symmetri/<b>petri.cc</b></li>
+<li>symmetri/<b>petri.cpp</b></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

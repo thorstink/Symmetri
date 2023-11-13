@@ -1,6 +1,6 @@
 var structsymmetri_1_1Petri =
 [
-    [ "Petri", "structsymmetri_1_1Petri.html#a99d1a73aa6fda929e301ba29de2f0714", null ],
+    [ "Petri", "structsymmetri_1_1Petri.html#add1cba1dbec90538b151ad4db87b52eb", null ],
     [ "fireTransitions", "structsymmetri_1_1Petri.html#af463c39b83fe0a7eebd288bf29c3479d", null ],
     [ "getLogInternal", "structsymmetri_1_1Petri.html#ac136748694672816d62f96e5d7ed9275", null ],
     [ "getMarking", "structsymmetri_1_1Petri.html#a880bf9aeb3b773009a4d31f1e35d3bba", null ],

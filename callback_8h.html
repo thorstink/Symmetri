@@ -102,49 +102,40 @@ $(document).ready(function(){initNavTree('callback_8h.html',''); initResizable()
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDirectMutation.html">DirectMutation</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A <a class="el" href="structDirectMutation.html" title="A DirectMutation is a synchronous Callback that always completes.">DirectMutation</a> is a synchronous Callback that always completes.  <a href="structDirectMutation.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1Callback.html">symmetri::Callback</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> is a wrapper around any type that you to tie to a transition. Typically this is an invokable object, such as a function, that executes some side-effects, but it can by anything if you implement a fire-function for it. The output can be used to communicate success or failure to the petri-net executor. You can create custom behavior by defining a tailored "Token fire(const A&amp;)" for your class A.  <a href="classsymmetri_1_1Callback.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> is a wrapper around any type that you to tie to a transition. Typically this is an invokable object, such as a function, that executes some side-effects, but it can by anything if you implement a fire function for it. The output can be used to communicate success or failure to the petri-net executor. You can create custom behavior by defining a tailored "Token fire(const A&amp;)" for your class A.  <a href="classsymmetri_1_1Callback.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:aa86f7d6612d27a9a0e3be3c0521b23a0" id="r_aa86f7d6612d27a9a0e3be3c0521b23a0"><td class="memItemLeft" align="right" valign="top"><a id="aa86f7d6612d27a9a0e3be3c0521b23a0" name="aa86f7d6612d27a9a0e3be3c0521b23a0"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>isSynchronous</b> (const <a class="el" href="structDirectMutation.html">DirectMutation</a> &amp;)</td></tr>
-<tr class="separator:aa86f7d6612d27a9a0e3be3c0521b23a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a90d5ac6d9b43babbd151041aa8e217e2" id="r_a90d5ac6d9b43babbd151041aa8e217e2"><td class="memItemLeft" align="right" valign="top"><a id="a90d5ac6d9b43babbd151041aa8e217e2" name="a90d5ac6d9b43babbd151041aa8e217e2"></a>
-symmetri::Token&#160;</td><td class="memItemRight" valign="bottom"><b>fire</b> (const <a class="el" href="structDirectMutation.html">DirectMutation</a> &amp;)</td></tr>
-<tr class="separator:a90d5ac6d9b43babbd151041aa8e217e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac4208bc719ab00e75b1c56ed8f95697c" id="r_ac4208bc719ab00e75b1c56ed8f95697c"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:ac4208bc719ab00e75b1c56ed8f95697c"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="callback_8h.html#ac4208bc719ab00e75b1c56ed8f95697c">isSynchronous</a> (const T &amp;)</td></tr>
-<tr class="memdesc:ac4208bc719ab00e75b1c56ed8f95697c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the callback is synchronous. Synchronous callbacks are immediately executed inside the Petri net executor. Asynchronous callbacks are deferred to the TaskSystem.  <br /></td></tr>
-<tr class="separator:ac4208bc719ab00e75b1c56ed8f95697c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2ad37ca1722b24acfd83ac544fb80bb7" id="r_a2ad37ca1722b24acfd83ac544fb80bb7"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a2ad37ca1722b24acfd83ac544fb80bb7"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="callback_8h.html#a2ad37ca1722b24acfd83ac544fb80bb7">cancel</a> (const T &amp;)</td></tr>
-<tr class="memdesc:a2ad37ca1722b24acfd83ac544fb80bb7"><td class="mdescLeft">&#160;</td><td class="mdescRight">The default cancel implementation is naive. It only returns a user-exit state and does nothing to the actual Callback itself, and it will still complete. Because the transition is by default not cancelled, it will produce a reducer, however, it will never be processed.  <br /></td></tr>
-<tr class="separator:a2ad37ca1722b24acfd83ac544fb80bb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3381197f96adaafef38cfb7c94860852" id="r_a3381197f96adaafef38cfb7c94860852"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a3381197f96adaafef38cfb7c94860852"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="callback_8h.html#a3381197f96adaafef38cfb7c94860852">pause</a> (const T &amp;)</td></tr>
-<tr class="memdesc:a3381197f96adaafef38cfb7c94860852"><td class="mdescLeft">&#160;</td><td class="mdescRight">Implements a pause action for a Callback. By default it does nothing and not pause the Callback.  <br /></td></tr>
-<tr class="separator:a3381197f96adaafef38cfb7c94860852"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a65b523ff8da503b1fff4ca98ce31ce33" id="r_a65b523ff8da503b1fff4ca98ce31ce33"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a65b523ff8da503b1fff4ca98ce31ce33"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="callback_8h.html#a65b523ff8da503b1fff4ca98ce31ce33">resume</a> (const T &amp;)</td></tr>
-<tr class="memdesc:a65b523ff8da503b1fff4ca98ce31ce33"><td class="mdescLeft">&#160;</td><td class="mdescRight">Templates a resume action for a Callback. By default it does nothing and not resume the Callback.  <br /></td></tr>
-<tr class="separator:a65b523ff8da503b1fff4ca98ce31ce33"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a64b089e5d45179a249cc51095bdb842f" id="r_a64b089e5d45179a249cc51095bdb842f"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a64b089e5d45179a249cc51095bdb842f"><td class="memTemplItemLeft" align="right" valign="top">symmetri::Token&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="callback_8h.html#a64b089e5d45179a249cc51095bdb842f">fire</a> (const T &amp;callback)</td></tr>
-<tr class="memdesc:a64b089e5d45179a249cc51095bdb842f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generates a Token based on what kind of information the Callback returns.  <br /></td></tr>
-<tr class="separator:a64b089e5d45179a249cc51095bdb842f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a50727ced7d06e94ad3d1f1a4c543ce4b" id="r_a50727ced7d06e94ad3d1f1a4c543ce4b"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a50727ced7d06e94ad3d1f1a4c543ce4b"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">symmetri::Eventlog</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="callback_8h.html#a50727ced7d06e94ad3d1f1a4c543ce4b">getLog</a> (const T &amp;)</td></tr>
-<tr class="memdesc:a50727ced7d06e94ad3d1f1a4c543ce4b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the Log object. By default it returns an empty list.  <br /></td></tr>
-<tr class="separator:a50727ced7d06e94ad3d1f1a4c543ce4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa0f94b8de344a14936f05f67078711ca" id="r_aa0f94b8de344a14936f05f67078711ca"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:aa0f94b8de344a14936f05f67078711ca"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="callback_8h.html#aa0f94b8de344a14936f05f67078711ca">symmetri::isSynchronous</a> (const T &amp;)</td></tr>
+<tr class="memdesc:aa0f94b8de344a14936f05f67078711ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the callback is synchronous. Synchronous callbacks are immediately executed inside the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> net executor. Asynchronous callbacks are deferred to the <a class="el" href="classsymmetri_1_1TaskSystem.html" title="Create a TaskSystem object. The only way to create a TaskSystem is through this factory....">TaskSystem</a>.  <br /></td></tr>
+<tr class="separator:aa0f94b8de344a14936f05f67078711ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac789f942935da112c594e5222ee043a8" id="r_ac789f942935da112c594e5222ee043a8"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:ac789f942935da112c594e5222ee043a8"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="callback_8h.html#ac789f942935da112c594e5222ee043a8">symmetri::cancel</a> (const T &amp;)</td></tr>
+<tr class="memdesc:ac789f942935da112c594e5222ee043a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">The default cancel implementation is naive. It only returns a user-exit state and does nothing to the actual <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> itself, and it will still complete. Because the transition is by default not cancelled, it will produce a reducer, however, it will never be processed.  <br /></td></tr>
+<tr class="separator:ac789f942935da112c594e5222ee043a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff448a8a01c2ee4b8a469c6b6ff3b00c" id="r_aff448a8a01c2ee4b8a469c6b6ff3b00c"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:aff448a8a01c2ee4b8a469c6b6ff3b00c"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="callback_8h.html#aff448a8a01c2ee4b8a469c6b6ff3b00c">symmetri::pause</a> (const T &amp;)</td></tr>
+<tr class="memdesc:aff448a8a01c2ee4b8a469c6b6ff3b00c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Implements a pause action for a <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a>. By default it does nothing and not pause the <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a>.  <br /></td></tr>
+<tr class="separator:aff448a8a01c2ee4b8a469c6b6ff3b00c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3d1732981b97f96c9bd841c6cd31c3f" id="r_aa3d1732981b97f96c9bd841c6cd31c3f"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:aa3d1732981b97f96c9bd841c6cd31c3f"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="callback_8h.html#aa3d1732981b97f96c9bd841c6cd31c3f">symmetri::resume</a> (const T &amp;)</td></tr>
+<tr class="memdesc:aa3d1732981b97f96c9bd841c6cd31c3f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Templates a resume action for a <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a>. By default it does nothing and not resume the <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a>.  <br /></td></tr>
+<tr class="separator:aa3d1732981b97f96c9bd841c6cd31c3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a369f9434bc62272ce37e6b35d1f8814b" id="r_a369f9434bc62272ce37e6b35d1f8814b"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a369f9434bc62272ce37e6b35d1f8814b"><td class="memTemplItemLeft" align="right" valign="top">Token&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="callback_8h.html#a369f9434bc62272ce37e6b35d1f8814b">symmetri::fire</a> (const T &amp;callback)</td></tr>
+<tr class="memdesc:a369f9434bc62272ce37e6b35d1f8814b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generates a Token based on what kind of information the <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> returns.  <br /></td></tr>
+<tr class="separator:a369f9434bc62272ce37e6b35d1f8814b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8325b9f980718dc4139ae947ebb78040" id="r_a8325b9f980718dc4139ae947ebb78040"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a8325b9f980718dc4139ae947ebb78040"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">Eventlog</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="callback_8h.html#a8325b9f980718dc4139ae947ebb78040">symmetri::getLog</a> (const T &amp;)</td></tr>
+<tr class="memdesc:a8325b9f980718dc4139ae947ebb78040"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the Log object. By default it returns an empty list.  <br /></td></tr>
+<tr class="separator:a8325b9f980718dc4139ae947ebb78040"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a2ad37ca1722b24acfd83ac544fb80bb7" name="a2ad37ca1722b24acfd83ac544fb80bb7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2ad37ca1722b24acfd83ac544fb80bb7">&#9670;&#160;</a></span>cancel()</h2>
+<a id="ac789f942935da112c594e5222ee043a8" name="ac789f942935da112c594e5222ee043a8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac789f942935da112c594e5222ee043a8">&#9670;&#160;</a></span>cancel()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -152,7 +143,7 @@ symmetri::Token&#160;</td><td class="memItemRight" valign="bottom"><b>fire</b> (
 template&lt;typename T &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void cancel </td>
+          <td class="memname">void symmetri::cancel </td>
           <td>(</td>
           <td class="paramtype">const T &amp;&#160;</td>
           <td class="paramname"></td><td>)</td>
@@ -172,8 +163,8 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
-<a id="a64b089e5d45179a249cc51095bdb842f" name="a64b089e5d45179a249cc51095bdb842f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a64b089e5d45179a249cc51095bdb842f">&#9670;&#160;</a></span>fire()</h2>
+<a id="a369f9434bc62272ce37e6b35d1f8814b" name="a369f9434bc62272ce37e6b35d1f8814b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a369f9434bc62272ce37e6b35d1f8814b">&#9670;&#160;</a></span>fire()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -181,7 +172,7 @@ template&lt;typename T &gt; </div>
 template&lt;typename T &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">symmetri::Token fire </td>
+          <td class="memname">Token symmetri::fire </td>
           <td>(</td>
           <td class="paramtype">const T &amp;&#160;</td>
           <td class="paramname"><em>callback</em></td><td>)</td>
@@ -207,8 +198,8 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
-<a id="a50727ced7d06e94ad3d1f1a4c543ce4b" name="a50727ced7d06e94ad3d1f1a4c543ce4b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a50727ced7d06e94ad3d1f1a4c543ce4b">&#9670;&#160;</a></span>getLog()</h2>
+<a id="a8325b9f980718dc4139ae947ebb78040" name="a8325b9f980718dc4139ae947ebb78040"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8325b9f980718dc4139ae947ebb78040">&#9670;&#160;</a></span>getLog()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -216,7 +207,7 @@ template&lt;typename T &gt; </div>
 template&lt;typename T &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">symmetri::Eventlog</a> getLog </td>
+          <td class="memname">Eventlog symmetri::getLog </td>
           <td>(</td>
           <td class="paramtype">const T &amp;&#160;</td>
           <td class="paramname"></td><td>)</td>
@@ -232,12 +223,12 @@ template&lt;typename T &gt; </div>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">symmetri::Eventlog</a> </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Eventlog </dd></dl>
 
 </div>
 </div>
-<a id="ac4208bc719ab00e75b1c56ed8f95697c" name="ac4208bc719ab00e75b1c56ed8f95697c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac4208bc719ab00e75b1c56ed8f95697c">&#9670;&#160;</a></span>isSynchronous()</h2>
+<a id="aa0f94b8de344a14936f05f67078711ca" name="aa0f94b8de344a14936f05f67078711ca"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa0f94b8de344a14936f05f67078711ca">&#9670;&#160;</a></span>isSynchronous()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -245,7 +236,7 @@ template&lt;typename T &gt; </div>
 template&lt;typename T &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">bool isSynchronous </td>
+          <td class="memname">bool symmetri::isSynchronous </td>
           <td>(</td>
           <td class="paramtype">const T &amp;&#160;</td>
           <td class="paramname"></td><td>)</td>
@@ -267,8 +258,8 @@ false the callback will be executed asynchronously </dd></dl>
 
 </div>
 </div>
-<a id="a3381197f96adaafef38cfb7c94860852" name="a3381197f96adaafef38cfb7c94860852"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3381197f96adaafef38cfb7c94860852">&#9670;&#160;</a></span>pause()</h2>
+<a id="aff448a8a01c2ee4b8a469c6b6ff3b00c" name="aff448a8a01c2ee4b8a469c6b6ff3b00c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff448a8a01c2ee4b8a469c6b6ff3b00c">&#9670;&#160;</a></span>pause()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -276,7 +267,7 @@ false the callback will be executed asynchronously </dd></dl>
 template&lt;typename T &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void pause </td>
+          <td class="memname">void symmetri::pause </td>
           <td>(</td>
           <td class="paramtype">const T &amp;&#160;</td>
           <td class="paramname"></td><td>)</td>
@@ -295,8 +286,8 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
-<a id="a65b523ff8da503b1fff4ca98ce31ce33" name="a65b523ff8da503b1fff4ca98ce31ce33"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a65b523ff8da503b1fff4ca98ce31ce33">&#9670;&#160;</a></span>resume()</h2>
+<a id="aa3d1732981b97f96c9bd841c6cd31c3f" name="aa3d1732981b97f96c9bd841c6cd31c3f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa3d1732981b97f96c9bd841c6cd31c3f">&#9670;&#160;</a></span>resume()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -304,7 +295,7 @@ template&lt;typename T &gt; </div>
 template&lt;typename T &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void resume </td>
+          <td class="memname">void symmetri::resume </td>
           <td>(</td>
           <td class="paramtype">const T &amp;&#160;</td>
           <td class="paramname"></td><td>)</td>

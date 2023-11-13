@@ -31,16 +31,17 @@ var NAVTREE =
       [ "Transitions as callbacks", "md_docs_2symmetri__nets.html#autotoc_md2", null ],
       [ "Conflict and priorities", "md_docs_2symmetri__nets.html#autotoc_md3", null ],
       [ "Failure at the level of transitions", "md_docs_2symmetri__nets.html#autotoc_md4", null ],
-      [ "Input from abroad", "md_docs_2symmetri__nets.html#autotoc_md5", null ],
-      [ "The event log", "md_docs_2symmetri__nets.html#autotoc_md6", null ]
+      [ "Colors", "md_docs_2symmetri__nets.html#autotoc_md5", null ],
+      [ "Input from abroad", "md_docs_2symmetri__nets.html#autotoc_md6", null ],
+      [ "The event log", "md_docs_2symmetri__nets.html#autotoc_md7", null ]
     ] ],
     [ "Symmetri library", "md_docs_2symmetri__lib.html", [
-      [ "Build", "md_docs_2symmetri__lib.html#autotoc_md8", [
-        [ "Vanilla CMake:", "md_docs_2symmetri__lib.html#autotoc_md9", null ],
-        [ "In a Colcon-workspace", "md_docs_2symmetri__lib.html#autotoc_md10", null ]
+      [ "Build", "md_docs_2symmetri__lib.html#autotoc_md9", [
+        [ "Vanilla CMake:", "md_docs_2symmetri__lib.html#autotoc_md10", null ],
+        [ "In a Colcon-workspace", "md_docs_2symmetri__lib.html#autotoc_md11", null ]
       ] ],
-      [ "Test", "md_docs_2symmetri__lib.html#autotoc_md11", null ],
-      [ "Architecture", "md_docs_2symmetri__lib.html#autotoc_md12", null ]
+      [ "Test", "md_docs_2symmetri__lib.html#autotoc_md12", null ],
+      [ "Architecture", "md_docs_2symmetri__lib.html#autotoc_md13", null ]
     ] ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
@@ -49,16 +50,11 @@ var NAVTREE =
       [ "Class Members", "functions.html", [
         [ "All", "functions.html", null ],
         [ "Functions", "functions_func.html", null ],
-        [ "Variables", "functions_vars.html", null ],
-        [ "Related Symbols", "functions_rela.html", null ]
+        [ "Variables", "functions_vars.html", null ]
       ] ]
     ] ],
     [ "Files", "files.html", [
-      [ "File List", "files.html", "files_dup" ],
-      [ "File Members", "globals.html", [
-        [ "All", "globals.html", null ],
-        [ "Functions", "globals_func.html", null ]
-      ] ]
+      [ "File List", "files.html", "files_dup" ]
     ] ]
   ] ]
 ];

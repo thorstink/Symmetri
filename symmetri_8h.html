@@ -90,8 +90,7 @@ $(document).ready(function(){initNavTree('symmetri_8h.html',''); initResizable()
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
-<a href="#func-members">Functions</a>  </div>
+<a href="#nested-classes">Classes</a>  </div>
   <div class="headertitle"><div class="title">symmetri.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -104,94 +103,10 @@ $(document).ready(function(){initNavTree('symmetri_8h.html',''); initResizable()
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPetriNet.html">PetriNet</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classPetriNet.html" title="PetriNet exposes the possible constructors to create PetriNets.">PetriNet</a> exposes the possible constructors to create PetriNets.  <a href="classPetriNet.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1PetriNet.html">symmetri::PetriNet</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classsymmetri_1_1PetriNet.html" title="PetriNet exposes the possible constructors to create PetriNets. It also allows the user to register a...">PetriNet</a> exposes the possible constructors to create PetriNets. It also allows the user to register a <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> to a transition, or to get a handle for input-transitions.  <a href="classsymmetri_1_1PetriNet.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
-Functions</h2></td></tr>
-<tr class="memitem:a347981a37ecfbb4e9b44e284f122f43b" id="r_a347981a37ecfbb4e9b44e284f122f43b"><td class="memItemLeft" align="right" valign="top">symmetri::Token&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symmetri_8h.html#a347981a37ecfbb4e9b44e284f122f43b">fire</a> (const <a class="el" href="classPetriNet.html">PetriNet</a> &amp;)</td></tr>
-<tr class="memdesc:a347981a37ecfbb4e9b44e284f122f43b"><td class="mdescLeft">&#160;</td><td class="mdescRight">The fire specialization for a <a class="el" href="classPetriNet.html" title="PetriNet exposes the possible constructors to create PetriNets.">PetriNet</a> runs the Petri net until it completes, deadlocks or is preempted. It returns an event log along with the result state.  <br /></td></tr>
-<tr class="separator:a347981a37ecfbb4e9b44e284f122f43b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae0901e63f9f0343793437999a5b797de" id="r_ae0901e63f9f0343793437999a5b797de"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symmetri_8h.html#ae0901e63f9f0343793437999a5b797de">cancel</a> (const <a class="el" href="classPetriNet.html">PetriNet</a> &amp;)</td></tr>
-<tr class="memdesc:ae0901e63f9f0343793437999a5b797de"><td class="mdescLeft">&#160;</td><td class="mdescRight">The cancel specialization for a <a class="el" href="classPetriNet.html" title="PetriNet exposes the possible constructors to create PetriNets.">PetriNet</a> breaks the PetriNets' internal loop. It will not queue any new Callbacks and it will cancel all child Callbacks that are running. The cancel function will return before the <a class="el" href="classPetriNet.html" title="PetriNet exposes the possible constructors to create PetriNets.">PetriNet</a> is preempted completely.  <br /></td></tr>
-<tr class="separator:ae0901e63f9f0343793437999a5b797de"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0a338d88cd12e32ade1a24ccd6543f16" id="r_a0a338d88cd12e32ade1a24ccd6543f16"><td class="memItemLeft" align="right" valign="top"><a id="a0a338d88cd12e32ade1a24ccd6543f16" name="a0a338d88cd12e32ade1a24ccd6543f16"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>pause</b> (const <a class="el" href="classPetriNet.html">PetriNet</a> &amp;)</td></tr>
-<tr class="memdesc:a0a338d88cd12e32ade1a24ccd6543f16"><td class="mdescLeft">&#160;</td><td class="mdescRight">The pause specialization for a <a class="el" href="classPetriNet.html" title="PetriNet exposes the possible constructors to create PetriNets.">PetriNet</a> prevents new fire-able Callbacks from being scheduled. It will also pause all child Callbacks that are running. The pause function will return before the <a class="el" href="classPetriNet.html" title="PetriNet exposes the possible constructors to create PetriNets.">PetriNet</a> will pause. <br /></td></tr>
-<tr class="separator:a0a338d88cd12e32ade1a24ccd6543f16"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abeaae46a239888856b8b8816f5b8852d" id="r_abeaae46a239888856b8b8816f5b8852d"><td class="memItemLeft" align="right" valign="top"><a id="abeaae46a239888856b8b8816f5b8852d" name="abeaae46a239888856b8b8816f5b8852d"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>resume</b> (const <a class="el" href="classPetriNet.html">PetriNet</a> &amp;)</td></tr>
-<tr class="memdesc:abeaae46a239888856b8b8816f5b8852d"><td class="mdescLeft">&#160;</td><td class="mdescRight">The resume specialization for a <a class="el" href="classPetriNet.html" title="PetriNet exposes the possible constructors to create PetriNets.">PetriNet</a> undoes pause and puts the <a class="el" href="classPetriNet.html" title="PetriNet exposes the possible constructors to create PetriNets.">PetriNet</a> back in a normal state where all fireable Callback are scheduled for execution. The resume function will return before the <a class="el" href="classPetriNet.html" title="PetriNet exposes the possible constructors to create PetriNets.">PetriNet</a> will resume. <br /></td></tr>
-<tr class="separator:abeaae46a239888856b8b8816f5b8852d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9f6227b64a19b86e89a5bf3d50125827" id="r_a9f6227b64a19b86e89a5bf3d50125827"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">symmetri::Eventlog</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symmetri_8h.html#a9f6227b64a19b86e89a5bf3d50125827">getLog</a> (const <a class="el" href="classPetriNet.html">PetriNet</a> &amp;)</td></tr>
-<tr class="memdesc:a9f6227b64a19b86e89a5bf3d50125827"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the Log object.  <br /></td></tr>
-<tr class="separator:a9f6227b64a19b86e89a5bf3d50125827"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Function Documentation</h2>
-<a id="ae0901e63f9f0343793437999a5b797de" name="ae0901e63f9f0343793437999a5b797de"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae0901e63f9f0343793437999a5b797de">&#9670;&#160;</a></span>cancel()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void cancel </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="classPetriNet.html">PetriNet</a> &amp;&#160;</td>
-          <td class="paramname"><em>app</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>The cancel specialization for a <a class="el" href="classPetriNet.html" title="PetriNet exposes the possible constructors to create PetriNets.">PetriNet</a> breaks the PetriNets' internal loop. It will not queue any new Callbacks and it will cancel all child Callbacks that are running. The cancel function will return before the <a class="el" href="classPetriNet.html" title="PetriNet exposes the possible constructors to create PetriNets.">PetriNet</a> is preempted completely. </p>
-<dl class="section return"><dt>Returns</dt><dd>symmetri::Token </dd></dl>
-
-</div>
-</div>
-<a id="a347981a37ecfbb4e9b44e284f122f43b" name="a347981a37ecfbb4e9b44e284f122f43b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a347981a37ecfbb4e9b44e284f122f43b">&#9670;&#160;</a></span>fire()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">symmetri::Token fire </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="classPetriNet.html">PetriNet</a> &amp;&#160;</td>
-          <td class="paramname"><em>app</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>The fire specialization for a <a class="el" href="classPetriNet.html" title="PetriNet exposes the possible constructors to create PetriNets.">PetriNet</a> runs the Petri net until it completes, deadlocks or is preempted. It returns an event log along with the result state. </p>
-<dl class="section return"><dt>Returns</dt><dd>symmetri::Token </dd></dl>
-
-</div>
-</div>
-<a id="a9f6227b64a19b86e89a5bf3d50125827" name="a9f6227b64a19b86e89a5bf3d50125827"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9f6227b64a19b86e89a5bf3d50125827">&#9670;&#160;</a></span>getLog()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">symmetri::Eventlog</a> getLog </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="classPetriNet.html">PetriNet</a> &amp;&#160;</td>
-          <td class="paramname"><em>app</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Get the Log object. </p>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">symmetri::Eventlog</a> </dd></dl>
-
-</div>
-</div>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

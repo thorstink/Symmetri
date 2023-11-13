@@ -118,31 +118,31 @@ $(document).ready(function(){initNavTree('utilities_8hpp_source.html',''); initR
 <div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
 <div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
 <div class="foldopen" id="foldopen00051" data-start="{" data-end="}">
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="utilities_8hpp.html#a418009feff8440061b68e708f273021b">   51</a></span><span class="keywordtype">bool</span> <a class="code hl_function" href="utilities_8hpp.html#a418009feff8440061b68e708f273021b">MarkingReached</a>(<span class="keyword">const</span> std::vector&lt;T&gt;&amp; marking,</div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>                    <span class="keyword">const</span> std::vector&lt;T&gt;&amp; final_marking) {</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>  <span class="keywordflow">if</span> (final_marking.empty()) {</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="utilities_8hpp.html#a731a816c7c159ed33f41f7e6e3a94b2b">   51</a></span><span class="keywordtype">bool</span> <a class="code hl_function" href="utilities_8hpp.html#a731a816c7c159ed33f41f7e6e3a94b2b">MarkingReached</a>(<span class="keyword">const</span> std::vector&lt;T&gt;&amp; marking,</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>                    <span class="keyword">const</span> std::vector&lt;T&gt;&amp; goal_marking) {</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>  <span class="keywordflow">if</span> (goal_marking.empty()) {</div>
 <div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>  }</div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>  <span class="keyword">auto</span> unique = final_marking;</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>  <span class="keyword">auto</span> unique = goal_marking;</div>
 <div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>  std::sort(unique.begin(), unique.end());</div>
 <div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>  <span class="keyword">auto</span> last = std::unique(unique.begin(), unique.end());</div>
 <div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>  unique.erase(last, unique.end());</div>
 <div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span> </div>
 <div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>  <span class="keywordflow">return</span> std::all_of(std::begin(unique), std::end(unique), [&amp;](<span class="keyword">const</span> <span class="keyword">auto</span>&amp; p) {</div>
 <div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    <span class="keywordflow">return</span> std::count(marking.begin(), marking.end(), p) ==</div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>           std::count(final_marking.begin(), final_marking.end(), p);</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>           std::count(goal_marking.begin(), goal_marking.end(), p);</div>
 <div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>  });</div>
 <div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>}</div>
 </div>
 <div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span> </div>
 <div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span><span class="keywordtype">bool</span> stateNetEquality(<span class="keyword">const</span> Net&amp; net1, <span class="keyword">const</span> Net&amp; net2);</div>
 <div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span> </div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span><span class="keywordtype">size_t</span> calculateTrace(<span class="keyword">const</span> Eventlog&amp; event_log) <span class="keyword">noexcept</span>;</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span><span class="keywordtype">size_t</span> calculateTrace(<span class="keyword">const</span> Eventlog&amp; log) <span class="keyword">noexcept</span>;</div>
 <div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span> </div>
 <div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>}  <span class="comment">// namespace symmetri</span></div>
 <div class="ttc" id="atypes_8h_html"><div class="ttname"><a href="types_8h.html">types.h</a></div></div>
-<div class="ttc" id="autilities_8hpp_html_a418009feff8440061b68e708f273021b"><div class="ttname"><a href="utilities_8hpp.html#a418009feff8440061b68e708f273021b">symmetri::MarkingReached</a></div><div class="ttdeci">bool MarkingReached(const std::vector&lt; T &gt; &amp;marking, const std::vector&lt; T &gt; &amp;final_marking)</div><div class="ttdoc">Checks if marking is at least a subset of final_marking. Note that this uses a different type for Mar...</div><div class="ttdef"><b>Definition</b> utilities.hpp:51</div></div>
 <div class="ttc" id="autilities_8hpp_html_a663f9de17f04a2b8e0d290e47e1dc92d"><div class="ttname"><a href="utilities_8hpp.html#a663f9de17f04a2b8e0d290e47e1dc92d">symmetri::MarkingEquality</a></div><div class="ttdeci">bool MarkingEquality(const std::vector&lt; T &gt; &amp;m1, const std::vector&lt; T &gt; &amp;m2)</div><div class="ttdoc">Checks if the markings are exactly the same. Note that this uses a different type for Marking compare...</div><div class="ttdef"><b>Definition</b> utilities.hpp:27</div></div>
+<div class="ttc" id="autilities_8hpp_html_a731a816c7c159ed33f41f7e6e3a94b2b"><div class="ttname"><a href="utilities_8hpp.html#a731a816c7c159ed33f41f7e6e3a94b2b">symmetri::MarkingReached</a></div><div class="ttdeci">bool MarkingReached(const std::vector&lt; T &gt; &amp;marking, const std::vector&lt; T &gt; &amp;goal_marking)</div><div class="ttdoc">Checks if marking is at least a subset of goal_marking. Note that this uses a different type for Mark...</div><div class="ttdef"><b>Definition</b> utilities.hpp:51</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

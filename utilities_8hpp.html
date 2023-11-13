@@ -105,20 +105,20 @@ Functions</h2></td></tr>
 <tr class="memitem:a663f9de17f04a2b8e0d290e47e1dc92d"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utilities_8hpp.html#a663f9de17f04a2b8e0d290e47e1dc92d">symmetri::MarkingEquality</a> (const std::vector&lt; T &gt; &amp;m1, const std::vector&lt; T &gt; &amp;m2)</td></tr>
 <tr class="memdesc:a663f9de17f04a2b8e0d290e47e1dc92d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the markings are exactly the same. Note that this uses a different type for Marking compared to the Marking type used to construct a net (an unordered map of strings). In this format the amount of tokens in a particular place is represented by how often that place occurs in the vector. For example: {"A","A","B"} is a marking with two tokens in place "A" and one token in place "B". This format does not have the overhead of mentioning all empty places.  <br /></td></tr>
 <tr class="separator:a663f9de17f04a2b8e0d290e47e1dc92d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a418009feff8440061b68e708f273021b" id="r_a418009feff8440061b68e708f273021b"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a418009feff8440061b68e708f273021b"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utilities_8hpp.html#a418009feff8440061b68e708f273021b">symmetri::MarkingReached</a> (const std::vector&lt; T &gt; &amp;marking, const std::vector&lt; T &gt; &amp;final_marking)</td></tr>
-<tr class="memdesc:a418009feff8440061b68e708f273021b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if marking is at least a subset of final_marking. Note that this uses a different type for Marking compared to the Marking type used to construct a net (an unordered map of strings). In this format the amount of tokens in a particular place is represented by how often that place occurs in the vector. For example: {"A","A","B"} is a marking with two tokens in place "A" and one token in place "B". This format does not have the overhead of mentioning all empty places.  <br /></td></tr>
-<tr class="separator:a418009feff8440061b68e708f273021b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a731a816c7c159ed33f41f7e6e3a94b2b" id="r_a731a816c7c159ed33f41f7e6e3a94b2b"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a731a816c7c159ed33f41f7e6e3a94b2b"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utilities_8hpp.html#a731a816c7c159ed33f41f7e6e3a94b2b">symmetri::MarkingReached</a> (const std::vector&lt; T &gt; &amp;marking, const std::vector&lt; T &gt; &amp;goal_marking)</td></tr>
+<tr class="memdesc:a731a816c7c159ed33f41f7e6e3a94b2b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if marking is at least a subset of goal_marking. Note that this uses a different type for Marking compared to the Marking type used to construct a net (an unordered map of strings). In this format the amount of tokens in a particular place is represented by how often that place occurs in the vector. For example: {"A","A","B"} is a marking with two tokens in place "A" and one token in place "B". This format does not have the overhead of mentioning all empty places.  <br /></td></tr>
+<tr class="separator:a731a816c7c159ed33f41f7e6e3a94b2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a08c2cf03e783cd4bca9d7ba72dec6835" id="r_a08c2cf03e783cd4bca9d7ba72dec6835"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="utilities_8hpp.html#a08c2cf03e783cd4bca9d7ba72dec6835">symmetri::stateNetEquality</a> (const <a class="el" href="types_8h.html#a8a7a9c8b346d56b747e1394bdc2d6c9c">Net</a> &amp;net1, const <a class="el" href="types_8h.html#a8a7a9c8b346d56b747e1394bdc2d6c9c">Net</a> &amp;net2)</td></tr>
 <tr class="memdesc:a08c2cf03e783cd4bca9d7ba72dec6835"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if two petri-nets have equal amount of arcs between places and transitions of the same name.  <br /></td></tr>
 <tr class="separator:a08c2cf03e783cd4bca9d7ba72dec6835"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6fab87c1ec65a55db8fb5b2126a8c14a" id="r_a6fab87c1ec65a55db8fb5b2126a8c14a"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="utilities_8hpp.html#a6fab87c1ec65a55db8fb5b2126a8c14a">symmetri::calculateTrace</a> (const <a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">Eventlog</a> &amp;event_log) noexcept</td></tr>
-<tr class="memdesc:a6fab87c1ec65a55db8fb5b2126a8c14a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculates a hash given an event log. This hash is only influenced by the order of the completions of transitions, the tokens the transitions return and the case_id of the net the transition is fired from.  <br /></td></tr>
-<tr class="separator:a6fab87c1ec65a55db8fb5b2126a8c14a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4504da6c4a4b937df22f228b9f822782" id="r_a4504da6c4a4b937df22f228b9f822782"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="utilities_8hpp.html#a4504da6c4a4b937df22f228b9f822782">symmetri::calculateTrace</a> (const <a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">Eventlog</a> &amp;log) noexcept</td></tr>
+<tr class="memdesc:a4504da6c4a4b937df22f228b9f822782"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculates a hash given an event log. This hash is only influenced by the order of the completions of transitions, the tokens the transitions return and the case_id of the net the transition is fired from.  <br /></td></tr>
+<tr class="separator:a4504da6c4a4b937df22f228b9f822782"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a6fab87c1ec65a55db8fb5b2126a8c14a" name="a6fab87c1ec65a55db8fb5b2126a8c14a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6fab87c1ec65a55db8fb5b2126a8c14a">&#9670;&#160;</a></span>calculateTrace()</h2>
+<a id="a4504da6c4a4b937df22f228b9f822782" name="a4504da6c4a4b937df22f228b9f822782"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4504da6c4a4b937df22f228b9f822782">&#9670;&#160;</a></span>calculateTrace()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -130,7 +130,7 @@ Functions</h2></td></tr>
           <td class="memname">size_t symmetri::calculateTrace </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">Eventlog</a> &amp;&#160;</td>
-          <td class="paramname"><em>event_log</em></td><td>)</td>
+          <td class="paramname"><em>log</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -144,7 +144,7 @@ Functions</h2></td></tr>
 <p>Calculates a hash given an event log. This hash is only influenced by the order of the completions of transitions, the tokens the transitions return and the case_id of the net the transition is fired from. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">event_log</td><td>An eventlog, can both be from a terminated or a still active net. </td></tr>
+    <tr><td class="paramname">log</td><td>An eventlog, can both be from a terminated or a still active net. </td></tr>
   </table>
   </dd>
 </dl>
@@ -200,8 +200,8 @@ false </dd></dl>
 
 </div>
 </div>
-<a id="a418009feff8440061b68e708f273021b" name="a418009feff8440061b68e708f273021b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a418009feff8440061b68e708f273021b">&#9670;&#160;</a></span>MarkingReached()</h2>
+<a id="a731a816c7c159ed33f41f7e6e3a94b2b" name="a731a816c7c159ed33f41f7e6e3a94b2b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a731a816c7c159ed33f41f7e6e3a94b2b">&#9670;&#160;</a></span>MarkingReached()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -218,7 +218,7 @@ template&lt;typename T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::vector&lt; T &gt; &amp;&#160;</td>
-          <td class="paramname"><em>final_marking</em>&#160;</td>
+          <td class="paramname"><em>goal_marking</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -228,7 +228,7 @@ template&lt;typename T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Checks if marking is at least a subset of final_marking. Note that this uses a different type for Marking compared to the Marking type used to construct a net (an unordered map of strings). In this format the amount of tokens in a particular place is represented by how often that place occurs in the vector. For example: {"A","A","B"} is a marking with two tokens in place "A" and one token in place "B". This format does not have the overhead of mentioning all empty places. </p>
+<p>Checks if marking is at least a subset of goal_marking. Note that this uses a different type for Marking compared to the Marking type used to construct a net (an unordered map of strings). In this format the amount of tokens in a particular place is represented by how often that place occurs in the vector. For example: {"A","A","B"} is a marking with two tokens in place "A" and one token in place "B". This format does not have the overhead of mentioning all empty places. </p>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
     <tr><td class="paramname">T</td><td></td></tr>

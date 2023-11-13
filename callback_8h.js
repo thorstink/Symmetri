@@ -1,11 +1,10 @@
 var callback_8h =
 [
-    [ "DirectMutation", "structDirectMutation.html", null ],
     [ "symmetri::Callback", "classsymmetri_1_1Callback.html", "classsymmetri_1_1Callback" ],
-    [ "cancel", "callback_8h.html#a2ad37ca1722b24acfd83ac544fb80bb7", null ],
-    [ "fire", "callback_8h.html#a64b089e5d45179a249cc51095bdb842f", null ],
-    [ "getLog", "callback_8h.html#a50727ced7d06e94ad3d1f1a4c543ce4b", null ],
-    [ "isSynchronous", "callback_8h.html#ac4208bc719ab00e75b1c56ed8f95697c", null ],
-    [ "pause", "callback_8h.html#a3381197f96adaafef38cfb7c94860852", null ],
-    [ "resume", "callback_8h.html#a65b523ff8da503b1fff4ca98ce31ce33", null ]
+    [ "cancel", "callback_8h.html#ac789f942935da112c594e5222ee043a8", null ],
+    [ "fire", "callback_8h.html#a369f9434bc62272ce37e6b35d1f8814b", null ],
+    [ "getLog", "callback_8h.html#a8325b9f980718dc4139ae947ebb78040", null ],
+    [ "isSynchronous", "callback_8h.html#aa0f94b8de344a14936f05f67078711ca", null ],
+    [ "pause", "callback_8h.html#aff448a8a01c2ee4b8a469c6b6ff3b00c", null ],
+    [ "resume", "callback_8h.html#aa3d1732981b97f96c9bd841c6cd31c3f", null ]
 ];

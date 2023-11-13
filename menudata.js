@@ -55,10 +55,6 @@ var menudata={children:[
 {text:"p",url:"functions_vars.html#index_p"},
 {text:"r",url:"functions_vars.html#index_r"},
 {text:"s",url:"functions_vars.html#index_s"},
-{text:"t",url:"functions_vars.html#index_t"}]},
-{text:"Related Symbols",url:"functions_rela.html"}]}]},
+{text:"t",url:"functions_vars.html#index_t"}]}]}]},
 {text:"Files",url:"files.html",children:[
-{text:"File List",url:"files.html"},
-{text:"File Members",url:"globals.html",children:[
-{text:"All",url:"globals.html"},
-{text:"Functions",url:"globals_func.html"}]}]}]}
+{text:"File List",url:"files.html"}]}]}

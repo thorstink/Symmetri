@@ -5,9 +5,8 @@ var indexSectionsWithContent =
   2: "cpstu",
   3: "cfghimprst",
   4: "cdfilnoprst",
-  5: "cenprst",
-  6: "cfgpr",
-  7: "cilnps"
+  5: "cemnprst",
+  6: "cilnps"
 };
 
 var indexSectionNames =
@@ -18,8 +17,7 @@ var indexSectionNames =
   3: "functions",
   4: "variables",
   5: "typedefs",
-  6: "related",
-  7: "pages"
+  6: "pages"
 };
 
 var indexSectionLabels =
@@ -30,7 +28,6 @@ var indexSectionLabels =
   3: "Functions",
   4: "Variables",
   5: "Typedefs",
-  6: "Friends",
-  7: "Pages"
+  6: "Pages"
 };
 

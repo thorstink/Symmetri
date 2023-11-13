@@ -2,7 +2,7 @@ var classsymmetri_1_1Color =
 [
     [ "getColors", "classsymmetri_1_1Color.html#a3c0e4063342030ca3ee113474b3e2b7d", null ],
     [ "registerToken", "classsymmetri_1_1Color.html#aca0a34f4d9bdf91acd2f3bd4c2045299", null ],
-    [ "toString", "classsymmetri_1_1Color.html#a1f8a81d610c14b691cdd8d1fb18ff5d8", null ],
+    [ "toString", "classsymmetri_1_1Color.html#afe0a4db54058a5b3579a59fd54394140", null ],
     [ "Canceled", "classsymmetri_1_1Color.html#a34b5c2f0a229f9a2c005f38266e7d8a1", null ],
     [ "Deadlocked", "classsymmetri_1_1Color.html#ae6744c78e3f2be0ea0e5bf8239235696", null ],
     [ "Failed", "classsymmetri_1_1Color.html#aa2a28bb7cd602f1a5982e0501994011e", null ],

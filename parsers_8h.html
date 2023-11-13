@@ -102,22 +102,22 @@ $(document).ready(function(){initNavTree('parsers_8h.html',''); initResizable();
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:aaf296f6b2cd4b825fd7c384a65df0724" id="r_aaf296f6b2cd4b825fd7c384a65df0724"><td class="memItemLeft" align="right" valign="top">std::tuple&lt; <a class="el" href="types_8h.html#a8a7a9c8b346d56b747e1394bdc2d6c9c">Net</a>, Marking, <a class="el" href="types_8h.html#a72b6ac5e27222e448aa05c547d275a4e">PriorityTable</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="grml__parser_8cc.html#aaf296f6b2cd4b825fd7c384a65df0724">symmetri::readGrml</a> (const std::set&lt; std::string &gt; &amp;files)</td></tr>
-<tr class="memdesc:aaf296f6b2cd4b825fd7c384a65df0724"><td class="mdescLeft">&#160;</td><td class="mdescRight">Given a set of unique paths to grml-files, it parses and merges them, and returns <em>one</em> Net, initial marking and table containing transitions with their respective priority if it is not 1. If a place's initial marking is defined in multiple nets, the initial marking in the last processed net is used. Note that this is kind of random because a set orders the files. It will also register tokens for the color attributes that are in the arcs that go from a place to a transition.  <br /></td></tr>
-<tr class="separator:aaf296f6b2cd4b825fd7c384a65df0724"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa06090b0b8a6aa53a4284b55469e86af" id="r_aa06090b0b8a6aa53a4284b55469e86af"><td class="memItemLeft" align="right" valign="top">std::tuple&lt; <a class="el" href="types_8h.html#a8a7a9c8b346d56b747e1394bdc2d6c9c">symmetri::Net</a>, symmetri::Marking &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parsers_8h.html#aa06090b0b8a6aa53a4284b55469e86af">symmetri::readPnml</a> (const std::set&lt; std::string &gt; &amp;files)</td></tr>
+<tr class="memitem:a962ad37a26312d82dfc9e2d7f4c30879" id="r_a962ad37a26312d82dfc9e2d7f4c30879"><td class="memItemLeft" align="right" valign="top">std::tuple&lt; <a class="el" href="types_8h.html#a8a7a9c8b346d56b747e1394bdc2d6c9c">Net</a>, <a class="el" href="types_8h.html#a8319494c5f8f855b564a56f18a6db012">Marking</a>, <a class="el" href="types_8h.html#a72b6ac5e27222e448aa05c547d275a4e">PriorityTable</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="grml__parser_8cpp.html#a962ad37a26312d82dfc9e2d7f4c30879">symmetri::readGrml</a> (const std::set&lt; std::string &gt; &amp;files)</td></tr>
+<tr class="memdesc:a962ad37a26312d82dfc9e2d7f4c30879"><td class="mdescLeft">&#160;</td><td class="mdescRight">Given a set of unique paths to grml-files, it parses and merges them, and returns <em>one</em> Net, initial marking and table containing transitions with their respective priority if it is not 1. If a place's initial marking is defined in multiple nets, the initial marking in the last processed net is used. Note that this is kind of random because a set orders the files. It will also register tokens for the color attributes that are in the arcs that go from a place to a transition.  <br /></td></tr>
+<tr class="separator:a962ad37a26312d82dfc9e2d7f4c30879"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa06090b0b8a6aa53a4284b55469e86af" id="r_aa06090b0b8a6aa53a4284b55469e86af"><td class="memItemLeft" align="right" valign="top">std::tuple&lt; <a class="el" href="types_8h.html#a8a7a9c8b346d56b747e1394bdc2d6c9c">Net</a>, <a class="el" href="types_8h.html#a8319494c5f8f855b564a56f18a6db012">Marking</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parsers_8h.html#aa06090b0b8a6aa53a4284b55469e86af">symmetri::readPnml</a> (const std::set&lt; std::string &gt; &amp;files)</td></tr>
 <tr class="memdesc:aa06090b0b8a6aa53a4284b55469e86af"><td class="mdescLeft">&#160;</td><td class="mdescRight">Given a set of unique paths to pnml-files, it parses and merges them, and returns <em>one</em> Net and initial marking. If the net has priorities, these will not be included in the net. If a place's initial marking is defined in multiple nets, the initial marking in the last processed net is used. Note that this is kind of random because a set orders the files. It will also register tokens for the color attributes that are in the arcs that go from a place to a transition.  <br /></td></tr>
 <tr class="separator:aa06090b0b8a6aa53a4284b55469e86af"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="aaf296f6b2cd4b825fd7c384a65df0724" name="aaf296f6b2cd4b825fd7c384a65df0724"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaf296f6b2cd4b825fd7c384a65df0724">&#9670;&#160;</a></span>readGrml()</h2>
+<a id="a962ad37a26312d82dfc9e2d7f4c30879" name="a962ad37a26312d82dfc9e2d7f4c30879"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a962ad37a26312d82dfc9e2d7f4c30879">&#9670;&#160;</a></span>readGrml()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::tuple&lt; <a class="el" href="types_8h.html#a8a7a9c8b346d56b747e1394bdc2d6c9c">symmetri::Net</a>, symmetri::Marking, <a class="el" href="types_8h.html#a72b6ac5e27222e448aa05c547d275a4e">symmetri::PriorityTable</a> &gt; symmetri::readGrml </td>
+          <td class="memname">std::tuple&lt; Net, Marking, PriorityTable &gt; symmetri::readGrml </td>
           <td>(</td>
           <td class="paramtype">const std::set&lt; std::string &gt; &amp;&#160;</td>
           <td class="paramname"><em>files</em></td><td>)</td>
@@ -133,7 +133,7 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>std::tuple&lt;symmetri::Net, symmetri::Marking,symmetri::PriorityTable&gt; </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>std::tuple&lt;Net, Marking,PriorityTable&gt; </dd></dl>
 
 </div>
 </div>
@@ -156,11 +156,11 @@ Functions</h2></td></tr>
 <p>Given a set of unique paths to pnml-files, it parses and merges them, and returns <em>one</em> Net and initial marking. If the net has priorities, these will not be included in the net. If a place's initial marking is defined in multiple nets, the initial marking in the last processed net is used. Note that this is kind of random because a set orders the files. It will also register tokens for the color attributes that are in the arcs that go from a place to a transition. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">files</td><td></td></tr>
+    <tr><td class="paramname">pnml-files</td><td></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>std::tuple&lt;symmetri::Net, symmetri::Marking&gt; </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>std::tuple&lt;Net, Marking&gt; </dd></dl>
 
 </div>
 </div>

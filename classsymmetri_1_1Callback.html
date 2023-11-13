@@ -98,52 +98,46 @@ $(document).ready(function(){initNavTree('classsymmetri_1_1Callback.html',''); i
 </div><!--header-->
 <div class="contents">
 
-<p><a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> is a wrapper around any type that you to tie to a transition. Typically this is an invokable object, such as a function, that executes some side-effects, but it can by anything if you implement a fire-function for it. The output can be used to communicate success or failure to the petri-net executor. You can create custom behavior by defining a tailored "Token fire(const A&amp;)" for your class A.  
+<p><a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> is a wrapper around any type that you to tie to a transition. Typically this is an invokable object, such as a function, that executes some side-effects, but it can by anything if you implement a fire function for it. The output can be used to communicate success or failure to the petri-net executor. You can create custom behavior by defining a tailored "Token fire(const A&amp;)" for your class A.  
  <a href="classsymmetri_1_1Callback.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="callback_8h_source.html">callback.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a54584257689336b694016538e651640d" id="r_a54584257689336b694016538e651640d"><td class="memTemplParams" colspan="2">template&lt;typename <a class="el" href="types_8h.html#a8fe8303eaca537c6edd9f8918f534a8a">Transition</a> &gt; </td></tr>
-<tr class="memitem:a54584257689336b694016538e651640d"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1Callback.html#a54584257689336b694016538e651640d">Callback</a> (<a class="el" href="types_8h.html#a8fe8303eaca537c6edd9f8918f534a8a">Transition</a> cb)</td></tr>
-<tr class="memdesc:a54584257689336b694016538e651640d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> object.  <br /></td></tr>
-<tr class="separator:a54584257689336b694016538e651640d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa5d922d68ccf2a387e5a70831284611b" id="r_aa5d922d68ccf2a387e5a70831284611b"><td class="memItemLeft" align="right" valign="top"><a id="aa5d922d68ccf2a387e5a70831284611b" name="aa5d922d68ccf2a387e5a70831284611b"></a>
-Token&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> () const</td></tr>
-<tr class="separator:aa5d922d68ccf2a387e5a70831284611b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aefde8b8046118a29a1cf6d8b939f4c73" id="r_aefde8b8046118a29a1cf6d8b939f4c73"><td class="memItemLeft" align="right" valign="top"><a id="aefde8b8046118a29a1cf6d8b939f4c73" name="aefde8b8046118a29a1cf6d8b939f4c73"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (<a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">Eventlog</a> &amp;el) const</td></tr>
-<tr class="separator:aefde8b8046118a29a1cf6d8b939f4c73"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0fe5042cec931ec17089c7ed3bc7dce4" id="r_a0fe5042cec931ec17089c7ed3bc7dce4"><td class="memTemplParams" colspan="2">template&lt;typename <a class="el" href="types_8h.html#a8fe8303eaca537c6edd9f8918f534a8a">Transition</a> &gt; </td></tr>
+<tr class="memitem:a0fe5042cec931ec17089c7ed3bc7dce4"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classsymmetri_1_1Callback.html#a0fe5042cec931ec17089c7ed3bc7dce4">Callback</a> (<a class="el" href="types_8h.html#a8fe8303eaca537c6edd9f8918f534a8a">Transition</a> callback)</td></tr>
+<tr class="memdesc:a0fe5042cec931ec17089c7ed3bc7dce4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> object.  <br /></td></tr>
+<tr class="separator:a0fe5042cec931ec17089c7ed3bc7dce4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="friends" name="friends"></a>
 Friends</h2></td></tr>
-<tr class="memitem:aa8e9a0f78d63bf9220468178f6094c66" id="r_aa8e9a0f78d63bf9220468178f6094c66"><td class="memItemLeft" align="right" valign="top"><a id="aa8e9a0f78d63bf9220468178f6094c66" name="aa8e9a0f78d63bf9220468178f6094c66"></a>
-Token&#160;</td><td class="memItemRight" valign="bottom"><b>fire</b> (const <a class="el" href="classsymmetri_1_1Callback.html">Callback</a> &amp;cb)</td></tr>
-<tr class="separator:aa8e9a0f78d63bf9220468178f6094c66"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae6db8e29451bf5d07075ad799fb33238" id="r_ae6db8e29451bf5d07075ad799fb33238"><td class="memItemLeft" align="right" valign="top"><a id="ae6db8e29451bf5d07075ad799fb33238" name="ae6db8e29451bf5d07075ad799fb33238"></a>
-<a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">Eventlog</a>&#160;</td><td class="memItemRight" valign="bottom"><b>getLog</b> (const <a class="el" href="classsymmetri_1_1Callback.html">Callback</a> &amp;cb)</td></tr>
-<tr class="separator:ae6db8e29451bf5d07075ad799fb33238"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa9fd507381f1f0fd8f6f23983d1a7e05" id="r_aa9fd507381f1f0fd8f6f23983d1a7e05"><td class="memItemLeft" align="right" valign="top"><a id="aa9fd507381f1f0fd8f6f23983d1a7e05" name="aa9fd507381f1f0fd8f6f23983d1a7e05"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>isSynchronous</b> (const <a class="el" href="classsymmetri_1_1Callback.html">Callback</a> &amp;cb)</td></tr>
-<tr class="separator:aa9fd507381f1f0fd8f6f23983d1a7e05"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a196e2da82f25357393d232a7f65a4814" id="r_a196e2da82f25357393d232a7f65a4814"><td class="memItemLeft" align="right" valign="top"><a id="a196e2da82f25357393d232a7f65a4814" name="a196e2da82f25357393d232a7f65a4814"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>cancel</b> (const <a class="el" href="classsymmetri_1_1Callback.html">Callback</a> &amp;cb)</td></tr>
-<tr class="separator:a196e2da82f25357393d232a7f65a4814"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a029165ef952aee84bcd649ed272dd5ee" id="r_a029165ef952aee84bcd649ed272dd5ee"><td class="memItemLeft" align="right" valign="top"><a id="a029165ef952aee84bcd649ed272dd5ee" name="a029165ef952aee84bcd649ed272dd5ee"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>pause</b> (const <a class="el" href="classsymmetri_1_1Callback.html">Callback</a> &amp;cb)</td></tr>
-<tr class="separator:a029165ef952aee84bcd649ed272dd5ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6d4a99f8c464ed5a86ce4e0354f2775a" id="r_a6d4a99f8c464ed5a86ce4e0354f2775a"><td class="memItemLeft" align="right" valign="top"><a id="a6d4a99f8c464ed5a86ce4e0354f2775a" name="a6d4a99f8c464ed5a86ce4e0354f2775a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>resume</b> (const <a class="el" href="classsymmetri_1_1Callback.html">Callback</a> &amp;cb)</td></tr>
-<tr class="separator:a6d4a99f8c464ed5a86ce4e0354f2775a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a135dafa528e3cd1376e6c2555da744" id="r_a0a135dafa528e3cd1376e6c2555da744"><td class="memItemLeft" align="right" valign="top"><a id="a0a135dafa528e3cd1376e6c2555da744" name="a0a135dafa528e3cd1376e6c2555da744"></a>
+Token&#160;</td><td class="memItemRight" valign="bottom"><b>fire</b> (const <a class="el" href="classsymmetri_1_1Callback.html">Callback</a> &amp;callback)</td></tr>
+<tr class="separator:a0a135dafa528e3cd1376e6c2555da744"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8808cbf337ba0f73cb34e226ab569c97" id="r_a8808cbf337ba0f73cb34e226ab569c97"><td class="memItemLeft" align="right" valign="top"><a id="a8808cbf337ba0f73cb34e226ab569c97" name="a8808cbf337ba0f73cb34e226ab569c97"></a>
+<a class="el" href="types_8h.html#a3cd7dcce5ab97a0890ab078f83435933">Eventlog</a>&#160;</td><td class="memItemRight" valign="bottom"><b>getLog</b> (const <a class="el" href="classsymmetri_1_1Callback.html">Callback</a> &amp;callback)</td></tr>
+<tr class="separator:a8808cbf337ba0f73cb34e226ab569c97"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9eaa1e2362865107478fc8541e2bfdfd" id="r_a9eaa1e2362865107478fc8541e2bfdfd"><td class="memItemLeft" align="right" valign="top"><a id="a9eaa1e2362865107478fc8541e2bfdfd" name="a9eaa1e2362865107478fc8541e2bfdfd"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>isSynchronous</b> (const <a class="el" href="classsymmetri_1_1Callback.html">Callback</a> &amp;callback)</td></tr>
+<tr class="separator:a9eaa1e2362865107478fc8541e2bfdfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a263bb79858706c92496798b1998bf929" id="r_a263bb79858706c92496798b1998bf929"><td class="memItemLeft" align="right" valign="top"><a id="a263bb79858706c92496798b1998bf929" name="a263bb79858706c92496798b1998bf929"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>cancel</b> (const <a class="el" href="classsymmetri_1_1Callback.html">Callback</a> &amp;callback)</td></tr>
+<tr class="separator:a263bb79858706c92496798b1998bf929"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0963282c0194d4ebdfd6b38ab8f0e886" id="r_a0963282c0194d4ebdfd6b38ab8f0e886"><td class="memItemLeft" align="right" valign="top"><a id="a0963282c0194d4ebdfd6b38ab8f0e886" name="a0963282c0194d4ebdfd6b38ab8f0e886"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>pause</b> (const <a class="el" href="classsymmetri_1_1Callback.html">Callback</a> &amp;callback)</td></tr>
+<tr class="separator:a0963282c0194d4ebdfd6b38ab8f0e886"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a966fc8f2ca8405dcac2d647fe15ca51a" id="r_a966fc8f2ca8405dcac2d647fe15ca51a"><td class="memItemLeft" align="right" valign="top"><a id="a966fc8f2ca8405dcac2d647fe15ca51a" name="a966fc8f2ca8405dcac2d647fe15ca51a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>resume</b> (const <a class="el" href="classsymmetri_1_1Callback.html">Callback</a> &amp;callback)</td></tr>
+<tr class="separator:a966fc8f2ca8405dcac2d647fe15ca51a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p><a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> is a wrapper around any type that you to tie to a transition. Typically this is an invokable object, such as a function, that executes some side-effects, but it can by anything if you implement a fire-function for it. The output can be used to communicate success or failure to the petri-net executor. You can create custom behavior by defining a tailored "Token fire(const A&amp;)" for your class A. </p>
+<div class="textblock"><p><a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> is a wrapper around any type that you to tie to a transition. Typically this is an invokable object, such as a function, that executes some side-effects, but it can by anything if you implement a fire function for it. The output can be used to communicate success or failure to the petri-net executor. You can create custom behavior by defining a tailored "Token fire(const A&amp;)" for your class A. </p>
 <p>Random note, this class is inspired/taken by Sean Parents' talk "inheritance
 is the base class of evil". </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a54584257689336b694016538e651640d" name="a54584257689336b694016538e651640d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a54584257689336b694016538e651640d">&#9670;&#160;</a></span>Callback()</h2>
+<a id="a0fe5042cec931ec17089c7ed3bc7dce4" name="a0fe5042cec931ec17089c7ed3bc7dce4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0fe5042cec931ec17089c7ed3bc7dce4">&#9670;&#160;</a></span>Callback()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -157,7 +151,7 @@ template&lt;typename <a class="el" href="types_8h.html#a8fe8303eaca537c6edd9f891
           <td class="memname">symmetri::Callback::Callback </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="types_8h.html#a8fe8303eaca537c6edd9f8918f534a8a">Transition</a>&#160;</td>
-          <td class="paramname"><em>cb</em></td><td>)</td>
+          <td class="paramname"><em>callback</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -171,7 +165,7 @@ template&lt;typename <a class="el" href="types_8h.html#a8fe8303eaca537c6edd9f891
 <p>Construct a new <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> object. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cb</td><td>is the <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> instance </td></tr>
+    <tr><td class="paramname">callback</td><td>is the <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> instance </td></tr>
   </table>
   </dd>
 </dl>
