@@ -18,9 +18,9 @@ namespace symmetri {
  * go from a place to a transition.
  *
  * @param grml-files
- * @return std::tuple<symmetri::Net, symmetri::Marking,symmetri::PriorityTable>
+ * @return std::tuple<Net, Marking,PriorityTable>
  */
-std::tuple<symmetri::Net, symmetri::Marking, symmetri::PriorityTable> readGrml(
+std::tuple<Net, Marking, PriorityTable> readGrml(
     const std::set<std::string> &files);
 
 /**
@@ -32,10 +32,9 @@ std::tuple<symmetri::Net, symmetri::Marking, symmetri::PriorityTable> readGrml(
  * register tokens for the color attributes that are in the arcs that go from a
  * place to a transition.
  *
- * @param files
- * @return std::tuple<symmetri::Net, symmetri::Marking>
+ * @param pnml-files
+ * @return std::tuple<Net, Marking>
  */
-std::tuple<symmetri::Net, symmetri::Marking> readPnml(
-    const std::set<std::string> &files);
+std::tuple<Net, Marking> readPnml(const std::set<std::string> &files);
 
 }  // namespace symmetri

@@ -30,8 +30,8 @@ Net net = {{"foo", {{"B", "C"}, {"Z", "B"}}},
                 {"bar", {{"Z"}, {"B", "C"}}}};
 Marking initial = {{"Z",  Color::Success}};
 Marking goal = {};
-auto pool = std::make_shared<symmetri::TaskSystem>(4);
-symmetri::PetriNet app(net,"test_net_without_end", pool, initial, goal);
+auto pool = std::make_shared<TaskSystem>(4);
+PetriNet app(net,"test_net_without_end", pool, initial, goal);
 app.registerCallback("foo", &foo);
 app.registerCallback("bar", &bar);
 

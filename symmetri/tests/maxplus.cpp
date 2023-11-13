@@ -5,8 +5,8 @@
 
 using Catch::Approx;
 using namespace symmetri;
-auto eps = symmetri::epsilon<double>;
-auto e = symmetri::e_<double>;
+auto eps = epsilon<double>;
+auto e = e_<double>;
 
 TEST_CASE("Matrices", "[MatrixXd]") {
   MatrixXd A(3, 3), B(3, 3), C(3, 3), ZERO(3, 3), ADD(3, 3), MUL(3, 3),

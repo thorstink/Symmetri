@@ -6,7 +6,10 @@
 #include "symmetri/colors.hpp"
 namespace symmetri {
 
-const std::string& Color::toString(symmetri::Token r) { return Color::map[r]; }
+bool isSynchronous(const DirectMutation&) { return true; }
+Token fire(const DirectMutation&) { return Color::Success; }
+
+const std::string& Color::toString(Token r) { return Color::map[r]; }
 
 const Token& Color::registerToken(const std::string& s) {
   return Color::map.insert({impl::HashColor(s.c_str()), s}).first->first;

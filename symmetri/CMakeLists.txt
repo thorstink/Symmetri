@@ -4,13 +4,14 @@ set(CMAKE_INSTALL_INCLUDEDIR include)
 
 #lib
 add_library(${PROJECT_NAME} SHARED
-  tasks.cpp
-  petri.cc
-  petri_utilities.cc
-  pnml_parser.cc
-  grml_parser.cc
   types.cpp
-  symmetri.cc
+  tasks.cpp
+  symmetri.cpp
+  petri.cpp
+  petri_traits.cpp
+  petri_utilities.cpp
+  pnml_parser.cpp
+  grml_parser.cpp
   submodules/tinyxml2/tinyxml2.cpp
 )
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})

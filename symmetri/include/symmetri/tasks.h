@@ -45,7 +45,7 @@ class TaskSystem {
   TaskSystem& operator=(TaskSystem&&) noexcept = delete;
 
   /**
-   * @brief push tasks the the queue for later execution on the thread pool.
+   * @brief push tasks the queue for later execution on the thread pool.
    *
    * @param p
    */

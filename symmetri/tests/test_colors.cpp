@@ -14,8 +14,8 @@ TEST_CASE("Test color.") {
   PriorityTable priority;
   Marking m0 = {{"p1", Blue}};
   Marking mgoal = {{"p1", Red}};
-  auto stp = std::make_shared<TaskSystem>(1);
-  Petri m(net, priority, m0, mgoal, "s", stp);
+  auto threadpool = std::make_shared<TaskSystem>(1);
+  Petri m(net, priority, m0, mgoal, "s", threadpool);
 
   m.net.registerCallback("t0", &red);
 

@@ -1,8 +1,4 @@
 #include "petri.h"
-bool isSynchronous(const DirectMutation &) { return true; }
-symmetri::Token fire(const DirectMutation &) {
-  return symmetri::Color::Success;
-}
 
 namespace symmetri {
 std::tuple<std::vector<std::string>, std::vector<std::string>,
@@ -84,14 +80,15 @@ std::vector<int8_t> createPriorityLookup(
 
 Petri::Petri(const Net &_net, const PriorityTable &_priority,
              const Marking &_initial_tokens, const Marking &_final_marking,
-             const std::string &_case_id, std::shared_ptr<TaskSystem> stp)
+             const std::string &_case_id,
+             std::shared_ptr<TaskSystem> threadpool)
     : log({}),
       state(Color::Scheduled),
       case_id(_case_id),
       thread_id_(std::nullopt),
       reducer_queue(
           std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(128)),
-      pool(stp) {
+      pool(threadpool) {
   log.reserve(1000);
   tokens.reserve(100);
   scheduled_callbacks.reserve(10);
@@ -240,8 +237,8 @@ Eventlog Petri::getLogInternal() const {
   }
 
   // get event log from parent nets:
-  for (const auto &cb : net.store) {
-    Eventlog sub_el = getLog(cb);
+  for (const auto &callback : net.store) {
+    Eventlog sub_el = getLog(callback);
     if (!sub_el.empty()) {
       eventlog.insert(eventlog.end(), sub_el.begin(), sub_el.end());
     }

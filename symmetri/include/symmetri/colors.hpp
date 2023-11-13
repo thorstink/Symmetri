@@ -24,7 +24,7 @@ Token constexpr HashColor(char const* input) {
 
 /**
  * @brief A completely static class that hosts the basic Tokens (Scheduled,
- * Started, Success, Deadlocked, Canceled, Paused and Failed.) It also hosts a
+ * Started, Success, Deadlocked, Canceled, Paused and Failed). It also hosts a
  * dictonairy matching the color's string description to the token.
  *
  */
@@ -67,7 +67,7 @@ class Color {
    * @param r
    * @return const std::string&
    */
-  static const std::string& toString(symmetri::Token r);
+  static const std::string& toString(Token r);
 
   /**
    * @brief By registering a color, a Token is calculated that represents that

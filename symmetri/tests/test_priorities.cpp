@@ -16,9 +16,9 @@ TEST_CASE(
     Net net = {{"t0", {{{"Pa", Color::Success}}, {{"Pb", Color::Success}}}},
                {"t1", {{{"Pa", Color::Success}}, {{"Pc", Color::Success}}}}};
     Marking m0 = {{"Pa", Color::Success}};
-    auto stp = std::make_shared<TaskSystem>(1);
+    auto threadpool = std::make_shared<TaskSystem>(1);
 
-    auto m = Petri(net, priority, m0, {}, "s", stp);
+    auto m = Petri(net, priority, m0, {}, "s", threadpool);
     m.net.registerCallback("t0", [] {});
     m.net.registerCallback("t1", [] {});
     m.fireTransitions();
@@ -53,9 +53,9 @@ TEST_CASE("Using DirectMutation does not queue reducers.") {
                {"t1", {{{"Pa", Color::Success}}, {{"Pc", Color::Success}}}}};
 
     Marking m0 = {{"Pa", Color::Success}};
-    auto stp = std::make_shared<TaskSystem>(1);
+    auto threadpool = std::make_shared<TaskSystem>(1);
 
-    auto m = Petri(net, priority, m0, {}, "s", stp);
+    auto m = Petri(net, priority, m0, {}, "s", threadpool);
     m.fireTransitions();
     // no reducers needed, as simple transitions are handled within run all.
     auto prio_t0 = std::find_if(priority.begin(), priority.end(), [](auto e) {

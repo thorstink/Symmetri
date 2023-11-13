@@ -3,11 +3,10 @@
 /** @file petri.h */
 
 #include <functional>
-#include <memory>
 #include <optional>
 
-#include "queue/blockingconcurrentqueue.h"
-#include "small_vector.hpp"
+#include "externals/blockingconcurrentqueue.h"
+#include "externals/small_vector.hpp"
 #include "symmetri/callback.h"
 #include "symmetri/tasks.h"
 #include "symmetri/types.h"
@@ -32,7 +31,7 @@ inline bool operator>(const AugmentedToken &lhs, const AugmentedToken &rhs) {
 }
 
 /**
- * @brief a minimal event representation.
+ * @brief a minimal Event representation.
  *
  */
 struct SmallEvent {
@@ -132,7 +131,8 @@ void deductMarking(std::vector<AugmentedToken> &tokens,
 /**
  * @brief Petri is a data structure that encodes the Petri net and holds
  * pointers to the thread-pool and the reducer-queue. It is optimized for
- * calculating the active transition set and quick lookups in ordered vectors.
+ * calculating the active transition set and dispatching a Callback to the
+ * TaskSystem.
  *
  */
 struct Petri {
@@ -147,11 +147,12 @@ struct Petri {
    * @param _initial_tokens
    * @param _final_marking
    * @param _case_id
-   * @param stp
+   * @param threadpool
    */
   explicit Petri(const Net &_net, const PriorityTable &_priority,
                  const Marking &_initial_tokens, const Marking &_final_marking,
-                 const std::string &_case_id, std::shared_ptr<TaskSystem> stp);
+                 const std::string &_case_id,
+                 std::shared_ptr<TaskSystem> threadpool);
   ~Petri() noexcept = default;
   Petri(Petri const &) = delete;
   Petri(Petri &&) noexcept = delete;
@@ -255,10 +256,10 @@ struct Petri {
     std::vector<Callback> store;
 
     void registerCallback(const std::string &t,
-                          const symmetri::Callback &cb) noexcept {
+                          const Callback &callback) noexcept {
       if (std::find(transition.begin(), transition.end(), t) !=
           transition.end()) {
-        store[toIndex(transition, t)] = cb;
+        store[toIndex(transition, t)] = callback;
       }
     }
   } net;  ///< Is a data-oriented design of a Petri net

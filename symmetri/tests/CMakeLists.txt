@@ -14,18 +14,18 @@ set(test_files
 install(DIRECTORY ${test_files} DESTINATION ${PROJECT_SOURCE_DIR}/build/symmetri/tests)
 
 add_executable(${PROJECT_NAME}_symmetri_test
-  test_actions.cc
-  test_parser.cc
-  test_petri_fire.cc
-  test_petri.cc
-  test_symmetri.cc
-  maxplus.cc
-  test_external_input.cc
-  test_priorities.cc
-  test_bugs.cc
-  test_colors.cc
-  test_types.cc
-  test_callback.cc
+  test_actions.cpp
+  test_parser.cpp
+  test_petri_fire.cpp
+  test_petri.cpp
+  test_symmetri.cpp
+  maxplus.cpp
+  test_external_input.cpp
+  test_priorities.cpp
+  test_bugs.cpp
+  test_colors.cpp
+  test_types.cpp
+  test_callback.cpp
 )
 target_link_libraries(${PROJECT_NAME}_symmetri_test PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME})
 add_test(${PROJECT_NAME}_symmetri_test ${PROJECT_NAME}_symmetri_test)

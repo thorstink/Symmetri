@@ -29,10 +29,10 @@ std::tuple<Net, PriorityTable, Marking> SymmetriTestNet() {
 
 TEST_CASE("Create a using the net constructor without end condition.") {
   auto [net, priority, initial_marking] = SymmetriTestNet();
-  auto stp = std::make_shared<TaskSystem>(1);
+  auto threadpool = std::make_shared<TaskSystem>(1);
   Marking goal_marking = {};
-  PetriNet app(net, "test_net_without_end", stp, initial_marking, goal_marking,
-               priority);
+  PetriNet app(net, "test_net_without_end", threadpool, initial_marking,
+               goal_marking, priority);
   app.registerCallback("t0", &t0);
   app.registerCallback("t1", &t1);
   // we can run the net
@@ -44,14 +44,14 @@ TEST_CASE("Create a using the net constructor without end condition.") {
 }
 
 TEST_CASE("Create a using the net constructor with end condition.") {
-  auto stp = std::make_shared<TaskSystem>(1);
+  auto threadpool = std::make_shared<TaskSystem>(1);
   auto [net, priority, initial_marking] = SymmetriTestNet();
   Marking goal_marking({{"Pb", Color::Success},
                         {"Pb", Color::Success},
                         {"Pd", Color::Success},
                         {"Pd", Color::Success}});
-  PetriNet app(net, "test_net_with_end", stp, initial_marking, goal_marking,
-               priority);
+  PetriNet app(net, "test_net_with_end", threadpool, initial_marking,
+               goal_marking, priority);
   app.registerCallback("t0", &t0);
   app.registerCallback("t1", &t1);
   // we can run the net
@@ -67,11 +67,11 @@ TEST_CASE("Create a using pnml constructor.") {
   const std::string pnml_file = std::filesystem::current_path().append(
       "../../../symmetri/tests/assets/PT1.pnml");
 
-  auto stp = std::make_shared<TaskSystem>(1);
+  auto threadpool = std::make_shared<TaskSystem>(1);
   PriorityTable priority;
   Marking final_marking({{"P1", Color::Success}});
   const auto case_id = "success";
-  PetriNet app({pnml_file}, case_id, stp, final_marking, priority);
+  PetriNet app({pnml_file}, case_id, threadpool, final_marking, priority);
   app.registerCallback("T0", &t0);
   // so we can run it,
   auto res = fire(app);
@@ -86,8 +86,9 @@ TEST_CASE("Reuse an application with a new case_id.") {
   Marking goal_marking = {};
   const auto initial_id = "initial0";
   const auto new_id = "something_different0";
-  auto stp = std::make_shared<TaskSystem>(1);
-  PetriNet app(net, initial_id, stp, initial_marking, goal_marking, priority);
+  auto threadpool = std::make_shared<TaskSystem>(1);
+  PetriNet app(net, initial_id, threadpool, initial_marking, goal_marking,
+               priority);
   app.registerCallback("t0", &t0);
   app.registerCallback("t1", &t1);
 
@@ -109,12 +110,13 @@ TEST_CASE("Can not reuse an active application with a new case_id.") {
   Marking goal_marking = {};
   const auto initial_id = "initial1";
   const auto new_id = "something_different1";
-  auto stp = std::make_shared<TaskSystem>(1);
-  PetriNet app(net, initial_id, stp, initial_marking, goal_marking, priority);
+  auto threadpool = std::make_shared<TaskSystem>(1);
+  PetriNet app(net, initial_id, threadpool, initial_marking, goal_marking,
+               priority);
   app.registerCallback(
       "t0", [] { std::this_thread::sleep_for(std::chrono::milliseconds(5)); });
   app.registerCallback("t1", &t1);
-  stp->push([&]() mutable {
+  threadpool->push([&]() mutable {
     // this should fail because we can not do this while everything is active.
     CHECK(!app.reuseApplication(new_id));
   });
@@ -125,13 +127,13 @@ TEST_CASE("Test pause and resume") {
   std::atomic<int> i = 0;
   Net net = {{"t0", {{{"Pa", Color::Success}}, {{"Pa", Color::Success}}}},
              {"t1", {{}, {{"Pb", Color::Success}}}}};
-  auto stp = std::make_shared<TaskSystem>(2);
+  auto threadpool = std::make_shared<TaskSystem>(2);
   Marking initial_marking = {{"Pa", Color::Success}};
   Marking goal_marking = {{"Pb", Color::Success}};
-  PetriNet app(net, "random_id", stp, initial_marking, goal_marking);
+  PetriNet app(net, "random_id", threadpool, initial_marking, goal_marking);
   app.registerCallback("t0", [&] { i++; });
   int check1, check2;
-  stp->push([&, app, t1 = app.getInputTransitionHandle("t1")]() {
+  threadpool->push([&, app, t1 = app.getInputTransitionHandle("t1")]() {
     const auto dt = std::chrono::milliseconds(5);
     std::this_thread::sleep_for(dt);
     pause(app);
@@ -155,7 +157,7 @@ const static Token ExternalState(Color::registerToken("ExternalState"));
 }  // namespace symmetri
 
 TEST_CASE("Types") {
-  using namespace symmetri::state;
+  using namespace state;
   CHECK(Color::Scheduled != ExternalState);
   CHECK(Color::Started != ExternalState);
   CHECK(Color::Success != ExternalState);
@@ -168,7 +170,7 @@ TEST_CASE("Types") {
 }
 
 TEST_CASE("Print Types") {
-  using namespace symmetri::state;
+  using namespace state;
   std::cout << Color::toString(Color::Scheduled) << ", " << Color::Scheduled
             << std::endl;
   std::cout << Color::toString(Color::Started) << ", " << Color::Started
