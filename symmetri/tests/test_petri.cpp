@@ -18,7 +18,7 @@ void petri0() {
 auto petri1() {
   auto inc = T1_COUNTER.load() + 1;
   T1_COUNTER.store(inc);
-  return symmetri::Color::Success;
+  return Color::Success;
 }
 
 std::tuple<Net, PriorityTable, Marking> PetriTestNet() {

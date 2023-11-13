@@ -63,12 +63,12 @@ void resume(const T &) {}
  * possible eventlog of the callback.
  */
 template <typename T>
-symmetri::Token fire(const T &callback) {
-  if constexpr (std::is_same_v<symmetri::Token, decltype(callback())>) {
+Token fire(const T &callback) {
+  if constexpr (std::is_same_v<Token, decltype(callback())>) {
     return callback();
   } else if constexpr (std::is_same_v<void, decltype(callback())>) {
     callback();
-    return symmetri::Color::Success;
+    return Color::Success;
   }
 }
 
@@ -76,10 +76,10 @@ symmetri::Token fire(const T &callback) {
  * @brief Get the Log object. By default it returns an empty list.
  *
  * @tparam T the type of the callback.
- * @return symmetri::Eventlog
+ * @return Eventlog
  */
 template <typename T>
-symmetri::Eventlog getLog(const T &) {
+Eventlog getLog(const T &) {
   return {};
 }
 

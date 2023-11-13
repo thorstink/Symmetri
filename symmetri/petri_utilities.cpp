@@ -76,10 +76,9 @@ Reducer scheduleCallback(
     size_t t_i, const Callback &task,
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducer_queue) {
-  reducer_queue->enqueue(
-      [start_time = Clock::now(), t_i](symmetri::Petri &model) {
-        model.log.push_back({t_i, Color::Started, start_time});
-      });
+  reducer_queue->enqueue([start_time = Clock::now(), t_i](Petri &model) {
+    model.log.push_back({t_i, Color::Started, start_time});
+  });
 
   return createReducerForCallback(t_i, fire(task), Clock::now());
 }

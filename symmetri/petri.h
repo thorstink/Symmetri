@@ -255,7 +255,7 @@ struct Petri {
     std::vector<Callback> store;
 
     void registerCallback(const std::string &t,
-                          const symmetri::Callback &callback) noexcept {
+                          const Callback &callback) noexcept {
       if (std::find(transition.begin(), transition.end(), t) !=
           transition.end()) {
         store[toIndex(transition, t)] = callback;

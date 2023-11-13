@@ -54,7 +54,7 @@ int main(int, char *argv[]) {
   // We create a threadpool to which transitions can be dispatched. In this
   // case 4 is too many; in theory you can deduce the maximum amount of
   // parallel transitions from your petri net.
-  auto pool = std::make_shared<symmetri::TaskSystem>(4);
+  auto pool = std::make_shared<TaskSystem>(4);
 
   // Here we create the first PetriNet based on composing pnml1 and pnml2
   // using flat composition. The associated transitions are two instance of

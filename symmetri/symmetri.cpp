@@ -54,9 +54,8 @@ std::function<void()> PetriNet::getInputTransitionHandle(
   }
 }
 
-void PetriNet::registerCallback(
-    const std::string &transition,
-    const symmetri::Callback &callback) const noexcept {
+void PetriNet::registerCallback(const std::string &transition,
+                                const Callback &callback) const noexcept {
   if (!impl->thread_id_.load().has_value()) {
     impl->net.registerCallback(transition, callback);
   }

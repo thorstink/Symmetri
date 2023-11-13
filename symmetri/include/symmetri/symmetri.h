@@ -38,10 +38,9 @@ class PetriNet final {
    * @param priorities
    */
   PetriNet(const std::set<std::string> &petri_net_xmls,
-           const std::string &case_id,
-           std::shared_ptr<symmetri::TaskSystem> threadpool,
-           const symmetri::Marking &goal_marking = {},
-           const symmetri::PriorityTable &priorities = {});
+           const std::string &case_id, std::shared_ptr<TaskSystem> threadpool,
+           const Marking &goal_marking = {},
+           const PriorityTable &priorities = {});
 
   /**
    * @brief Construct a new PetriNet object from a net and initial marking
@@ -53,11 +52,10 @@ class PetriNet final {
    * @param goal_marking
    * @param priorities
    */
-  PetriNet(const symmetri::Net &net, const std::string &case_id,
-           std::shared_ptr<symmetri::TaskSystem> threadpool,
-           const symmetri::Marking &initial_marking,
-           const symmetri::Marking &goal_marking = {},
-           const symmetri::PriorityTable &priorities = {});
+  PetriNet(const Net &net, const std::string &case_id,
+           std::shared_ptr<TaskSystem> threadpool,
+           const Marking &initial_marking, const Marking &goal_marking = {},
+           const PriorityTable &priorities = {});
 
   /**
    * @brief By registering a input transition you get a handle to manually force
@@ -79,15 +77,15 @@ class PetriNet final {
    * @param callback the callback
    */
   void registerCallback(const std::string &transition,
-                        const symmetri::Callback &callback) const noexcept;
+                        const Callback &callback) const noexcept;
 
   /**
    * @brief Get the Marking object. This function is thread-safe and be called
    * during PetriNet execution.
    *
-   * @return std::vector<symmetri::Place>
+   * @return std::vector<Place>
    */
-  symmetri::Marking getMarking() const noexcept;
+  Marking getMarking() const noexcept;
 
   /**
    * @brief reuseApplication resets the PetriNet such that the same net can
@@ -100,16 +98,15 @@ class PetriNet final {
    */
   bool reuseApplication(const std::string &case_id);
 
-  friend symmetri::Token(symmetri::fire)(const PetriNet &);
+  friend Token(symmetri::fire)(const PetriNet &);
   friend void(symmetri::cancel)(const PetriNet &);
   friend void(symmetri::pause)(const PetriNet &);
   friend void(symmetri::resume)(const PetriNet &);
-  friend symmetri::Eventlog(symmetri::getLog)(const PetriNet &);
+  friend Eventlog(symmetri::getLog)(const PetriNet &);
 
  private:
-  const std::shared_ptr<symmetri::Petri>
-      impl;  ///< Pointer to the implementation, all
-             ///< information is stored in Petri
+  const std::shared_ptr<Petri> impl;  ///< Pointer to the implementation, all
+                                      ///< information is stored in Petri
 };
 
 }  // namespace symmetri

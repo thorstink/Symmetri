@@ -49,5 +49,5 @@ int main(int argc, char *argv[]) {
                    .count()
             << ", execution trace: " << calculateTrace(getLog(petri))
             << std::endl;
-  return result == symmetri::Color::Success ? 0 : -1;
+  return result == Color::Success ? 0 : -1;
 }

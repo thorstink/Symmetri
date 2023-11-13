@@ -66,23 +66,23 @@ class PetriNet;
  * completes.
  *
  */
-bool isSynchronous(const symmetri::DirectMutation &);
+bool isSynchronous(const DirectMutation &);
 
 /**
  * @brief fire for a direct mutation does no work at all.
  *
- * @return symmetri::Token
+ * @return Token
  */
-symmetri::Token fire(const symmetri::DirectMutation &);
+Token fire(const DirectMutation &);
 
 /**
  * @brief The fire specialization for a PetriNet runs the Petri net until it
  * completes, deadlocks or is preempted. It returns an event log along with the
  * result state.
  *
- * @return symmetri::Token
+ * @return Token
  */
-symmetri::Token fire(const symmetri::PetriNet &);
+Token fire(const PetriNet &);
 
 /**
  * @brief The cancel specialization for a PetriNet breaks the PetriNets'
@@ -90,9 +90,9 @@ symmetri::Token fire(const symmetri::PetriNet &);
  * child Callbacks that are running. The cancel function will return before the
  * PetriNet is preempted completely.
  *
- * @return symmetri::Token
+ * @return Token
  */
-void cancel(const symmetri::PetriNet &);
+void cancel(const PetriNet &);
 
 /**
  * @brief The pause specialization for a PetriNet prevents new fire-able
@@ -100,7 +100,7 @@ void cancel(const symmetri::PetriNet &);
  * are running. The pause function will return before the PetriNet will pause.
  *
  */
-void pause(const symmetri::PetriNet &);
+void pause(const PetriNet &);
 
 /**
  * @brief The resume specialization for a PetriNet undoes pause and puts the
@@ -108,13 +108,13 @@ void pause(const symmetri::PetriNet &);
  * execution. The resume function will return before the PetriNet will resume.
  *
  */
-void resume(const symmetri::PetriNet &);
+void resume(const PetriNet &);
 
 /**
  * @brief Get the Log object
  *
- * @return symmetri::Eventlog
+ * @return Eventlog
  */
-symmetri::Eventlog getLog(const symmetri::PetriNet &);
+Eventlog getLog(const PetriNet &);
 
 }  // namespace symmetri

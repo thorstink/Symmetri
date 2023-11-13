@@ -18,16 +18,16 @@ unsigned int getThreadId() {
       std::hash<std::thread::id>()(std::this_thread::get_id()));
 }
 
-symmetri::Token fire(const PetriNet &app) {
+Token fire(const PetriNet &app) {
   if (app.impl->thread_id_.load().has_value()) {
-    return symmetri::Color::Failed;
+    return Color::Failed;
   }
   auto &m = *app.impl;
-  m.thread_id_.store(symmetri::getThreadId());
+  m.thread_id_.store(getThreadId());
   m.scheduled_callbacks.clear();
   m.tokens = m.initial_tokens;
   m.state = Color::Started;
-  symmetri::Reducer f;
+  Reducer f;
   while (m.reducer_queue->try_dequeue(f)) { /* get rid of old reducers  */
   }
 
@@ -39,7 +39,7 @@ symmetri::Token fire(const PetriNet &app) {
       f(m);
     } while (m.reducer_queue->try_dequeue(f));
 
-    if (symmetri::MarkingReached(m.tokens, m.final_marking)) {
+    if (MarkingReached(m.tokens, m.final_marking)) {
       m.state = Color::Success;
     }
 
@@ -49,13 +49,13 @@ symmetri::Token fire(const PetriNet &app) {
       // if there's nothing to fire; we deadlocked
       if (m.scheduled_callbacks.size() == 0) {
         m.state = Color::Deadlocked;
-      } else if (symmetri::MarkingReached(m.tokens, m.final_marking)) {
+      } else if (MarkingReached(m.tokens, m.final_marking)) {
         m.state = Color::Success;
       }
     }
   }
 
-  if (symmetri::MarkingReached(m.tokens, m.final_marking)) {
+  if (MarkingReached(m.tokens, m.final_marking)) {
     m.state = Color::Success;
   }
 

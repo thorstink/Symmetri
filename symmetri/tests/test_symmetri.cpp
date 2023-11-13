@@ -157,7 +157,7 @@ const static Token ExternalState(Color::registerToken("ExternalState"));
 }  // namespace symmetri
 
 TEST_CASE("Types") {
-  using namespace symmetri::state;
+  using namespace state;
   CHECK(Color::Scheduled != ExternalState);
   CHECK(Color::Started != ExternalState);
   CHECK(Color::Success != ExternalState);
@@ -170,7 +170,7 @@ TEST_CASE("Types") {
 }
 
 TEST_CASE("Print Types") {
-  using namespace symmetri::state;
+  using namespace state;
   std::cout << Color::toString(Color::Scheduled) << ", " << Color::Scheduled
             << std::endl;
   std::cout << Color::toString(Color::Started) << ", " << Color::Started
