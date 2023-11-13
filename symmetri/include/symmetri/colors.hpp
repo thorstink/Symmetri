@@ -24,7 +24,7 @@ Token constexpr HashColor(char const* input) {
 
 /**
  * @brief A completely static class that hosts the basic Tokens (Scheduled,
- * Started, Success, Deadlocked, Canceled, Paused and Failed.) It also hosts a
+ * Started, Success, Deadlocked, Canceled, Paused and Failed). It also hosts a
  * dictonairy matching the color's string description to the token.
  *
  */

@@ -87,7 +87,7 @@ Eventlog getLog(const T &) {
  * @brief Callback is a wrapper around any type that you to tie to a
  * transition. Typically this is an invokable object, such as a function, that
  * executes some side-effects, but it can by anything if you implement a
- * fire-function for it. The output can be used to communicate success or
+ * fire function for it. The output can be used to communicate success or
  * failure to the petri-net executor. You can create custom behavior by defining
  * a tailored "Token fire(const A&)" for your class A.
  *

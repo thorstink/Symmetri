@@ -131,7 +131,8 @@ void deductMarking(std::vector<AugmentedToken> &tokens,
 /**
  * @brief Petri is a data structure that encodes the Petri net and holds
  * pointers to the thread-pool and the reducer-queue. It is optimized for
- * calculating the active transition set and quick lookups in ordered vectors.
+ * calculating the active transition set and dispatching a Callback to the
+ * TaskSystem.
  *
  */
 struct Petri {
