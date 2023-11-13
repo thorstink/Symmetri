@@ -6,8 +6,8 @@
 #include <memory>
 #include <optional>
 
-#include "queue/blockingconcurrentqueue.h"
-#include "small_vector.hpp"
+#include "externals/blockingconcurrentqueue.h"
+#include "externals/small_vector.hpp"
 #include "symmetri/callback.h"
 #include "symmetri/tasks.h"
 #include "symmetri/types.h"
