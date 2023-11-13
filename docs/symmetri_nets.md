@@ -18,7 +18,20 @@ There is also the complication of conflict. Conflict arises if two or more trans
 
 ## Failure at the level of transitions
 
-When firing is atomic there is no room for failure of transitions. They either fire and cause a marking mutation or they do not. In Symmetri, the atomic mutation is split into consumption and production, and these mutations are processed at different points in time. The execution or scheduling of a callback will still always consume tokens. The production of tokens however, can be made dependent on the outcome of a callback. Being able to withhold token production gives modelling capabilities to alter transition sequences and even create a deadlock on purpose in cases of failures inside a callback. This kind of behaviour is favourable if one wants to [fail fast](https://en.wikipedia.org/wiki/Fail-fast).
+When firing is atomic there is no room for failure of transitions. They either fire and cause a marking mutation or they do not. In Symmetri, the atomic mutation is split into consumption and production, and these mutations are processed at different points in time. The execution or scheduling of a callback will still always consume tokens. The production of tokens however, can be made dependent on the outcome of a callback. Being able to withhold token production gives modelling capabilities to alter transition sequences and even create a deadlock on purpose in cases of failures inside a callback. This kind of behavior is favorable if one wants to [fail fast](https://en.wikipedia.org/wiki/Fail-fast).
+
+## Colors
+
+In Symmetri there is a minimal support set for using high-level Petri nets, also known as Colored Petri nets. It is implemented by adding color-restrictions on the input-arcs, running from (pre-)places to transitions. A colored arc implies that the token in the pre-place must be of the same color as the color of the arc.
+
+![](img/colors.svg)
+
+<center><br />A Petri net with color constraints. Because the Token in P<sub>2</sub> is blue, T<sub>blue</sub> will be fired
+</center>
+
+This deviates a from literature where the definition is much more formal, where colors represent any type or value. In Symmetri we use colors only as means to communicate state and not to transfer data from one transition to the next. This could be interesting someday, but for now is out of scope.
+
+Also, because the output of a transition in Symmetri is determined by what happens in the *Callback* (e.g. configurable by the user), there technically is no color constraint on the output arcs at the level of the Petri net definition. Do note, that if there simply are no consumers for a particular color in a specific place, this simply results in a deadlocked system.
 
 ## Input from abroad
 
