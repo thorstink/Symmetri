@@ -1,15 +1,14 @@
 #pragma once
-
-#include <spdlog/spdlog.h>
-
+#include <iostream>
 #include <random>
 
 #include "symmetri/types.h"
 
 void printLog(const symmetri::Eventlog &eventlog) {
   for (const auto &[caseid, t, s, c] : eventlog) {
-    spdlog::info("EventLog: {0}, {1}, {2}, {3}", caseid, t,
-                 symmetri::Color::toString(s), c.time_since_epoch().count());
+    std::cout << "Eventlog: " << caseid << ", " << t << ", "
+              << symmetri::Color::toString(s) << ", "
+              << c.time_since_epoch().count() << std::endl;
   }
 }
 

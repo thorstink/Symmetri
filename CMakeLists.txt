@@ -26,6 +26,8 @@ if(BUILD_TESTING)
   endif()
 endif()
 
+include(GNUInstallDirs)
+
 # the lib
 add_subdirectory(symmetri)
 

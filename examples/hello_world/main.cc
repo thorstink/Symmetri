@@ -3,7 +3,6 @@
 // '1' through std::cin (the keyboard). When t50 is triggered, the net becomes
 // live. This example has no ' final marking ' (goal marking), so it' ll run
 // forever until the user hits ctrl-c.
-#include <spdlog/spdlog.h>
 
 #include <iostream>
 #include <thread>
@@ -57,12 +56,10 @@ int main(int, char *argv[]) {
                   // the net completes, deadlocks or user requests exit (ctrl-c)
 
   // this simply prints the event log
-  uint64_t oldt = 0;
   for (const auto &[caseid, t, s, c] : getLog(net)) {
-    spdlog::info("{0}, {1}, {2}, {3}", caseid, t, symmetri::Color::toString(s),
-                 c.time_since_epoch().count());
-    spdlog::info("{0}", c.time_since_epoch().count() - oldt);
-    oldt = c.time_since_epoch().count();
+    std::cout << "Eventlog: " << caseid << ", " << t << ", "
+              << symmetri::Color::toString(s) << ", "
+              << c.time_since_epoch().count() << std::endl;
   }
 
   // return the result! If everything went well, you typically return

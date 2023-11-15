@@ -1,8 +1,7 @@
 #pragma once
-#include <spdlog/spdlog.h>
-
 #include <atomic>
 #include <chrono>
+#include <iostream>
 
 /**
  * @brief Foo is an example of a class that has success/fail options and
@@ -34,13 +33,14 @@ class Foo {
   bool fire() const {
     cancel_.store(false);
     is_paused_.store(false);
-    spdlog::info("Running {0}", name);
+    std::cout << "Running " << name << std::endl;
     unsigned counter = 0;
     do {
       if (!is_paused_.load()) {
-        spdlog::info("Running {0} {1}", name, counter++);
+        std::cout << "Running " << name << " " << counter++ << std::endl;
+
       } else {
-        spdlog::info("Paused {0} {1}", name, counter);
+        std::cout << "Paused " << name << " " << counter << std::endl;
       }
       std::this_thread::sleep_for(interval);
     } while (counter < count && !cancel_.load());
@@ -48,17 +48,17 @@ class Foo {
   }
 
   void cancel() const {
-    spdlog::info("cancel {0}!", name);
+    std::cout << "cancel " << name << std::endl;
     cancel_.store(true);
   }
 
   void pause() const {
-    spdlog::info("pause {0}!", name);
+    std::cout << "pause " << name << std::endl;
     is_paused_.store(true);
   }
 
   void resume() const {
-    spdlog::info("resume {0}!", name);
+    std::cout << "resume " << name << std::endl;
     is_paused_.store(false);
   }
 };

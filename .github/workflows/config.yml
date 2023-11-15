@@ -11,7 +11,7 @@ jobs:
     - name: apt dependencies
       run: |
         sudo apt update
-        sudo apt install -y ninja-build libeigen3-dev libspdlog-dev
+        sudo apt install -y ninja-build libeigen3-dev
 
     - name: catch2
       run: |

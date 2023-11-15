@@ -1,4 +1,3 @@
-#include <spdlog/spdlog.h>
 #include <symmetri/parsers.h>
 #include <symmetri/symmetri.h>
 
@@ -36,15 +35,14 @@ void resume(const Foo &f) { f.resume(); }
  */
 void printLog(const symmetri::Eventlog &eventlog) {
   for (const auto &[caseid, t, s, c] : eventlog) {
-    spdlog::info("EventLog: {0}, {1}, {2}, {3}", caseid, t,
-                 symmetri::Color::toString(s), c.time_since_epoch().count());
+    std::cout << "Eventlog: " << caseid << ", " << t << ", "
+              << symmetri::Color::toString(s) << ", "
+              << c.time_since_epoch().count() << std::endl;
   }
 }
 
 int main(int, char *argv[]) {
   using namespace symmetri;
-
-  spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%f] [%^%l%$] [thread %t] %v");
 
   // We get some paths to PNML-files
   const auto pnml1 = std::string(argv[1]);
@@ -112,10 +110,10 @@ int main(int, char *argv[]) {
   auto result = fire(bignet);
   running = false;
   // print the results and eventlog
-  spdlog::info("Token of this net: {0}", Color::toString(result));
-  const auto el = getLog(bignet);
-  auto marking = bignet.getMarking();
-  printLog(el);
+
+  printLog(getLog(bignet));
+  std::cout << "Token of this net: " << Color::toString(result)
+            << ", token count: " << bignet.getMarking().size() << std::endl;
   t.join();  // clean up
   return 0;
 }
