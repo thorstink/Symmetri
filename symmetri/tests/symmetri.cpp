@@ -1,8 +1,9 @@
-#include <catch2/catch_test_macros.hpp>
+#include "symmetri/symmetri.h"
+
 #include <filesystem>
 #include <iostream>
 
-#include "symmetri/symmetri.h"
+#include "doctest/doctest.h"
 
 using namespace symmetri;
 
