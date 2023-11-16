@@ -1,6 +1,6 @@
-#include <catch2/catch_test_macros.hpp>
-
 #include "symmetri/types.h"
+
+#include "doctest/doctest.h"
 #include "symmetri/utilities.hpp"
 
 using namespace symmetri;

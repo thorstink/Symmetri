@@ -1,7 +1,5 @@
 include_directories(include submodules)
 
-set(CMAKE_INSTALL_INCLUDEDIR include)
-
 #lib
 add_library(${PROJECT_NAME} SHARED
   types.cpp

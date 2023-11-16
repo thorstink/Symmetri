@@ -1,6 +1,6 @@
 #include <atomic>
-#include <catch2/catch_test_macros.hpp>
 
+#include "doctest/doctest.h"
 #include "symmetri/symmetri.h"
 
 using namespace symmetri;

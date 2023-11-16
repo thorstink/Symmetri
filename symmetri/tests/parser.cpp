@@ -1,6 +1,6 @@
-#include <catch2/catch_test_macros.hpp>
 #include <filesystem>
 
+#include "doctest/doctest.h"
 #include "symmetri/parsers.h"
 #include "symmetri/utilities.hpp"
 

@@ -1,6 +1,4 @@
-#include <catch2/catch_test_macros.hpp>
-#include <memory>
-
+#include "doctest/doctest.h"
 #include "symmetri/tasks.h"
 
 using namespace symmetri;
@@ -40,6 +38,6 @@ TEST_CASE("Run the executor parallel tasks") {
   while (!ran1.load() || !ran2.load()) {
   }
   CHECK((ran1.load() && ran2.load()));
-  REQUIRE_FALSE(main_thread == thread_id2);
-  REQUIRE_FALSE(thread_id1 == main_thread);
+  CHECK(static_cast<bool>(main_thread != thread_id1));
+  CHECK(static_cast<bool>(main_thread != thread_id2));
 }

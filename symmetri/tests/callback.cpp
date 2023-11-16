@@ -1,7 +1,8 @@
-#include <catch2/catch_test_macros.hpp>
+#include "symmetri/callback.h"
+
 #include <iostream>
 
-#include "symmetri/callback.h"
+#include "doctest/doctest.h"
 
 class Foo {
  public:

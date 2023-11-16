@@ -40,9 +40,10 @@ int main(int, char *argv[]) {
 
   printLog(getLog(parent_net));
 
-  spdlog::info("Token of this net: {0}. It took {1} ms, token count: {2}",
-               Color::toString(result), dt.count(),
-               parent_net.getMarking().size());
+  std::cout << "Token of this net: " << Color::toString(result) << ". It took "
+            << dt.count()
+            << " ms, token count: " << parent_net.getMarking().size()
+            << std::endl;
 
   return 0;
 }

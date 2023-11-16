@@ -33,9 +33,9 @@ int main(int, char *argv[]) {
       std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - now);
 
   printLog(getLog(petri));
-
-  spdlog::info("Token of this net: {0}. It took {1} ms, token count: {2}",
-               Color::toString(result), dt.count(), petri.getMarking().size());
+  std::cout << "Token of this net: " << Color::toString(result) << ". It took "
+            << dt.count() << " ms, token count: " << petri.getMarking().size()
+            << std::endl;
 
   return 0;
 }
