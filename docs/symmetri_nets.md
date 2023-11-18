@@ -44,8 +44,8 @@ Because callbacks can have variable durations before they generate a result and 
 Not having to define every possible sequence can be a work-saver, however, it can be interesting to retrospectively inspect the actual executed transition sequence. For this Symmetri creates an event log. Symmetri’s event log definition is inspired by the [definition used in Process mining](https://en.wikipedia.org/wiki/Process_mining#:~:text=Input%20for%20process%20mining%20is,and%20(3)%20a%20timestamp.);
 
 Each event in the log should contain:
-- a unique identifier for a particular process instance (called case id),
-- an activity (description of the event that is occurring), and
+- a unique identifier for a particular process instance (called case id)
+- an activity (description of the event that is occurring)
 - a timestamp
 
 In Symmetri the unique identifier consists out of an identifier for the transition and an identifier for the parent Petri net the transition is a part of. This combination guarantees that we have an unique identifier also in nested Petri nets. The activity in Symmetri is considered more as the state changes during the firing “lifecycle”. This means the event log is populated mostly with scheduled, started, completed. The timestamp is based on a monotonic system clock.
