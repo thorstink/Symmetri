@@ -9,12 +9,13 @@ var searchData=
   ['smallvectorinput_6',['SmallVectorInput',['../petri_8h.html#ad57d63947afb8be62061af41eb2a1be4',1,'symmetri']]],
   ['stamp_7',['stamp',['../structsymmetri_1_1Event.html#a51e5b4b01acd062d8f09eb9c335017d3',1,'symmetri::Event::stamp'],['../structsymmetri_1_1SmallEvent.html#a20978bce298197de90debf077a059e57',1,'symmetri::SmallEvent::stamp']]],
   ['started_8',['Started',['../classsymmetri_1_1Color.html#a53e8844b6e4a473f1af99e5e5de25f26',1,'symmetri::Color']]],
-  ['state_9',['state',['../structsymmetri_1_1Petri.html#abc135716ad53a105112f46477d70a8a2',1,'symmetri::Petri::state'],['../structsymmetri_1_1SmallEvent.html#a4ce578319376ff5b13e498fae051b745',1,'symmetri::SmallEvent::state'],['../structsymmetri_1_1Event.html#a155bb01a390f1310a79a2e1593c3cf93',1,'symmetri::Event::state']]],
+  ['state_9',['state',['../structsymmetri_1_1SmallEvent.html#a4ce578319376ff5b13e498fae051b745',1,'symmetri::SmallEvent::state'],['../structsymmetri_1_1Petri.html#abc135716ad53a105112f46477d70a8a2',1,'symmetri::Petri::state'],['../structsymmetri_1_1Event.html#a155bb01a390f1310a79a2e1593c3cf93',1,'symmetri::Event::state']]],
   ['statenetequality_10',['stateNetEquality',['../utilities_8hpp.html#a08c2cf03e783cd4bca9d7ba72dec6835',1,'symmetri']]],
   ['store_11',['store',['../structsymmetri_1_1Petri.html#a98b178983eb29ef8b8bd9e5ab6325761',1,'symmetri::Petri']]],
   ['success_12',['Success',['../classsymmetri_1_1Color.html#a4e9796ed76127913d6dac48163e3af34',1,'symmetri::Color']]],
-  ['symmetri_20library_13',['Symmetri library',['../md_docs_2symmetri__lib.html',1,'']]],
-  ['symmetri_20nets_14',['Symmetri nets',['../md_docs_2symmetri__nets.html',1,'']]],
-  ['symmetri_20petri_20nets_20in_20c_15',['Symmetri, Petri Nets in C++',['../index.html',1,'']]],
-  ['symmetri_2eh_16',['symmetri.h',['../symmetri_8h.html',1,'']]]
+  ['symmetri_20eventloop_13',['The Symmetri eventloop',['../md_docs_2symmetri__lib.html#autotoc_md14',1,'']]],
+  ['symmetri_20library_14',['Symmetri library',['../md_docs_2symmetri__lib.html',1,'']]],
+  ['symmetri_20nets_15',['Symmetri nets',['../md_docs_2symmetri__nets.html',1,'']]],
+  ['symmetri_20petri_20nets_20in_20c_16',['Symmetri, Petri Nets in C++',['../index.html',1,'']]],
+  ['symmetri_2eh_17',['symmetri.h',['../symmetri_8h.html',1,'']]]
 ];

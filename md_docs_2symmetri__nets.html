@@ -134,8 +134,8 @@ The event log</h1>
 <p>Because callbacks can have variable durations before they generate a result and a Petri net itself does not enforce an exact sequence of transitions in the case of parallelism, it can be the case that there are multiple transition sequences that create the same result (e.g. marking). This is exactly the power of Petri nets over Finite State Machines. Petri nets define a set of transition sequences that are valid, while in FSMs you need to explicitly model each transition sequence, which scales poorly if multiple processes are run in parallel.</p>
 <p>Not having to define every possible sequence can be a work-saver, however, it can be interesting to retrospectively inspect the actual executed transition sequence. For this Symmetri creates an event log. Symmetri’s event log definition is inspired by the <a href="https://en.wikipedia.org/wiki/Process_mining#:~:text=Input%20for%20process%20mining%20is,and%20(3)%20a%20timestamp.">definition used in Process mining</a>;</p>
 <p>Each event in the log should contain:</p><ul>
-<li>a unique identifier for a particular process instance (called case id),</li>
-<li>an activity (description of the event that is occurring), and</li>
+<li>a unique identifier for a particular process instance (called case id)</li>
+<li>an activity (description of the event that is occurring)</li>
 <li>a timestamp</li>
 </ul>
 <p>In Symmetri the unique identifier consists out of an identifier for the transition and an identifier for the parent Petri net the transition is a part of. This combination guarantees that we have an unique identifier also in nested Petri nets. The activity in Symmetri is considered more as the state changes during the firing “lifecycle”. This means the event log is populated mostly with scheduled, started, completed. The timestamp is based on a monotonic system clock.</p>

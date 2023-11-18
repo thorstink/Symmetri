@@ -41,7 +41,11 @@ var NAVTREE =
         [ "In a Colcon-workspace", "md_docs_2symmetri__lib.html#autotoc_md11", null ]
       ] ],
       [ "Test", "md_docs_2symmetri__lib.html#autotoc_md12", null ],
-      [ "Architecture", "md_docs_2symmetri__lib.html#autotoc_md13", null ]
+      [ "Architecture", "md_docs_2symmetri__lib.html#autotoc_md13", [
+        [ "The Symmetri eventloop", "md_docs_2symmetri__lib.html#autotoc_md14", null ],
+        [ "Callback execution", "md_docs_2symmetri__lib.html#autotoc_md15", null ],
+        [ "Determining the active transitions", "md_docs_2symmetri__lib.html#autotoc_md16", null ]
+      ] ]
     ] ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
