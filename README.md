@@ -26,25 +26,28 @@ This Petri net can be described using Symmetri:
 
 ```cpp
 using namespace symmetri;
-Net net = {{"foo", {{"B", "C"}, {"Z", "B"}}},
-                {"bar", {{"Z"}, {"B", "C"}}}};
-Marking initial = {{"Z",  Color::Success}};
+Net net = {{"foo",
+            {{{"B", Color::Success}, {"C", Color::Success}},
+              {{"Z", Color::Success}, {"B", Color::Success}}}},
+            {"bar",
+            {{{"Z", Color::Success}},
+              {{"B", Color::Success}, {"C", Color::Success}}}}};
+Marking initial = {{"Z", Color::Success}};
 Marking goal = {};
-auto pool = std::make_shared<TaskSystem>(4);
-PetriNet app(net,"test_net_without_end", pool, initial, goal);
+auto task_system = std::make_shared<TaskSystem>(4);
+PetriNet app(net, "test_net_without_end", pool, initial, goal);
 app.registerCallback("foo", &foo);
 app.registerCallback("bar", &bar);
-
-auto result = fire(app); // run until done.
-auto log = getLog(app);
+auto result = fire(app);  // run until done.
+auto log = getLog(app); // get the event log
 ```
 
 - `net` is a multiset description of a Petri net
-- `store` is a lookup table that links the *symbolic* transitions to actual functions
-- `priority` can be used if some transitions are more equal than others ([Wiki on prioritized Petri nets](https://en.wikipedia.org/wiki/Prioritised_Petri_net))
-- `m0` is the initial token distribution (also known as _initial marking_)
-- `pool` is a simple task based threadpool
-- `app` is all the ingredients put together - creating something that can be executed! it outputs a result (`res`) and a log (`eventlog`)
+- `initial` is the initial token distribution (also known as _initial marking_)
+- `goal` is the goal marking, the net terminates if this is reached
+- `task_system` is a simple SPMC-queue based based threadpool
+- `&foo` and `&bar` are user-supplied *Callbacks*
+- `app` is all the ingredients put together - creating something that can be *fired*! it outputs a result (`res`) and at all times an event log can be queried
 
 ## Build
 
@@ -64,9 +67,7 @@ make && make test
 ## Run examples
 
 ```bash
-# assumed you build the examples
-# finishes with a deadlock
-./build/examples/hello_world/symmetri_hello_world nets/passive_n1.pnml nets/T50startP0.pnml
+# assumes you build the examples
 # finishes by reaching the final marking (e.g. completed). Use keyboard to interact pause/resume/cancel/print log
 ./build/examples/flight/symmetri_flight nets/PT1.pnml nets/PT2.pnml nets/PT3.pnml
 ```
