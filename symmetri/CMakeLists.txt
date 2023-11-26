@@ -1,6 +1,6 @@
 include_directories(include submodules)
 
-#lib
+# lib
 add_library(${PROJECT_NAME} SHARED
   types.cpp
   tasks.cpp
@@ -52,8 +52,8 @@ write_basic_package_version_file(
 
 install(
   FILES
-    "${PROJECT_BINARY_DIR}/${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake"
-    "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+  "${PROJECT_BINARY_DIR}/${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake"
+  "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}
 )
 
@@ -74,4 +74,5 @@ install(
 
 if(BUILD_TESTING)
   add_subdirectory(tests)
+  add_subdirectory(gui)
 endif()
