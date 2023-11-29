@@ -14,7 +14,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -pedantic")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 if(BUILD_TESTING)
   enable_testing()

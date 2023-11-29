@@ -74,5 +74,6 @@ install(
 
 if(BUILD_TESTING)
   add_subdirectory(tests)
-  add_subdirectory(gui)
 endif()
+
+add_subdirectory(gui)

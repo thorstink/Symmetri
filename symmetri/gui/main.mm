@@ -1,16 +1,9 @@
-#include <imgui.h>
 #include <stdio.h>
 
-#include <iostream>
-#include <thread>
-#include "drawable.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_metal.h"
-#include "imgui_node_editor.h"
-#include "menu_bar.hpp"
-#include "redux.hpp"
-#include "view.hpp"
+#include "initialize.hpp"
 #define GLFW_INCLUDE_NONE
 #define GLFW_EXPOSE_NATIVE_COCOA
 #include <GLFW/glfw3.h>
@@ -18,14 +11,14 @@
 #import <Metal/Metal.h>
 #import <QuartzCore/QuartzCore.h>
 
-namespace ed = ax::NodeEditor;
-
 static void glfw_error_callback(int error, const char *description) {
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
 int main(int, char **) {
   // Setup Dear ImGui context
+  MVC::push(&initializeModel);
+
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
@@ -65,15 +58,14 @@ int main(int, char **) {
 
   float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
 
-  ed::Config config;
-  config.SettingsFile = "Simple.json";
-  auto m_Context = ed::CreateEditor(&config);
   // Main loop
   while (!glfwWindowShouldClose(window)) {
     while (auto v = MVC::dequeue()) {
-      MVC::update(v.value());
+      if (v.has_value()) {
+        MVC::update(v.value());
+      }
+      // should happen on a different thread?
     }
-    auto model = MVC::getView();
 
     @autoreleasepool {
       glfwPollEvents();
@@ -84,9 +76,11 @@ int main(int, char **) {
       id<CAMetalDrawable> drawable = [layer nextDrawable];
 
       id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+      // colors
       renderPassDescriptor.colorAttachments[0].clearColor =
           MTLClearColorMake(clear_color[0] * clear_color[3], clear_color[1] * clear_color[3],
                             clear_color[2] * clear_color[3], clear_color[3]);
+
       renderPassDescriptor.colorAttachments[0].texture = drawable.texture;
       renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
       renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
@@ -99,26 +93,11 @@ int main(int, char **) {
       ImGui_ImplGlfw_NewFrame();
       ImGui::NewFrame();
 
-      draw(model);
+      MVC::render();
 
-      ed::SetCurrentEditor(m_Context);
-      ed::Begin("My Editor", ImVec2(0.0, 0.0f));
-      int uniqueId = 1;
-      // Start drawing nodes.
-      ed::BeginNode(uniqueId++);
-      ImGui::Text("Node A");
-      ed::BeginPin(uniqueId++, ed::PinKind::Input);
-      ImGui::Text("-> In");
-      ed::EndPin();
-      ImGui::SameLine();
-      ed::BeginPin(uniqueId++, ed::PinKind::Output);
-      ImGui::Text("Out ->");
-      ed::EndPin();
-      ed::EndNode();
-      ed::End();
-      ed::SetCurrentEditor(nullptr);
       // Rendering
       ImGui::Render();
+      ImGui::EndFrame();  // <-- Added
       ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), commandBuffer, renderEncoder);
 
       [renderEncoder popDebugGroup];

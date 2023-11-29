@@ -29,8 +29,8 @@ static void showMutation(const Mutation& mutation) {
   }
 }
 
-void draw(const symmetri::Net& net) {
-  std::cout << "drawable!" << std::endl;
+template <>
+void draw(symmetri::Net& net) {
   if (ImGui::BeginListBox("##bla")) {
     for (const auto& [t, p] : net) {
       if (ImGui::Selectable(t.c_str(), false)) {
