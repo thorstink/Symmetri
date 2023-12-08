@@ -12,19 +12,20 @@
 
 #include "blockingconcurrentqueue.h"
 #include "drawable.h"
+#include "imgui.h"
 
 using View = std::vector<Drawable>;
 using History = std::vector<View>;
 
-void commit(History& x) {
+inline void commit(History& x) {
   assert(!x.empty());
   x.push_back(x.back());
 }
-void undo(History& x) {
+inline void undo(History& x) {
   assert(!x.empty());
   x.pop_back();
 }
-View& current(History& x) {
+inline View& current(History& x) {
   assert(!x.empty());
   return x.back();
 }
@@ -37,7 +38,7 @@ struct Model {
   History documents = History{1};
 };
 
-void draw(Model& m) {
+inline void draw(Model& m) {
   for (auto& drawable : m.statics) {
     draw(drawable);
   }

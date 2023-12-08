@@ -8,8 +8,10 @@
 #include "view.hpp"
 inline Model initializeModel(Model &&m) {
   m.working_dir = "/users/thomashorstink/Projects/symmetri/nets";
+  // m.active_file = "/users/thomashorstink/Projects/symmetri/nets/n1.pnml";
   m.active_file =
-      "/users/thomashorstink/Projects/symmetri/nets/InspectionSeqPNv21.pnml";
+      "/Users/thomashorstink/Projects/Symmetri/examples/combinations/"
+      "DualProcessWorker.pnml";
   symmetri::Net net;
   symmetri::Marking marking;
   symmetri::PriorityTable pt;
@@ -21,8 +23,8 @@ inline Model initializeModel(Model &&m) {
     std::tie(net, marking, pt) = symmetri::readGrml({pn_file});
   }
 
-  current(m.documents).push_back(net);
-  current(m.documents).push_back(marking);
+  // current(m.documents).push_back(net);
+  // current(m.documents).push_back(marking);
   current(m.documents).push_back(Graph{net, marking});
 
   // create a file browser instance

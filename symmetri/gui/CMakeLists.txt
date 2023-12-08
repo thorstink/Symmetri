@@ -5,10 +5,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(glfw3 REQUIRED)
 find_package(ogdf REQUIRED)
+
 if(ASAN_BUILD AND NOT TSAN_BUILD)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address,undefined -fno-omit-frame-pointer -O0")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address,undefined -fno-omit-frame-pointer -O0")
 elseif(TSAN_BUILD AND NOT ASAN_BUILD)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=thread -fno-omit-frame-pointer -O0")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=thread -fno-omit-frame-pointer -O0")
 endif()
 
 include_directories(
@@ -23,6 +24,7 @@ include_directories(
 set(SOURCES
     main.mm
     symbol.cpp
+    draw_graph.cpp
 )
 
 set(IMGUI_SOURCES
@@ -33,10 +35,11 @@ set(IMGUI_SOURCES
     imgui/imgui_tables.cpp
     imgui/backends/imgui_impl_glfw.cpp
     imgui/backends/imgui_impl_metal.mm
-    extensions/crude_json.cpp
-    extensions/imgui_node_editor_api.cpp
-    extensions/imgui_node_editor.cpp
-    extensions/imgui_canvas.cpp
+
+    # extensions/crude_json.cpp
+    # extensions/imgui_node_editor_api.cpp
+    # extensions/imgui_node_editor.cpp
+    # extensions/imgui_canvas.cpp
 )
 
 if(APPLE)
