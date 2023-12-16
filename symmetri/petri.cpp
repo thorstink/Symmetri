@@ -124,10 +124,7 @@ void Petri::fireSynchronous(const size_t t) {
   switch (result) {
     case Color::Scheduled:
     case Color::Started:
-    case Color::Deadlocked:
-    case Color::Canceled:
     case Color::Paused:
-    case Color::Failed:
       break;
     default: {
       tokens.reserve(tokens.size() + lookup_t.size());

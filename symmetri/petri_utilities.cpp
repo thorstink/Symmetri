@@ -53,10 +53,7 @@ Reducer createReducerForCallback(const size_t t_i, const Token result,
       switch (result) {
         case Color::Scheduled:
         case Color::Started:
-        case Color::Deadlocked:
-        case Color::Canceled:
         case Color::Paused:
-        case Color::Failed:
           break;
         default: {
           const auto &place_list = model.net.output_n[t_i];

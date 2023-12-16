@@ -124,6 +124,40 @@ TEST_CASE("Can not reuse an active application with a new case_id.") {
   fire(app);
 }
 
+TEST_CASE("Deadlocked transition shows up in marking") {
+  auto [net, priority, initial_marking] = SymmetriTestNet();
+  Marking goal_marking = {};
+  const auto initial_id = "deadlock transition";
+  auto threadpool = std::make_shared<TaskSystem>(1);
+  PetriNet app(net, initial_id, threadpool, initial_marking, goal_marking,
+               priority);
+  app.registerCallback("t0", [] { return Color::Deadlocked; });
+  fire(app);
+  const auto marking = app.getMarking();
+  const bool has_deadlock_token =
+      std::find_if(marking.cbegin(), marking.cend(), [=](const auto& pc) {
+        return Color::Deadlocked == pc.second && pc.first == "Pc";
+      }) != marking.end();
+  CHECK(has_deadlock_token);
+}
+
+TEST_CASE("Error'd transition shows up in marking") {
+  auto [net, priority, initial_marking] = SymmetriTestNet();
+  Marking goal_marking = {};
+  const auto initial_id = "deadlock transition";
+  auto threadpool = std::make_shared<TaskSystem>(1);
+  PetriNet app(net, initial_id, threadpool, initial_marking, goal_marking,
+               priority);
+  app.registerCallback("t0", [] { return Color::Failed; });
+  fire(app);
+  const auto marking = app.getMarking();
+  const bool has_failed_token =
+      std::find_if(marking.cbegin(), marking.cend(), [=](const auto& pc) {
+        return Color::Failed == pc.second && pc.first == "Pc";
+      }) != marking.end();
+  CHECK(has_failed_token);
+}
+
 TEST_CASE("Test pause and resume") {
   std::atomic<int> i = 0;
   Net net = {{"t0", {{{"Pa", Color::Success}}, {{"Pa", Color::Success}}}},
