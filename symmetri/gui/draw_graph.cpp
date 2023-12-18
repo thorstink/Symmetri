@@ -1,7 +1,10 @@
+#include <iostream>
+
 #include "drawable.h"
 #include "graph.hpp"
 #include "imgui.h"
 #include "redux.hpp"
+
 // Creating a node graph editor for Dear ImGui
 // Quick sample, not production code!
 // This is quick demo I crafted in a few hours in 2015 showcasing how to use
@@ -61,6 +64,7 @@ void draw(Graph& g) {
   static ImVec2 scrolling = ImVec2(0.0f, 0.0f);
   static bool show_grid = true;
   static Symbol node_selected = -1;
+  static ImVec2 size;
 
   // Initialization
   ImGuiIO& io = ImGui::GetIO();
@@ -71,37 +75,33 @@ void draw(Graph& g) {
   ImGui::BeginChild("node_list", ImVec2(150, 0));
   ImGui::Text("Places");
   ImGui::Separator();
-  for (const auto& node : g.nodes) {
-    if (node.id.chr() == 'P') {
-      ImGui::PushID(node.id);
-      if (ImGui::Selectable(node.name.c_str(), node.id == node_selected)) {
-        node_selected = node.id;
-      }
-      if (ImGui::IsItemHovered()) {
-        node_hovered_in_list = node.id;
-        // node_hovered_in_list = node.id;
-        // open_context_menu |= ImGui::IsMouseClicked(1);
-      }
-      ImGui::PopID();
+  for (const auto& node : g.places) {
+    ImGui::PushID(node.id.key());
+    if (ImGui::Selectable(node.name.c_str(), node.id == node_selected)) {
+      node_selected = node.id;
     }
+    if (ImGui::IsItemHovered()) {
+      node_hovered_in_list = node.id;
+      // node_hovered_in_list = node.id;
+      // open_context_menu |= ImGui::IsMouseClicked(1);
+    }
+    ImGui::PopID();
   }
 
   ImGui::Dummy(ImVec2(0.0f, 20.0f));
   ImGui::Text("Transitions");
   ImGui::Separator();
-  for (const auto& node : g.nodes) {
-    if (node.id.chr() == 'T') {
-      ImGui::PushID(node.id);
-      if (ImGui::Selectable(node.name.c_str(), node.id == node_selected)) {
-        node_selected = node.id;
-      }
-      if (ImGui::IsItemHovered()) {
-        node_hovered_in_list = node.id;
-        // node_hovered_in_list = node.id;
-        // open_context_menu |= ImGui::IsMouseClicked(1);
-      }
-      ImGui::PopID();
+  for (const auto& node : g.transitions) {
+    ImGui::PushID(node.id.key());
+    if (ImGui::Selectable(node.name.c_str(), node.id == node_selected)) {
+      node_selected = node.id;
     }
+    if (ImGui::IsItemHovered()) {
+      node_hovered_in_list = node.id;
+      // node_hovered_in_list = node.id;
+      // open_context_menu |= ImGui::IsMouseClicked(1);
+    }
+    ImGui::PopID();
   }
   ImGui::EndChild();
 
@@ -144,9 +144,9 @@ void draw(Graph& g) {
   // Display links
   draw_list->ChannelsSplit(2);
   draw_list->ChannelsSetCurrent(0);  // Background
-  for (const auto& [edge, color, from_to] : g.arcs) {
-    ImVec2 p1 = offset + from_to[0]->GetCenterPos();
-    ImVec2 p2 = offset + from_to[1]->GetCenterPos();
+  for (const auto& [color, from_to] : g.arcs) {
+    ImVec2 p1 = offset + Node::GetCenterPos(*from_to[0], size);
+    ImVec2 p2 = offset + Node::GetCenterPos(*from_to[1], size);
     ImVec2 d = p1 - p2;
     d.x *= 0.33;
     d.y *= 0.33;
@@ -155,51 +155,57 @@ void draw(Graph& g) {
   }
 
   // Display nodes
-  for (auto& node : g.nodes) {
-    ImGui::PushID(node.id);
-    ImVec2 node_rect_min = offset + node.Pos;
+  std::vector<Node*> nodes;
+  for (auto& n : g.transitions) {
+    nodes.push_back(&n);
+  }
+  for (auto& n : g.places) {
+    nodes.push_back(&n);
+  }
+  for (auto* node : nodes) {
+    ImGui::PushID(node->id.key());
+    ImVec2 node_rect_min = offset + node->Pos;
 
     // Display node contents first
     draw_list->ChannelsSetCurrent(1);  // Foreground
     bool old_any_active = ImGui::IsAnyItemActive();
-    auto textWidth = ImGui::CalcTextSize(node.name.c_str()).x;
+    auto textWidth = ImGui::CalcTextSize(node->name.c_str()).x;
     ImGui::SetCursorScreenPos(node_rect_min + NODE_WINDOW_PADDING +
                               ImVec2(8.0f - textWidth * 0.5f, -20.0f));
     ImGui::BeginGroup();  // Lock horizontal position
-    ImGui::Text("%s", node.name.c_str());
+    ImGui::Text("%s", node->name.c_str());
     ImGui::EndGroup();
 
     // Save the size of what we have emitted and whether any of the widgets are
     // being used
     bool node_widgets_active = (!old_any_active && ImGui::IsAnyItemActive());
-    node.Size =
-        ImGui::GetItemRectSize() + NODE_WINDOW_PADDING + NODE_WINDOW_PADDING;
-    node.Size.x = node.Size.y;
-    ImVec2 node_rect_max = node_rect_min + node.Size;
+    size = ImGui::GetItemRectSize() + NODE_WINDOW_PADDING + NODE_WINDOW_PADDING;
+    size.x = size.y;
+    ImVec2 node_rect_max = node_rect_min + size;
 
     // Display node box
     draw_list->ChannelsSetCurrent(0);  // Background
     ImGui::SetCursorScreenPos(node_rect_min);
-    ImGui::InvisibleButton("node", node.Size);
+    ImGui::InvisibleButton("node", size);
     if (ImGui::IsItemHovered()) {
-      node_hovered_in_scene = node.id;
+      node_hovered_in_scene = node->id;
       open_context_menu |= ImGui::IsMouseClicked(1);
     }
     bool node_moving_active = ImGui::IsItemActive();
-    if (node_widgets_active || node_moving_active) node_selected = node.id;
+    if (node_widgets_active || node_moving_active) node_selected = node->id;
     if (node_moving_active && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
-      node.Pos = node.Pos + io.MouseDelta;
+      node->Pos = node->Pos + io.MouseDelta;
 
     const int opacity = 255;
-    auto select_color = node.id == node_hovered_in_list
+    auto select_color = node->id == node_hovered_in_list
                             ? IM_COL32(255, 255, 0, opacity)
                             : IM_COL32(100, 100, 100, opacity);
-    if (node.id.chr() == 'P') {
-      draw_list->AddCircleFilled(offset + node.GetCenterPos(),
-                                 0.5f * node.Size.x,
+    if (node->id.chr() == 'P') {
+      draw_list->AddCircleFilled(offset + Node::GetCenterPos(node->Pos, size),
+                                 0.5f * size.x,
                                  IM_COL32(135, 135, 135, opacity), -5);
-      draw_list->AddCircle(offset + node.GetCenterPos(), 0.5f * node.Size.x,
-                           select_color, -5, 3.0f);
+      draw_list->AddCircle(offset + Node::GetCenterPos(node->Pos, size),
+                           0.5f * size.x, select_color, -5, 3.0f);
 
     } else {
       draw_list->AddRectFilled(node_rect_min, node_rect_max,
