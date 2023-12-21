@@ -42,8 +42,8 @@ gch::small_vector<size_t, 32> possibleTransitions(
   return possible_transition_list_n;
 }
 
-Reducer createReducerForCallback(const size_t t_i, const Token result,
-                                 const Clock::time_point t_end) {
+Reducer createReducerForCallback(const size_t t_i, const Token result) {
+  const auto t_end(Clock::now());
   return [=](Petri &model) {
     // if it is in the active transition set it means it is finished and we
     // should process it.
@@ -77,7 +77,7 @@ Reducer scheduleCallback(
     model.log.push_back({t_i, Color::Started, start_time});
   });
 
-  return createReducerForCallback(t_i, fire(task), Clock::now());
+  return createReducerForCallback(t_i, fire(task));
 }
 
 }  // namespace symmetri

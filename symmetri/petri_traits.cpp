@@ -3,7 +3,7 @@
 #include "petri.h"
 #include "symmetri/symmetri.h"
 #include "symmetri/utilities.hpp"
-
+#include <iostream>
 namespace symmetri {
 
 /**
@@ -47,16 +47,21 @@ Token fire(const PetriNet &app) {
       // we're firing
       m.fireTransitions();
       // if there's nothing to fire; we deadlocked
-      if (m.scheduled_callbacks.size() == 0) {
-        m.state = Color::Deadlocked;
-      } else if (MarkingReached(m.tokens, m.final_marking)) {
+       if (MarkingReached(m.tokens, m.final_marking)) {
         m.state = Color::Success;
+      } else if  (m.scheduled_callbacks.size() == 0) {
+        m.state = Color::Deadlocked;
       }
     }
   }
 
   if (MarkingReached(m.tokens, m.final_marking)) {
     m.state = Color::Success;
+  }
+  
+  for (const auto transition_index : m.scheduled_callbacks) {
+    cancel(m.net.store.at(transition_index));
+    m.log.push_back({transition_index, Color::Canceled, Clock::now()});
   }
 
   while (!m.scheduled_callbacks.empty()) {
