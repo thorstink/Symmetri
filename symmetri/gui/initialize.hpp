@@ -25,7 +25,7 @@ inline Model initializeModel(Model &&m) {
 
   // current(m.documents).push_back(net);
   // current(m.documents).push_back(marking);
-  current(m.documents).push_back(Graph{net, marking});
+  current(m.documents).push_back({createGraph(net)});
 
   // create a file browser instance
   ImGui::FileBrowser fileDialog;

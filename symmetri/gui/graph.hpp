@@ -26,7 +26,7 @@ template <typename T>
 size_t toIndex(const std::vector<T>& m,
                const std::function<bool(const T&)>& s) {
   auto ptr = std::find_if(m.begin(), m.end(), s);
-  return std::distance(m.begin(), ptr);
+  return ptr->id.index();
 }
 
 struct Node {
@@ -44,98 +44,92 @@ struct Arc {
 };
 
 struct Graph {
-  explicit Graph(const symmetri::Net net, const symmetri::Marking&) {
-    ogdf::Graph G;
-    ogdf::GraphAttributes GA(G, ogdf::GraphAttributes::nodeGraphics |
-                                    ogdf::GraphAttributes::nodeLabel |
-                                    ogdf::GraphAttributes::edgeGraphics);
-    std::vector<ogdf::node> ogdf_places, ogdf_transitions;
+  std::vector<Arc> arcs;
+  std::vector<Node> nodes;
+};
 
-    for (const auto& [t, io] : net) {
-      for (const auto& s : io.first) {
-        if (std::find_if(places.begin(), places.end(), [&](const auto& n) {
-              return s.first == n.name;
-            }) == std::end(places)) {
-          const auto place_key = Symbol('P', places.size() + 1);
-          ogdf_places.push_back(G.newNode());
-          auto current_node = ogdf_places.back();
-          GA.label(current_node) = s.first;
-          GA.shape(current_node) = ogdf::Shape::Ellipse;
-          places.push_back({s.first, place_key});
-        }
-      }
+inline Graph createGraph(const symmetri::Net net) {
+  std::vector<Node> nodes;
+  std::vector<Arc> arcs;
+  ogdf::Graph G;
+  ogdf::GraphAttributes GA(G, ogdf::GraphAttributes::nodeGraphics |
+                                  ogdf::GraphAttributes::nodeLabel |
+                                  ogdf::GraphAttributes::edgeGraphics);
+  std::vector<ogdf::node> ogdf_places, ogdf_transitions, ogdf_nodes;
 
-      for (const auto& s : io.second) {
-        if (std::find_if(places.begin(), places.end(), [&](const auto& n) {
-              return s.first == n.name;
-            }) == std::end(places)) {
-          const auto place_key = Symbol('P', places.size() + 1);
-          ogdf_places.push_back(G.newNode());
-          auto current_node = ogdf_places.back();
-          GA.label(current_node) = s.first;
-          GA.shape(current_node) = ogdf::Shape::Ellipse;
-          places.push_back({s.first, place_key});
-        }
-      }
-
-      const auto transition_key = Symbol('T', transitions.size() + 1);
-      ogdf_transitions.push_back(G.newNode());
-      auto current_node = ogdf_transitions.back();
-      GA.label(current_node) = t;
-      transitions.push_back({t, transition_key});
-    }
-
-    // make the graph
-    for (const auto& x : net) {
-      const auto [t, io] = x;
-      const auto transition_idx = toIndex<Node>(
-          transitions, [=](const Node& n) { return x.first == n.name; });
-      for (const auto& s : io.first) {
-        const auto place_idx = toIndex<Node>(
-            places, [=](const Node& n) { return s.first == n.name; });
-        // ogdf_arcs.push_back();
-        G.newEdge(ogdf_places[place_idx], ogdf_transitions[transition_idx]);
-        arcs.push_back(
-            {s.second,
-             {&(places[place_idx].Pos), &(transitions[transition_idx].Pos)}});
-      }
-
-      for (const auto& s : io.second) {
-        const auto place_idx = toIndex<Node>(
-            places, [=](const Node& n) { return s.first == n.name; });
-        G.newEdge(ogdf_transitions[transition_idx], ogdf_places[place_idx]);
-        arcs.push_back(
-            {s.second,
-             {&(transitions[transition_idx].Pos), &(places[place_idx].Pos)}});
+  for (const auto& [t, io] : net) {
+    for (const auto& s : io.first) {
+      if (std::find_if(nodes.begin(), nodes.end(), [&](const auto& n) {
+            return s.first == n.name;
+          }) == std::end(nodes)) {
+        const auto place_key = Symbol('P', nodes.size());
+        ogdf_nodes.push_back(G.newNode());
+        auto current_node = ogdf_nodes.back();
+        GA.label(current_node) = s.first;
+        GA.shape(current_node) = ogdf::Shape::Ellipse;
+        nodes.push_back({s.first, place_key});
       }
     }
 
-    {
-      using namespace ogdf;
-      SugiyamaLayout SL;
-      SL.setRanking(new OptimalRanking);
-      SL.setCrossMin(new MedianHeuristic);
-
-      OptimalHierarchyLayout* ohl = new OptimalHierarchyLayout;
-      SL.setLayout(ohl);
-
-      SL.call(GA);
-      GA.rotateLeft90();
-      GA.translateToNonNeg();
-      GraphIO::write(GA, "output-unix-history-hierarchical.svg",
-                     GraphIO::drawSVG);
+    for (const auto& s : io.second) {
+      if (std::find_if(nodes.begin(), nodes.end(), [&](const auto& n) {
+            return s.first == n.name;
+          }) == std::end(nodes)) {
+        const auto place_key = Symbol('P', nodes.size());
+        ogdf_nodes.push_back(G.newNode());
+        auto current_node = ogdf_nodes.back();
+        GA.label(current_node) = s.first;
+        GA.shape(current_node) = ogdf::Shape::Ellipse;
+        nodes.push_back({s.first, place_key});
+      }
     }
 
-    for (size_t i = 0; i < ogdf_places.size(); i++) {
-      places[i].Pos = ImVec2(GA.x(ogdf_places[i]), 2 * GA.y(ogdf_places[i]));
+    const auto transition_key = Symbol('T', nodes.size());
+    ogdf_nodes.push_back(G.newNode());
+    auto current_node = ogdf_nodes.back();
+    GA.label(current_node) = t;
+    nodes.push_back({t, transition_key});
+  }
+
+  // make the graph
+  for (const auto& x : net) {
+    const auto [t, io] = x;
+    const auto transition_idx =
+        toIndex<Node>(nodes, [=](const Node& n) { return x.first == n.name; });
+    for (const auto& s : io.first) {
+      const auto place_idx = toIndex<Node>(
+          nodes, [=](const Node& n) { return s.first == n.name; });
+      G.newEdge(ogdf_nodes[place_idx], ogdf_nodes[transition_idx]);
+      arcs.push_back(
+          {s.second, {&(nodes[place_idx].Pos), &(nodes[transition_idx].Pos)}});
     }
-    for (size_t i = 0; i < ogdf_transitions.size(); i++) {
-      transitions[i].Pos =
-          ImVec2(GA.x(ogdf_transitions[i]), 2 * GA.y(ogdf_transitions[i]));
+
+    for (const auto& s : io.second) {
+      const auto place_idx = toIndex<Node>(
+          nodes, [=](const Node& n) { return s.first == n.name; });
+      G.newEdge(ogdf_nodes[transition_idx], ogdf_nodes[place_idx]);
+      arcs.push_back(
+          {s.second, {&(nodes[transition_idx].Pos), &(nodes[place_idx].Pos)}});
     }
   }
 
-  std::vector<Node> places;
-  std::vector<Node> transitions;
-  std::vector<Arc> arcs;
-};
+  {
+    using namespace ogdf;
+    SugiyamaLayout SL;
+    SL.setRanking(new OptimalRanking);
+    SL.setCrossMin(new MedianHeuristic);
+
+    OptimalHierarchyLayout* ohl = new OptimalHierarchyLayout;
+    SL.setLayout(ohl);
+
+    SL.call(GA);
+    GA.rotateLeft90();
+    GA.translateToNonNeg();
+  }
+
+  for (size_t i = 0; i < ogdf_nodes.size(); i++) {
+    nodes[i].Pos = ImVec2(GA.x(ogdf_nodes[i]), 2 * GA.y(ogdf_nodes[i]));
+  }
+
+  return {std::move(arcs), std::move(nodes)};
+}
