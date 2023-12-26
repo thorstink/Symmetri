@@ -40,7 +40,7 @@ struct Node {
 
 struct Arc {
   symmetri::Token color;
-  std::array<ImVec2*, 2> from_to_pos;
+  std::array<const ImVec2*, 2> from_to_pos;
 };
 
 struct Graph {

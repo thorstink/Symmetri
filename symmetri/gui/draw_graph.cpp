@@ -4,7 +4,6 @@
 #include "graph.hpp"
 #include "imgui.h"
 #include "redux.hpp"
-
 // Creating a node graph editor for Dear ImGui
 // Quick sample, not production code!
 // This is quick demo I crafted in a few hours in 2015 showcasing how to use
@@ -256,6 +255,22 @@ void draw(Graph& g) {
           return m;
         });
       }
+      if (ImGui::BeginMenu("Add arc")) {
+        for (const auto& from : g.nodes) {
+          if (ImGui::BeginMenu(from.name.c_str())) {
+            for (const auto& to : g.nodes) {
+              if (from.id.chr() != to.id.chr() &&
+                  ImGui::MenuItem(to.name.c_str())) {
+                g.arcs.push_back(
+                    Arc{symmetri::Color::Success, &from.Pos, &to.Pos});
+              }
+            }
+            ImGui::EndMenu();
+          }
+        }
+        ImGui::EndMenu();
+      }
+
       if (ImGui::MenuItem("Paste", NULL, false, false)) {
       }
     }
