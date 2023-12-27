@@ -108,7 +108,8 @@ void draw_nodes(Node& node) {
     open_context_menu |= ImGui::IsMouseClicked(1);
   }
   bool node_moving_active = ImGui::IsItemActive();
-  if (node_widgets_active || node_moving_active) node_selected = node.id;
+  if (node_widgets_active || node_moving_active)
+    node_selected = node_hovered_in_list = node.id;
   if (node_moving_active && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
     node.Pos = node.Pos + ImGui::GetIO().MouseDelta;
 
@@ -175,10 +176,10 @@ void draw(Graph& g) {
   ImGui::Dummy(ImVec2(0.0f, 20.0f));
   ImGui::Text("Selected");
   ImGui::Separator();
-  if (node_hovered_in_list != Symbol(-1)) {
-    auto node = std::find_if(
-        g.nodes.begin(), g.nodes.end(),
-        [=](const auto& n) { return n.id == node_hovered_in_list; });
+  if (node_selected != Symbol(-1)) {
+    auto node =
+        std::find_if(g.nodes.begin(), g.nodes.end(),
+                     [=](const auto& n) { return n.id == node_selected; });
     static char buf[32] = "hello";
     ImGui::Text("Name");
     ImGui::SameLine();
@@ -245,12 +246,12 @@ void draw(Graph& g) {
   if (open_context_menu) {
     ImGui::OpenPopup("context_menu");
     if (node_hovered_in_list != Symbol(-1)) {
-      node_selected = node_hovered_in_list;
-      node_hovered_in_scene = node_selected;
+      // node_selected = node_hovered_in_list;
+      node_hovered_in_scene = node_hovered_in_list;
     }
     if (node_hovered_in_scene != Symbol(-1)) {
-      node_selected = node_hovered_in_scene;
-      node_hovered_in_list = node_selected;
+      // node_selected = node_hovered_in_scene;
+      node_hovered_in_list = node_hovered_in_scene;
     }
   }
 
