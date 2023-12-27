@@ -167,12 +167,36 @@ void draw(Graph& g) {
       }
       if (ImGui::IsItemHovered()) {
         node_hovered_in_list = node.id;
-        // node_hovered_in_list = node.id;
         open_context_menu |= ImGui::IsMouseClicked(1);
       }
       ImGui::PopID();
     }
   }
+  ImGui::Dummy(ImVec2(0.0f, 20.0f));
+  ImGui::Text("Selected");
+  ImGui::Separator();
+  if (node_hovered_in_list != Symbol(-1)) {
+    auto node = std::find_if(
+        g.nodes.begin(), g.nodes.end(),
+        [=](const auto& n) { return n.id == node_hovered_in_list; });
+    static char buf[32] = "hello";
+    ImGui::Text("Name");
+    ImGui::SameLine();
+    const auto id = std::to_string(node->id.key());
+    ImGui::InputText(id.c_str(), node->name.data(), 30);
+    static int priority = 1;
+    static int multiplicity = 1;
+    if (node->id.chr() == 'T') {
+      ImGui::Text("Priority");
+      ImGui::SameLine();
+      ImGui::InputInt("##", &priority);
+      ImGui::Text("Weight");
+      ImGui::SameLine();
+      ImGui::InputInt("##", &multiplicity);
+    } else {
+    }
+  }
+
   ImGui::EndChild();
 
   ImGui::SameLine();
@@ -220,8 +244,14 @@ void draw(Graph& g) {
     }
   if (open_context_menu) {
     ImGui::OpenPopup("context_menu");
-    // if (node_hovered_in_list != -1) node_selected = node_hovered_in_list;
-    // if (node_hovered_in_scene != -1) node_selected = node_hovered_in_scene;
+    if (node_hovered_in_list != Symbol(-1)) {
+      node_selected = node_hovered_in_list;
+      node_hovered_in_scene = node_selected;
+    }
+    if (node_hovered_in_scene != Symbol(-1)) {
+      node_selected = node_hovered_in_scene;
+      node_hovered_in_list = node_selected;
+    }
   }
 
   // Draw context menu
