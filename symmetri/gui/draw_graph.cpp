@@ -1,9 +1,15 @@
 #include <iostream>
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif
+#include <cmath>
 
 #include "drawable.h"
 #include "graph.hpp"
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "redux.hpp"
+
 // Creating a node graph editor for Dear ImGui
 // Quick sample, not production code!
 // This is quick demo I crafted in a few hours in 2015 showcasing how to use
@@ -33,14 +39,14 @@ inline ImU32 getColor(symmetri::Token token) {
     case Color::Canceled:
     case Color::Paused:
     case Color::Failed:
-      return IM_COL32(255, 0, 0, 255);
+      return IM_COL32(255, 0, 0, 128);
       break;
     case Color::Success:
-      return IM_COL32(0, 255, 0, 255);
+      return IM_COL32(0, 255, 0, 128);
       break;
     default: {
       // create new color and lookup if it already exists.
-      return IM_COL32(255, 200, 0, 255);
+      return IM_COL32(255, 200, 0, 128);
     }
   }
 };
@@ -48,35 +54,53 @@ inline ImU32 getColor(symmetri::Token token) {
 // State
 static ImVec2 scrolling = ImVec2(0.0f, 0.0f);
 static bool show_grid = true;
-static Symbol node_selected = -1;
+static Symbol node_selected = Symbol(-1);
 static ImVec2 size;
 static ImVec2 offset;
 static ImDrawList* draw_list;
 static bool open_context_menu = false;
-static Symbol node_hovered_in_list = -1;
-static int node_hovered_in_scene = -1;
+static Symbol node_hovered_in_list = Symbol(-1);
+static Symbol node_hovered_in_scene = Symbol(-1);
+static Arc* active_arc = nullptr;
 static const float NODE_SLOT_RADIUS = 4.0f;
 static const ImVec2 NODE_WINDOW_PADDING(8.0f, 8.0f);
-
-// NB: You can use math functions/operators on ImVec2 if you #define
-// IMGUI_DEFINE_MATH_OPERATORS and #include "imgui_internal.h" Here we only
-// declare simple +/- operators so others don't leak into the demo code.
-static inline ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs) {
-  return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y);
-}
-static inline ImVec2 operator-(const ImVec2& lhs, const ImVec2& rhs) {
-  return ImVec2(lhs.x - rhs.x, lhs.y - rhs.y);
-}
 
 void draw_arc(Arc& arc) {
   const auto& [color, from_to] = arc;
   ImVec2 p1 = offset + Node::GetCenterPos(*from_to[0], size);
   ImVec2 p2 = offset + Node::GetCenterPos(*from_to[1], size);
-  ImVec2 d = p1 - p2;
-  d.x *= 0.33;
-  d.y *= 0.33;
+  // use with:
+  using namespace ImGui;
   ImU32 imcolor = getColor(color);
-  draw_list->AddLine(p1, p2, imcolor, 2.0f);
+  const float max_distance = 2.f;
+  const auto mouse_pos = ImGui::GetIO().MousePos;
+  ImVec2 mouse_pos_projected_on_segment = ImLineClosestPoint(p1, p2, mouse_pos);
+  ImVec2 mouse_pos_delta_to_segment =
+      mouse_pos_projected_on_segment - mouse_pos;
+  bool is_segment_hovered =
+      active_arc == &arc || (node_hovered_in_scene == Symbol(-1) &&
+                             (ImLengthSqr(mouse_pos_delta_to_segment) <=
+                              max_distance * max_distance));
+
+  imcolor |= ((ImU32)IM_F32_TO_INT8_SAT(is_segment_hovered ? 1.0f : 0.65f))
+             << IM_COL32_A_SHIFT;
+
+  if (is_segment_hovered && ImGui::IsMouseClicked(0)) {
+    active_arc = &arc;
+  }
+
+  const auto d = p2 - p1;
+  const auto theta = std::atan2(d.y, d.x) - M_PI_2;
+  const float h = draw_list->_Data->FontSize * 1.00f;
+  const float r = h * 0.40f * 1;
+  const ImVec2 center = p1 + d / 2.f;
+  const auto a_sin = std::sin(theta);
+  const auto a_cos = std::cos(theta);
+  const auto a = ImRotate(ImVec2(+0.000f, +1.f) * r, a_cos, a_sin);
+  const auto b = ImRotate(ImVec2(-1.f, -1.f) * r, a_cos, a_sin);
+  const auto c = ImRotate(ImVec2(+1.f, -1.f) * r, a_cos, a_sin);
+  draw_list->AddTriangleFilled(center + a, center + b, center + c, imcolor);
+  draw_list->AddLine(p1, p2, imcolor, is_segment_hovered ? 3.0f : 2.0f);
 };
 
 void draw_nodes(Node& node) {
@@ -103,19 +127,20 @@ void draw_nodes(Node& node) {
   // Display node box
   ImGui::SetCursorScreenPos(node_rect_min);
   ImGui::InvisibleButton("node", size);
-  if (ImGui::IsItemHovered()) {
-    node_hovered_in_scene = node.id;
-    open_context_menu |= ImGui::IsMouseClicked(1);
-  }
+  node_hovered_in_scene = ImGui::IsItemHovered()      ? node.id
+                          : ImGui::IsAnyItemHovered() ? node_hovered_in_scene
+                                                      : Symbol(-1);
   bool node_moving_active = ImGui::IsItemActive();
-  if (node_widgets_active || node_moving_active)
+  if (node_widgets_active || node_moving_active) {
     node_selected = node_hovered_in_list = node.id;
-  if (node_moving_active && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+  }
+  if (node_moving_active && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
     node.Pos = node.Pos + ImGui::GetIO().MouseDelta;
-
+  }
   const int opacity = 255;
-  auto select_color = node.id == node_hovered_in_list
-                          ? IM_COL32(255, 255, 0, opacity)
+  auto select_color = node.id == node_selected ? IM_COL32(255, 255, 0, opacity)
+                      : node.id == node_hovered_in_list
+                          ? IM_COL32(255, 255, 50, 100)
                           : IM_COL32(100, 100, 100, opacity);
   if (node.id.chr() == 'P') {
     draw_list->AddCircleFilled(offset + Node::GetCenterPos(node.Pos, size),
@@ -138,10 +163,64 @@ void draw_nodes(Node& node) {
 // Note that we storing links as indices (not ID) to make example code shorter.
 template <>
 void draw(Graph& g) {
+  ImVec2 WindowSize = ImGui::GetWindowSize();
+  WindowSize.y -= 140.0f;
   // Draw a list of nodes on the left side
-  ImGui::BeginChild("node_list", ImVec2(150, 0));
+  ImGui::BeginChild("some", ImVec2(200, 0));
+  ImGui::Text("Selected");
+  ImGui::Separator();
+  ImGui::BeginChild("selected_node", ImVec2(200, 0.1 * WindowSize.y));
+  if (node_selected != Symbol(-1)) {
+    auto node =
+        std::find_if(g.nodes.begin(), g.nodes.end(),
+                     [=](const auto& n) { return n.id == node_selected; });
+    ImGui::Text("Name");
+    ImGui::SameLine();
+    const auto id = std::string("##") + std::to_string(node->id.key());
+    ImGui::PushItemWidth(-1);
+    ImGui::InputText(id.c_str(), node->name.data(), 30);
+    ImGui::PopItemWidth();
+    static int priority = 1;
+    static int multiplicity = 1;
+    if (node->id.chr() == 'T') {
+      ImGui::Text("Priority");
+      ImGui::SameLine();
+      ImGui::InputInt("##", &priority);
+      ImGui::Text("Weight");
+      ImGui::SameLine();
+      ImGui::InputInt("##", &multiplicity);
+    }
+  }
+  ImGui::Separator();
+  if (active_arc != nullptr) {
+    constexpr std::size_t offset = offsetof(Node, Pos);
+    const Node* from = reinterpret_cast<const Node*>(
+        reinterpret_cast<const char*>(active_arc->from_to_pos[0]) - offset);
+    const Node* to = reinterpret_cast<const Node*>(
+        reinterpret_cast<const char*>(active_arc->from_to_pos[1]) - offset);
+
+    ImGui::Text("From:");
+    ImGui::SameLine();
+    ImGui::PushItemWidth(-1);
+    ImGui::Text("%s", from->name.data());
+    ImGui::PopItemWidth();
+    ImGui::Text("To:");
+    ImGui::SameLine();
+    ImGui::PushItemWidth(-1);
+    ImGui::Text("%s", to->name.data());
+    ImGui::PopItemWidth();
+    ImGui::Text("Color");
+    ImGui::SameLine();
+    ImGui::Text("%s", symmetri::Color::toString(active_arc->color).c_str());
+  }
+  ImGui::EndChild();
+
+  ImGui::Dummy(ImVec2(0.0f, 20.0f));
+
   ImGui::Text("Places");
   ImGui::Separator();
+  constexpr float height_fraction = 0.8 / 2.0;
+  ImGui::BeginChild("place_list", ImVec2(200, height_fraction * WindowSize.y));
   for (const auto& node : g.nodes) {
     if (node.id.chr() == 'P') {
       ImGui::PushID(node.id.key());
@@ -156,10 +235,13 @@ void draw(Graph& g) {
       ImGui::PopID();
     }
   }
+  ImGui::EndChild();
 
   ImGui::Dummy(ImVec2(0.0f, 20.0f));
   ImGui::Text("Transitions");
   ImGui::Separator();
+  ImGui::BeginChild("transition_list",
+                    ImVec2(200, height_fraction * WindowSize.y));
   for (const auto& node : g.nodes) {
     if (node.id.chr() == 'T') {
       ImGui::PushID(node.id.key());
@@ -168,35 +250,12 @@ void draw(Graph& g) {
       }
       if (ImGui::IsItemHovered()) {
         node_hovered_in_list = node.id;
-        open_context_menu |= ImGui::IsMouseClicked(1);
+        // open_context_menu |= ImGui::IsMouseClicked(1);
       }
       ImGui::PopID();
     }
   }
-  ImGui::Dummy(ImVec2(0.0f, 20.0f));
-  ImGui::Text("Selected");
-  ImGui::Separator();
-  if (node_selected != Symbol(-1)) {
-    auto node =
-        std::find_if(g.nodes.begin(), g.nodes.end(),
-                     [=](const auto& n) { return n.id == node_selected; });
-    static char buf[32] = "hello";
-    ImGui::Text("Name");
-    ImGui::SameLine();
-    const auto id = std::to_string(node->id.key());
-    ImGui::InputText(id.c_str(), node->name.data(), 30);
-    static int priority = 1;
-    static int multiplicity = 1;
-    if (node->id.chr() == 'T') {
-      ImGui::Text("Priority");
-      ImGui::SameLine();
-      ImGui::InputInt("##", &priority);
-      ImGui::Text("Weight");
-      ImGui::SameLine();
-      ImGui::InputInt("##", &multiplicity);
-    } else {
-    }
-  }
+  ImGui::EndChild();
 
   ImGui::EndChild();
 
@@ -240,14 +299,14 @@ void draw(Graph& g) {
   if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
     if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) ||
         !ImGui::IsAnyItemHovered()) {
-      node_selected = node_hovered_in_list = node_hovered_in_scene = -1;
+      node_selected = node_hovered_in_list = node_hovered_in_scene = Symbol(-1);
       open_context_menu = true;
     }
   if (open_context_menu) {
     ImGui::OpenPopup("context_menu");
     if (node_hovered_in_list != Symbol(-1)) {
       // node_selected = node_hovered_in_list;
-      node_hovered_in_scene = node_hovered_in_list;
+      // node_hovered_in_scene = node_hovered_in_list;
     }
     if (node_hovered_in_scene != Symbol(-1)) {
       // node_selected = node_hovered_in_scene;

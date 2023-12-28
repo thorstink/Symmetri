@@ -25,8 +25,8 @@
 #include <list>
 #include <sstream>
 
-static const size_t keyBits = sizeof(Key) * 4;
-static const size_t chrBits = sizeof(unsigned char) * 4;
+static const size_t keyBits = sizeof(Key) * 8;
+static const size_t chrBits = sizeof(unsigned char) * 8;
 static const size_t indexBits = keyBits - chrBits;
 static const Key chrMask =
     Key(UCHAR_MAX)
