@@ -30,6 +30,16 @@
 
 #include "symmetri/colors.hpp"
 
+template <typename T>
+bool isSelected(const T& n, const T* selected) {
+  return const_cast<T*>(&n) == selected;
+}
+
+template <typename T>
+const T* assignSelected(const T& n) {
+  return const_cast<T*>(&n);
+}
+
 inline ImU32 getColor(symmetri::Token token) {
   using namespace symmetri;
   switch (token) {
@@ -58,14 +68,15 @@ static ImVec2 size;
 static ImVec2 offset;
 static ImDrawList* draw_list;
 static bool open_context_menu = false;
-static Node* node_selected = nullptr;
-static Node* node_hovered_in_list = nullptr;
-static Node* node_hovered_in_scene = nullptr;
-static Arc* active_arc = nullptr;
+static const Node* node_selected = nullptr;
+static const Node* node_hovered_in_list = nullptr;
+static const Node* node_hovered_in_scene = nullptr;
+static const Arc* active_arc = nullptr;
+
 static const float NODE_SLOT_RADIUS = 4.0f;
 static const ImVec2 NODE_WINDOW_PADDING(8.0f, 8.0f);
 
-void draw_arc(Arc& arc) {
+void draw_arc(const Arc& arc) {
   const auto& [color, from_to] = arc;
   ImVec2 p1 = offset + Node::GetCenterPos(*from_to[0], size);
   ImVec2 p2 = offset + Node::GetCenterPos(*from_to[1], size);
@@ -78,7 +89,7 @@ void draw_arc(Arc& arc) {
   ImVec2 mouse_pos_delta_to_segment =
       mouse_pos_projected_on_segment - mouse_pos;
   bool is_segment_hovered =
-      active_arc == &arc ||
+      active_arc == assignSelected(arc) ||
       (ImLengthSqr(mouse_pos_delta_to_segment) <= max_distance * max_distance &&
        node_hovered_in_scene == nullptr);
 
@@ -86,7 +97,7 @@ void draw_arc(Arc& arc) {
              << IM_COL32_A_SHIFT;
 
   if (is_segment_hovered && ImGui::IsMouseClicked(0)) {
-    active_arc = &arc;
+    active_arc = assignSelected(arc);
   }
 
   const auto d = p2 - p1;
@@ -222,13 +233,13 @@ void draw(Graph& g) {
   ImGui::Separator();
   constexpr float height_fraction = 0.8 / 2.0;
   ImGui::BeginChild("place_list", ImVec2(200, height_fraction * WindowSize.y));
-  for (auto& node : g.nodes) {
+  for (const auto& node : g.nodes) {
     if (node.id.chr() == 'P') {
       ImGui::PushID(node.id.key());
       if (ImGui::Selectable(node.name.c_str(), &node == node_selected)) {
-        node_selected = &node;
+        node_selected = assignSelected(node);
       }
-      node_hovered_in_list = ImGui::IsItemHovered()      ? &node
+      node_hovered_in_list = ImGui::IsItemHovered()      ? assignSelected(node)
                              : ImGui::IsAnyItemHovered() ? node_hovered_in_list
                                                          : nullptr;
 
@@ -245,13 +256,13 @@ void draw(Graph& g) {
   ImGui::Separator();
   ImGui::BeginChild("transition_list",
                     ImVec2(200, height_fraction * WindowSize.y));
-  for (auto& node : g.nodes) {
+  for (const auto& node : g.nodes) {
     if (node.id.chr() == 'T') {
       ImGui::PushID(node.id.key());
       if (ImGui::Selectable(node.name.c_str(), &node == node_selected)) {
-        node_selected = &node;
+        node_selected = assignSelected(node);
       }
-      node_hovered_in_list = ImGui::IsItemHovered()      ? &node
+      node_hovered_in_list = ImGui::IsItemHovered()      ? assignSelected(node)
                              : ImGui::IsAnyItemHovered() ? node_hovered_in_list
                                                          : nullptr;
       // if (ImGui::IsItemHovered()) {
@@ -324,8 +335,11 @@ void draw(Graph& g) {
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
   if (ImGui::BeginPopup("context_menu")) {
     auto node =
-        std::find_if(g.nodes.begin(), g.nodes.end(),
-                     [=](const auto& n) { return n.id == node_selected->id; });
+        std::find_if(g.nodes.begin(), g.nodes.end(), [=](const auto& n) {
+          return isSelected(n, node_selected);
+          // return const_cast<Node*>(&n) == node_selected;
+          // return node_selected && n.id == node_selected->id;
+        });
     ImVec2 scene_pos = ImGui::GetMousePosOnOpeningCurrentPopup() - offset;
     if (node != std::end(g.nodes)) {
       ImGui::Text("Node '%s'", node->name.c_str());
