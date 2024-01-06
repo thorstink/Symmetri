@@ -265,10 +265,9 @@ void draw(Graph& g) {
       node_hovered_in_list = ImGui::IsItemHovered()      ? assignSelected(node)
                              : ImGui::IsAnyItemHovered() ? node_hovered_in_list
                                                          : nullptr;
-      // if (ImGui::IsItemHovered()) {
-      // node_hovered_in_list = node.id;
-      // open_context_menu |= ImGui::IsMouseClicked(1);
-      // }
+      if (node_hovered_in_list) {
+        open_context_menu |= ImGui::IsMouseClicked(1);
+      }
       ImGui::PopID();
     }
   }
@@ -317,29 +316,20 @@ void draw(Graph& g) {
     if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) ||
         !ImGui::IsAnyItemHovered()) {
       node_selected = nullptr;
+      active_arc = nullptr;
       open_context_menu = true;
     }
+
   if (open_context_menu) {
     ImGui::OpenPopup("context_menu");
-    // if (node_hovered_in_list != Symbol(-1)) {
-    // node_selected = node_hovered_in_list;
-    // node_hovered_in_scene = node_hovered_in_list;
-    // }
-    // if (node_hovered_in_scene != Symbol(-1)) {
-    //   // node_selected = node_hovered_in_scene;
-    //   node_hovered_in_list = node_hovered_in_scene;
-    // }
   }
 
   // Draw context menu
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
   if (ImGui::BeginPopup("context_menu")) {
-    auto node =
-        std::find_if(g.nodes.begin(), g.nodes.end(), [=](const auto& n) {
-          return isSelected(n, node_selected);
-          // return const_cast<Node*>(&n) == node_selected;
-          // return node_selected && n.id == node_selected->id;
-        });
+    auto node = std::find_if(
+        g.nodes.begin(), g.nodes.end(),
+        [=](const auto& n) { return isSelected(n, node_selected); });
     ImVec2 scene_pos = ImGui::GetMousePosOnOpeningCurrentPopup() - offset;
     if (node != std::end(g.nodes)) {
       ImGui::Text("Node '%s'", node->name.c_str());
