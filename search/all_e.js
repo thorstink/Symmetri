@@ -1,7 +1,7 @@
 var searchData=
 [
   ['readpnml_0',['readPnml',['../parsers_8h.html#aa06090b0b8a6aa53a4284b55469e86af',1,'symmetri']]],
-  ['reducer_1',['Reducer',['../petri_8h.html#a6434bd1832596983e4d74f3c5ceac58a',1,'symmetri']]],
+  ['reducer_1',['Reducer',['../petri_8h.html#acbe7ea854ba6be3596fab040e6e27c87',1,'symmetri']]],
   ['reducer_5fqueue_2',['reducer_queue',['../structsymmetri_1_1Petri.html#ad12b7a5a2f3341fc17154c3c65f0d00f',1,'symmetri::Petri']]],
   ['registercallback_3',['registerCallback',['../classsymmetri_1_1PetriNet.html#a17f7ea1ea58dc7682a671c33860da467',1,'symmetri::PetriNet']]],
   ['registertoken_4',['registerToken',['../classsymmetri_1_1Color.html#aca0a34f4d9bdf91acd2f3bd4c2045299',1,'symmetri::Color']]],

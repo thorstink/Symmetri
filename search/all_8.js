@@ -6,5 +6,5 @@ var searchData=
   ['input_20from_20abroad_3',['Input from abroad',['../md_docs_2symmetri__nets.html#autotoc_md6',1,'']]],
   ['input_5fn_4',['input_n',['../structsymmetri_1_1Petri.html#a7e997c5e80e9ca6e6dd41af430bb8a7e',1,'symmetri::Petri']]],
   ['introduction_5',['Introduction',['../md_docs_2symmetri__nets.html#autotoc_md1',1,'']]],
-  ['issynchronous_6',['issynchronous',['../callback_8h.html#aa0f94b8de344a14936f05f67078711ca',1,'symmetri::isSynchronous(const T &amp;)'],['../types_8h.html#a36437109bfa83caee93ad77a73c97863',1,'symmetri::isSynchronous(const DirectMutation &amp;)']]]
+  ['issynchronous_6',['isSynchronous',['../callback_8h.html#aa0f94b8de344a14936f05f67078711ca',1,'symmetri::isSynchronous(const T &amp;)'],['../types_8h.html#a36437109bfa83caee93ad77a73c97863',1,'symmetri::isSynchronous(const DirectMutation &amp;)']]]
 ];
