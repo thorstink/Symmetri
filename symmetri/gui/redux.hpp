@@ -30,6 +30,8 @@ inline View& current(History& x) {
   return x.back();
 }
 
+struct ViewModel {};
+
 struct Model {
   std::filesystem::path working_dir;
   std::optional<std::filesystem::path> active_file;

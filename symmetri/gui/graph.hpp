@@ -46,6 +46,7 @@ struct Arc {
 struct Graph {
   std::vector<Arc> arcs;
   std::vector<Node> nodes;
+  std::vector<size_t> a_idx, n_idx;
 };
 
 inline Graph createGraph(const symmetri::Net net) {
@@ -131,5 +132,8 @@ inline Graph createGraph(const symmetri::Net net) {
     nodes[i].Pos = ImVec2(GA.x(ogdf_nodes[i]), 2 * GA.y(ogdf_nodes[i]));
   }
 
-  return {std::move(arcs), std::move(nodes)};
+  std::vector<size_t> v(arcs.size()), w(nodes.size());
+  std::iota(v.begin(), v.end(), 0);
+  std::iota(w.begin(), w.end(), 0);
+  return {std::move(arcs), std::move(nodes), std::move(v), std::move(w)};
 }
