@@ -59,8 +59,10 @@ static ImVec2 size;
 static ImVec2 offset;
 static ImDrawList* draw_list;
 static bool open_context_menu = false;
-static Symbol node_hovered_in_list = Symbol(-1);
-static Symbol node_hovered_in_scene = Symbol(-1);
+// static Symbol node_hovered_in_list = Symbol(-1);
+// static Symbol node_hovered_in_scene = Symbol(-1);
+static Node* node_hovered_in_list = nullptr;
+static Node* node_hovered_in_scene = nullptr;
 static Arc* active_arc = nullptr;
 static const float NODE_SLOT_RADIUS = 4.0f;
 static const ImVec2 NODE_WINDOW_PADDING(8.0f, 8.0f);
@@ -78,9 +80,8 @@ void draw_arc(Arc& arc) {
   ImVec2 mouse_pos_delta_to_segment =
       mouse_pos_projected_on_segment - mouse_pos;
   bool is_segment_hovered =
-      active_arc == &arc || (node_hovered_in_scene == Symbol(-1) &&
-                             (ImLengthSqr(mouse_pos_delta_to_segment) <=
-                              max_distance * max_distance));
+      active_arc == &arc ||
+      (ImLengthSqr(mouse_pos_delta_to_segment) <= max_distance * max_distance);
 
   imcolor |= ((ImU32)IM_F32_TO_INT8_SAT(is_segment_hovered ? 1.0f : 0.65f))
              << IM_COL32_A_SHIFT;
@@ -127,21 +128,22 @@ void draw_nodes(Node& node) {
   // Display node box
   ImGui::SetCursorScreenPos(node_rect_min);
   ImGui::InvisibleButton("node", size);
-  node_hovered_in_scene = ImGui::IsItemHovered()      ? node.id
+  node_hovered_in_scene = ImGui::IsItemHovered()      ? &node
                           : ImGui::IsAnyItemHovered() ? node_hovered_in_scene
-                                                      : Symbol(-1);
+                                                      : nullptr;
   bool node_moving_active = ImGui::IsItemActive();
   if (node_widgets_active || node_moving_active) {
-    node_selected = node_hovered_in_list = node.id;
+    node_selected = node.id;
   }
   if (node_moving_active && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
     node.Pos = node.Pos + ImGui::GetIO().MouseDelta;
   }
   const int opacity = 255;
-  auto select_color = node.id == node_selected ? IM_COL32(255, 255, 0, opacity)
-                      : node.id == node_hovered_in_list
-                          ? IM_COL32(255, 255, 50, 100)
-                          : IM_COL32(100, 100, 100, opacity);
+  auto select_color =
+      node.id == node_selected ? IM_COL32(255, 255, 0, opacity)
+      : &node == node_hovered_in_list || &node == node_hovered_in_scene
+          ? IM_COL32(255, 255, 50, 100)
+          : IM_COL32(100, 100, 100, opacity);
   if (node.id.chr() == 'P') {
     draw_list->AddCircleFilled(offset + Node::GetCenterPos(node.Pos, size),
                                0.5f * size.x, IM_COL32(135, 135, 135, opacity),
@@ -221,14 +223,18 @@ void draw(Graph& g) {
   ImGui::Separator();
   constexpr float height_fraction = 0.8 / 2.0;
   ImGui::BeginChild("place_list", ImVec2(200, height_fraction * WindowSize.y));
-  for (const auto& node : g.nodes) {
+  for (auto& node : g.nodes) {
     if (node.id.chr() == 'P') {
       ImGui::PushID(node.id.key());
       if (ImGui::Selectable(node.name.c_str(), node.id == node_selected)) {
         node_selected = node.id;
       }
-      if (ImGui::IsItemHovered()) {
-        node_hovered_in_list = node.id;
+      node_hovered_in_list = ImGui::IsItemHovered()      ? &node
+                             : ImGui::IsAnyItemHovered() ? node_hovered_in_list
+                                                         : nullptr;
+
+      if (node_hovered_in_list) {
+        // node_hovered_in_list = node.id;
         // node_hovered_in_list = node.id;
         open_context_menu |= ImGui::IsMouseClicked(1);
       }
@@ -242,16 +248,19 @@ void draw(Graph& g) {
   ImGui::Separator();
   ImGui::BeginChild("transition_list",
                     ImVec2(200, height_fraction * WindowSize.y));
-  for (const auto& node : g.nodes) {
+  for (auto& node : g.nodes) {
     if (node.id.chr() == 'T') {
       ImGui::PushID(node.id.key());
       if (ImGui::Selectable(node.name.c_str(), node.id == node_selected)) {
         node_selected = node.id;
       }
-      if (ImGui::IsItemHovered()) {
-        node_hovered_in_list = node.id;
-        // open_context_menu |= ImGui::IsMouseClicked(1);
-      }
+      node_hovered_in_list = ImGui::IsItemHovered()      ? &node
+                             : ImGui::IsAnyItemHovered() ? node_hovered_in_list
+                                                         : nullptr;
+      // if (ImGui::IsItemHovered()) {
+      // node_hovered_in_list = node.id;
+      // open_context_menu |= ImGui::IsMouseClicked(1);
+      // }
       ImGui::PopID();
     }
   }
@@ -299,19 +308,19 @@ void draw(Graph& g) {
   if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
     if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) ||
         !ImGui::IsAnyItemHovered()) {
-      node_selected = node_hovered_in_list = node_hovered_in_scene = Symbol(-1);
+      node_selected = Symbol(-1);
       open_context_menu = true;
     }
   if (open_context_menu) {
     ImGui::OpenPopup("context_menu");
-    if (node_hovered_in_list != Symbol(-1)) {
-      // node_selected = node_hovered_in_list;
-      // node_hovered_in_scene = node_hovered_in_list;
-    }
-    if (node_hovered_in_scene != Symbol(-1)) {
-      // node_selected = node_hovered_in_scene;
-      node_hovered_in_list = node_hovered_in_scene;
-    }
+    // if (node_hovered_in_list != Symbol(-1)) {
+    // node_selected = node_hovered_in_list;
+    // node_hovered_in_scene = node_hovered_in_list;
+    // }
+    // if (node_hovered_in_scene != Symbol(-1)) {
+    //   // node_selected = node_hovered_in_scene;
+    //   node_hovered_in_list = node_hovered_in_scene;
+    // }
   }
 
   // Draw context menu
