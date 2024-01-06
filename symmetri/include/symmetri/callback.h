@@ -26,11 +26,9 @@ bool isSynchronous(const T &) {
  * @brief The default cancel implementation is naive. It only returns a
  * user-exit state and does nothing to the actual Callback itself, and it will
  * still complete. Because the transition is by default not cancelled, it will
- * produce a reducer, however, it will never be processed.
+ * produce a reducer which potentially can still be processed.
  *
  * @tparam T the type of the callback.
- * @return Token, can be used to return the state at the moment on
- * cancellation.
  */
 template <typename T>
 void cancel(const T &) {}
@@ -73,7 +71,7 @@ Token fire(const T &callback) {
 }
 
 /**
- * @brief Get the Log object. By default it returns an empty list.
+ * @brief Get the Log object. By default it returns an empty vector.
  *
  * @tparam T the type of the callback.
  * @return Eventlog
