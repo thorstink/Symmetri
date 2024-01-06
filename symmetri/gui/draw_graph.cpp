@@ -54,13 +54,11 @@ inline ImU32 getColor(symmetri::Token token) {
 // State
 static ImVec2 scrolling = ImVec2(0.0f, 0.0f);
 static bool show_grid = true;
-static Symbol node_selected = Symbol(-1);
 static ImVec2 size;
 static ImVec2 offset;
 static ImDrawList* draw_list;
 static bool open_context_menu = false;
-// static Symbol node_hovered_in_list = Symbol(-1);
-// static Symbol node_hovered_in_scene = Symbol(-1);
+static Node* node_selected = nullptr;
 static Node* node_hovered_in_list = nullptr;
 static Node* node_hovered_in_scene = nullptr;
 static Arc* active_arc = nullptr;
@@ -81,7 +79,8 @@ void draw_arc(Arc& arc) {
       mouse_pos_projected_on_segment - mouse_pos;
   bool is_segment_hovered =
       active_arc == &arc ||
-      (ImLengthSqr(mouse_pos_delta_to_segment) <= max_distance * max_distance);
+      (ImLengthSqr(mouse_pos_delta_to_segment) <= max_distance * max_distance &&
+       node_hovered_in_scene == nullptr);
 
   imcolor |= ((ImU32)IM_F32_TO_INT8_SAT(is_segment_hovered ? 1.0f : 0.65f))
              << IM_COL32_A_SHIFT;
@@ -133,14 +132,14 @@ void draw_nodes(Node& node) {
                                                       : nullptr;
   bool node_moving_active = ImGui::IsItemActive();
   if (node_widgets_active || node_moving_active) {
-    node_selected = node.id;
+    node_selected = &node;
   }
   if (node_moving_active && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
     node.Pos = node.Pos + ImGui::GetIO().MouseDelta;
   }
   const int opacity = 255;
   auto select_color =
-      node.id == node_selected ? IM_COL32(255, 255, 0, opacity)
+      &node == node_selected ? IM_COL32(255, 255, 0, opacity)
       : &node == node_hovered_in_list || &node == node_hovered_in_scene
           ? IM_COL32(255, 255, 50, 100)
           : IM_COL32(100, 100, 100, opacity);
@@ -172,10 +171,10 @@ void draw(Graph& g) {
   ImGui::Text("Selected");
   ImGui::Separator();
   ImGui::BeginChild("selected_node", ImVec2(200, 0.1 * WindowSize.y));
-  if (node_selected != Symbol(-1)) {
+  if (node_selected) {
     auto node =
         std::find_if(g.nodes.begin(), g.nodes.end(),
-                     [=](const auto& n) { return n.id == node_selected; });
+                     [=](const auto& n) { return n.id == node_selected->id; });
     ImGui::Text("Name");
     ImGui::SameLine();
     const auto id = std::string("##") + std::to_string(node->id.key());
@@ -226,16 +225,14 @@ void draw(Graph& g) {
   for (auto& node : g.nodes) {
     if (node.id.chr() == 'P') {
       ImGui::PushID(node.id.key());
-      if (ImGui::Selectable(node.name.c_str(), node.id == node_selected)) {
-        node_selected = node.id;
+      if (ImGui::Selectable(node.name.c_str(), &node == node_selected)) {
+        node_selected = &node;
       }
       node_hovered_in_list = ImGui::IsItemHovered()      ? &node
                              : ImGui::IsAnyItemHovered() ? node_hovered_in_list
                                                          : nullptr;
 
       if (node_hovered_in_list) {
-        // node_hovered_in_list = node.id;
-        // node_hovered_in_list = node.id;
         open_context_menu |= ImGui::IsMouseClicked(1);
       }
       ImGui::PopID();
@@ -251,8 +248,8 @@ void draw(Graph& g) {
   for (auto& node : g.nodes) {
     if (node.id.chr() == 'T') {
       ImGui::PushID(node.id.key());
-      if (ImGui::Selectable(node.name.c_str(), node.id == node_selected)) {
-        node_selected = node.id;
+      if (ImGui::Selectable(node.name.c_str(), &node == node_selected)) {
+        node_selected = &node;
       }
       node_hovered_in_list = ImGui::IsItemHovered()      ? &node
                              : ImGui::IsAnyItemHovered() ? node_hovered_in_list
@@ -308,7 +305,7 @@ void draw(Graph& g) {
   if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
     if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) ||
         !ImGui::IsAnyItemHovered()) {
-      node_selected = Symbol(-1);
+      node_selected = nullptr;
       open_context_menu = true;
     }
   if (open_context_menu) {
@@ -328,7 +325,7 @@ void draw(Graph& g) {
   if (ImGui::BeginPopup("context_menu")) {
     auto node =
         std::find_if(g.nodes.begin(), g.nodes.end(),
-                     [=](const auto& n) { return n.id == node_selected; });
+                     [=](const auto& n) { return n.id == node_selected->id; });
     ImVec2 scene_pos = ImGui::GetMousePosOnOpeningCurrentPopup() - offset;
     if (node != std::end(g.nodes)) {
       ImGui::Text("Node '%s'", node->name.c_str());
