@@ -261,7 +261,7 @@ void draw(Graph& g) {
   // Create our child canvas
   ImGui::Text("Hold middle mouse button to scroll (%.2f,%.2f)", scrolling.x,
               scrolling.y);
-  ImGui::SameLine(ImGui::GetWindowWidth() - 440);
+  ImGui::SameLine(ImGui::GetWindowWidth() - 340);
   ImGui::Checkbox("Show grid", &show_grid);
   ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
@@ -312,23 +312,34 @@ void draw(Graph& g) {
     if (node_selected) {
       ImGui::Text("Node '%s'", node_selected->name.c_str());
       ImGui::Separator();
-      if (ImGui::MenuItem("Delete", NULL, false, false)) {
+      if (ImGui::MenuItem("Delete")) {
+        MVC::push([&](Model&& m) {
+          const auto idx = std::distance(
+              g.nodes.begin(),
+              std::find_if(g.nodes.begin(), g.nodes.end(),
+                           [=](const Node& n) { return node_selected == &n; }));
+          const auto swap_idx = std::distance(
+              g.n_idx.begin(), std::find(g.n_idx.begin(), g.n_idx.end(), idx));
+          std::swap(g.n_idx[swap_idx], g.n_idx.back());
+          g.n_idx.pop_back();
+          return m;
+        });
       }
     } else {
       ImVec2 scene_pos = ImGui::GetMousePosOnOpeningCurrentPopup() - offset;
       if (ImGui::MenuItem("Add place")) {
         MVC::push([&, scene_pos](Model&& m) {
-          g.n_idx.push_back(g.nodes.size());
           g.nodes.push_back(
               Node{"New node", Symbol('P', g.nodes.size()), scene_pos});
+          g.n_idx.push_back(g.nodes.size() - 1);
           return m;
         });
       }
       if (ImGui::MenuItem("Add transition")) {
         MVC::push([&, scene_pos](Model&& m) {
-          g.n_idx.push_back(g.nodes.size());
           g.nodes.push_back(
               Node{"New node", Symbol('T', g.nodes.size()), scene_pos});
+          g.n_idx.push_back(g.nodes.size() - 1);
           return m;
         });
       }
