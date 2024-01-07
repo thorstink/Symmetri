@@ -49,6 +49,19 @@ inline ImU32 getColor(symmetri::Token token) {
   }
 };
 
+void draw_grid() {
+  ImU32 GRID_COLOR = IM_COL32(200, 200, 200, 40);
+  float GRID_SZ = 64.0f;
+  ImVec2 win_pos = ImGui::GetCursorScreenPos();
+  ImVec2 canvas_sz = ImGui::GetWindowSize();
+  for (float x = fmodf(scrolling.x, GRID_SZ); x < canvas_sz.x; x += GRID_SZ)
+    draw_list->AddLine(ImVec2(x, 0.0f) + win_pos,
+                       ImVec2(x, canvas_sz.y) + win_pos, GRID_COLOR);
+  for (float y = fmodf(scrolling.y, GRID_SZ); y < canvas_sz.y; y += GRID_SZ)
+    draw_list->AddLine(ImVec2(0.0f, y) + win_pos,
+                       ImVec2(canvas_sz.x, y) + win_pos, GRID_COLOR);
+};
+
 void draw_arc(const Arc& arc) {
   const auto& [color, from_to] = arc;
   ImVec2 p1 = offset + Node::GetCenterPos(*from_to[0], size);
@@ -241,16 +254,14 @@ void draw(Graph& g) {
     }
   }
   ImGui::EndChild();
-
   ImGui::EndChild();
-
   ImGui::SameLine();
   ImGui::BeginGroup();
 
   // Create our child canvas
   ImGui::Text("Hold middle mouse button to scroll (%.2f,%.2f)", scrolling.x,
               scrolling.y);
-  ImGui::SameLine(ImGui::GetWindowWidth() - 100);
+  ImGui::SameLine(ImGui::GetWindowWidth() - 440);
   ImGui::Checkbox("Show grid", &show_grid);
   ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
@@ -265,27 +276,18 @@ void draw(Graph& g) {
 
   // Display grid
   if (show_grid) {
-    ImU32 GRID_COLOR = IM_COL32(200, 200, 200, 40);
-    float GRID_SZ = 64.0f;
-    ImVec2 win_pos = ImGui::GetCursorScreenPos();
-    ImVec2 canvas_sz = ImGui::GetWindowSize();
-    for (float x = fmodf(scrolling.x, GRID_SZ); x < canvas_sz.x; x += GRID_SZ)
-      draw_list->AddLine(ImVec2(x, 0.0f) + win_pos,
-                         ImVec2(x, canvas_sz.y) + win_pos, GRID_COLOR);
-    for (float y = fmodf(scrolling.y, GRID_SZ); y < canvas_sz.y; y += GRID_SZ)
-      draw_list->AddLine(ImVec2(0.0f, y) + win_pos,
-                         ImVec2(canvas_sz.x, y) + win_pos, GRID_COLOR);
+    draw_grid();
   }
 
+  // draw arcs
   for (auto idx : g.a_idx) {
     draw_arc(g.arcs[idx]);
   }
 
+  // draw places & transitions
   for (auto idx : g.n_idx) {
     draw_nodes(g.nodes[idx]);
   }
-  // std::for_each(g.arcs.begin(), g.arcs.end(), &draw_arc);
-  // std::for_each(g.nodes.begin(), g.nodes.end(), &draw_nodes);
 
   // Open context menu
   if (ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
