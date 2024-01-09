@@ -23,7 +23,8 @@ static bool open_context_menu = false;
 static const Node* node_selected = nullptr;
 static const Node* node_hovered_in_list = nullptr;
 static const Node* node_hovered_in_scene = nullptr;
-static const Arc* active_arc = nullptr;
+static const Arc* arc_selected = nullptr;
+static const Arc* arc_hovered_in_scene = nullptr;
 
 static const float NODE_SLOT_RADIUS = 4.0f;
 static const ImVec2 NODE_WINDOW_PADDING(8.0f, 8.0f);
@@ -68,23 +69,31 @@ void draw_arc(const Arc& arc) {
   ImVec2 p2 = offset + Node::GetCenterPos(*from_to[1], size);
   // use with:
   using namespace ImGui;
-  ImU32 imcolor = getColor(color);
   const float max_distance = 2.f;
   const auto mouse_pos = ImGui::GetIO().MousePos;
   ImVec2 mouse_pos_projected_on_segment = ImLineClosestPoint(p1, p2, mouse_pos);
   ImVec2 mouse_pos_delta_to_segment =
       mouse_pos_projected_on_segment - mouse_pos;
   bool is_segment_hovered =
-      active_arc == &arc ||
+      arc_selected == &arc ||
       (ImLengthSqr(mouse_pos_delta_to_segment) <= max_distance * max_distance &&
        node_hovered_in_scene == nullptr);
 
-  imcolor |= ((ImU32)IM_F32_TO_INT8_SAT(is_segment_hovered ? 1.0f : 0.65f))
-             << IM_COL32_A_SHIFT;
+  if (is_segment_hovered) {
+    arc_hovered_in_scene = &arc;
+  } else if (arc_hovered_in_scene == &arc) {
+    arc_hovered_in_scene = nullptr;
+  }
 
   if (is_segment_hovered && ImGui::IsMouseClicked(0)) {
-    active_arc = &arc;
+    arc_selected = &arc;
+    node_selected = nullptr;
   }
+
+  ImU32 imcolor =
+      getColor(color) |
+      ((ImU32)IM_F32_TO_INT8_SAT(arc_hovered_in_scene == &arc ? 1.0f : 0.65f))
+          << IM_COL32_A_SHIFT;
 
   const auto d = p2 - p1;
   const auto theta = std::atan2(d.y, d.x) - M_PI_2;
@@ -97,7 +106,8 @@ void draw_arc(const Arc& arc) {
   const auto b = ImRotate(ImVec2(-1.f, -1.f) * r, a_cos, a_sin);
   const auto c = ImRotate(ImVec2(+1.f, -1.f) * r, a_cos, a_sin);
   draw_list->AddTriangleFilled(center + a, center + b, center + c, imcolor);
-  draw_list->AddLine(p1, p2, imcolor, is_segment_hovered ? 3.0f : 2.0f);
+  draw_list->AddLine(p1, p2, imcolor,
+                     arc_hovered_in_scene == &arc ? 3.0f : 2.0f);
 };
 
 void draw_nodes(Node& node) {
@@ -130,6 +140,7 @@ void draw_nodes(Node& node) {
   bool node_moving_active = ImGui::IsItemActive();
   if (node_widgets_active || node_moving_active) {
     node_selected = &node;
+    arc_selected = nullptr;
   }
   if (node_moving_active && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
     node.Pos = node.Pos + ImGui::GetIO().MouseDelta;
@@ -188,14 +199,12 @@ void draw(Graph& g) {
       ImGui::SameLine();
       ImGui::InputInt("##", &multiplicity);
     }
-  }
-  ImGui::Separator();
-  if (active_arc != nullptr) {
+  } else if (arc_selected != nullptr) {
     constexpr std::size_t offset = offsetof(Node, Pos);
     const Node* from = reinterpret_cast<const Node*>(
-        reinterpret_cast<const char*>(active_arc->from_to_pos[0]) - offset);
+        reinterpret_cast<const char*>(arc_selected->from_to_pos[0]) - offset);
     const Node* to = reinterpret_cast<const Node*>(
-        reinterpret_cast<const char*>(active_arc->from_to_pos[1]) - offset);
+        reinterpret_cast<const char*>(arc_selected->from_to_pos[1]) - offset);
 
     ImGui::Text("From:");
     ImGui::SameLine();
@@ -209,7 +218,7 @@ void draw(Graph& g) {
     ImGui::PopItemWidth();
     ImGui::Text("Color");
     ImGui::SameLine();
-    ImGui::Text("%s", symmetri::Color::toString(active_arc->color).c_str());
+    ImGui::Text("%s", symmetri::Color::toString(arc_selected->color).c_str());
   }
   ImGui::EndChild();
 
@@ -225,6 +234,7 @@ void draw(Graph& g) {
       ImGui::PushID(node.id.key());
       if (ImGui::Selectable(node.name.c_str(), &node == node_selected)) {
         node_selected = &node;
+        arc_selected = nullptr;
       }
       node_hovered_in_list = ImGui::IsItemHovered()      ? &node
                              : ImGui::IsAnyItemHovered() ? node_hovered_in_list
@@ -246,6 +256,7 @@ void draw(Graph& g) {
       ImGui::PushID(node.id.key());
       if (ImGui::Selectable(node.name.c_str(), &node == node_selected)) {
         node_selected = &node;
+        arc_selected = nullptr;
       }
       node_hovered_in_list = ImGui::IsItemHovered()      ? &node
                              : ImGui::IsAnyItemHovered() ? node_hovered_in_list
@@ -294,11 +305,11 @@ void draw(Graph& g) {
     if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) ||
         !ImGui::IsAnyItemHovered()) {
       node_selected = node_hovered_in_scene;
-      active_arc = nullptr;
+      arc_selected = arc_hovered_in_scene;
       open_context_menu = true;
     } else {
       node_selected = nullptr;
-      active_arc = nullptr;
+      arc_selected = nullptr;
     }
   }
 
@@ -322,8 +333,60 @@ void draw(Graph& g) {
               g.n_idx.begin(), std::find(g.n_idx.begin(), g.n_idx.end(), idx));
           std::swap(g.n_idx[swap_idx], g.n_idx.back());
           g.n_idx.pop_back();
+
+          // delete arcs related to this
+          for (auto iter = g.a_idx.begin(); iter != g.a_idx.end();) {
+            const auto [color, from_to] = g.arcs[*iter];
+            if (from_to[0] == &(node_selected->Pos) ||
+                from_to[1] == &(node_selected->Pos)) {
+              g.a_idx.erase(iter);
+            } else {
+              ++iter;
+            }
+          }
           return m;
         });
+        node_selected = nullptr;
+      }
+    } else if (arc_selected) {
+      ImGui::Text("Arc");
+      ImGui::Separator();
+
+      if (ImGui::MenuItem("Delete")) {
+        MVC::push([&, ptr = arc_selected](Model&& m) {
+          const auto idx = std::distance(
+              g.arcs.begin(),
+              std::find_if(g.arcs.begin(), g.arcs.end(),
+                           [=](const Arc& a) { return ptr == &a; }));
+          const auto swap_idx = std::distance(
+              g.a_idx.begin(), std::find(g.a_idx.begin(), g.a_idx.end(), idx));
+          std::swap(g.a_idx[swap_idx], g.a_idx.back());
+          g.a_idx.pop_back();
+          return m;
+        });
+        arc_selected = nullptr;
+      }
+      if (ImGui::BeginMenu("Change color")) {
+        for (const auto& arc : symmetri::Color::getColors()) {
+          if (ImGui::MenuItem(arc.second.c_str())) {
+            MVC::push([&, ptr = arc_selected](Model&& m) {
+              const auto idx = std::distance(
+                  g.arcs.begin(),
+                  std::find_if(g.arcs.begin(), g.arcs.end(),
+                               [=](const Arc& a) { return ptr == &a; }));
+              const auto swap_idx =
+                  std::distance(g.a_idx.begin(),
+                                std::find(g.a_idx.begin(), g.a_idx.end(), idx));
+              std::swap(g.a_idx[swap_idx], g.a_idx.back());
+              g.a_idx.pop_back();
+              g.a_idx.push_back(g.arcs.size());
+              g.arcs.push_back({arc.first, ptr->from_to_pos});
+              return m;
+            });
+            arc_selected = nullptr;
+          }
+        }
+        ImGui::EndMenu();
       }
     } else {
       ImVec2 scene_pos = ImGui::GetMousePosOnOpeningCurrentPopup() - offset;
@@ -352,7 +415,7 @@ void draw(Graph& g) {
                 MVC::push([&](Model&& m) {
                   g.a_idx.push_back(g.arcs.size());
                   g.arcs.push_back(
-                      Arc{symmetri::Color::Success, &from.Pos, &to.Pos});
+                      {symmetri::Color::Success, &from.Pos, &to.Pos});
                   return m;
                 });
               }
