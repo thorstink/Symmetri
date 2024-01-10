@@ -6,6 +6,7 @@
 #include <cmath>
 #include <iostream>
 
+#include "color.hpp"
 #include "drawable.h"
 #include "graph.hpp"
 #include "imgui.h"
@@ -29,24 +30,17 @@ static const Arc* arc_hovered_in_scene = nullptr;
 static const float NODE_SLOT_RADIUS = 4.0f;
 static const ImVec2 NODE_WINDOW_PADDING(8.0f, 8.0f);
 
-inline ImU32 getColor(symmetri::Token token) {
+ImU32 getColor(symmetri::Token token) {
   using namespace symmetri;
-  switch (token) {
-    case Color::Scheduled:
-    case Color::Started:
-    case Color::Deadlocked:
-    case Color::Canceled:
-    case Color::Paused:
-    case Color::Failed:
-      return IM_COL32(255, 0, 0, 128);
-      break;
-    case Color::Success:
-      return IM_COL32(0, 255, 0, 128);
-      break;
-    default: {
-      // create new color and lookup if it already exists.
-      return IM_COL32(255, 200, 0, 128);
-    }
+  static std::unordered_map<Token, ImU32> color_table;
+  const auto ptr = color_table.find(token);
+  if (ptr != std::end(color_table)) {
+    return ptr->second;
+  } else {
+    const auto rgb = hsv_to_rgb(ratio(), 0.6, 0.95);
+    const auto color = IM_COL32(rgb[0], rgb[1], rgb[2], 128);
+    color_table.insert({token, color});
+    return color;
   }
 };
 
@@ -149,7 +143,7 @@ void draw_nodes(Node& node) {
   auto select_color =
       &node == node_selected ? IM_COL32(255, 255, 0, opacity)
       : &node == node_hovered_in_list || &node == node_hovered_in_scene
-          ? IM_COL32(255, 255, 50, 100)
+          ? IM_COL32(0, 255, 0, opacity)
           : IM_COL32(100, 100, 100, opacity);
   if (node.id.chr() == 'P') {
     draw_list->AddCircleFilled(offset + Node::GetCenterPos(node.Pos, size),
@@ -409,15 +403,21 @@ void draw(Graph& g) {
       if (ImGui::BeginMenu("Add arc")) {
         for (const auto& from : g.nodes) {
           if (ImGui::BeginMenu(from.name.c_str())) {
+            node_hovered_in_scene = &from;
             for (const auto& to : g.nodes) {
               if (from.id.chr() != to.id.chr() &&
-                  ImGui::MenuItem(to.name.c_str())) {
-                MVC::push([&](Model&& m) {
-                  g.a_idx.push_back(g.arcs.size());
-                  g.arcs.push_back(
-                      {symmetri::Color::Success, &from.Pos, &to.Pos});
-                  return m;
-                });
+                  ImGui::BeginMenu(to.name.c_str())) {
+                node_hovered_in_scene = &to;
+                for (const auto& color : symmetri::Color::getColors()) {
+                  if (ImGui::MenuItem(color.second.c_str())) {
+                    MVC::push([&](Model&& m) {
+                      g.a_idx.push_back(g.arcs.size());
+                      g.arcs.push_back({color.first, &from.Pos, &to.Pos});
+                      return m;
+                    });
+                  }
+                }
+                ImGui::EndMenu();
               }
             }
             ImGui::EndMenu();
