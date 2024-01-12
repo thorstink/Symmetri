@@ -11,8 +11,7 @@ Reducer updateActiveFile(const std::filesystem::path &file) {
   return [=](Model &&m) {
     m.active_file = file;
     auto [net, marking] = symmetri::readPnml({file});
-    m.documents.push_back({createGraph(net)});
-    commit(m.documents);
+    m.graph->reset(*createGraph(net));
     return m;
   };
 }

@@ -23,6 +23,7 @@ include_directories(
 
 set(SOURCES
     main.mm
+    redux.cpp
     symbol.cpp
     draw_graph.cpp
 )

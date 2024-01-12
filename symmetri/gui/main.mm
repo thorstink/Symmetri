@@ -104,10 +104,6 @@ int main(int, char **) {
 
       [commandBuffer presentDrawable:drawable];
       [commandBuffer commit];
-      if (ImGui::GetIO().Framerate > 61.f) {
-        std::this_thread::sleep_for(
-            std::chrono::milliseconds(200));  // drop to 5 FPS when invisible
-      }
     }
   }
 

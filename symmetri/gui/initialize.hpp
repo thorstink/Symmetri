@@ -18,14 +18,12 @@ inline Model initializeModel(Model &&m) {
   const std::filesystem::path pn_file = m.active_file.value();
   if (pn_file.extension() == std::string(".pnml")) {
     std::tie(net, marking) = symmetri::readPnml({pn_file});
-
   } else {
     std::tie(net, marking, pt) = symmetri::readGrml({pn_file});
   }
 
-  // current(m.documents).push_back(net);
-  // current(m.documents).push_back(marking);
-  current(m.documents).push_back({createGraph(net)});
+  m.graph = std::make_shared<Graph>();
+  m.graph->reset(*createGraph(net));
 
   // create a file browser instance
   ImGui::FileBrowser fileDialog;

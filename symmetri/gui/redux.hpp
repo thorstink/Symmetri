@@ -12,6 +12,7 @@
 
 #include "blockingconcurrentqueue.h"
 #include "drawable.h"
+#include "graph.hpp"
 #include "imgui.h"
 
 using View = std::vector<Drawable>;
@@ -33,29 +34,14 @@ inline View& current(History& x) {
 struct ViewModel {};
 
 struct Model {
+  std::shared_ptr<Graph> graph;
   std::filesystem::path working_dir;
   std::optional<std::filesystem::path> active_file;
   int menu_height = 0;
   View statics;
-  History documents = History{1};
 };
 
-inline void draw(Model& m) {
-  for (auto& drawable : m.statics) {
-    draw(drawable);
-  }
-
-  ImGui::SetNextWindowSize(
-      ImVec2(ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y));
-
-  ImGui::SetNextWindowPos(ImVec2(0, m.menu_height));
-
-  ImGui::Begin("test", NULL, ImGuiWindowFlags_NoTitleBar);
-  for (auto& drawable : current(m.documents)) {
-    draw(drawable);
-  }
-  ImGui::End();
-}
+void draw(Model& m);
 
 using Reducer = std::function<Model(Model)>;
 

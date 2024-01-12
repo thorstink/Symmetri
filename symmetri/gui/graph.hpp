@@ -40,16 +40,36 @@ struct Node {
 
 struct Arc {
   symmetri::Token color;
-  std::array<const ImVec2*, 2> from_to_pos;
+  std::array<size_t, 2> from_to_pos_idx;
 };
 
 struct Graph {
-  std::vector<Arc> arcs;
-  std::vector<Node> nodes;
-  std::vector<size_t> a_idx, n_idx;
+  std::vector<Arc> arcs = {};
+  std::vector<Node> nodes = {};
+  std::vector<size_t> a_idx = {};
+  std::vector<size_t> n_idx = {};
+
+  void reset(const Graph& g) {
+    const auto offset_arcs = arcs.size();
+    const auto offset_nodes = nodes.size();
+    nodes.insert(nodes.end(), g.nodes.begin(), g.nodes.end());
+    arcs.insert(arcs.end(), g.arcs.begin(), g.arcs.end());
+    a_idx = g.a_idx;
+    n_idx = g.n_idx;
+    for (auto& idx : a_idx) {
+      idx += offset_arcs;
+    }
+    for (auto& idx : n_idx) {
+      idx += offset_nodes;
+    }
+    for (auto& arc : arcs) {
+      arc.from_to_pos_idx[0] += offset_nodes;
+      arc.from_to_pos_idx[1] += offset_nodes;
+    }
+  }
 };
 
-inline Graph createGraph(const symmetri::Net net) {
+inline std::shared_ptr<Graph> createGraph(const symmetri::Net net) {
   std::vector<Node> nodes;
   std::vector<Arc> arcs;
   ogdf::Graph G;
@@ -101,16 +121,14 @@ inline Graph createGraph(const symmetri::Net net) {
       const auto place_idx = toIndex<Node>(
           nodes, [=](const Node& n) { return s.first == n.name; });
       G.newEdge(ogdf_nodes[place_idx], ogdf_nodes[transition_idx]);
-      arcs.push_back(
-          {s.second, {&(nodes[place_idx].Pos), &(nodes[transition_idx].Pos)}});
+      arcs.push_back({s.second, {place_idx, transition_idx}});
     }
 
     for (const auto& s : io.second) {
       const auto place_idx = toIndex<Node>(
           nodes, [=](const Node& n) { return s.first == n.name; });
       G.newEdge(ogdf_nodes[transition_idx], ogdf_nodes[place_idx]);
-      arcs.push_back(
-          {s.second, {&(nodes[transition_idx].Pos), &(nodes[place_idx].Pos)}});
+      arcs.push_back({s.second, {transition_idx, place_idx}});
     }
   }
 
@@ -135,5 +153,6 @@ inline Graph createGraph(const symmetri::Net net) {
   std::vector<size_t> v(arcs.size()), w(nodes.size());
   std::iota(v.begin(), v.end(), 0);
   std::iota(w.begin(), w.end(), 0);
-  return {std::move(arcs), std::move(nodes), std::move(v), std::move(w)};
+  return std::make_shared<Graph>(
+      Graph{std::move(arcs), std::move(nodes), std::move(v), std::move(w)});
 }

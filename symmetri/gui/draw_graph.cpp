@@ -30,6 +30,17 @@ static const Arc* arc_hovered_in_scene = nullptr;
 static const float NODE_SLOT_RADIUS = 4.0f;
 static const ImVec2 NODE_WINDOW_PADDING(8.0f, 8.0f);
 
+template <class T>
+std::size_t GetIndexFromRef(std::vector<T> const& vec, T const& item) {
+  T const* data = vec.data();
+
+  if (std::less<T const*>{}(&item, data) ||
+      std::greater_equal<T const*>{}(&item, data + vec.size()))
+    throw std::out_of_range{"The given object is not part of the vector."};
+
+  return static_cast<std::size_t>(&item - vec.data());
+};
+
 ImU32 getColor(symmetri::Token token) {
   using namespace symmetri;
   static std::unordered_map<Token, ImU32> color_table;
@@ -57,10 +68,11 @@ void draw_grid() {
                        ImVec2(canvas_sz.x, y) + win_pos, GRID_COLOR);
 };
 
-void draw_arc(const Arc& arc) {
-  const auto& [color, from_to] = arc;
-  ImVec2 p1 = offset + Node::GetCenterPos(*from_to[0], size);
-  ImVec2 p2 = offset + Node::GetCenterPos(*from_to[1], size);
+void draw_arc(const Arc& arc, const std::vector<Node>& nodes) {
+  const auto& [color, from_to_idx] = arc;
+  ImVec2 p1 = offset + Node::GetCenterPos(nodes[from_to_idx[0]].Pos, size);
+  ImVec2 p2 = offset + Node::GetCenterPos(nodes[from_to_idx[1]].Pos, size);
+
   // use with:
   using namespace ImGui;
   const float max_distance = 2.f;
@@ -137,7 +149,11 @@ void draw_nodes(Node& node) {
     arc_selected = nullptr;
   }
   if (node_moving_active && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-    node.Pos = node.Pos + ImGui::GetIO().MouseDelta;
+    MVC::push(
+        [Pos = &node.Pos, d = ImGui::GetIO().MouseDelta](Model&& m) mutable {
+          *Pos += d;
+          return m;
+        });
   }
   const int opacity = 255;
   auto select_color =
@@ -176,39 +192,38 @@ void draw(Graph& g) {
   if (node_selected) {
     auto node =
         std::find_if(g.nodes.begin(), g.nodes.end(),
-                     [=](const auto& n) { return n.id == node_selected->id; });
-    ImGui::Text("Name");
-    ImGui::SameLine();
-    const auto id = std::string("##") + std::to_string(node->id.key());
-    ImGui::PushItemWidth(-1);
-    ImGui::InputText(id.c_str(), node->name.data(), 30);
-    ImGui::PopItemWidth();
-    static int priority = 1;
-    static int multiplicity = 1;
-    if (node->id.chr() == 'T') {
-      ImGui::Text("Priority");
+                     [=](const auto& n) { return &n == node_selected; });
+    if (node != std::end(g.nodes)) {
+      ImGui::Text("Name");
       ImGui::SameLine();
-      ImGui::InputInt("##", &priority);
-      ImGui::Text("Weight");
-      ImGui::SameLine();
-      ImGui::InputInt("##", &multiplicity);
+      const auto id = std::string("##") + std::to_string(node->id.key());
+      ImGui::PushItemWidth(-1);
+      ImGui::InputText(id.c_str(), node->name.data(), 30);
+      ImGui::PopItemWidth();
+      static int priority = 1;
+      static int multiplicity = 1;
+      if (node_selected->id.chr() == 'T') {
+        ImGui::Text("Priority");
+        ImGui::SameLine();
+        ImGui::InputInt("##", &priority);
+        ImGui::Text("Weight");
+        ImGui::SameLine();
+        ImGui::InputInt("##", &multiplicity);
+      }
     }
-  } else if (arc_selected != nullptr) {
-    constexpr std::size_t offset = offsetof(Node, Pos);
-    const Node* from = reinterpret_cast<const Node*>(
-        reinterpret_cast<const char*>(arc_selected->from_to_pos[0]) - offset);
-    const Node* to = reinterpret_cast<const Node*>(
-        reinterpret_cast<const char*>(arc_selected->from_to_pos[1]) - offset);
 
+  } else if (arc_selected) {
+    const Node& from = g.nodes[arc_selected->from_to_pos_idx[0]];
+    const Node& to = g.nodes[arc_selected->from_to_pos_idx[1]];
     ImGui::Text("From:");
     ImGui::SameLine();
     ImGui::PushItemWidth(-1);
-    ImGui::Text("%s", from->name.data());
+    ImGui::Text("%s", from.name.data());
     ImGui::PopItemWidth();
     ImGui::Text("To:");
     ImGui::SameLine();
     ImGui::PushItemWidth(-1);
-    ImGui::Text("%s", to->name.data());
+    ImGui::Text("%s", to.name.data());
     ImGui::PopItemWidth();
     ImGui::Text("Color");
     ImGui::SameLine();
@@ -266,6 +281,10 @@ void draw(Graph& g) {
   // Create our child canvas
   ImGui::Text("Hold middle mouse button to scroll (%.2f,%.2f)", scrolling.x,
               scrolling.y);
+  ImGui::SameLine();
+  const auto io = ImGui::GetIO();
+  ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
+              1000.0f / io.Framerate, io.Framerate);
   ImGui::SameLine(ImGui::GetWindowWidth() - 340);
   ImGui::Checkbox("Show grid", &show_grid);
   ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
@@ -285,8 +304,9 @@ void draw(Graph& g) {
   }
 
   // draw arcs
-  for (auto idx : g.a_idx) {
-    draw_arc(g.arcs[idx]);
+  int i = 0;
+  for (const auto& idx : g.a_idx) {
+    draw_arc(g.arcs[idx], g.nodes);
   }
 
   // draw places & transitions
@@ -318,22 +338,23 @@ void draw(Graph& g) {
       ImGui::Text("Node '%s'", node_selected->name.c_str());
       ImGui::Separator();
       if (ImGui::MenuItem("Delete")) {
-        MVC::push([&](Model&& m) {
+        MVC::push([node_selected = node_selected](Model&& m) {
           const auto idx = std::distance(
-              g.nodes.begin(),
-              std::find_if(g.nodes.begin(), g.nodes.end(),
+              m.graph->nodes.begin(),
+              std::find_if(m.graph->nodes.begin(), m.graph->nodes.end(),
                            [=](const Node& n) { return node_selected == &n; }));
           const auto swap_idx = std::distance(
-              g.n_idx.begin(), std::find(g.n_idx.begin(), g.n_idx.end(), idx));
-          std::swap(g.n_idx[swap_idx], g.n_idx.back());
-          g.n_idx.pop_back();
+              m.graph->n_idx.begin(),
+              std::find(m.graph->n_idx.begin(), m.graph->n_idx.end(), idx));
+          std::swap(m.graph->n_idx[swap_idx], m.graph->n_idx.back());
+          m.graph->n_idx.pop_back();
 
           // delete arcs related to this
-          for (auto iter = g.a_idx.begin(); iter != g.a_idx.end();) {
-            const auto [color, from_to] = g.arcs[*iter];
-            if (from_to[0] == &(node_selected->Pos) ||
-                from_to[1] == &(node_selected->Pos)) {
-              g.a_idx.erase(iter);
+          for (auto iter = m.graph->a_idx.begin();
+               iter != m.graph->a_idx.end();) {
+            const auto [color, from_to_idx] = m.graph->arcs[*iter];
+            if (from_to_idx[0] == idx || from_to_idx[1] == idx) {
+              m.graph->a_idx.erase(iter);
             } else {
               ++iter;
             }
@@ -341,6 +362,10 @@ void draw(Graph& g) {
           return m;
         });
         node_selected = nullptr;
+        // node_hovered_in_list = nullptr;
+        // node_hovered_in_scene = nullptr;
+        // arc_selected = nullptr;
+        // arc_hovered_in_scene = nullptr;
       }
     } else if (arc_selected) {
       ImGui::Text("Arc");
@@ -363,18 +388,18 @@ void draw(Graph& g) {
       if (ImGui::BeginMenu("Change color")) {
         for (const auto& arc : symmetri::Color::getColors()) {
           if (ImGui::MenuItem(arc.second.c_str())) {
-            MVC::push([&, ptr = arc_selected](Model&& m) {
+            MVC::push([color = arc.first, ptr = arc_selected](Model&& m) {
               const auto idx = std::distance(
-                  g.arcs.begin(),
-                  std::find_if(g.arcs.begin(), g.arcs.end(),
+                  m.graph->arcs.begin(),
+                  std::find_if(m.graph->arcs.begin(), m.graph->arcs.end(),
                                [=](const Arc& a) { return ptr == &a; }));
-              const auto swap_idx =
-                  std::distance(g.a_idx.begin(),
-                                std::find(g.a_idx.begin(), g.a_idx.end(), idx));
-              std::swap(g.a_idx[swap_idx], g.a_idx.back());
-              g.a_idx.pop_back();
-              g.a_idx.push_back(g.arcs.size());
-              g.arcs.push_back({arc.first, ptr->from_to_pos});
+              const auto swap_idx = std::distance(
+                  m.graph->a_idx.begin(),
+                  std::find(m.graph->a_idx.begin(), m.graph->a_idx.end(), idx));
+              std::swap(m.graph->a_idx[swap_idx], m.graph->a_idx.back());
+              m.graph->a_idx.pop_back();
+              m.graph->a_idx.push_back(m.graph->arcs.size());
+              m.graph->arcs.push_back({color, ptr->from_to_pos_idx});
               return m;
             });
             arc_selected = nullptr;
@@ -385,36 +410,40 @@ void draw(Graph& g) {
     } else {
       ImVec2 scene_pos = ImGui::GetMousePosOnOpeningCurrentPopup() - offset;
       if (ImGui::MenuItem("Add place")) {
-        MVC::push([&, scene_pos](Model&& m) {
-          g.nodes.push_back(
-              Node{"New node", Symbol('P', g.nodes.size()), scene_pos});
-          g.n_idx.push_back(g.nodes.size() - 1);
+        MVC::push([scene_pos](Model&& m) {
+          m.graph->n_idx.push_back(m.graph->nodes.size());
+          m.graph->nodes.push_back(
+              Node{"New node", Symbol('P', m.graph->nodes.size()), scene_pos});
           return m;
         });
       }
       if (ImGui::MenuItem("Add transition")) {
-        MVC::push([&, scene_pos](Model&& m) {
-          g.nodes.push_back(
-              Node{"New node", Symbol('T', g.nodes.size()), scene_pos});
-          g.n_idx.push_back(g.nodes.size() - 1);
+        MVC::push([scene_pos](Model&& m) {
+          m.graph->n_idx.push_back(m.graph->nodes.size());
+          m.graph->nodes.push_back(
+              Node{"New node", Symbol('T', m.graph->nodes.size()), scene_pos});
           return m;
         });
       }
       if (ImGui::BeginMenu("Add arc")) {
-        for (const auto& from : g.nodes) {
+        for (const auto& from_idx : g.n_idx) {
+          const auto& from = g.nodes[from_idx];
           if (ImGui::BeginMenu(from.name.c_str())) {
             node_hovered_in_scene = &from;
-            for (const auto& to : g.nodes) {
+            for (const auto& to_idx : g.n_idx) {
+              const auto& to = g.nodes[to_idx];
               if (from.id.chr() != to.id.chr() &&
                   ImGui::BeginMenu(to.name.c_str())) {
                 node_hovered_in_scene = &to;
                 for (const auto& color : symmetri::Color::getColors()) {
                   if (ImGui::MenuItem(color.second.c_str())) {
-                    MVC::push([&](Model&& m) {
-                      g.a_idx.push_back(g.arcs.size());
-                      g.arcs.push_back({color.first, &from.Pos, &to.Pos});
+                    MVC::push([arc = Arc{color.first, {from_idx, to_idx}}](
+                                  Model&& m) {
+                      m.graph->a_idx.push_back(m.graph->arcs.size());
+                      m.graph->arcs.push_back(arc);
                       return m;
                     });
+                    node_hovered_in_scene = nullptr;
                   }
                 }
                 ImGui::EndMenu();
