@@ -4,6 +4,8 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_metal.h"
 #include "initialize.hpp"
+#include "rpp/rpp.hpp"
+
 #define GLFW_INCLUDE_NONE
 #define GLFW_EXPOSE_NATIVE_COCOA
 #include <GLFW/glfw3.h>
@@ -56,12 +58,12 @@ int main(int, char **) {
   MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor new];
 
   float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
-
   // Main loop
   while (!glfwWindowShouldClose(window)) {
     while (auto v = MVC::dequeue()) {
       if (v.has_value()) {
         MVC::update(v.value());
+        // dispatcher.on_next(v.value());
       }
       // should happen on a different thread?
     }
