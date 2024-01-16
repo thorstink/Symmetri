@@ -24,9 +24,9 @@ include_directories(
 
 set(SOURCES
     main.mm
-    redux.cpp
-    symbol.cpp
+    menu_bar.cpp
     draw_graph.cpp
+    rxdispatch.cpp
 )
 
 set(IMGUI_SOURCES

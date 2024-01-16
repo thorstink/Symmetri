@@ -1,11 +1,15 @@
 #include <stdio.h>
 
+#include <chrono>
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_metal.h"
-#include "initialize.hpp"
 #include "rpp/rpp.hpp"
-
+#include "rxdispatch.h"
+#include "rximgui.h"
+using namespace rximgui;
+#include "model.h"
+#include "util.h"
 #define GLFW_INCLUDE_NONE
 #define GLFW_EXPOSE_NATIVE_COCOA
 #include <GLFW/glfw3.h>
@@ -18,8 +22,6 @@ static void glfw_error_callback(int error, const char *description) {
 
 int main(int, char **) {
   // Setup Dear ImGui context
-  MVC::push(&initializeModel);
-
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
@@ -58,16 +60,41 @@ int main(int, char **) {
   MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor new];
 
   float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
-  // Main loop
-  while (!glfwWindowShouldClose(window)) {
-    while (auto v = MVC::dequeue()) {
-      if (v.has_value()) {
-        MVC::update(v.value());
-        // dispatcher.on_next(v.value());
-      }
-      // should happen on a different thread?
-    }
 
+  // Flux starts here
+
+  auto reducers = rpp::source::create<model::Reducer>(&rxdispatch::dequeue)
+                      .subscribe_on(rpp::schedulers::new_thread{});
+
+  auto models = reducers
+                    .scan(model::initializeModel(),
+                          [=](model::Model &&m, model::Reducer f) {
+                            try {
+                              auto r = f(m);
+                              r.data->timestamp = std::chrono::steady_clock::now();
+                              return r;
+                            } catch (const std::exception &e) {
+                              std::cerr << e.what() << std::endl;
+                              return std::move(m);
+                            }
+                          })
+                    .sample_with_time(std::chrono::milliseconds{200}, rl);
+
+  auto view_models = models
+                         .filter([=](const model::Model &m) {
+                           return m.data->timestamp <= std::chrono::steady_clock::now();
+                         })
+                         .start_with(model::initializeModel())
+                         .map([](const model::Model &m) { return model::ViewModel{m}; });
+
+  auto draw_frames = frames.with_latest_from(rxu::take_at<1>(), view_models);
+
+  auto subscription = draw_frames.tap([](const model::ViewModel &vm) { draw(vm); }).subscribe();
+
+  // and loop
+
+  // Main loop
+  while (!glfwWindowShouldClose(window) && subscription.is_subscribed()) {
     @autoreleasepool {
       glfwPollEvents();
 
@@ -87,21 +114,25 @@ int main(int, char **) {
       renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
       id<MTLRenderCommandEncoder> renderEncoder =
           [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
-      [renderEncoder pushDebugGroup:@"ImGui demo"];
+      // [renderEncoder pushDebugGroup:@"ImGui demo"]; ????
 
       // Start the Dear ImGui frame
       ImGui_ImplMetal_NewFrame(renderPassDescriptor);
       ImGui_ImplGlfw_NewFrame();
       ImGui::NewFrame();
 
-      MVC::render();
+      while (rl.is_any_ready_schedulable()) rl.dispatch();
+
+      sendframe();
+
+      while (rl.is_any_ready_schedulable()) rl.dispatch();
 
       // Rendering
       ImGui::Render();
-      ImGui::EndFrame();  // <-- Added
+      // ImGui::EndFrame();  // <-- Added, can be deleted?
       ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), commandBuffer, renderEncoder);
 
-      [renderEncoder popDebugGroup];
+      // [renderEncoder popDebugGroup]; ????
       [renderEncoder endEncoding];
 
       [commandBuffer presentDrawable:drawable];
@@ -109,6 +140,7 @@ int main(int, char **) {
     }
   }
 
+  subscription.unsubscribe();
   // Cleanup
   ImGui_ImplMetal_Shutdown();
   ImGui_ImplGlfw_Shutdown();
@@ -116,6 +148,5 @@ int main(int, char **) {
 
   glfwDestroyWindow(window);
   glfwTerminate();
-
   return 0;
 }

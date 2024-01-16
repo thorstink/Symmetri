@@ -17,21 +17,19 @@
 #include <symmetri/types.h>
 
 #include <algorithm>
-#include <iostream>
 
 #include "imgui.h"
-#include "symbol.h"
 
 template <typename T>
 size_t toIndex(const std::vector<T>& m,
                const std::function<bool(const T&)>& s) {
-  auto ptr = std::find_if(m.begin(), m.end(), s);
-  return ptr->id.index();
+  return std::distance(m.begin(), std::find_if(m.begin(), m.end(), s));
 }
 
 struct Node {
   std::string name;
-  Symbol id;
+  enum Type { Place, Transition };
+  Type type = Place;
   ImVec2 Pos;
   static ImVec2 GetCenterPos(const ImVec2& pos, const ImVec2& size) {
     return ImVec2(pos.x + size.x * 0.5f, pos.y + size.y * 0.5f);
@@ -83,12 +81,11 @@ inline std::shared_ptr<Graph> createGraph(const symmetri::Net net) {
       if (std::find_if(nodes.begin(), nodes.end(), [&](const auto& n) {
             return s.first == n.name;
           }) == std::end(nodes)) {
-        const auto place_key = Symbol('P', nodes.size());
         ogdf_nodes.push_back(G.newNode());
         auto current_node = ogdf_nodes.back();
         GA.label(current_node) = s.first;
         GA.shape(current_node) = ogdf::Shape::Ellipse;
-        nodes.push_back({s.first, place_key});
+        nodes.push_back({s.first, Node::Type::Place});
       }
     }
 
@@ -96,20 +93,18 @@ inline std::shared_ptr<Graph> createGraph(const symmetri::Net net) {
       if (std::find_if(nodes.begin(), nodes.end(), [&](const auto& n) {
             return s.first == n.name;
           }) == std::end(nodes)) {
-        const auto place_key = Symbol('P', nodes.size());
         ogdf_nodes.push_back(G.newNode());
         auto current_node = ogdf_nodes.back();
         GA.label(current_node) = s.first;
         GA.shape(current_node) = ogdf::Shape::Ellipse;
-        nodes.push_back({s.first, place_key});
+        nodes.push_back({s.first, Node::Type::Place});
       }
     }
 
-    const auto transition_key = Symbol('T', nodes.size());
     ogdf_nodes.push_back(G.newNode());
     auto current_node = ogdf_nodes.back();
     GA.label(current_node) = t;
-    nodes.push_back({t, transition_key});
+    nodes.push_back({t, Node::Type::Transition});
   }
 
   // make the graph
@@ -156,3 +151,5 @@ inline std::shared_ptr<Graph> createGraph(const symmetri::Net net) {
   return std::make_shared<Graph>(
       Graph{std::move(arcs), std::move(nodes), std::move(v), std::move(w)});
 }
+
+void draw(Graph&);
