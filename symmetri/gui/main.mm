@@ -139,7 +139,7 @@ int main(int, char **) {
       [commandBuffer commit];
     }
   }
-
+  rxdispatch::push(std::move(model::noop));
   subscription.unsubscribe();
   // Cleanup
   ImGui_ImplMetal_Shutdown();

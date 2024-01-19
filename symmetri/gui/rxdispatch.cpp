@@ -12,15 +12,12 @@ void push(model::Reducer&& r) {
 void dequeue(const rpp::dynamic_subscriber<model::Reducer>& sub) {
   model::Reducer f;
   sub.get_subscription().add([&]() {
-    printf("%s", "x-");  // x is notation for unsubscribed
-    rxdispatch::reducer_queue.enqueue(model::noop);
+    // cleanup?
   });
 
-  while (sub.is_subscribed()) {
-    while (sub.is_subscribed() && rxdispatch::reducer_queue.wait_dequeue_timed(
-                                      f, std::chrono::milliseconds(100))) {
-      sub.on_next(f);
-    }
+  while (sub.is_subscribed() &&
+         rxdispatch::reducer_queue.wait_dequeue_timed(f, -1)) {
+    sub.on_next(f);
   }
 };
 }  // namespace rxdispatch
