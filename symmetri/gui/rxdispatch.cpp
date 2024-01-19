@@ -12,7 +12,7 @@ void push(model::Reducer&& r) {
 void dequeue(const rpp::dynamic_subscriber<model::Reducer>& sub) {
   model::Reducer f;
   sub.get_subscription().add([&]() {
-    std::cout << "x-";  // x is notation for unsubscribed
+    printf("%s", "x-");  // x is notation for unsubscribed
     rxdispatch::reducer_queue.enqueue(model::noop);
   });
 

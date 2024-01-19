@@ -1,25 +1,14 @@
 #pragma once
 
 #include <math.h>  // fmodf
-#include <ogdf/basic/GraphAttributes.h>
-#include <ogdf/energybased/FMMMLayout.h>
-#include <ogdf/fileformats/GraphIO.h>
-#include <ogdf/layered/MedianHeuristic.h>
-#include <ogdf/layered/OptimalHierarchyLayout.h>
-#include <ogdf/layered/OptimalRanking.h>
-#include <ogdf/layered/SugiyamaLayout.h>
-#include <ogdf/orthogonal/OrthoLayout.h>
-#include <ogdf/planarity/EmbedderMinDepthMaxFaceLayers.h>
-#include <ogdf/planarity/PlanarSubgraphFast.h>
-#include <ogdf/planarity/PlanarizationLayout.h>
-#include <ogdf/planarity/SubgraphPlanarizer.h>
-#include <ogdf/planarity/VariableEmbeddingInserter.h>
 #include <symmetri/types.h>
 
 #include <algorithm>
+#include <array>
+#include <map>
+#include <numeric>
 
 #include "imgui.h"
-
 template <typename T>
 size_t toIndex(const std::vector<T>& m,
                const std::function<bool(const T&)>& s) {
@@ -35,6 +24,10 @@ struct Node {
     return ImVec2(pos.x + size.x * 0.5f, pos.y + size.y * 0.5f);
   }
 };
+
+inline ImVec2 toImVec2(const std::pair<float, float>& p) {
+  return ImVec2(p.first, p.second);
+}
 
 struct Arc {
   symmetri::Token color;
@@ -67,25 +60,19 @@ struct Graph {
   }
 };
 
-inline std::shared_ptr<Graph> createGraph(const symmetri::Net net) {
+inline std::shared_ptr<Graph> createGraph(
+    const symmetri::Net net,
+    const std::map<std::string, std::pair<float, float>>& positions) {
   std::vector<Node> nodes;
   std::vector<Arc> arcs;
-  ogdf::Graph G;
-  ogdf::GraphAttributes GA(G, ogdf::GraphAttributes::nodeGraphics |
-                                  ogdf::GraphAttributes::nodeLabel |
-                                  ogdf::GraphAttributes::edgeGraphics);
-  std::vector<ogdf::node> ogdf_places, ogdf_transitions, ogdf_nodes;
 
   for (const auto& [t, io] : net) {
     for (const auto& s : io.first) {
       if (std::find_if(nodes.begin(), nodes.end(), [&](const auto& n) {
             return s.first == n.name;
           }) == std::end(nodes)) {
-        ogdf_nodes.push_back(G.newNode());
-        auto current_node = ogdf_nodes.back();
-        GA.label(current_node) = s.first;
-        GA.shape(current_node) = ogdf::Shape::Ellipse;
-        nodes.push_back({s.first, Node::Type::Place});
+        nodes.push_back(
+            {s.first, Node::Type::Place, toImVec2(positions.at(s.first))});
       }
     }
 
@@ -93,18 +80,12 @@ inline std::shared_ptr<Graph> createGraph(const symmetri::Net net) {
       if (std::find_if(nodes.begin(), nodes.end(), [&](const auto& n) {
             return s.first == n.name;
           }) == std::end(nodes)) {
-        ogdf_nodes.push_back(G.newNode());
-        auto current_node = ogdf_nodes.back();
-        GA.label(current_node) = s.first;
-        GA.shape(current_node) = ogdf::Shape::Ellipse;
-        nodes.push_back({s.first, Node::Type::Place});
+        nodes.push_back(
+            {s.first, Node::Type::Place, toImVec2(positions.at(s.first))});
       }
     }
 
-    ogdf_nodes.push_back(G.newNode());
-    auto current_node = ogdf_nodes.back();
-    GA.label(current_node) = t;
-    nodes.push_back({t, Node::Type::Transition});
+    nodes.push_back({t, Node::Type::Transition, toImVec2(positions.at(t))});
   }
 
   // make the graph
@@ -115,34 +96,14 @@ inline std::shared_ptr<Graph> createGraph(const symmetri::Net net) {
     for (const auto& s : io.first) {
       const auto place_idx = toIndex<Node>(
           nodes, [=](const Node& n) { return s.first == n.name; });
-      G.newEdge(ogdf_nodes[place_idx], ogdf_nodes[transition_idx]);
       arcs.push_back({s.second, {place_idx, transition_idx}});
     }
 
     for (const auto& s : io.second) {
       const auto place_idx = toIndex<Node>(
           nodes, [=](const Node& n) { return s.first == n.name; });
-      G.newEdge(ogdf_nodes[transition_idx], ogdf_nodes[place_idx]);
       arcs.push_back({s.second, {transition_idx, place_idx}});
     }
-  }
-
-  {
-    using namespace ogdf;
-    SugiyamaLayout SL;
-    SL.setRanking(new OptimalRanking);
-    SL.setCrossMin(new MedianHeuristic);
-
-    OptimalHierarchyLayout* ohl = new OptimalHierarchyLayout;
-    SL.setLayout(ohl);
-
-    SL.call(GA);
-    GA.rotateLeft90();
-    GA.translateToNonNeg();
-  }
-
-  for (size_t i = 0; i < ogdf_nodes.size(); i++) {
-    nodes[i].Pos = ImVec2(GA.x(ogdf_nodes[i]), 2 * GA.y(ogdf_nodes[i]));
   }
 
   std::vector<size_t> v(arcs.size()), w(nodes.size());

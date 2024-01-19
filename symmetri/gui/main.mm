@@ -74,7 +74,7 @@ int main(int, char **) {
                               r.data->timestamp = std::chrono::steady_clock::now();
                               return r;
                             } catch (const std::exception &e) {
-                              std::cerr << e.what() << std::endl;
+                              printf("%s", e.what());
                               return std::move(m);
                             }
                           })

@@ -104,7 +104,7 @@ void draw_arc(const Arc& arc, const std::vector<Node>& nodes) {
   const auto theta = std::atan2(d.y, d.x) - M_PI_2;
   const float h = draw_list->_Data->FontSize * 1.00f;
   const float r = h * 0.40f * 1;
-  const ImVec2 center = p1 + d / 2.f;
+  const ImVec2 center = p1 + d * 0.6f;
   const auto a_sin = std::sin(theta);
   const auto a_cos = std::cos(theta);
   const auto a = ImRotate(ImVec2(+0.000f, +1.f) * r, a_cos, a_sin);

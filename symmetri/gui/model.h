@@ -8,6 +8,7 @@
 #include "graph.hpp"
 #include "imgui.h"
 #include "menu_bar.h"
+#include "position_parsers.h"
 #include "symmetri/parsers.h"
 
 namespace model {
@@ -49,13 +50,15 @@ inline Model initializeModel() {
   symmetri::Net net;
   symmetri::Marking marking;
   symmetri::PriorityTable pt;
+  std::map<std::string, std::pair<float, float>> positions;
   const std::filesystem::path pn_file = m.active_file.value();
   if (pn_file.extension() == std::string(".pnml")) {
     std::tie(net, marking) = symmetri::readPnml({pn_file});
+    positions = farbart::readPnmlPositions({pn_file});
   } else {
     std::tie(net, marking, pt) = symmetri::readGrml({pn_file});
   }
-  auto g = createGraph(net);
+  auto g = createGraph(net, positions);
   m.graph = *g;
   m.arcs = g->arcs;
   m.nodes = g->nodes;

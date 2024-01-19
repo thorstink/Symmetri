@@ -1,8 +1,8 @@
 #include "menu_bar.h"
 
 #include "model.h"
+#include "position_parsers.h"
 #include "rxdispatch.h"
-
 model::Reducer updateActiveFile(const std::filesystem::path &file) {
   return [=](model::Model &m_ptr) {
     auto &m = *m_ptr.data;
@@ -10,13 +10,17 @@ model::Reducer updateActiveFile(const std::filesystem::path &file) {
     symmetri::Net net;
     symmetri::Marking marking;
     symmetri::PriorityTable pt;
+    std::map<std::string, std::pair<float, float>> positions;
+
     const std::filesystem::path pn_file = m.active_file.value();
     if (pn_file.extension() == std::string(".pnml")) {
       std::tie(net, marking) = symmetri::readPnml({pn_file});
+      positions = farbart::readPnmlPositions({pn_file});
+
     } else {
       std::tie(net, marking, pt) = symmetri::readGrml({pn_file});
     }
-    m.graph.reset(*createGraph(net));
+    m.graph.reset(*createGraph(net, positions));
     // auto g = createGraph(net);
     // m.graph = *g;
     // m.arcs = g->arcs;

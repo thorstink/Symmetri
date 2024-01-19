@@ -19,7 +19,6 @@ include_directories(
     ../externals
     gui
     extensions
-    /usr/local/include
 )
 
 set(SOURCES
@@ -27,6 +26,7 @@ set(SOURCES
     menu_bar.cpp
     draw_graph.cpp
     rxdispatch.cpp
+    position_parsers.cpp
 )
 
 set(IMGUI_SOURCES
@@ -37,11 +37,6 @@ set(IMGUI_SOURCES
     imgui/imgui_tables.cpp
     imgui/backends/imgui_impl_glfw.cpp
     imgui/backends/imgui_impl_metal.mm
-
-    # extensions/crude_json.cpp
-    # extensions/imgui_node_editor_api.cpp
-    # extensions/imgui_node_editor.cpp
-    # extensions/imgui_canvas.cpp
 )
 
 if(APPLE)
@@ -65,4 +60,4 @@ if(APPLE)
 endif(APPLE)
 
 add_executable(Farbart ${SOURCES} ${IMGUI_SOURCES})
-target_link_libraries(Farbart symmetri OGDF ${EXTRA_LIBS})
+target_link_libraries(Farbart symmetri ${EXTRA_LIBS})
