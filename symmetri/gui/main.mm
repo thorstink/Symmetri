@@ -139,8 +139,11 @@ int main(int, char **) {
       [commandBuffer commit];
     }
   }
-  rxdispatch::push(std::move(model::noop));
-  subscription.unsubscribe();
+  rxdispatch::push([&](model::Model &m) {
+    subscription.unsubscribe();
+    return m;
+  });
+
   // Cleanup
   ImGui_ImplMetal_Shutdown();
   ImGui_ImplGlfw_Shutdown();

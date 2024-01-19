@@ -3,7 +3,7 @@
 #include "blockingconcurrentqueue.h"
 namespace rxdispatch {
 
-static moodycamel::BlockingConcurrentQueue<model::Reducer> reducer_queue{10};
+moodycamel::BlockingConcurrentQueue<model::Reducer> reducer_queue{10};
 
 void push(model::Reducer&& r) {
   reducer_queue.enqueue(std::forward<model::Reducer>(r));
