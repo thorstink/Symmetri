@@ -1,7 +1,5 @@
 #include "position_parsers.h"
 
-#include <stdexcept>
-
 #include "tinyxml2/tinyxml2.h"
 using namespace tinyxml2;
 

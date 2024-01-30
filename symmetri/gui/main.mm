@@ -7,6 +7,7 @@
 #include "rpp/rpp.hpp"
 #include "rxdispatch.h"
 #include "rximgui.h"
+#include "write_graph_to_disk.hpp"
 using namespace rximgui;
 #include "model.h"
 #include "util.h"
@@ -62,7 +63,6 @@ int main(int, char **) {
   float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
 
   // Flux starts here
-
   auto reducers = rpp::source::create<model::Reducer>(&rxdispatch::dequeue)
                       .subscribe_on(rpp::schedulers::new_thread{});
 

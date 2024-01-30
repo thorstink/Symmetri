@@ -113,4 +113,5 @@ inline std::shared_ptr<Graph> createGraph(
       Graph{std::move(arcs), std::move(nodes), std::move(v), std::move(w)});
 }
 
-void draw(Graph&);
+void draw(const Graph&, const std::vector<size_t>& n_idx,
+          const std::vector<size_t>& a_idx);

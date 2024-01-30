@@ -3,6 +3,7 @@
 #include "model.h"
 #include "position_parsers.h"
 #include "rxdispatch.h"
+#include "write_graph_to_disk.hpp"
 model::Reducer updateActiveFile(const std::filesystem::path &file) {
   return [=](model::Model &m_ptr) {
     auto &m = *m_ptr.data;
@@ -21,12 +22,6 @@ model::Reducer updateActiveFile(const std::filesystem::path &file) {
       std::tie(net, marking, pt) = symmetri::readGrml({pn_file});
     }
     m.graph.reset(*createGraph(net, positions));
-    // auto g = createGraph(net);
-    // m.graph = *g;
-    // m.arcs = g->arcs;
-    // m.nodes = g->nodes;
-    // m.a_idx = g->a_idx;
-    // m.n_idx = g->n_idx;
     return m_ptr;
   };
 }
@@ -43,6 +38,10 @@ void draw_menu_bar(ImGui::FileBrowser &fileDialog) {
       }
       if (ImGui::MenuItem("Open")) {
         fileDialog.Open();
+      }
+      if (ImGui::MenuItem("Save")) {
+        rxdispatch::push(farbart::writeToDisk(std::filesystem::path(
+            "/Users/thomashorstink/Projects/Symmetri/nets/test9001.pnml")));
       }
       // Exit...
       ImGui::EndMenu();

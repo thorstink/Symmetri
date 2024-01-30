@@ -19,10 +19,6 @@ struct Model {
     std::filesystem::path working_dir;
     std::optional<std::filesystem::path> active_file;
     int menu_height = 20;
-    std::vector<Arc> arcs = {};
-    std::vector<Node> nodes = {};
-    std::vector<size_t> a_idx = {};
-    std::vector<size_t> n_idx = {};
     Graph graph;
     ImGui::FileBrowser file_dialog;
   };
@@ -31,9 +27,16 @@ struct Model {
 
 struct ViewModel {
   ViewModel() {}
-  explicit ViewModel(const Model& m) : m(m) { auto& model = *m.data; }
+  explicit ViewModel(const Model& m) : m(m) {
+    auto& model = *m.data;
+    data->a_idx = model.graph.a_idx;
+    data->n_idx = model.graph.n_idx;
+  }
   Model m;
-  struct shared {};
+  struct shared {
+    std::vector<size_t> a_idx = {};
+    std::vector<size_t> n_idx = {};
+  };
   std::shared_ptr<shared> data = std::make_shared<shared>();
 };
 
@@ -58,12 +61,7 @@ inline Model initializeModel() {
   } else {
     std::tie(net, marking, pt) = symmetri::readGrml({pn_file});
   }
-  auto g = createGraph(net, positions);
-  m.graph = *g;
-  m.arcs = g->arcs;
-  m.nodes = g->nodes;
-  m.a_idx = g->a_idx;
-  m.n_idx = g->n_idx;
+  m.graph = *createGraph(net, positions);
 
   m.file_dialog.SetTitle("title");
   m.file_dialog.SetTypeFilters({".pnml", ".grml"});
@@ -75,7 +73,7 @@ inline void draw(const ViewModel& vm) {
   auto& m = *vm.m.data;
   draw_menu_bar(m.file_dialog);
 
-  draw(m.graph);
+  draw(m.graph, vm.data->n_idx, vm.data->a_idx);
   ImGui::End();
 }
 

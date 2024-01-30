@@ -115,7 +115,7 @@ void draw_arc(const Arc& arc, const std::vector<Node>& nodes) {
                      arc_hovered_in_scene == &arc ? 3.0f : 2.0f);
 };
 
-void draw_nodes(Node& node) {
+void draw_nodes(const Node& node, size_t idx) {
   open_context_menu = false;
   ImGui::PushID(node.name.c_str());
   ImVec2 node_rect_min = offset + node.Pos;
@@ -148,11 +148,11 @@ void draw_nodes(Node& node) {
     arc_selected = nullptr;
   }
   if (node_moving_active && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-    rxdispatch::push([Pos = &node.Pos,
-                      d = ImGui::GetIO().MouseDelta](model::Model& m) mutable {
-      *Pos += d;
-      return m;
-    });
+    rxdispatch::push(
+        [idx, d = ImGui::GetIO().MouseDelta](model::Model& m) mutable {
+          m.data->graph.nodes[idx].Pos += d;
+          return m;
+        });
   }
   const int opacity = 255;
   auto select_color =
@@ -179,7 +179,8 @@ void draw_nodes(Node& node) {
 
 // Dummy data structure provided for the example.
 // Note that we storing links as indices (not ID) to make example code shorter.
-void draw(Graph& g) {
+void draw(const Graph& g, const std::vector<size_t>& n_idx,
+          const std::vector<size_t>& a_idx) {
   ImGui::Begin("test", NULL, ImGuiWindowFlags_NoTitleBar);
 
   ImVec2 WindowSize = ImGui::GetWindowSize();
@@ -199,7 +200,8 @@ void draw(Graph& g) {
       static int i = 0;
       const auto id = std::string("##") + std::to_string(i++);
       ImGui::PushItemWidth(-1);
-      ImGui::InputText(id.c_str(), node->name.data(), 30);
+      ImGui::Text("%s", node->name.c_str());
+      // ImGui::InputText(id.c_str(), node->name.data(), 30);
       ImGui::PopItemWidth();
       static int priority = 1;
       static int multiplicity = 1;
@@ -238,7 +240,7 @@ void draw(Graph& g) {
   ImGui::Separator();
   constexpr float height_fraction = 0.8 / 2.0;
   ImGui::BeginChild("place_list", ImVec2(200, height_fraction * WindowSize.y));
-  for (auto idx : g.n_idx) {
+  for (auto idx : n_idx) {
     const auto& node = g.nodes[idx];
     if (node.type == Node::Type::Place) {
       ImGui::PushID(idx);
@@ -260,7 +262,7 @@ void draw(Graph& g) {
   ImGui::Separator();
   ImGui::BeginChild("transition_list",
                     ImVec2(200, height_fraction * WindowSize.y));
-  for (auto idx : g.n_idx) {
+  for (auto idx : n_idx) {
     const auto& node = g.nodes[idx];
     if (node.type == Node::Type::Transition) {
       ImGui::PushID(idx);
@@ -311,8 +313,8 @@ void draw(Graph& g) {
   }
 
   // draw places & transitions
-  for (auto idx : g.n_idx) {
-    draw_nodes(g.nodes[idx]);
+  for (auto idx : n_idx) {
+    draw_nodes(g.nodes[idx], idx);
   }
 
   // Open context menu
@@ -339,12 +341,9 @@ void draw(Graph& g) {
       ImGui::Text("Node '%s'", node_selected->name.c_str());
       ImGui::Separator();
       if (ImGui::MenuItem("Delete")) {
-        rxdispatch::push([node_selected = node_selected](model::Model& m_ptr) {
+        rxdispatch::push([idx = GetIndexFromRef(g.nodes, *node_selected)](
+                             model::Model& m_ptr) {
           auto& m = *m_ptr.data;
-          const auto idx = std::distance(
-              m.graph.nodes.begin(),
-              std::find_if(m.graph.nodes.begin(), m.graph.nodes.end(),
-                           [=](const Node& n) { return node_selected == &n; }));
           const auto swap_idx = std::distance(
               m.graph.n_idx.begin(),
               std::find(m.graph.n_idx.begin(), m.graph.n_idx.end(), idx));
@@ -364,50 +363,44 @@ void draw(Graph& g) {
           return m_ptr;
         });
         node_selected = nullptr;
-        // node_hovered_in_list = nullptr;
-        // node_hovered_in_scene = nullptr;
-        // arc_selected = nullptr;
-        // arc_hovered_in_scene = nullptr;
       }
     } else if (arc_selected) {
       ImGui::Text("Arc");
       ImGui::Separator();
 
       if (ImGui::MenuItem("Delete")) {
-        rxdispatch::push([&, ptr = arc_selected](model::Model& m_ptr) {
+        rxdispatch::push([&, idx = GetIndexFromRef(g.arcs, *arc_selected)](
+                             model::Model& m_ptr) {
           auto& m = *m_ptr.data;
-          const auto idx = std::distance(
-              g.arcs.begin(),
-              std::find_if(g.arcs.begin(), g.arcs.end(),
-                           [=](const Arc& a) { return ptr == &a; }));
           const auto swap_idx = std::distance(
-              g.a_idx.begin(), std::find(g.a_idx.begin(), g.a_idx.end(), idx));
-          std::swap(g.a_idx[swap_idx], g.a_idx.back());
-          g.a_idx.pop_back();
+              m.graph.a_idx.begin(),
+              std::find(m.graph.a_idx.begin(), m.graph.a_idx.end(), idx));
+          std::swap(m.graph.a_idx[swap_idx], m.graph.a_idx.back());
+          m.graph.a_idx.pop_back();
           return m_ptr;
         });
         arc_selected = nullptr;
+        arc_hovered_in_scene = nullptr;
       }
       if (ImGui::BeginMenu("Change color")) {
         for (const auto& arc : symmetri::Color::getColors()) {
           if (ImGui::MenuItem(arc.second.c_str())) {
             rxdispatch::push([color = arc.first,
-                              ptr = arc_selected](model::Model& m_ptr) {
+                              idx = GetIndexFromRef(g.arcs, *arc_selected)](
+                                 model::Model& m_ptr) {
               auto& m = *m_ptr.data;
-              const auto idx = std::distance(
-                  m.graph.arcs.begin(),
-                  std::find_if(m.graph.arcs.begin(), m.graph.arcs.end(),
-                               [=](const Arc& a) { return ptr == &a; }));
               const auto swap_idx = std::distance(
                   m.graph.a_idx.begin(),
                   std::find(m.graph.a_idx.begin(), m.graph.a_idx.end(), idx));
               std::swap(m.graph.a_idx[swap_idx], m.graph.a_idx.back());
               m.graph.a_idx.pop_back();
               m.graph.a_idx.push_back(m.graph.arcs.size());
-              m.graph.arcs.push_back({color, ptr->from_to_pos_idx});
+              m.graph.arcs.push_back(
+                  {color, m.graph.arcs[idx].from_to_pos_idx});
               return m_ptr;
             });
             arc_selected = nullptr;
+            arc_hovered_in_scene = nullptr;
           }
         }
         ImGui::EndMenu();
@@ -419,7 +412,7 @@ void draw(Graph& g) {
           auto& m = *m_ptr.data;
           m.graph.n_idx.push_back(m.graph.nodes.size());
           m.graph.nodes.push_back(
-              Node{"New node", Node::Type::Place, scene_pos});
+              Node{"NewPlace", Node::Type::Place, scene_pos});
           return m_ptr;
         });
       }
@@ -428,16 +421,16 @@ void draw(Graph& g) {
           auto& m = *m_ptr.data;
           m.graph.n_idx.push_back(m.graph.nodes.size());
           m.graph.nodes.push_back(
-              Node{"New node", Node::Type::Transition, scene_pos});
+              Node{"NewTransition", Node::Type::Transition, scene_pos});
           return m_ptr;
         });
       }
       if (ImGui::BeginMenu("Add arc")) {
-        for (const auto& from_idx : g.n_idx) {
+        for (const auto& from_idx : n_idx) {
           const auto& from = g.nodes[from_idx];
           if (ImGui::BeginMenu(from.name.c_str())) {
             node_hovered_in_scene = &from;
-            for (const auto& to_idx : g.n_idx) {
+            for (const auto& to_idx : n_idx) {
               const auto& to = g.nodes[to_idx];
               if (from.type != to.type && ImGui::BeginMenu(to.name.c_str())) {
                 node_hovered_in_scene = &to;
