@@ -4,4 +4,4 @@
 // clang-format on
 #include "imfilebrowser.h"
 
-void draw_menu_bar(ImGui::FileBrowser &fileDialog);
+void draw_menu_bar(ImGui::FileBrowser& fileDialog);

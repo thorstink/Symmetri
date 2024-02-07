@@ -72,7 +72,6 @@ inline Model initializeModel() {
 inline void draw(const ViewModel& vm) {
   auto& m = *vm.m.data;
   draw_menu_bar(m.file_dialog);
-
   draw(m.graph, vm.data->n_idx, vm.data->a_idx);
   ImGui::End();
 }

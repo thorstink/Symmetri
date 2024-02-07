@@ -62,11 +62,14 @@ int main(int, char **) {
 
   float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
 
+  // start event
+  rxdispatch::push([](model::Model &m) { return m; });
+
   // Flux starts here
   auto reducers = rpp::source::create<model::Reducer>(&rxdispatch::dequeue)
                       .subscribe_on(rpp::schedulers::new_thread{});
 
-  auto models = reducers
+  auto models = reducers.observe_on(rximgui::rl)
                     .scan(model::initializeModel(),
                           [=](model::Model &&m, model::Reducer f) {
                             try {
@@ -84,14 +87,11 @@ int main(int, char **) {
                          .filter([=](const model::Model &m) {
                            return m.data->timestamp <= std::chrono::steady_clock::now();
                          })
-                         .start_with(model::initializeModel())
                          .map([](const model::Model &m) { return model::ViewModel{m}; });
 
   auto draw_frames = frames.with_latest_from(rxu::take_at<1>(), view_models);
 
   auto subscription = draw_frames.tap([](const model::ViewModel &vm) { draw(vm); }).subscribe();
-
-  // and loop
 
   // Main loop
   while (!glfwWindowShouldClose(window) && subscription.is_subscribed()) {
@@ -129,7 +129,6 @@ int main(int, char **) {
 
       // Rendering
       ImGui::Render();
-      // ImGui::EndFrame();  // <-- Added, can be deleted?
       ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), commandBuffer, renderEncoder);
 
       // [renderEncoder popDebugGroup]; ????
@@ -139,17 +138,14 @@ int main(int, char **) {
       [commandBuffer commit];
     }
   }
-  rxdispatch::push([&](model::Model &m) {
-    subscription.unsubscribe();
-    return m;
-  });
+  subscription.unsubscribe();
 
-  // Cleanup
   ImGui_ImplMetal_Shutdown();
   ImGui_ImplGlfw_Shutdown();
   ImGui::DestroyContext();
 
   glfwDestroyWindow(window);
   glfwTerminate();
+
   return 0;
 }

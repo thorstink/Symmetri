@@ -1,6 +1,5 @@
 #include "menu_bar.h"
 
-#include "model.h"
 #include "position_parsers.h"
 #include "rxdispatch.h"
 #include "write_graph_to_disk.hpp"
