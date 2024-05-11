@@ -1,6 +1,8 @@
 #ifndef IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DEFINE_MATH_OPERATORS
 #endif
+#include "draw_graph.h"
+
 #include <math.h>  // fmodf
 
 #include <cmath>
@@ -14,8 +16,6 @@
 #include "symmetri/colors.hpp"
 
 // State
-static ImVec2 scrolling = ImVec2(0.0f, 0.0f);
-static bool show_grid = true;
 static ImVec2 size;
 static ImVec2 offset;
 static ImDrawList* draw_list;
@@ -54,7 +54,7 @@ ImU32 getColor(symmetri::Token token) {
   }
 };
 
-void draw_grid() {
+void draw_grid(const ImVec2& scrolling) {
   ImU32 GRID_COLOR = IM_COL32(200, 200, 200, 40);
   float GRID_SZ = 64.0f;
   ImVec2 win_pos = ImGui::GetCursorScreenPos();
@@ -179,8 +179,11 @@ void draw_nodes(const Node& node, size_t idx) {
 
 // Dummy data structure provided for the example.
 // Note that we storing links as indices (not ID) to make example code shorter.
-void draw(const Graph& g, const std::vector<size_t>& n_idx,
-          const std::vector<size_t>& a_idx) {
+void draw_everything(const model::ViewModel& vm) {
+  const auto& g = vm.m.data->graph;
+  const auto& n_idx = vm.data->n_idx;
+  const auto& a_idx = vm.data->a_idx;
+  const auto& scrolling = vm.m.data->scrolling;
   ImGui::Begin("test", NULL, ImGuiWindowFlags_NoTitleBar);
 
   ImVec2 WindowSize = ImGui::GetWindowSize();
@@ -289,7 +292,7 @@ void draw(const Graph& g, const std::vector<size_t>& n_idx,
   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
               1000.0f / io.Framerate, io.Framerate);
   ImGui::SameLine(ImGui::GetWindowWidth() - 340);
-  ImGui::Checkbox("Show grid", &show_grid);
+  ImGui::Checkbox("Show grid", &vm.m.data->show_grid);
   ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
   ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(60, 60, 70, 200));
@@ -302,8 +305,8 @@ void draw(const Graph& g, const std::vector<size_t>& n_idx,
   draw_list = ImGui::GetWindowDrawList();
 
   // Display grid
-  if (show_grid) {
-    draw_grid();
+  if (vm.m.data->show_grid) {
+    draw_grid(scrolling);
   }
 
   // draw arcs
@@ -463,7 +466,10 @@ void draw(const Graph& g, const std::vector<size_t>& n_idx,
   // Scrolling
   if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive() &&
       ImGui::IsMouseDragging(ImGuiMouseButton_Right, 0.0f)) {
-    scrolling = scrolling + ImGui::GetIO().MouseDelta;
+    rxdispatch::push([d = ImGui::GetIO().MouseDelta](model::Model& m) mutable {
+      m.data->scrolling += d;
+      return m;
+    });
   }
 
   ImGui::PopItemWidth();
@@ -471,4 +477,5 @@ void draw(const Graph& g, const std::vector<size_t>& n_idx,
   ImGui::PopStyleColor();
   ImGui::PopStyleVar();
   ImGui::EndGroup();
+  ImGui::End();
 }

@@ -9,6 +9,7 @@
 #include <numeric>
 
 #include "imgui.h"
+
 template <typename T>
 size_t toIndex(const std::vector<T>& m,
                const std::function<bool(const T&)>& s) {
@@ -112,6 +113,3 @@ inline std::shared_ptr<Graph> createGraph(
   return std::make_shared<Graph>(
       Graph{std::move(arcs), std::move(nodes), std::move(v), std::move(w)});
 }
-
-void draw(const Graph&, const std::vector<size_t>& n_idx,
-          const std::vector<size_t>& a_idx);

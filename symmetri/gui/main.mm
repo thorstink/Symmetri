@@ -9,6 +9,7 @@
 #include "rximgui.h"
 #include "write_graph_to_disk.hpp"
 using namespace rximgui;
+#include "draw_graph.h"
 #include "menu_bar.h"
 #include "model.h"
 #include "util.h"
@@ -96,7 +97,7 @@ int main(int, char **) {
       draw_frames | rpp::operators::tap([](const model::ViewModel &vm) { draw_menu_bar(vm); });
 
   auto window_render =
-      draw_frames | rpp::operators::tap([](const model::ViewModel &vm) { draw(vm); });
+      draw_frames | rpp::operators::tap([](const model::ViewModel &vm) { draw_everything(vm); });
 
   auto renderers = menu_bar | rpp::operators::merge_with(window_render);
 

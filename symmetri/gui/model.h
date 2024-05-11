@@ -1,7 +1,7 @@
 #pragma once
 // clang-format off
 #include "imgui.h"
-// clang-format on#include "position_parsers.h"
+// clang-format on
 
 #include <chrono>
 #include <filesystem>
@@ -10,16 +10,18 @@
 #include <optional>
 
 #include "graph.hpp"
-
-#include "symmetri/parsers.h"
 #include "imfilebrowser.h"
 #include "position_parsers.h"
+#include "symmetri/parsers.h"
 
 namespace model {
 
 struct Model {
   Model() {}
   struct shared {
+    bool show_grid;
+    ImVec2 scrolling;
+
     std::chrono::steady_clock::time_point timestamp;
     std::filesystem::path working_dir;
     std::optional<std::filesystem::path> active_file;
@@ -51,6 +53,8 @@ inline auto noop = Reducer([](Model& m) { return std::move(m); });
 inline Model initializeModel() {
   Model m_ptr;
   auto& m = *m_ptr.data;
+  m.show_grid = true;
+  m.scrolling = ImVec2(0.0f, 0.0f);
   m.working_dir = "/users/thomashorstink/Projects/symmetri/nets";
   m.active_file =
       "/Users/thomashorstink/Projects/Symmetri/examples/combinations/"
@@ -72,12 +76,6 @@ inline Model initializeModel() {
   m.file_dialog.SetTypeFilters({".pnml", ".grml"});
   m.file_dialog.SetPwd(m.working_dir);
   return m_ptr;
-}
-
-inline void draw(const ViewModel& vm) {
-  auto& m = *vm.m.data;
-  draw(m.graph, vm.data->n_idx, vm.data->a_idx);
-  ImGui::End();
 }
 
 }  // namespace model
