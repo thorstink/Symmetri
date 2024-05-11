@@ -149,7 +149,7 @@ void draw_nodes(const Node& node, size_t idx) {
   }
   if (node_moving_active && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
     rxdispatch::push(
-        [idx, d = ImGui::GetIO().MouseDelta](model::Model& m) mutable {
+        [idx, d = ImGui::GetIO().MouseDelta](model::Model&& m) mutable {
           m.data->graph.nodes[idx].Pos += d;
           return m;
         });
@@ -345,7 +345,7 @@ void draw_everything(const model::ViewModel& vm) {
       ImGui::Separator();
       if (ImGui::MenuItem("Delete")) {
         rxdispatch::push([idx = GetIndexFromRef(g.nodes, *node_selected)](
-                             model::Model& m_ptr) {
+                             model::Model&& m_ptr) {
           auto& m = *m_ptr.data;
           const auto swap_idx = std::distance(
               m.graph.n_idx.begin(),
@@ -373,7 +373,7 @@ void draw_everything(const model::ViewModel& vm) {
 
       if (ImGui::MenuItem("Delete")) {
         rxdispatch::push([&, idx = GetIndexFromRef(g.arcs, *arc_selected)](
-                             model::Model& m_ptr) {
+                             model::Model&& m_ptr) {
           auto& m = *m_ptr.data;
           const auto swap_idx = std::distance(
               m.graph.a_idx.begin(),
@@ -390,7 +390,7 @@ void draw_everything(const model::ViewModel& vm) {
           if (ImGui::MenuItem(arc.second.c_str())) {
             rxdispatch::push([color = arc.first,
                               idx = GetIndexFromRef(g.arcs, *arc_selected)](
-                                 model::Model& m_ptr) {
+                                 model::Model&& m_ptr) {
               auto& m = *m_ptr.data;
               const auto swap_idx = std::distance(
                   m.graph.a_idx.begin(),
@@ -411,7 +411,7 @@ void draw_everything(const model::ViewModel& vm) {
     } else {
       ImVec2 scene_pos = ImGui::GetMousePosOnOpeningCurrentPopup() - offset;
       if (ImGui::MenuItem("Add place")) {
-        rxdispatch::push([scene_pos](model::Model& m_ptr) {
+        rxdispatch::push([scene_pos](model::Model&& m_ptr) {
           auto& m = *m_ptr.data;
           m.graph.n_idx.push_back(m.graph.nodes.size());
           m.graph.nodes.push_back(
@@ -420,7 +420,7 @@ void draw_everything(const model::ViewModel& vm) {
         });
       }
       if (ImGui::MenuItem("Add transition")) {
-        rxdispatch::push([scene_pos](model::Model& m_ptr) {
+        rxdispatch::push([scene_pos](model::Model&& m_ptr) {
           auto& m = *m_ptr.data;
           m.graph.n_idx.push_back(m.graph.nodes.size());
           m.graph.nodes.push_back(
@@ -441,7 +441,7 @@ void draw_everything(const model::ViewModel& vm) {
                   if (ImGui::MenuItem(color.second.c_str())) {
                     rxdispatch::push(
                         [arc = Arc{color.first, {from_idx, to_idx}}](
-                            model::Model& m_ptr) {
+                            model::Model&& m_ptr) {
                           auto& m = *m_ptr.data;
                           m.graph.a_idx.push_back(m.graph.arcs.size());
                           m.graph.arcs.push_back(arc);
@@ -466,7 +466,7 @@ void draw_everything(const model::ViewModel& vm) {
   // Scrolling
   if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive() &&
       ImGui::IsMouseDragging(ImGuiMouseButton_Right, 0.0f)) {
-    rxdispatch::push([d = ImGui::GetIO().MouseDelta](model::Model& m) mutable {
+    rxdispatch::push([d = ImGui::GetIO().MouseDelta](model::Model&& m) mutable {
       m.data->scrolling += d;
       return m;
     });

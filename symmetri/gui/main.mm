@@ -65,7 +65,7 @@ int main(int, char **) {
   float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
 
   // start event
-  rxdispatch::push([](model::Model &m) { return m; });
+  rxdispatch::push([](model::Model &&m) { return m; });
 
   // Flux starts here
   auto reducers = rpp::source::create<model::Reducer>(&rxdispatch::dequeue) |
@@ -75,7 +75,7 @@ int main(int, char **) {
       reducers | rpp::operators::subscribe_on(rximgui::rl) |
       rpp::operators::scan(model::initializeModel(), [=](model::Model &&m, model::Reducer f) {
         try {
-          auto r = f(m);
+          auto &&r = f(std::move(m));
           r.data->timestamp = std::chrono::steady_clock::now();
           return r;
         } catch (const std::exception &e) {

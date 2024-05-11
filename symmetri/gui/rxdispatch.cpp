@@ -9,7 +9,7 @@ static moodycamel::BlockingConcurrentQueue<model::Reducer> reducer_queue{10};
 static auto subscription = rpp::composite_disposable_wrapper::make();
 
 void unsubscribe() {
-  push(model::Reducer([](auto& m) {
+  push(model::Reducer([](auto&& m) {
     subscription.dispose();
     return m;
   }));

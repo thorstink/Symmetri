@@ -4,7 +4,7 @@
 #include "rxdispatch.h"
 #include "write_graph_to_disk.hpp"
 model::Reducer updateActiveFile(const std::filesystem::path &file) {
-  return [=](model::Model &m_ptr) {
+  return [=](model::Model &&m_ptr) {
     auto &m = *m_ptr.data;
     m.active_file = file;
     symmetri::Net net;

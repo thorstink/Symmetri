@@ -7,7 +7,7 @@
 
 namespace farbart {
 inline model::Reducer writeToDisk(const std::filesystem::path& path) {
-  return [=](model::Model& m_ptr) {
+  return [=](model::Model&& m_ptr) {
     auto& m = *m_ptr.data;
     const auto& graph = m.graph;
     using namespace tinyxml2;

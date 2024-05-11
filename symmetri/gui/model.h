@@ -17,7 +17,6 @@
 namespace model {
 
 struct Model {
-  Model() {}
   struct shared {
     bool show_grid;
     ImVec2 scrolling;
@@ -47,8 +46,8 @@ struct ViewModel {
   std::shared_ptr<shared> data = std::make_shared<shared>();
 };
 
-using Reducer = std::function<Model(Model&)>;
-inline auto noop = Reducer([](Model& m) { return std::move(m); });
+using Reducer = std::function<Model(Model&&)>;
+inline auto noop = Reducer([](Model&& m) { return std::move(m); });
 
 inline Model initializeModel() {
   Model m_ptr;
