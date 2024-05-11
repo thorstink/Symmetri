@@ -1,7 +1,6 @@
 //                  ReactivePlusPlus library
 //
-//          Copyright Aleksey Loginov 2022 - present.
-//                    TC Wang 2022 - present.
+//          Copyright Aleksey Loginov 2023 - present.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -11,58 +10,87 @@
 
 #pragma once
 
-#include <rpp/operators/details/subscriber_with_state.hpp>  // create_subscriber_with_state
-#include <rpp/operators/fwd/last.hpp>                       // own forwarding
-#include <rpp/operators/lift.hpp>       // required due to operator uses lift
-#include <rpp/operators/take_last.hpp>  // take_last
-#include <rpp/subscribers/constraints.hpp>  // constraint::subscriber
-#include <rpp/utils/exceptions.hpp>         // not_enough_emissions
-#include <rpp/utils/functors.hpp>           // forwarding_on_error
+#include <optional>
+#include <rpp/defs.hpp>
+#include <rpp/operators/details/strategy.hpp>
+#include <rpp/operators/fwd.hpp>
 
-IMPLEMENTATION_FILE(last_tag);
+namespace rpp::operators::details {
+template <rpp::constraint::decayed_type Type,
+          rpp::constraint::observer TObserver>
+struct last_observer_strategy {
+  using preferred_disposable_strategy =
+      rpp::details::observers::none_disposable_strategy;
 
-namespace rpp::details {
-template <constraint::decayed_type Type>
-struct last_state : public take_last_state<Type> {
-  explicit last_state() : take_last_state<Type>{1} {}
-};
+  RPP_NO_UNIQUE_ADDRESS TObserver observer;
+  mutable std::optional<Type> value{};
 
-/**
- * Functor of last() operator for on_next events.
- */
-using last_on_next = take_last_on_next;
+  template <typename T>
+  void on_next(T&& v) const {
+    value.emplace(std::forward<T>(v));
+  }
 
-/**
- * Functor of last() operator for on_completed event.
- */
-struct last_on_completed {
-  template <constraint::decayed_type Type>
-  void operator()(const constraint::subscriber auto& subscriber,
-                  const last_state<Type>& state) const {
-    auto&& last_value = state.items.at(0);
-    if (!last_value.has_value()) {
-      subscriber.on_error(std::make_exception_ptr(utils::not_enough_emissions{
+  void on_completed() const {
+    if (value.has_value()) {
+      observer.on_next(std::move(value).value());
+      observer.on_completed();
+    } else
+      observer.on_error(std::make_exception_ptr(utils::not_enough_emissions{
           "last() operator expects at least one emission from observable "
           "before completion"}));
-      return;
-    }
-
-    subscriber.on_next(std::move(last_value.value()));
-    subscriber.on_completed();
   }
+
+  void on_error(const std::exception_ptr& err) const { observer.on_error(err); }
+
+  void set_upstream(const disposable_wrapper& d) { observer.set_upstream(d); }
+
+  bool is_disposed() const { return observer.is_disposed(); }
 };
 
-template <constraint::decayed_type Type>
-struct last_impl {
- public:
-  template <constraint::subscriber_of_type<Type> TSub>
-  auto operator()(TSub&& subscriber) const {
-    auto subscription = subscriber.get_subscription();
+struct last_t : lift_operator<last_t> {
+  using lift_operator<last_t>::lift_operator;
 
-    return create_subscriber_with_dynamic_state<Type>(
-        std::move(subscription), last_on_next{}, utils::forwarding_on_error{},
-        last_on_completed{}, std::forward<TSub>(subscriber),
-        last_state<Type>{});
-  }
+  template <rpp::constraint::decayed_type T>
+  struct operator_traits {
+    using result_type = T;
+
+    template <rpp::constraint::observer_of_type<result_type> TObserver>
+    using observer_strategy = last_observer_strategy<T, TObserver>;
+  };
+
+  template <rpp::details::observables::constraint::disposable_strategy Prev>
+  using updated_disposable_strategy = Prev;
 };
-}  // namespace rpp::details
+}  // namespace rpp::operators::details
+
+namespace rpp::operators {
+/**
+ * @brief Emit only the last item provided before on_completed.
+ *
+ * @marble last
+     {
+         source observable   : +--1--2--3--|
+         operator "last"     : +--3-|
+     }
+ *
+ * @details Actually this operator just updates `std::optional` on every new
+ emission and emits this value on_completed
+ * @throws rpp::utils::not_enough_emissions in case of on_completed obtained
+ without any emissions
+ *
+ * @par Performance notes:
+ * - No any heap allocations
+ * - No replace std::optional with each new emission and move value from
+ optional on_completed
+ *
+ * @warning #include <rpp/operators/last.hpp>
+ *
+ * @par Example:
+ * @snippet last.cpp last
+ * @snippet last.cpp last empty
+ *
+ * @ingroup filtering_operators
+ * @see https://reactivex.io/documentation/operators/last.html
+ */
+inline auto last() { return details::last_t{}; }
+}  // namespace rpp::operators

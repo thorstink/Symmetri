@@ -66,35 +66,36 @@ int main(int, char **) {
   rxdispatch::push([](model::Model &m) { return m; });
 
   // Flux starts here
-  auto reducers = rpp::source::create<model::Reducer>(&rxdispatch::dequeue)
-                      .subscribe_on(rpp::schedulers::new_thread{});
+  auto reducers = rpp::source::create<model::Reducer>(&rxdispatch::dequeue) |
+                  rpp::operators::subscribe_on(rpp::schedulers::new_thread{});
 
-  auto models = reducers.observe_on(rximgui::rl)
-                    .scan(model::initializeModel(),
-                          [=](model::Model &&m, model::Reducer f) {
-                            try {
-                              auto r = f(m);
-                              r.data->timestamp = std::chrono::steady_clock::now();
-                              return r;
-                            } catch (const std::exception &e) {
-                              printf("%s", e.what());
-                              return std::move(m);
-                            }
-                          })
-                    .sample_with_time(std::chrono::milliseconds{200}, rl);
+  auto models =
+      reducers | rpp::operators::subscribe_on(rximgui::rl) |
+      rpp::operators::scan(model::initializeModel(), [=](model::Model &&m, model::Reducer f) {
+        try {
+          auto r = f(m);
+          r.data->timestamp = std::chrono::steady_clock::now();
+          return r;
+        } catch (const std::exception &e) {
+          printf("%s", e.what());
+          return std::move(m);
+        }
+      });
+  //                      |
+  // rpp::operators::sample_with_time(std::chrono::milliseconds{200}, rl);
 
-  auto view_models = models
-                         .filter([=](const model::Model &m) {
-                           return m.data->timestamp <= std::chrono::steady_clock::now();
-                         })
-                         .map([](const model::Model &m) { return model::ViewModel{m}; });
+  auto view_models = models | rpp::operators::filter([=](const model::Model &m) {
+                       return m.data->timestamp <= std::chrono::steady_clock::now();
+                     }) |
+                     rpp::operators::map([](const model::Model &m) { return model::ViewModel{m}; });
 
-  auto draw_frames = frames.with_latest_from(rxu::take_at<1>(), view_models);
+  auto draw_frames = frames | rpp::operators::with_latest_from(rxu::take_at<1>(), view_models);
 
-  auto subscription = draw_frames.tap([](const model::ViewModel &vm) { draw(vm); }).subscribe();
+  draw_frames | rpp::operators::tap([](const model::ViewModel &vm) { draw(vm); }) |
+      rpp::operators::subscribe();
 
   // Main loop
-  while (!glfwWindowShouldClose(window) && subscription.is_subscribed()) {
+  while (!glfwWindowShouldClose(window)) {
     @autoreleasepool {
       glfwPollEvents();
 
@@ -138,7 +139,7 @@ int main(int, char **) {
       [commandBuffer commit];
     }
   }
-  subscription.unsubscribe();
+  rxdispatch::unsubscribe();
 
   ImGui_ImplMetal_Shutdown();
   ImGui_ImplGlfw_Shutdown();

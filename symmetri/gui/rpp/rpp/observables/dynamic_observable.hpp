@@ -1,120 +1,90 @@
-//                  ReactivePlusPlus library
+//                   ReactivePlusPlus library
 //
-//          Copyright Aleksey Loginov 2022 - present.
-// Distributed under the Boost Software License, Version 1.0.
-//    (See accompanying file LICENSE_1_0.txt or copy at
-//          https://www.boost.org/LICENSE_1_0.txt)
+//           Copyright Aleksey Loginov 2023 - present.
+//  Distributed under the Boost Software License, Version 1.0.
+//     (See accompanying file LICENSE_1_0.txt or copy at
+//           https://www.boost.org/LICENSE_1_0.txt)
 //
-// Project home: https://github.com/victimsnino/ReactivePlusPlus
-//
+//  Project home: https://github.com/victimsnino/ReactivePlusPlus
 
 #pragma once
 
 #include <memory>
-#include <rpp/defs.hpp>
-#include <rpp/observables/specific_observable.hpp>  // base
-#include <rpp/utils/operator_declaration.hpp>       // for header include
+#include <rpp/observables/fwd.hpp>
+#include <rpp/observables/observable.hpp>
+#include <rpp/observers/dynamic_observer.hpp>
+#include <utility>
 
-IMPLEMENTATION_FILE(dynamic_observable_tag);
+namespace rpp::details::observables {
+template <typename T, typename Observable>
+void forwarding_subscribe(const void* const ptr, dynamic_observer<T>&& obs) {
+  static_cast<const Observable*>(ptr)->subscribe(std::move(obs));
+}
 
-namespace rpp::details {
-template <constraint::decayed_type Type>
-class dynamic_observable_state {
+template <rpp::constraint::decayed_type Type>
+class dynamic_strategy final {
  public:
-  template <constraint::observable_of_type<Type> TObs>
-  dynamic_observable_state(TObs&& obs)
-      : m_impl{
-            std::make_shared<dynamic_observable_state_impl<std::decay_t<TObs>>>(
-                std::forward<TObs>(obs))} {}
+  using value_type = Type;
 
-  template <constraint::on_subscribe_fn<Type> TOnSub>
-    requires(
-        !constraint::decayed_same_as<TOnSub, dynamic_observable_state<Type>>)
-  dynamic_observable_state(TOnSub&& on_sub)
-      : m_impl{std::make_shared<dynamic_observable_state_impl<
-            specific_observable<Type, std::decay_t<TOnSub>>>>(
-            std::forward<TOnSub>(on_sub))} {}
+  template <rpp::constraint::observable_strategy<Type> Strategy>
+    requires(!rpp::constraint::decayed_same_as<Strategy,
+                                               dynamic_strategy<Type>>)
+  explicit dynamic_strategy(observable<Type, Strategy>&& obs)
+      : m_forwarder{std::make_shared<observable<Type, Strategy>>(
+            std::move(obs))},
+        m_vtable{vtable::template create<observable<Type, Strategy>>()} {}
 
-  dynamic_observable_state(const dynamic_observable_state& other) = default;
-  dynamic_observable_state(dynamic_observable_state&& other) noexcept = default;
-  dynamic_observable_state& operator=(const dynamic_observable_state& other) =
-      default;
-  dynamic_observable_state& operator=(
-      dynamic_observable_state&& other) noexcept = default;
+  template <rpp::constraint::observable_strategy<Type> Strategy>
+    requires(!rpp::constraint::decayed_same_as<Strategy,
+                                               dynamic_strategy<Type>>)
+  explicit dynamic_strategy(const observable<Type, Strategy>& obs)
+      : m_forwarder{std::make_shared<observable<Type, Strategy>>(obs)},
+        m_vtable{vtable::template create<observable<Type, Strategy>>()} {}
 
-  composite_subscription operator()(
-      const dynamic_subscriber<Type>& subscriber) const {
-    return (*m_impl)(subscriber);
+  template <rpp::constraint::observer_strategy<Type> ObserverStrategy>
+  void subscribe(observer<Type, ObserverStrategy>&& observer) const {
+    m_vtable->subscribe(m_forwarder.get(), std::move(observer).as_dynamic());
   }
 
  private:
-  struct interface_dynamic_observable_state_impl {
-    virtual ~interface_dynamic_observable_state_impl() = default;
+  struct vtable {
+    void (*subscribe)(const void*, dynamic_observer<Type>&&){};
 
-    virtual composite_subscription operator()(
-        const dynamic_subscriber<Type>& subscriber) const = 0;
-  };
-
-  template <constraint::observable TObs>
-  class dynamic_observable_state_impl final
-      : public interface_dynamic_observable_state_impl {
-   public:
-    dynamic_observable_state_impl(TObs&& observable)
-        : m_observable{std::move(observable)} {}
-
-    dynamic_observable_state_impl(const TObs& observable)
-        : m_observable{observable} {}
-
-    composite_subscription operator()(
-        const dynamic_subscriber<Type>& subscriber) const override {
-      return m_observable.subscribe(subscriber);
+    template <rpp::constraint::observable Observable>
+    static const vtable* create() noexcept {
+      static vtable s_res{.subscribe = forwarding_subscribe<Type, Observable>};
+      return &s_res;
     }
-
-   private:
-    RPP_NO_UNIQUE_ADDRESS TObs m_observable{};
   };
 
-  std::shared_ptr<interface_dynamic_observable_state_impl> m_impl{};
+ private:
+  std::shared_ptr<void> m_forwarder;
+  const vtable* m_vtable;
 };
-}  // namespace rpp::details
+}  // namespace rpp::details::observables
 
 namespace rpp {
 /**
- * \brief Type-less observable (or partially untyped) that has the notion of
- * Type but hides the notion of on_subscribe<Type> for C++ compiler.
+ * @brief Type-erased version of the `rpp::observable`. Any observable can be
+ * converted to dynamic_observable via `rpp::observable::as_dynamic` member
+ * function.
+ * @details To provide type-erasure it uses `std::shared_ptr`. As a result it
+ * has worse performance.
  *
- * \details This is a C++ technique called type-erasure. Multiple instances of
- * the observable<type> that may have different upstream graphs are considered
- * homogeneous. i.e. They can be stored in the same container, e.g. std::vector.
- * As a result, it uses heap to store on_subscribe and hide its type.
+ * @tparam Type of value this obsevalbe can provide
  *
- * \param Type is the value type. Observable of type means this source could
- * emit a sequence of items of that "Type". \ingroup observables
+ * @ingroup observables
  */
 template <constraint::decayed_type Type>
 class dynamic_observable
-    : public specific_observable<Type,
-                                 details::dynamic_observable_state<Type>> {
+    : public observable<Type, details::observables::dynamic_strategy<Type>> {
+  using base = observable<Type, details::observables::dynamic_strategy<Type>>;
+
  public:
-  using base =
-      specific_observable<Type, details::dynamic_observable_state<Type>>;
   using base::base;
 
-  explicit dynamic_observable(
-      constraint::on_subscribe_fn<Type> auto&& on_subscribe)
-      : base{std::forward<decltype(on_subscribe)>(on_subscribe)} {}
+  dynamic_observable(base&& b) : base{std::move(b)} {}
 
-  template <constraint::observable_of_type<Type> TObs>
-    requires(!std::is_same_v<std::decay_t<TObs>, dynamic_observable<Type>>)
-  dynamic_observable(TObs&& observable)
-      : base{std::forward<TObs>(observable)} {}
+  dynamic_observable(const base& b) : base{b} {}
 };
-
-template <constraint::observable TObs>
-dynamic_observable(TObs obs)
-    -> dynamic_observable<utils::extract_observable_type_t<TObs>>;
-
-template <typename OnSub>
-dynamic_observable(OnSub on_subscribe) -> dynamic_observable<
-    utils::extract_subscriber_type_t<utils::function_argument_t<OnSub>>>;
 }  // namespace rpp

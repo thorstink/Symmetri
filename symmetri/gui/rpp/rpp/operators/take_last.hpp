@@ -1,6 +1,6 @@
 //                  ReactivePlusPlus library
 //
-//          Copyright Aleksey Loginov 2022 - present.
+//          Copyright Aleksey Loginov 2023 - present.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -10,74 +10,101 @@
 
 #pragma once
 
-#include <optional>
-#include <rpp/operators/details/subscriber_with_state.hpp>  // create_subscriber_with_state
-#include <rpp/operators/fwd/take_last.hpp>
-#include <rpp/operators/lift.hpp>  // required due to operator uses lift
-#include <rpp/subscribers/constraints.hpp>
-#include <rpp/utils/functors.hpp>
-#include <vector>
+#include <cstddef>
+#include <rpp/defs.hpp>
+#include <rpp/operators/details/strategy.hpp>
+#include <rpp/operators/fwd.hpp>
 
-IMPLEMENTATION_FILE(take_last_tag);
+namespace rpp::operators::details {
+template <rpp::constraint::observer TObserver>
+class take_last_observer_strategy {
+ public:
+  using preferred_disposable_strategy =
+      rpp::details::observers::none_disposable_strategy;
 
-namespace rpp::details {
-template <constraint::decayed_type Type>
-struct take_last_state {
-  explicit take_last_state(size_t count) : items(count) {}
-
-  size_t get_next_position(size_t pos) const {
-    return ++pos >= items.size() ? 0 : pos;
+  take_last_observer_strategy(TObserver&& observer, size_t count)
+      : m_observer{std::move(observer)} {
+    m_data.reserve(count);
   }
 
-  mutable std::vector<std::optional<Type>> items;
-  mutable size_t current_end_position{};
-};
-
-struct take_last_on_next {
-  template <typename T, constraint::decayed_type Type>
-  void operator()(T&& v, const auto&,
-                  const take_last_state<Type>& state) const {
+  template <typename T>
+  void on_next(T&& v) const {
     // handle case "count==0"
-    if (state.items.empty()) return;
+    if (!m_data.capacity()) return;
 
-    state.items[state.current_end_position].emplace(std::forward<T>(v));
-    state.current_end_position =
-        state.get_next_position(state.current_end_position);
-  }
-};
-
-struct take_last_on_completed {
-  template <constraint::decayed_type Type>
-  void operator()(const auto& subscriber,
-                  const take_last_state<Type>& state) const {
-    if (!state.items.empty()) {
-      size_t cur_pos = state.current_end_position;
-
-      do {
-        if (auto&& value = state.items[cur_pos])
-          subscriber.on_next(std::move(value.value()));
-
-        cur_pos = state.get_next_position(cur_pos);
-
-      } while (cur_pos != state.current_end_position);
+    // handle case "count==0"
+    if (m_data.size() < m_data.capacity()) {
+      m_data.push_back(std::forward<T>(v));
+    } else {
+      m_data[m_current_end] = std::forward<T>(v);
+      m_current_end = get_next(m_current_end);
     }
-    subscriber.on_completed();
   }
+
+  void on_error(const std::exception_ptr& err) const {
+    m_observer.on_error(err);
+  }
+
+  void on_completed() const {
+    for (size_t i = 0; i < m_data.size(); ++i) {
+      m_observer.on_next(std::move(m_data[m_current_end]));
+      m_current_end = get_next(m_current_end);
+    }
+
+    m_observer.on_completed();
+  }
+
+  void set_upstream(const disposable_wrapper& d) { m_observer.set_upstream(d); }
+
+  bool is_disposed() const { return m_observer.is_disposed(); }
+
+ private:
+  size_t get_next(size_t pos) const { return ++pos >= m_data.size() ? 0 : pos; }
+
+ private:
+  RPP_NO_UNIQUE_ADDRESS TObserver m_observer;
+  mutable std::vector<rpp::utils::extract_observer_type_t<TObserver>> m_data{};
+  mutable size_t m_current_end{};
 };
 
-template <constraint::decayed_type Type>
-struct take_last_impl {
-  size_t count;
+struct take_last_t : lift_operator<take_last_t, size_t> {
+  using lift_operator<take_last_t, size_t>::lift_operator;
 
-  template <constraint::subscriber_of_type<Type> TSub>
-  auto operator()(TSub&& subscriber) const {
-    auto subscription = subscriber.get_subscription();
-    // dynamic_state there to make shared_ptr for observer instead of making
-    // shared_ptr for state
-    return create_subscriber_with_dynamic_state<Type>(
-        std::move(subscription), take_last_on_next{},
-        utils::forwarding_on_error{}, take_last_on_completed{},
-        std::forward<TSub>(subscriber), take_last_state<Type>{count});
-  }
+  template <rpp::constraint::decayed_type T>
+  struct operator_traits {
+    using result_type = T;
+
+    template <rpp::constraint::observer_of_type<result_type> TObserver>
+    using observer_strategy = take_last_observer_strategy<TObserver>;
+  };
+
+  template <rpp::details::observables::constraint::disposable_strategy Prev>
+  using updated_disposable_strategy = Prev;
 };
-}  // namespace rpp::details
+}  // namespace rpp::operators::details
+
+namespace rpp::operators {
+/**
+ * @brief Emit only last `count` items provided by observable, then send
+ `on_completed`
+ *
+ * @marble take_last
+ {
+     source observable       : +--1-2-3-4-5-6-|
+     operator "take_last(3)" : +--------------456|
+ }
+ *
+ * @details Actually this operator has buffer of requested size inside, keeps
+ last `count` values and emit stored values on `on_completed`
+ *
+ * @param count amount of last items to be emitted
+ * @warning #include <rpp/operators/take_last.hpp>
+ *
+ * @par Example
+ * @snippet take_last.cpp take_last
+ *
+ * @ingroup filtering_operators
+ * @see https://reactivex.io/documentation/operators/takelast.html
+ */
+inline auto take_last(size_t count) { return details::take_last_t{count}; }
+}  // namespace rpp::operators

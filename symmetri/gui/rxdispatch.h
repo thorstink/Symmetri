@@ -3,7 +3,7 @@
 #include "model.h"
 #include "rpp/rpp.hpp"
 namespace rxdispatch {
-
+void unsubscribe();
 void push(model::Reducer&& r);
-void dequeue(const rpp::dynamic_subscriber<model::Reducer>& sub);
+void dequeue(rpp::dynamic_observer<model::Reducer>&& observer);
 }  // namespace rxdispatch

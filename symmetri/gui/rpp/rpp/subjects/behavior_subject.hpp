@@ -9,121 +9,123 @@
 
 #pragma once
 
-#include <rpp/subjects/details/base_subject.hpp>
+#include <deque>
+#include <rpp/disposables/disposable_wrapper.hpp>
+#include <rpp/observers/observer.hpp>
+#include <rpp/schedulers/fwd.hpp>
+#include <rpp/subjects/details/subject_on_subscribe.hpp>
 #include <rpp/subjects/details/subject_state.hpp>
 #include <rpp/subjects/fwd.hpp>
-#include <rpp/subscribers/dynamic_subscriber.hpp>
-#include <rpp/utils/constraints.hpp>
+#include <utility>
 
 namespace rpp::subjects::details {
-template <rpp::constraint::decayed_type T>
-class behavior_strategy {
- public:
-  template <rpp::constraint::decayed_same_as<T> TT,
-            rpp::constraint::decayed_same_as<composite_subscription> TSub>
-  behavior_strategy(TT&& v, TSub&& sub)
-      : m_state{std::make_shared<behavior_state>(std::forward<TT>(v))},
-        m_sub{std::forward<TSub>(sub)} {
-    m_sub.add([state = std::weak_ptr{m_state}] {
-      if (const auto locked = state.lock()) locked->on_unsubscribe();
-    });
-  }
-
-  void on_subscribe(const dynamic_subscriber<T>& sub) const {
-    if (m_sub.is_subscribed()) sub.on_next(m_state->get_value());
-
-    m_state->on_subscribe(sub);
-  }
-
-  auto get_subscriber() const {
-    return rpp::make_specific_subscriber<T>(
-        m_sub,
-        [state = m_state](const T& v) {
-          state->set_value(v);
-          state->on_next(v);
-        },
-        [state = m_state](const std::exception_ptr& err) {
-          state->on_error(err);
-        },
-        [state = m_state]() { state->on_completed(); });
-  }
-
-  T get_value() const { return m_state->get_value(); }
-
- private:
-  class behavior_state : public subject_state<T> {
+template <rpp::constraint::decayed_type Type, bool Serialized>
+class behavior_subject_base {
+  class behavior_state final : public subject_state<Type, Serialized> {
    public:
-    behavior_state(const T& v) : subject_state<T>{}, value{v} {}
+    behavior_state(const Type& v) : m_value{v} {}
+    behavior_state(Type&& v) : m_value{std::move(v)} {}
 
-    behavior_state(T&& v) : subject_state<T>{}, value{std::move(v)} {}
-
-    T get_value() {
-      std::lock_guard lock{mutex};
-      return value;
-    }
-
-    void set_value(const T& v) {
-      std::lock_guard lock{mutex};
-      value = v;
+    rpp::utils::pointer_under_lock<Type> get_value() {
+      return rpp::utils::pointer_under_lock<Type>{m_value};
     }
 
    private:
-    std::mutex mutex;
-    T value;
+    rpp::utils::value_with_mutex<Type> m_value{};
   };
 
-  std::shared_ptr<behavior_state> m_state;
-  composite_subscription m_sub{};
+  struct observer_strategy {
+    using preferred_disposable_strategy =
+        rpp::details::observers::none_disposable_strategy;
+
+    std::shared_ptr<behavior_state> state;
+
+    void set_upstream(const disposable_wrapper& d) const noexcept {
+      state->add(d);
+    }
+
+    bool is_disposed() const noexcept { return state->is_disposed(); }
+
+    void on_next(const Type& v) const {
+      *state->get_value() = v;
+      state->on_next(v);
+    }
+
+    void on_error(const std::exception_ptr& err) const { state->on_error(err); }
+
+    void on_completed() const { state->on_completed(); }
+  };
+
+ public:
+  using expected_disposable_strategy =
+      rpp::details::observables::deduce_disposable_strategy_t<
+          details::subject_state<Type, Serialized>>;
+
+  explicit behavior_subject_base(const Type& value)
+      : m_state{disposable_wrapper_impl<behavior_state>::make(value)} {}
+
+  explicit behavior_subject_base(Type&& value)
+      : m_state{
+            disposable_wrapper_impl<behavior_state>::make(std::move(value))} {}
+
+  auto get_observer() const {
+    return rpp::observer<Type, observer_strategy>{m_state.lock()};
+  }
+
+  auto get_observable() const {
+    return create_subject_on_subscribe_observable<Type,
+                                                  expected_disposable_strategy>(
+        [state = m_state]<rpp::constraint::observer_of_type<Type> TObs>(
+            TObs&& observer) {
+          const auto locked = state.lock();
+          if (!locked->is_disposed()) {
+            auto v = *locked->get_value();
+            observer.on_next(std::move(v));
+          }
+          locked->on_subscribe(std::forward<TObs>(observer));
+        });
+  }
+
+  rpp::disposable_wrapper get_disposable() const { return m_state; }
+
+  Type get_value() const { return *m_state.lock()->get_value(); }
+
+ private:
+  disposable_wrapper_impl<behavior_state> m_state;
 };
 }  // namespace rpp::subjects::details
 
 namespace rpp::subjects {
 /**
- * \brief Subject which multicasts values to observers subscribed on it and
- * sends last emitted value (or initial value) on subscribe. It contains two
- * parts: subscriber and observable at the same time.
+ * @brief Same as rpp::subjects::publish_subject but keeps last value (or
+ * default) and emits it to newly subscribed observer
  *
- * \details Each subscriber obtains only last/initial value + values which
- * emitted after corresponding subscribe. on_error/on_completer/unsubscribe
- * cached and provided to new subscribers if any
+ * @tparam Type value provided by this subject
  *
- * \warning this subject is not synchronized/serialized! It means, that expected
- * to call callbacks of subscriber in the serialized way to follow observable
- * contract: "Observables must issue notifications to observers serially (not in
- * parallel).". If you are not sure or need extra serialization, please, use
- * serialized_subject.
- *
- * \tparam T value provided by this subject
- *
- * \ingroup subjects
- * \see https://reactivex.io/documentation/subject.html
+ * @ingroup subjects
+ * @see https://reactivex.io/documentation/subject.html
  */
-template <rpp::constraint::decayed_type T>
+template <rpp::constraint::decayed_type Type>
 class behavior_subject final
-    : public details::base_subject<T, details::behavior_strategy<T>> {
+    : public details::behavior_subject_base<Type, false> {
  public:
-  behavior_subject(const T& initial_value, const composite_subscription& sub)
-      : details::base_subject<T, details::behavior_strategy<T>>{initial_value,
-                                                                sub} {}
+  using details::behavior_subject_base<Type, false>::behavior_subject_base;
+};
 
-  behavior_subject(T&& initial_value, const composite_subscription& sub)
-      : details::base_subject<T, details::behavior_strategy<T>>{
-            std::move(initial_value), sub} {}
-
-  behavior_subject(const T& initial_value,
-                   composite_subscription&& sub = composite_subscription{})
-      : details::base_subject<T, details::behavior_strategy<T>>{
-            initial_value, std::move(sub)} {}
-
-  behavior_subject(T&& initial_value,
-                   composite_subscription&& sub = composite_subscription{})
-      : details::base_subject<T, details::behavior_strategy<T>>{
-            std::move(initial_value), std::move(sub)} {}
-
-  T get_value() const {
-    return details::base_subject<T,
-                                 details::behavior_strategy<T>>::get_strategy()
-        .get_value();
-  }
+/**
+ * @brief Same as rpp::subjects::behavior_subject but
+ * on_next/on_error/on_completed calls are serialized via mutex.
+ * @details When you are using ordinary rpp::subjects::behavior_subject, then
+ * you must take care not to call its on_next method (or its other on methods)
+ * in async way.
+ *
+ * @ingroup subjects
+ * @see https://reactivex.io/documentation/subject.html
+ */
+template <rpp::constraint::decayed_type Type>
+class serialized_behavior_subject final
+    : public details::behavior_subject_base<Type, true> {
+ public:
+  using details::behavior_subject_base<Type, true>::behavior_subject_base;
 };
 }  // namespace rpp::subjects

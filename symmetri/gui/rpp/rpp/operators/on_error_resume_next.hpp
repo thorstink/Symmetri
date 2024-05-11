@@ -1,7 +1,6 @@
 //                  ReactivePlusPlus library
 //
-//          Copyright Aleksey Loginov 2022 - present.
-//                    TC Wang 2022 - present.
+//          Copyright Aleksey Loginov 2023 - present.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -11,47 +10,108 @@
 
 #pragma once
 
-#include <rpp/defs.hpp>  // RPP_NO_UNIQUE_ADDRESS
-#include <rpp/operators/details/subscriber_with_state.hpp>  // create_subscriber_with_state
-#include <rpp/operators/fwd/on_error_resume_next.hpp>  // own forwarduing
-#include <rpp/operators/lift.hpp>  // required due to operator uses lift
-#include <rpp/subscribers/constraints.hpp>  // constraint::subscriber_of_type
-#include <rpp/utils/functors.hpp>
+#include <rpp/defs.hpp>
+#include <rpp/operators/details/strategy.hpp>
+#include <rpp/operators/fwd.hpp>
 
-IMPLEMENTATION_FILE(on_error_resume_next_tag);
+namespace rpp::operators::details {
+template <rpp::constraint::observer TObserver,
+          rpp::constraint::decayed_type Selector>
+struct on_error_resume_next_observer_strategy {
+  using preferred_disposable_strategy =
+      rpp::details::observers::none_disposable_strategy;
 
-namespace rpp::details {
-/**
- * Functor (type-erasure) of "on_error_resume_next" for on_error operator.
- */
-struct on_error_resume_next_on_error {
-  template <rpp::details::resume_callable ResumeCallable>
-  void operator()(const std::exception_ptr& err, const auto& subscriber,
-                  const ResumeCallable& resume_callable) const {
-    // Subscribe to next_observable
-    resume_callable(err).subscribe(subscriber);
+  RPP_NO_UNIQUE_ADDRESS mutable TObserver observer;
+  RPP_NO_UNIQUE_ADDRESS Selector selector;
+  // Manually control disposable to ensure observer is not used after move in
+  // on_error emission
+  mutable rpp::composite_disposable_wrapper disposable =
+      composite_disposable_wrapper::make();
+
+  RPP_CALL_DURING_CONSTRUCTION(observer.set_upstream(disposable););
+
+  template <typename T>
+  void on_next(T&& v) const {
+    observer.on_next(std::forward<T>(v));
   }
+
+  void on_error(const std::exception_ptr& err) const {
+    std::optional<std::invoke_result_t<Selector, std::exception_ptr>>
+        selector_obs;
+    try {
+      selector_obs.emplace(selector(err));
+    } catch (...) {
+      observer.on_error(std::current_exception());
+    }
+    if (selector_obs.has_value()) {
+      std::move(selector_obs).value().subscribe(std::move(observer));
+    }
+    disposable.dispose();
+  }
+
+  void on_completed() const {
+    observer.on_completed();
+    disposable.dispose();
+  }
+
+  void set_upstream(const disposable_wrapper& d) { disposable.add(d); }
+
+  bool is_disposed() const { return disposable.is_disposed(); }
 };
 
-/**
- * \brief Functor of OperatorFn for "on_error_resume_next" operator (used by
- * "lift").
- */
-template <constraint::decayed_type Type,
-          rpp::details::resume_callable ResumeCallable>
-struct on_error_resume_next_impl {
-  RPP_NO_UNIQUE_ADDRESS ResumeCallable resume_callable;
+template <rpp::constraint::decayed_type Selector>
+struct on_error_resume_next_t
+    : lift_operator<on_error_resume_next_t<Selector>, Selector> {
+  using lift_operator<on_error_resume_next_t<Selector>,
+                      Selector>::lift_operator;
 
-  template <constraint::subscriber_of_type<Type> TSub>
-  auto operator()(TSub&& downstream_subscriber) const {
-    // Child subscription is for keeping the downstream subscriber's
-    // subscription alive when upstream sends on_error event.
-    auto subscription = downstream_subscriber.get_subscription().make_child();
+  template <rpp::constraint::decayed_type T>
+  struct operator_traits {
+    using selector_observable_result_type =
+        rpp::utils::extract_observable_type_t<
+            std::invoke_result_t<Selector, std::exception_ptr>>;
 
-    return create_subscriber_with_state<Type>(
-        std::move(subscription), rpp::utils::forwarding_on_next{},
-        on_error_resume_next_on_error{}, rpp::utils::forwarding_on_completed{},
-        std::forward<TSub>(downstream_subscriber), resume_callable);
-  }
+    static_assert(
+        rpp::constraint::decayed_same_as<selector_observable_result_type, T>,
+        "Selector observable result type is not the same as T");
+
+    using result_type = T;
+
+    template <rpp::constraint::observer_of_type<result_type> TObserver>
+    using observer_strategy =
+        on_error_resume_next_observer_strategy<TObserver, Selector>;
+  };
+
+  template <rpp::details::observables::constraint::disposable_strategy Prev>
+  using updated_disposable_strategy =
+      rpp::details::observables::atomic_dynamic_disposable_strategy_selector<1>;
 };
-}  // namespace rpp::details
+}  // namespace rpp::operators::details
+
+namespace rpp::operators {
+/**
+ * @brief If an error occurs, take the result from the Selector and subscribe to
+ that instead.
+ *
+ * @marble on_error_resume_next
+   {
+       source observable                                  : +-1-x
+       operator "on_error_resume_next: () => obs(-2-3-|)" : +-1-2-3-|
+   }
+ *
+ * @param selector callable taking a std::exception_ptr and returning observable
+ to continue on
+ *
+ * @warning #include <rpp/operators/on_error_resume_next.hpp>
+ *
+ * @ingroup error_handling_operators
+ * @see https://reactivex.io/documentation/operators/catch.html
+ */
+template <typename Selector>
+  requires rpp::constraint::observable<
+      std::invoke_result_t<Selector, std::exception_ptr>>
+auto on_error_resume_next(Selector&& selector) {
+  return details::on_error_resume_next_t<std::decay_t<Selector>>{
+      std::forward<Selector>(selector)};
+}
+}  // namespace rpp::operators

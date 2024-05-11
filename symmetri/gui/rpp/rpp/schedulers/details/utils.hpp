@@ -9,39 +9,134 @@
 
 #pragma once
 
-#include <rpp/schedulers/constraints.hpp>
-#include <rpp/subscriptions/subscription_base.hpp>
+#include <exception>
+#include <optional>
+#include <rpp/schedulers/fwd.hpp>
 #include <thread>
 
 namespace rpp::schedulers::details {
-// keep old_timepoint to easily understand if we need to sleep (due to sleep is
-// expensive enough even if time in the "past")
-inline thread_local time_point s_last_sleep_timepoint{};
+inline thread_local time_point s_last_now_time{};
+
+inline rpp::schedulers::time_point now() {
+  return s_last_now_time = clock_type::now();
+}
+
+inline bool sleep_until(const time_point timepoint) {
+  if (timepoint <= details::s_last_now_time) return false;
+
+  const auto now = clock_type::now();
+  std::this_thread::sleep_for(timepoint - now);
+  details::s_last_now_time = std::max(now, timepoint);
+  return timepoint > now;
+}
 
 /**
- * \brief Makes immediate-like scheduling for provided arguments
- * \returns false in case of subscription unsubscribed or schedulable doesn't
- *requested to re-schedule, true - in case of condition failed
+ * @brief Makes immediate-like scheduling for provided arguments
+ * @returns nullopt in case of subscription unsubscribed or schedulable doesn't
+ *requested to re-schedule, some value - in case of condition failed but still
+ *some duration to delay action
  **/
-bool immediate_scheduling_while_condition(
-    time_point& time_point, constraint::schedulable_fn auto&& schedulable,
-    const subscription_base& sub, const std::predicate auto& condition) {
+template <typename NowStrategy,
+          rpp::schedulers::constraint::schedulable_handler Handler,
+          typename... Args>
+std::optional<time_point> immediate_scheduling_while_condition(
+    duration duration, const std::predicate auto& condition,
+    constraint::schedulable_delay_from_this_timepoint_fn<Handler,
+                                                         Args...> auto&& fn,
+    Handler&& handler, Args&&... args) noexcept {
+  auto timepoint = NowStrategy::now() + duration;
   while (condition()) {
-    if (!sub.is_subscribed()) return false;
+    if (handler.is_disposed()) return std::nullopt;
 
-    if (s_last_sleep_timepoint < time_point) {
-      std::this_thread::sleep_until(time_point);
-      s_last_sleep_timepoint = time_point;
+    if (sleep_until(timepoint) && handler.is_disposed()) return std::nullopt;
 
-      if (!sub.is_subscribed()) return false;
+    try {
+      if (const auto duration_from_timepoint = fn(handler, args...))
+        timepoint += duration_from_timepoint->value;
+      else
+        return std::nullopt;
+    } catch (...) {
+      handler.on_error(std::current_exception());
+      return std::nullopt;
     }
-
-    if (const auto duration = schedulable())
-      time_point = time_point + duration.value();
-    else
-      return false;
   }
 
-  return true;
+  return timepoint;
+}
+
+/**
+ * @brief Makes immediate-like scheduling for provided arguments
+ * @returns nullopt in case of subscription unsubscribed or schedulable doesn't
+ *requested to re-schedule, some value - in case of condition failed but still
+ *some duration to delay action
+ **/
+template <typename NowStrategy,
+          rpp::schedulers::constraint::schedulable_handler Handler,
+          typename... Args>
+std::optional<time_point> immediate_scheduling_while_condition(
+    duration duration, const std::predicate auto& condition,
+    constraint::schedulable_delay_from_now_fn<Handler, Args...> auto&& fn,
+    Handler&& handler, Args&&... args) noexcept {
+  while (condition()) {
+    if (handler.is_disposed()) return std::nullopt;
+
+    if (duration > duration::zero()) {
+      std::this_thread::sleep_for(duration);
+
+      if (handler.is_disposed()) return std::nullopt;
+    }
+
+    try {
+      if (const auto new_duration = fn(handler, args...))
+        duration = new_duration->value;
+      else
+        return std::nullopt;
+    } catch (...) {
+      handler.on_error(std::current_exception());
+      return std::nullopt;
+    }
+  }
+
+  return NowStrategy::now() + duration;
+}
+
+/**
+ * @brief Makes immediate-like scheduling for provided arguments
+ * @returns nullopt in case of subscription unsubscribed or schedulable doesn't
+ *requested to re-schedule, some value - in case of condition failed but still
+ *some duration to delay action
+ **/
+template <typename NowStrategy,
+          rpp::schedulers::constraint::schedulable_handler Handler,
+          typename... Args>
+std::optional<time_point> immediate_scheduling_while_condition(
+    duration duration, const std::predicate auto& condition,
+    constraint::schedulable_delay_to_fn<Handler, Args...> auto&& fn,
+    Handler&& handler, Args&&... args) noexcept {
+  std::optional<time_point> timepoint{};
+  while (condition()) {
+    if (handler.is_disposed()) return std::nullopt;
+
+    if (!timepoint.has_value()) {
+      if (duration > duration::zero()) {
+        std::this_thread::sleep_for(duration);
+
+        if (handler.is_disposed()) return std::nullopt;
+      }
+    } else if (sleep_until(timepoint.value()) && handler.is_disposed())
+      return std::nullopt;
+
+    try {
+      if (const auto new_timepoint = fn(handler, args...))
+        timepoint = new_timepoint->value;
+      else
+        return std::nullopt;
+    } catch (...) {
+      handler.on_error(std::current_exception());
+      return std::nullopt;
+    }
+  }
+
+  return timepoint;
 }
 }  // namespace rpp::schedulers::details

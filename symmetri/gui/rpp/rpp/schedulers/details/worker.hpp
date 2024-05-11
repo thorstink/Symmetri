@@ -1,6 +1,6 @@
 //                  ReactivePlusPlus library
 //
-//          Copyright Aleksey Loginov 2022 - present.
+//          Copyright Aleksey Loginov 2023 - present.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -10,70 +10,71 @@
 
 #pragma once
 
-#include <algorithm>
-#include <functional>
-#include <rpp/schedulers/constraints.hpp>  // schedulable_fn
-#include <rpp/schedulers/fwd.hpp>          // own forwarding
+#include <rpp/defs.hpp>
+#include <rpp/disposables/disposable_wrapper.hpp>
+#include <rpp/schedulers/fwd.hpp>
 #include <rpp/utils/constraints.hpp>
 
 namespace rpp::schedulers {
-template <typename T>
-concept worker_strategy =
-    std::copyable<T> &&
-    requires(const T t) {
-      t.defer_at(time_point{}, std::declval<optional_duration (*)()>());
-      { t.now() } -> std::same_as<time_point>;
-    };
-
-template <typename Strategy>
-class schedulable_wrapper {
- public:
-  template <constraint::schedulable_fn Fn>
-  schedulable_wrapper(const Strategy& strategy, time_point time_point, Fn&& fn)
-      : m_strategy{strategy},
-        m_time_point{time_point},
-        m_fn{std::forward<Fn>(fn)} {}
-
-  void operator()() {
-    if (!m_strategy.is_subscribed()) return;
-
-    if (const auto duration = m_fn()) {
-      m_time_point =
-          std::max(m_strategy.now(), m_time_point + duration.value());
-
-      m_strategy.defer_at(m_time_point, std::move(*this));
-    }
-  }
-
- private:
-  Strategy m_strategy;
-  time_point m_time_point;
-  std::function<optional_duration()> m_fn{};
-};
-
-template <worker_strategy Strategy>
-class worker final : public details::worker_tag {
+template <rpp::schedulers::constraint::strategy Strategy>
+class worker {
  public:
   template <typename... Args>
-    requires(!rpp::constraint::variadic_is_same_type<worker<Strategy>, Args...>)
-  worker(Args&&... args) : m_strategy{std::forward<Args>(args)...} {}
+    requires(
+        !rpp::constraint::variadic_decayed_same_as<worker<Strategy>, Args...> &&
+        rpp::constraint::is_constructible_from<Strategy, Args && ...>)
+  explicit worker(Args&&... args) : m_strategy(std::forward<Args>(args)...) {}
 
-  void schedule(constraint::schedulable_fn auto&& fn) const {
-    schedule(m_strategy.now(), std::forward<decltype(fn)>(fn));
+  worker(const worker&) = default;
+  worker(worker&&) noexcept = default;
+
+  template <rpp::schedulers::constraint::schedulable_handler Handler,
+            typename... Args, constraint::schedulable_fn<Handler, Args...> Fn>
+  void schedule(Fn&& fn, Handler&& handler, Args&&... args) const {
+    schedule(duration{}, std::forward<Fn>(fn), std::forward<Handler>(handler),
+             std::forward<Args>(args)...);
   }
 
-  void schedule(duration delay, constraint::schedulable_fn auto&& fn) const {
-    schedule(m_strategy.now() + delay, std::forward<decltype(fn)>(fn));
+  template <rpp::schedulers::constraint::schedulable_handler Handler,
+            typename... Args, constraint::schedulable_fn<Handler, Args...> Fn>
+  void schedule(const duration delay, Fn&& fn, Handler&& handler,
+                Args&&... args) const {
+    if constexpr (constraint::defer_for_strategy<Strategy>)
+      m_strategy.defer_for(delay, std::forward<Fn>(fn),
+                           std::forward<Handler>(handler),
+                           std::forward<Args>(args)...);
+    else
+      schedule(now() + delay, std::forward<Fn>(fn),
+               std::forward<Handler>(handler), std::forward<Args>(args)...);
   }
 
-  void schedule(time_point time_point,
-                constraint::schedulable_fn auto&& fn) const {
-    m_strategy.defer_at(time_point, std::forward<decltype(fn)>(fn));
+  template <rpp::schedulers::constraint::schedulable_handler Handler,
+            typename... Args, constraint::schedulable_fn<Handler, Args...> Fn>
+  void schedule(const time_point tp, Fn&& fn, Handler&& handler,
+                Args&&... args) const {
+    if constexpr (constraint::defer_to_strategy<Strategy>)
+      m_strategy.defer_to(tp, std::forward<Fn>(fn),
+                          std::forward<Handler>(handler),
+                          std::forward<Args>(args)...);
+    else
+      schedule(tp - now(), std::forward<Fn>(fn), std::forward<Handler>(handler),
+               std::forward<Args>(args)...);
   }
 
-  static time_point now() { return Strategy::now(); }
+  rpp::disposable_wrapper get_disposable() const {
+    if constexpr (is_none_disposable)
+      return disposable_wrapper::empty();
+    else
+      return m_strategy.get_disposable();
+  }
+
+  static rpp::schedulers::time_point now() { return Strategy::now(); }
+
+  static constexpr bool is_none_disposable =
+      std::same_as<decltype(std::declval<Strategy>().get_disposable()),
+                   rpp::schedulers::details::none_disposable>;
 
  private:
-  Strategy m_strategy;
+  RPP_NO_UNIQUE_ADDRESS Strategy m_strategy;
 };
 }  // namespace rpp::schedulers

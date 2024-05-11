@@ -1,6 +1,6 @@
 //                  ReactivePlusPlus library
 //
-//          Copyright Aleksey Loginov 2022 - present.
+//          Copyright Aleksey Loginov 2023 - present.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -10,56 +10,103 @@
 
 #pragma once
 
-#include <optional>
-#include <rpp/defs.hpp>  // RPP_NO_UNIQUE_ADDRESS
-#include <rpp/operators/details/subscriber_with_state.hpp>  // create_subscriber_with_dynamic_state
-#include <rpp/operators/fwd/distinct_until_changed.hpp>  // own forwarding
-#include <rpp/operators/lift.hpp>  // required due to operator uses lift
-#include <rpp/subscribers/constraints.hpp>  // constraint::subscriber_of_type
-#include <rpp/utils/functors.hpp>  // forwarding_on_error/forwarding_on_completed
-#include <rpp/utils/utilities.hpp>  // as_const
+#include <rpp/defs.hpp>
+#include <rpp/operators/details/strategy.hpp>
+#include <rpp/operators/fwd.hpp>
+#include <type_traits>
 
-IMPLEMENTATION_FILE(distinct_until_changed_tag);
+namespace rpp::operators::details {
+template <rpp::constraint::decayed_type Type,
+          rpp::constraint::observer TObserver,
+          rpp::constraint::decayed_type EqualityFn>
+struct distinct_until_changed_observer_strategy {
+  using preferred_disposable_strategy =
+      rpp::details::observers::none_disposable_strategy;
 
-namespace rpp::details {
-template <constraint::decayed_type Type,
-          std::equivalence_relation<Type, Type> EqualityFn>
-struct distinct_until_changed_state {
-  RPP_NO_UNIQUE_ADDRESS EqualityFn equality_comparator;
+  RPP_NO_UNIQUE_ADDRESS TObserver observer;
+  RPP_NO_UNIQUE_ADDRESS EqualityFn comparator;
   mutable std::optional<Type> last_value{};
-};
 
-struct distinct_until_changed_on_next {
-  template <constraint::decayed_type Type,
-            std::equivalence_relation<Type, Type> EqualityFn>
-  void operator()(
-      auto&& new_value, const constraint::subscriber auto& sub,
-      const distinct_until_changed_state<Type, EqualityFn>& state) const {
-    if (state.last_value.has_value() &&
-        state.equality_comparator(utils::as_const(state.last_value.value()),
-                                  utils::as_const(new_value)))
+  template <typename T>
+  void on_next(T&& v) const {
+    if (last_value.has_value() &&
+        comparator(utils::as_const(last_value.value()),
+                   rpp::utils::as_const(v)))
       return;
 
-    state.last_value.emplace(new_value);
-    sub.on_next(std::forward<decltype(new_value)>(new_value));
+    last_value.emplace(std::forward<T>(v));
+    observer.on_next(utils::as_const(last_value.value()));
   }
+
+  void on_error(const std::exception_ptr& err) const { observer.on_error(err); }
+
+  void on_completed() const { observer.on_completed(); }
+
+  void set_upstream(const disposable_wrapper& d) { observer.set_upstream(d); }
+
+  bool is_disposed() const { return observer.is_disposed(); }
 };
 
-template <constraint::decayed_type Type,
-          std::equivalence_relation<Type, Type> EqualityFn>
-struct distinct_until_changed_impl {
-  RPP_NO_UNIQUE_ADDRESS EqualityFn equality_comparator;
+template <rpp::constraint::decayed_type EqualityFn>
+struct distinct_until_changed_t
+    : public operators::details::lift_operator<
+          distinct_until_changed_t<EqualityFn>, EqualityFn> {
+  using operators::details::lift_operator<distinct_until_changed_t<EqualityFn>,
+                                          EqualityFn>::lift_operator;
 
-  template <constraint::subscriber_of_type<Type> TSub>
-  auto operator()(TSub&& subscriber) const {
-    auto subscription = subscriber.get_subscription();
-    // dynamic_state there to make shared_ptr for observer instead of making
-    // shared_ptr for state
-    return create_subscriber_with_dynamic_state<Type>(
-        std::move(subscription), distinct_until_changed_on_next{},
-        utils::forwarding_on_error{}, utils::forwarding_on_completed{},
-        std::forward<TSub>(subscriber),
-        distinct_until_changed_state<Type, EqualityFn>{equality_comparator});
-  }
+  template <rpp::constraint::decayed_type T>
+  struct operator_traits {
+    static_assert(rpp::constraint::invocable_r_v<bool, EqualityFn, T, T>,
+                  "EqualityFn is not invocable with T and T returning bool");
+
+    using result_type = T;
+
+    template <rpp::constraint::observer_of_type<result_type> TObserver>
+    using observer_strategy =
+        distinct_until_changed_observer_strategy<T, TObserver, EqualityFn>;
+  };
+
+  template <rpp::details::observables::constraint::disposable_strategy Prev>
+  using updated_disposable_strategy = Prev;
 };
-}  // namespace rpp::details
+}  // namespace rpp::operators::details
+
+namespace rpp::operators {
+/**
+ * @brief Suppress consecutive duplicates of emissions from original observable
+ *
+ * @marble distinct_until_changed
+ {
+     source observable       : +--1-1-2-2-3-2-1-|
+     operator "distinct_until_changed" : +--1---2---3-2-1-|
+ }
+ *
+ * @details Actually this operator has `std::optional` with last item and checks
+ everytime where new emission is same or not.
+ *
+ * @par Performance notes:
+ * - No any heap allocations at all
+ * - std::optional to keep last value
+ * - passing last and emitted value to predicate
+ *
+ * @param equality_fn optional equality comparator function
+ * @warning #include <rpp/operators/distinct_until_changed.hpp>
+ *
+ * @par Example
+ * @snippet distinct_until_changed.cpp distinct_until_changed
+ * @snippet distinct_until_changed.cpp distinct_until_changed_with_comparator
+ *
+ * @ingroup filtering_operators
+ * @see https://reactivex.io/documentation/operators/distinct.html
+ */
+template <typename EqualityFn>
+  requires(
+      !utils::is_not_template_callable<EqualityFn> ||
+      std::same_as<
+          bool, std::invoke_result_t<EqualityFn, rpp::utils::convertible_to_any,
+                                     rpp::utils::convertible_to_any>>)
+auto distinct_until_changed(EqualityFn&& equality_fn) {
+  return details::distinct_until_changed_t<std::decay_t<EqualityFn>>{
+      std::forward<EqualityFn>(equality_fn)};
+}
+}  // namespace rpp::operators

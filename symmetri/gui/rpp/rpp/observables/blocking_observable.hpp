@@ -1,6 +1,6 @@
 //                   ReactivePlusPlus library
 //
-//           Copyright Aleksey Loginov 2022 - present.
+//           Copyright Aleksey Loginov 2023 - present.
 //  Distributed under the Boost Software License, Version 1.0.
 //     (See accompanying file LICENSE_1_0.txt or copy at
 //           https://www.boost.org/LICENSE_1_0.txt)
@@ -9,67 +9,81 @@
 
 #pragma once
 
-#include <future>
-#include <rpp/defs.hpp>                     // RPP_EMPTY_BASES
-#include <rpp/observables/constraints.hpp>  // OriginalObservable type
-#include <rpp/observables/details/member_overload.hpp>  // overload operators
-#include <rpp/observers/state_observer.hpp>             // wrap subscribers
-#include <rpp/operators/details/subscriber_with_state.hpp>  // create_subscriber_with_state
-#include <rpp/operators/fwd.hpp>  // forwarding of member_overaloads
-#include <rpp/subscribers/specific_subscriber.hpp>  // create subscriber
+#include <condition_variable>
+#include <mutex>
+#include <rpp/defs.hpp>
+#include <rpp/observables/fwd.hpp>
+#include <rpp/operators/details/strategy.hpp>
 
-namespace rpp {
-/**
- * \brief blocking alternative of observable: provides interface where each
- * function do blocking subscribe on original observable (waits till
- * on_completed and provides value) \tparam Type type of values emitted by this
- * observable \tparam OriginalObservable original observable wrapped by this
- * observable \ingroup observables
- */
-template <constraint::decayed_type Type,
-          constraint::observable_of_type<Type> OriginalObservable>
-class RPP_EMPTY_BASES blocking_observable final
-    : public details::member_overload<
-          Type, blocking_observable<Type, OriginalObservable>,
-          details::subscribe_tag> {
+namespace rpp::details::observables {
+class blocking_disposble final : public base_disposable {
  public:
-  blocking_observable(const OriginalObservable& original)
-      : m_original{original} {}
+  void wait() {
+    std::unique_lock lock{m_mutex};
+    m_cv.wait(lock, [this] { return m_completed; });
+  }
 
-  blocking_observable(OriginalObservable&& original)
-      : m_original{std::move(original)} {}
-
-  friend struct details::member_overload<
-      Type, blocking_observable<Type, OriginalObservable>,
-      details::subscribe_tag>;
-
- private:
-  template <constraint::subscriber_of_type<Type> TSub>
-  void subscribe_impl(TSub&& subscriber) const noexcept {
-    if (!subscriber.is_subscribed()) return;
-
-    std::promise<bool> is_success{};
-    const auto future = is_success.get_future();
-    auto sub = subscriber.get_subscription();
-    m_original.subscribe(create_subscriber_with_state<Type>(
-        std::move(sub), utils::forwarding_on_next{},
-        [&](const std::exception_ptr& err, const auto& sub) {
-          sub.on_error(err);
-          is_success.set_value(false);
-        },
-        [&](const auto& sub) {
-          sub.on_completed();
-          is_success.set_value(true);
-        },
-        std::forward<TSub>(subscriber)));
-    future.wait();
+  void base_dispose_impl(interface_disposable::Mode) noexcept override {
+    {
+      std::lock_guard lock{m_mutex};
+      m_completed = true;
+    }
+    m_cv.notify_all();
   }
 
  private:
-  OriginalObservable m_original;
+  std::mutex m_mutex{};
+  std::condition_variable m_cv{};
+  bool m_completed{};
 };
 
-template <constraint::observable TObs>
-blocking_observable(const TObs&)
-    -> blocking_observable<rpp::utils::extract_observable_type_t<TObs>, TObs>;
+template <rpp::constraint::decayed_type Type,
+          rpp::constraint::observable_strategy<Type> Strategy>
+class blocking_strategy {
+ public:
+  using value_type = Type;
+  using expected_disposable_strategy =
+      typename rpp::details::observables::deduce_disposable_strategy_t<
+          Strategy>::template add<1>;
+
+  blocking_strategy(observable<Type, Strategy>&& observable)
+      : m_original{std::move(observable)} {}
+
+  blocking_strategy(const observable<Type, Strategy>& observable)
+      : m_original{observable} {}
+
+  template <rpp::constraint::observer_strategy<Type> ObserverStrategy>
+  void subscribe(observer<Type, ObserverStrategy>&& obs) const {
+    auto d = disposable_wrapper_impl<blocking_disposble>::make();
+    obs.set_upstream(d);
+    m_original.subscribe(std::move(obs));
+
+    if (!d.is_disposed())
+      if (const auto locked = d.lock()) locked->wait();
+  }
+
+ private:
+  RPP_NO_UNIQUE_ADDRESS observable<Type, Strategy> m_original;
+};
+}  // namespace rpp::details::observables
+
+namespace rpp {
+/**
+ * @brief Extension over rpp::observable with set of blocking operators - it
+ * waits till completion of underlying observable
+ *
+ * @par Example:
+ * @snippet as_blocking.cpp as_blocking
+ *
+ * @ingroup observables
+ */
+template <constraint::decayed_type Type,
+          constraint::observable_strategy<Type> Strategy>
+class blocking_observable
+    : public observable<
+          Type, details::observables::blocking_strategy<Type, Strategy>> {
+ public:
+  using observable<Type, details::observables::blocking_strategy<
+                             Type, Strategy>>::observable;
+};
 }  // namespace rpp

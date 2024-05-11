@@ -1,7 +1,6 @@
 //                  ReactivePlusPlus library
 //
-//          Copyright Aleksey Loginov 2022 - present.
-//                            TC Wang 2022 - present.
+//          Copyright Aleksey Loginov 2023 - present.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -11,44 +10,81 @@
 
 #pragma once
 
-#include <rpp/operators/details/subscriber_with_state.hpp>  // create_subscriber_with_state
-#include <rpp/operators/fwd/first.hpp>                      // own forwarding
-#include <rpp/operators/lift.hpp>  // required due to operator uses lift
-#include <rpp/operators/take.hpp>  // take_state
-#include <rpp/subscribers/constraints.hpp>  // constraint::subscriber
-#include <rpp/utils/exceptions.hpp>         // not_enough_emissions
-#include <rpp/utils/functors.hpp>           // forwarding_on_error
+#include <rpp/defs.hpp>
+#include <rpp/operators/details/strategy.hpp>
+#include <rpp/operators/fwd.hpp>
 
-IMPLEMENTATION_FILE(first_tag);
+namespace rpp::operators::details {
+template <rpp::constraint::observer TObserver>
+struct first_observer_strategy {
+  using preferred_disposable_strategy =
+      rpp::details::observers::none_disposable_strategy;
 
-namespace rpp::details {
-struct first_state : take_state {
-  first_state() : take_state{1} {}
-};
+  RPP_NO_UNIQUE_ADDRESS TObserver observer;
 
-using first_on_next = take_on_next;
+  template <typename T>
+  void on_next(T&& v) const {
+    observer.on_next(std::forward<T>(v));
+    observer.on_completed();
+  }
 
-struct first_on_completed {
-  void operator()(const constraint::subscriber auto& subscriber,
-                  const first_state&) const {
-    subscriber.on_error(std::make_exception_ptr(utils::not_enough_emissions{
+  void on_completed() const {
+    observer.on_error(std::make_exception_ptr(utils::not_enough_emissions{
         "first() operator expects at least one emission from observable before "
         "completion"}));
   }
+
+  void on_error(const std::exception_ptr& err) const { observer.on_error(err); }
+
+  void set_upstream(const disposable_wrapper& d) { observer.set_upstream(d); }
+
+  bool is_disposed() const { return observer.is_disposed(); }
 };
 
-template <constraint::decayed_type Type>
-struct first_impl {
- public:
-  template <constraint::subscriber_of_type<Type> TSub>
-  auto operator()(TSub&& subscriber) const {
-    auto subscription = subscriber.get_subscription();
+struct first_t : lift_operator<first_t> {
+  using lift_operator<first_t>::lift_operator;
 
-    // dynamic_state there to make shared_ptr for observer instead of making
-    // shared_ptr for state
-    return create_subscriber_with_dynamic_state<Type>(
-        std::move(subscription), first_on_next{}, utils::forwarding_on_error{},
-        first_on_completed{}, std::forward<TSub>(subscriber), first_state{});
-  }
+  template <rpp::constraint::decayed_type T>
+  struct operator_traits {
+    using result_type = T;
+
+    template <rpp::constraint::observer_of_type<result_type> TObserver>
+    using observer_strategy = first_observer_strategy<TObserver>;
+  };
+
+  template <rpp::details::observables::constraint::disposable_strategy Prev>
+  using updated_disposable_strategy = Prev;
 };
-}  // namespace rpp::details
+}  // namespace rpp::operators::details
+
+namespace rpp::operators {
+/**
+ * @brief Emit only the first item.
+ *
+ * @marble first
+     {
+         source observable   : +--1--2--3--|
+         operator "first"    : +--1|
+     }
+ *
+ * @details Actually this operator is `take(1)` with exception during
+ `on_completed` if no any emision happens. So, it just forwards first obtained
+ emission and emits on_completed immediately
+ * @throws rpp::utils::not_enough_emissions in case of on_completed obtained
+ without any emissions
+ *
+ * @par Performance notes:
+ * - No any heap allocations
+ * - No any copies/moves just forwarding of emission
+ *
+ * @warning #include <rpp/operators/first.hpp>
+ *
+ * @par Example:
+ * @snippet first.cpp first
+ * @snippet first.cpp first_empty
+ *
+ * @ingroup filtering_operators
+ * @see https://reactivex.io/documentation/operators/first.html
+ */
+inline auto first() { return details::first_t{}; }
+}  // namespace rpp::operators

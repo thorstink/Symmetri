@@ -1,6 +1,6 @@
 //                  ReactivePlusPlus library
 //
-//          Copyright Aleksey Loginov 2022 - present.
+//          Copyright Aleksey Loginov 2023 - present.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -11,18 +11,84 @@
 #pragma once
 
 #include <rpp/observables/connectable_observable.hpp>
-#include <rpp/observables/constraints.hpp>
-#include <rpp/operators/fwd/multicast.hpp>
+#include <rpp/operators/fwd.hpp>
 
-IMPLEMENTATION_FILE(multicast_tag);
+namespace rpp::operators::details {
+template <rpp::constraint::subject Subject>
+struct multicast_t {
+  RPP_NO_UNIQUE_ADDRESS Subject m_subject;
 
-namespace rpp::details {
-template <constraint::decayed_type Type,
-          constraint::observable_of_type<Type> TObs,
-          subjects::constraint::subject_of_type<Type> TSubject>
-auto multicast_impl(TObs&& observable, TSubject&& subject) {
-  return connectable_observable<Type, std::decay_t<TSubject>,
-                                std::decay_t<TObs>>{
-      std::forward<TObs>(observable), std::forward<TSubject>(subject)};
+  template <rpp::constraint::observable TObservable>
+    requires std::same_as<rpp::utils::extract_observable_type_t<TObservable>,
+                          rpp::subjects::utils::extract_subject_type_t<Subject>>
+  auto operator()(TObservable&& observable) const {
+    return rpp::connectable_observable<std::decay_t<TObservable>, Subject>{
+        std::forward<TObservable>(observable), m_subject};
+  }
+};
+
+template <template <typename> typename Subject>
+struct template_multicast_t {
+  template <rpp::constraint::observable TObservable>
+    requires rpp::constraint::subject<
+        Subject<rpp::utils::extract_observable_type_t<TObservable>>>
+  auto operator()(TObservable&& observable) const {
+    return rpp::connectable_observable<
+        std::decay_t<TObservable>,
+        Subject<rpp::utils::extract_observable_type_t<TObservable>>>{
+        std::forward<TObservable>(observable),
+        Subject<rpp::utils::extract_observable_type_t<TObservable>>{}};
+  }
+};
+
+}  // namespace rpp::operators::details
+
+namespace rpp::operators {
+/**
+ * @brief Converts ordinary observable to rpp::connectable_observable with help
+ * of provided subject
+ * @details Connectable observable is common observable, but actually it starts
+ * emissions of items only after call "connect", "ref_count" or any other
+ * available way. Also it uses subject to multicast values to subscribers
+ * @warning Same subject would be used to all observables lifted via this
+ * operator. To have fresh subject everytime use another overloading
+ *
+ * @param subject is subject used to create rpp::connectable_observable
+ * @warning #include <rpp/operators/multicast.hpp>
+ *
+ * @par Example
+ * @snippet multicast.cpp multicast
+ *
+ * @ingroup connectable_operators
+ * @see https://reactivex.io/documentation/operators/publish.html
+ */
+template <rpp::constraint::subject Subject>
+auto multicast(Subject&& subject) {
+  return details::multicast_t<std::decay_t<Subject>>{
+      std::forward<Subject>(subject)};
 }
-}  // namespace rpp::details
+
+/**
+ * @brief Converts ordinary observable to rpp::connectable_observable with help
+ * of inline instsantiated subject of provided type
+ * @details Connectable observable is common observable, but actually it starts
+ * emissions of items only after call "connect", "ref_count" or any other
+ * available way. Also it uses subject to multicast values to subscribers
+ * @warning This overloading creates fresh `Subject<Type>` everytime new
+ * observable passed to this operator
+ *
+ * @tparam Subject is template teamplate typename over Subject to be created to
+ * create corresponding connectable_observable for provided observable
+ * @warning #include <rpp/operators/multicast.hpp>
+ *
+ * @par Example
+ * @snippet multicast.cpp multicast_template
+ *
+ * @ingroup connectable_operators
+ * @see https://reactivex.io/documentation/operators/publish.html
+ */
+template <template <typename> typename Subject>
+auto multicast() {
+  return details::template_multicast_t<Subject>{};
+}
+}  // namespace rpp::operators

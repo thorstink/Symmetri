@@ -9,72 +9,101 @@
 
 #pragma once
 
-#include <rpp/subjects/details/base_subject.hpp>
+#include <rpp/disposables/disposable_wrapper.hpp>
+#include <rpp/observers/observer.hpp>
+#include <rpp/subjects/details/subject_on_subscribe.hpp>
 #include <rpp/subjects/details/subject_state.hpp>
 #include <rpp/subjects/fwd.hpp>
-#include <rpp/subscribers/dynamic_subscriber.hpp>
-#include <rpp/utils/constraints.hpp>
 
 namespace rpp::subjects::details {
-template <rpp::constraint::decayed_type T>
-class publish_strategy {
+template <rpp::constraint::decayed_type Type, bool Serialized>
+class publish_subject_base {
+  struct observer_strategy {
+    using preferred_disposable_strategy =
+        rpp::details::observers::none_disposable_strategy;
+
+    std::shared_ptr<details::subject_state<Type, Serialized>> state{};
+
+    void set_upstream(const disposable_wrapper& d) const noexcept {
+      state->add(d);
+    }
+
+    bool is_disposed() const noexcept { return state->is_disposed(); }
+
+    void on_next(const Type& v) const { state->on_next(v); }
+
+    void on_error(const std::exception_ptr& err) const { state->on_error(err); }
+
+    void on_completed() const { state->on_completed(); }
+  };
+
  public:
-  template <rpp::constraint::decayed_same_as<composite_subscription> TSub>
-  publish_strategy(TSub&& sub) : m_sub{std::forward<TSub>(sub)} {
-    m_sub.add([state = std::weak_ptr{m_state}] {
-      if (const auto locked = state.lock()) locked->on_unsubscribe();
-    });
+  using expected_disposable_strategy =
+      rpp::details::observables::deduce_disposable_strategy_t<
+          details::subject_state<Type, Serialized>>;
+
+  publish_subject_base() = default;
+
+  auto get_observer() const {
+    return rpp::observer<Type, observer_strategy>{m_state.lock()};
   }
 
-  void on_subscribe(const dynamic_subscriber<T>& sub) const {
-    m_state->on_subscribe(sub);
+  auto get_observable() const {
+    return create_subject_on_subscribe_observable<Type,
+                                                  expected_disposable_strategy>(
+        [state = m_state]<rpp::constraint::observer_of_type<Type> TObs>(
+            TObs&& observer) {
+          state.lock()->on_subscribe(std::forward<TObs>(observer));
+        });
   }
 
-  auto get_subscriber() const {
-    return rpp::make_specific_subscriber<T>(
-        m_sub, [state = m_state](const T& v) { state->on_next(v); },
-        [state = m_state](const std::exception_ptr& err) {
-          state->on_error(err);
-        },
-        [state = m_state]() { state->on_completed(); });
-  }
+  rpp::disposable_wrapper get_disposable() const { return m_state; }
 
  private:
-  std::shared_ptr<subject_state<T>> m_state =
-      std::make_shared<subject_state<T>>();
-  composite_subscription m_sub{};
+  disposable_wrapper_impl<details::subject_state<Type, Serialized>> m_state =
+      disposable_wrapper_impl<subject_state<Type, Serialized>>::make();
 };
 }  // namespace rpp::subjects::details
-
 namespace rpp::subjects {
 /**
- * \brief Subject which just multicasts values to observers subscribed on it. It
- * contains two parts: subscriber and observable at the same time.
+ * @brief Subject which just multicasts values to observers subscribed on it. It
+ * contains two parts: observer and observable at the same time.
  *
- * \details Each subscriber obtains only values which emitted after
- * corresponding subscribe. on_error/on_completer/unsubscribe cached and
- * provided to new subscribers if any
+ * @details Each observer obtains only values which emitted after corresponding
+ * subscribe. on_error/on_completer/unsubscribe cached and provided to new
+ * observers if any
  *
- * \warning this subject is not synchronized/serialized! It means, that expected
- * to call callbacks of subscriber in the serialized way to follow observable
+ * @warning this subject is not synchronized/serialized! It means, that expected
+ * to call callbacks of observer in the serialized way to follow observable
  * contract: "Observables must issue notifications to observers serially (not in
  * parallel).". If you are not sure or need extra serialization, please, use
- * serialized_subject.
+ * serialized_publish_subject.
  *
- * \tparam T value provided by this subject
+ * @tparam Type value provided by this subject
  *
- * \ingroup subjects
- * \see https://reactivex.io/documentation/subject.html
+ * @ingroup subjects
+ * @see https://reactivex.io/documentation/subject.html
  */
-template <rpp::constraint::decayed_type T>
+template <rpp::constraint::decayed_type Type>
 class publish_subject final
-    : public details::base_subject<T, details::publish_strategy<T>> {
+    : public details::publish_subject_base<Type, false> {
  public:
-  publish_subject(const composite_subscription& sub)
-      : details::base_subject<T, details::publish_strategy<T>>{sub} {}
+  using details::publish_subject_base<Type, false>::publish_subject_base;
+};
 
-  publish_subject(composite_subscription&& sub = composite_subscription{})
-      : details::base_subject<T, details::publish_strategy<T>>{std::move(sub)} {
-  }
+/**
+ * @brief Serialized version of rpp::subjects::publish_subject
+ * @details When you are using ordinary rpp::subjects::publish_subject, then you
+ * must take care not to call its on_next method (or its other on methods) in
+ * async way.
+ *
+ * @ingroup subjects
+ * @see https://reactivex.io/documentation/subject.html
+ */
+template <rpp::constraint::decayed_type Type>
+class serialized_publish_subject final
+    : public details::publish_subject_base<Type, true> {
+ public:
+  using details::publish_subject_base<Type, true>::publish_subject_base;
 };
 }  // namespace rpp::subjects

@@ -1,7 +1,6 @@
 //                  ReactivePlusPlus library
 //
-//          Copyright Aleksey Loginov 2022 - present.
-//                    TC Wang 2022 - present.
+//          Copyright Aleksey Loginov 2023 - present.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -11,76 +10,94 @@
 
 #pragma once
 
-#include <algorithm>
-#include <rpp/operators/details/subscriber_with_state.hpp>  // create_subscriber_with_dynamic_state
-#include <rpp/operators/fwd/buffer.hpp>                     // own forwarding
-#include <rpp/operators/lift.hpp>  // required due to operator uses lift
-#include <rpp/subscribers/constraints.hpp>  // subscriber_of_type
-#include <rpp/utils/functors.hpp>           // forwarding_on_error
+#include <cstddef>
+#include <rpp/defs.hpp>
+#include <rpp/operators/details/strategy.hpp>
+#include <rpp/operators/fwd.hpp>
 
-IMPLEMENTATION_FILE(buffer_tag);
+namespace rpp::operators::details {
+template <rpp::constraint::observer TObserver>
+class buffer_observer_strategy {
+  using container = rpp::utils::extract_observer_type_t<TObserver>;
+  using value_type = typename container::value_type;
+  static_assert(std::same_as<container, std::vector<value_type>>);
 
-namespace rpp::details {
-/// A non-copyable class that provides a copyable on_next for the subscriber and
-/// allows copies of on_next(s) to share the same states.
-template <constraint::decayed_type UpstreamType>
-struct buffer_state {
-  /// \param count Number of items being bundled. Note when count == 0, we'll
-  /// treat the behavior like when count == 1.
-  explicit buffer_state(size_t count) : max(std::max(size_t{1}, count)) {
-    clear_and_reserve_buckets();
+ public:
+  using preferred_disposable_strategy =
+      rpp::details::observers::none_disposable_strategy;
+
+  buffer_observer_strategy(TObserver&& observer, size_t count)
+      : m_observer{std::move(observer)} {
+    m_bucket.reserve(std::max(size_t{1}, count));
   }
 
-  buffer_state(const buffer_state& other) = delete;
-  buffer_state(buffer_state&&) noexcept = default;
-  buffer_state& operator=(const buffer_state&) = delete;
-  buffer_state& operator=(buffer_state&&) noexcept = default;
-
-  void clear_and_reserve_buckets() const {
-    buckets.clear();
-    buckets.reserve(max);
-  }
-
-  const size_t max;
-  mutable buffer_bundle_type<UpstreamType> buckets;
-};
-
-struct buffer_on_next {
-  template <constraint::decayed_type UpstreamType>
-  void operator()(auto&& value, const auto& subscriber,
-                  const buffer_state<UpstreamType>& state) const {
-    state.buckets.push_back(std::forward<decltype(value)>(value));
-    if (state.buckets.size() == state.max) {
-      subscriber.on_next(std::move(state.buckets));
-      state.clear_and_reserve_buckets();
+  template <typename T>
+  void on_next(T&& v) const {
+    m_bucket.push_back(std::forward<T>(v));
+    if (m_bucket.size() == m_bucket.capacity()) {
+      m_observer.on_next(std::move(m_bucket));
+      m_bucket.clear();
     }
   }
-};
 
-struct buffer_on_completed {
-  template <constraint::decayed_type UpstreamType>
-  void operator()(const auto& subscriber,
-                  const buffer_state<UpstreamType>& state) const {
-    if (!state.buckets.empty()) subscriber.on_next(std::move(state.buckets));
-    subscriber.on_completed();
+  void on_error(const std::exception_ptr& err) const {
+    m_observer.on_error(err);
   }
-};
 
-template <constraint::decayed_type Type>
-struct buffer_impl {
-  const size_t count;
-
-  template <constraint::subscriber_of_type<buffer_bundle_type<Type>> TSub>
-  auto operator()(TSub&& subscriber) const {
-    auto subscription = subscriber.get_subscription();
-
-    // dynamic_state there to make shared_ptr for observer instead of making
-    // shared_ptr for state
-    return create_subscriber_with_dynamic_state<Type>(
-        std::move(subscription), buffer_on_next{}, utils::forwarding_on_error{},
-        buffer_on_completed{}, std::forward<TSub>(subscriber),
-        buffer_state<Type>{count});
+  void on_completed() const {
+    if (!m_bucket.empty()) m_observer.on_next(std::move(m_bucket));
+    m_observer.on_completed();
   }
+
+  void set_upstream(const disposable_wrapper& d) { m_observer.set_upstream(d); }
+
+  bool is_disposed() const { return m_observer.is_disposed(); }
+
+ private:
+  RPP_NO_UNIQUE_ADDRESS TObserver m_observer;
+  mutable std::vector<value_type> m_bucket;
 };
 
-}  // namespace rpp::details
+struct buffer_t : lift_operator<buffer_t, size_t> {
+  using lift_operator<buffer_t, size_t>::lift_operator;
+
+  template <rpp::constraint::decayed_type T>
+  struct operator_traits {
+    using result_type = std::vector<T>;
+
+    template <rpp::constraint::observer_of_type<result_type> TObserver>
+    using observer_strategy = buffer_observer_strategy<TObserver>;
+  };
+
+  template <rpp::details::observables::constraint::disposable_strategy Prev>
+  using updated_disposable_strategy = Prev;
+};
+}  // namespace rpp::operators::details
+
+namespace rpp::operators {
+/**
+ * @brief Periodically gather emissions emitted by an original Observable into
+ bundles and emit these bundles rather than emitting
+ * the items one at a time
+ *
+ * @marble buffer
+     {
+         source observable    : +-1-2-3-|
+         operator "buffer(2)" : +---{1,2}-{3}-|
+     }
+ *
+ * @details The resulting bundle is `std::vector<Type>` of requested size.
+ Actually it is similar to `window()` operator, but it emits vectors instead of
+ observables.
+ *
+ * @param count number of items being bundled.
+ * @warning #include <rpp/operators/buffer.hpp>
+ *
+ * @par Example:
+ * @snippet buffer.cpp buffer
+ *
+ * @ingroup transforming_operators
+ * @see https://reactivex.io/documentation/operators/buffer.html
+ */
+inline auto buffer(size_t count) { return details::buffer_t{count}; }
+}  // namespace rpp::operators

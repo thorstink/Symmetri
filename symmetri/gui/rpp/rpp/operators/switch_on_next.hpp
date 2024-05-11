@@ -1,6 +1,6 @@
 //                  ReactivePlusPlus library
 //
-//          Copyright Aleksey Loginov 2022 - present.
+//          Copyright Aleksey Loginov 2023 - present.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -10,98 +10,143 @@
 
 #pragma once
 
-#include <atomic>
-#include <memory>
-#include <rpp/operators/fwd/switch_on_next.hpp>
-#include <rpp/operators/lift.hpp>  // required due to operator uses lift
-#include <rpp/operators/merge.hpp>
-#include <rpp/subscribers/constraints.hpp>
-#include <rpp/utils/functors.hpp>
-#include <rpp/utils/spinlock.hpp>
+#include <rpp/defs.hpp>
+#include <rpp/disposables/refcount_disposable.hpp>
+#include <rpp/operators/details/strategy.hpp>
+#include <rpp/operators/fwd.hpp>
+#include <rpp/utils/utils.hpp>
 
-IMPLEMENTATION_FILE(switch_on_next_tag);
+namespace rpp::operators::details {
+template <rpp::constraint::observer TObserver>
+class switch_on_next_state_t final : public refcount_disposable {
+ public:
+  template <rpp::constraint::decayed_same_as<TObserver> TObs>
+    requires(!rpp::constraint::decayed_same_as<
+             TObs, switch_on_next_state_t<TObserver>>)
+  switch_on_next_state_t(TObs&& obs)
+      : m_observer_with_mutex{std::forward<TObs>(obs)} {}
 
-namespace rpp::details {
-struct switch_on_next_state : public merge_state {
-  using merge_state::merge_state;
+  switch_on_next_state_t(const switch_on_next_state_t&) = delete;
+  switch_on_next_state_t(switch_on_next_state_t&&) noexcept = delete;
 
-  composite_subscription current_inner_observable =
-      rpp::composite_subscription::empty();
-};
-
-struct switch_on_next_on_completed_inner {
-  void operator()(const constraint::subscriber auto& sub,
-                  const std::shared_ptr<switch_on_next_state>& state) const {
-    // 1 because decrement happens in composite_subscription_callback
-    if (state->count_of_on_completed_needed.load(std::memory_order::acquire) ==
-        1)
-      sub.on_completed();
+  rpp::utils::pointer_under_lock<TObserver> get_observer() {
+    return m_observer_with_mutex;
   }
+
+ private:
+  rpp::utils::value_with_mutex<TObserver> m_observer_with_mutex{};
 };
 
-using switch_on_next_on_next_inner = merge_forwarding_on_next;
-using switch_on_next_on_error = merge_on_error;
+template <rpp::constraint::observer TObserver>
+class switch_on_next_inner_observer_strategy {
+ public:
+  using preferred_disposable_strategy =
+      rpp::details::observers::none_disposable_strategy;
 
-struct switch_on_next_on_next {
-  template <constraint::observable TObs>
-  void operator()(const TObs& new_observable,
-                  const constraint::subscriber auto& sub,
-                  const std::shared_ptr<switch_on_next_state>& state) const {
-    using ValueType = utils::extract_observable_type_t<TObs>;
+  switch_on_next_inner_observer_strategy(
+      const std::shared_ptr<switch_on_next_state_t<TObserver>>& state,
+      const composite_disposable_wrapper& refcounted)
+      : m_state{state}, m_refcounted{refcounted} {}
 
-    state->current_inner_observable.unsubscribe();
-    state->current_inner_observable =
-        state->children_subscriptions.make_child();
-    state->current_inner_observable.add([state = std::weak_ptr{state}] {
-      if (const auto locked = state.lock())
-        locked->count_of_on_completed_needed.fetch_sub(
-            1, std::memory_order::relaxed);
-    });
-
-    state->count_of_on_completed_needed.fetch_add(1,
-                                                  std::memory_order::relaxed);
-
-    new_observable.subscribe(create_subscriber_with_state<ValueType>(
-        state->current_inner_observable, switch_on_next_on_next_inner{},
-        switch_on_next_on_error{}, switch_on_next_on_completed_inner{}, sub,
-        state));
+  template <typename T>
+  void on_next(T&& v) const {
+    m_state->get_observer()->on_next(std::forward<T>(v));
   }
-};
 
-using switch_on_next_on_completed_outer = merge_on_completed;
-
-struct switch_on_next_state_with_serialized_spinlock : switch_on_next_state {
-  using switch_on_next_state::switch_on_next_state;
-
-  // we can use spinlock there because 99.9% of time only one ever thread would
-  // send values from on_next (only one active observable), but we have small
-  // probability to get error from main observable immediately
-  utils::spinlock spinlock{};
-};
-
-template <constraint::decayed_type Type>
-struct switch_on_next_impl {
-  using ValueType = utils::extract_observable_type_t<Type>;
-
-  template <constraint::subscriber_of_type<ValueType> TSub>
-  auto operator()(TSub&& in_subscriber) const {
-    auto state =
-        std::make_shared<switch_on_next_state_with_serialized_spinlock>(
-            in_subscriber.get_subscription());
-
-    // change subscriber to serialized to avoid manual using of mutex
-    auto subscriber = make_serialized_subscriber(
-        std::forward<TSub>(in_subscriber),
-        std::shared_ptr<utils::spinlock>{state, &state->spinlock});
-
-    state->count_of_on_completed_needed.fetch_add(1,
-                                                  std::memory_order::relaxed);
-
-    auto subscription = state->children_subscriptions.make_child();
-    return create_subscriber_with_state<Type>(
-        std::move(subscription), switch_on_next_on_next{},
-        switch_on_next_on_error{}, switch_on_next_on_completed_outer{},
-        std::move(subscriber), std::move(state));
+  void on_error(const std::exception_ptr& err) const {
+    m_state->get_observer()->on_error(err);
+    m_state->dispose();
   }
+
+  void on_completed() const {
+    m_refcounted.dispose();
+    if (m_state->is_disposed()) m_state->get_observer()->on_completed();
+  }
+
+  void set_upstream(const disposable_wrapper& d) const { m_refcounted.add(d); }
+
+  bool is_disposed() const { return m_refcounted.is_disposed(); }
+
+ private:
+  std::shared_ptr<switch_on_next_state_t<TObserver>> m_state;
+  rpp::composite_disposable_wrapper m_refcounted;
 };
-}  // namespace rpp::details
+
+template <rpp::constraint::observer TObserver>
+class switch_on_next_observer_strategy {
+ public:
+  using preferred_disposable_strategy =
+      rpp::details::observers::none_disposable_strategy;
+
+  switch_on_next_observer_strategy(TObserver&& obs)
+      : m_state{init_state(std::move(obs))} {}
+
+  switch_on_next_observer_strategy(const switch_on_next_observer_strategy&) =
+      delete;
+  switch_on_next_observer_strategy(
+      switch_on_next_observer_strategy&&) noexcept = default;
+
+  template <typename T>
+  void on_next(T&& v) const {
+    m_last_refcount.dispose();
+    m_last_refcount = m_state->add_ref();
+    std::forward<T>(v).subscribe(
+        switch_on_next_inner_observer_strategy<TObserver>{m_state,
+                                                          m_last_refcount});
+  }
+
+  void on_error(const std::exception_ptr& err) const {
+    m_state->get_observer()->on_error(err);
+    m_state->dispose();
+  }
+
+  void on_completed() const {
+    m_this_refcount.dispose();
+    if (m_state->is_disposed()) m_state->get_observer()->on_completed();
+  }
+
+  void set_upstream(const disposable_wrapper& d) const {
+    m_this_refcount.add(d);
+  }
+  bool is_disposed() const { return m_this_refcount.is_disposed(); }
+
+ private:
+  static std::shared_ptr<switch_on_next_state_t<TObserver>> init_state(
+      TObserver&& observer) {
+    const auto d =
+        disposable_wrapper_impl<switch_on_next_state_t<TObserver>>::make(
+            std::move(observer));
+    auto ptr = d.lock();
+    ptr->get_observer()->set_upstream(d.as_weak());
+    return ptr;
+  }
+
+ private:
+  std::shared_ptr<switch_on_next_state_t<TObserver>> m_state;
+  rpp::composite_disposable_wrapper m_this_refcount = m_state->add_ref();
+  mutable rpp::composite_disposable_wrapper m_last_refcount =
+      composite_disposable_wrapper::empty();
+};
+
+struct switch_on_next_t : lift_operator<switch_on_next_t> {
+  using lift_operator<switch_on_next_t>::lift_operator;
+
+  template <rpp::constraint::decayed_type T>
+  struct operator_traits {
+    static_assert(rpp::constraint::observable<T>, "T is not observable");
+
+    using result_type = rpp::utils::extract_observable_type_t<T>;
+
+    template <rpp::constraint::observer_of_type<result_type> TObserver>
+    using observer_strategy = switch_on_next_observer_strategy<TObserver>;
+  };
+
+  template <rpp::details::observables::constraint::disposable_strategy Prev>
+  using updated_disposable_strategy =
+      rpp::details::observables::fixed_disposable_strategy_selector<1>;
+};
+}  // namespace rpp::operators::details
+
+namespace rpp::operators {
+inline auto switch_on_next() { return details::switch_on_next_t{}; }
+}  // namespace rpp::operators

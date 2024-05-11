@@ -1,6 +1,6 @@
 //                  ReactivePlusPlus library
 //
-//          Copyright Aleksey Loginov 2022 - present.
+//          Copyright Aleksey Loginov 2023 - present.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -10,172 +10,177 @@
 
 #pragma once
 
-#include <rpp/defs.hpp>  // RPP_NO_UNIQUE_ADDRESS
-#include <rpp/observables/constraints.hpp>
-#include <rpp/operators/details/subscriber_with_state.hpp>  // create_subscriber_with_state
-#include <rpp/operators/fwd/reduce.hpp>                     // own forwarding
-#include <rpp/operators/lift.hpp>  // required due to operator uses lift
-#include <rpp/subscribers/constraints.hpp>  // constraint::subscriber
-#include <rpp/utils/functors.hpp>           // forwarding_on_error
-#include <rpp/utils/utilities.hpp>          // utils::as_const
+#include <rpp/defs.hpp>
+#include <rpp/operators/details/strategy.hpp>
+#include <rpp/operators/fwd.hpp>
 
-IMPLEMENTATION_FILE(reduce_tag);
+namespace rpp::operators::details {
+template <rpp::constraint::observer TObserver,
+          rpp::constraint::decayed_type Accumulator>
+struct reduce_observer_strategy {
+  using preferred_disposable_strategy =
+      rpp::details::observers::none_disposable_strategy;
+  using Seed = rpp::utils::extract_observer_type_t<TObserver>;
 
-namespace rpp::details {
-template <constraint::decayed_type Seed, typename AccumulatorFn,
-          std::invocable<Seed&&> SelectorFn = std::identity>
-struct reduce_state {
-  mutable Seed seed;
-  RPP_NO_UNIQUE_ADDRESS AccumulatorFn accumulator;
-  RPP_NO_UNIQUE_ADDRESS SelectorFn selector{};
-};
+  RPP_NO_UNIQUE_ADDRESS TObserver observer;
+  RPP_NO_UNIQUE_ADDRESS mutable Seed seed;
+  RPP_NO_UNIQUE_ADDRESS Accumulator accumulator;
 
-struct reduce_on_next {
-  template <constraint::decayed_type Result, typename AccumulatorFn,
-            typename SelectorFn>
-  void operator()(
-      auto&& value, const constraint::subscriber auto&,
-      const reduce_state<Result, AccumulatorFn, SelectorFn>& state) const {
-    state.seed = state.accumulator(std::move(state.seed),
-                                   std::forward<decltype(value)>(value));
+  template <typename T>
+  void on_next(T&& v) const {
+    seed = accumulator(std::move(seed), std::forward<T>(v));
   }
-};
 
-struct reduce_on_completed {
-  template <constraint::decayed_type Result, typename AccumulatorFn,
-            typename SelectorFn>
-  void operator()(
-      const constraint::subscriber auto& sub,
-      const reduce_state<Result, AccumulatorFn, SelectorFn>& state) const {
-    try {
-      sub.on_next(state.selector(std::move(state.seed)));
-    } catch (...) {
-      sub.on_error(std::current_exception());
-      return;
-    }
-    sub.on_completed();
+  void on_error(const std::exception_ptr& err) const { observer.on_error(err); }
+
+  void on_completed() const {
+    observer.on_next(std::move(seed));
+    observer.on_completed();
   }
+
+  void set_upstream(const disposable_wrapper& d) { observer.set_upstream(d); }
+
+  bool is_disposed() const { return observer.is_disposed(); }
 };
 
-template <constraint::decayed_type Type, constraint::decayed_type Seed,
-          reduce_accumulator<Seed, Type> AccumulatorFn,
-          std::invocable<Seed&&> ResultSelectorFn>
-struct reduce_impl {
-  Seed initial_value;
-  RPP_NO_UNIQUE_ADDRESS AccumulatorFn accumulator;
-  RPP_NO_UNIQUE_ADDRESS ResultSelectorFn selector;
+template <rpp::constraint::decayed_type Seed,
+          rpp::constraint::decayed_type Accumulator>
+struct reduce_t
+    : lift_operator<reduce_t<Seed, Accumulator>, Seed, Accumulator> {
+  using operators::details::lift_operator<reduce_t<Seed, Accumulator>, Seed,
+                                          Accumulator>::lift_operator;
 
-  template <constraint::subscriber_of_type<
-      utils::decayed_invoke_result_t<ResultSelectorFn, Seed>>
-                TSub>
-  auto operator()(TSub&& subscriber) const {
-    auto subscription = subscriber.get_subscription();
-    // dynamic_state there to make shared_ptr for observer instead of making
-    // shared_ptr for state
-    return create_subscriber_with_dynamic_state<Type>(
-        std::move(subscription), reduce_on_next{}, utils::forwarding_on_error{},
-        reduce_on_completed{}, std::forward<TSub>(subscriber),
-        reduce_state<Seed, AccumulatorFn, ResultSelectorFn>{
-            initial_value, accumulator, selector});
+  template <rpp::constraint::decayed_type T>
+  struct operator_traits {
+    static_assert(
+        std::is_invocable_r_v<Seed, Accumulator, Seed&&, T>,
+        "Accumulator is not invocable with Seed&& abnd T returning Seed");
+
+    using result_type = Seed;
+
+    template <rpp::constraint::observer_of_type<result_type> TObserver>
+    using observer_strategy = reduce_observer_strategy<TObserver, Accumulator>;
+  };
+
+  template <rpp::details::observables::constraint::disposable_strategy Prev>
+  using updated_disposable_strategy = Prev;
+};
+
+template <rpp::constraint::observer TObserver,
+          rpp::constraint::decayed_type Accumulator>
+struct reduce_no_seed_observer_strategy {
+  using preferred_disposable_strategy =
+      rpp::details::observers::none_disposable_strategy;
+  using Seed = rpp::utils::extract_observer_type_t<TObserver>;
+
+  RPP_NO_UNIQUE_ADDRESS TObserver observer;
+  RPP_NO_UNIQUE_ADDRESS Accumulator accumulator;
+  mutable std::optional<Seed> seed{};
+
+  template <typename T>
+  void on_next(T&& v) const {
+    if (seed.has_value())
+      seed = accumulator(std::move(seed).value(), std::forward<T>(v));
+    else
+      seed = std::forward<T>(v);
   }
+
+  void on_error(const std::exception_ptr& err) const { observer.on_error(err); }
+
+  void on_completed() const {
+    observer.on_next(std::move(seed).value());
+    observer.on_completed();
+  }
+
+  void set_upstream(const disposable_wrapper& d) { observer.set_upstream(d); }
+
+  bool is_disposed() const { return observer.is_disposed(); }
 };
 
-template <constraint::decayed_type CastBeforeDivide,
-          constraint::observable TObs>
-auto average_impl(TObs&& observable) {
-  using Type = utils::extract_observable_type_t<std::decay_t<TObs>>;
-  using Pair = std::pair<std::optional<Type>, int32_t>;
-  return std::forward<TObs>(observable)
-      .reduce(
-          Pair{},
-          [](Pair&& seed, auto&& val) {
-            if (seed.first)
-              seed.first.value() += std::forward<decltype(val)>(val);
-            else
-              seed.first = std::forward<decltype(val)>(val);
-            ++seed.second;
-            return std::move(seed);
-          },
-          [](Pair&& seed) {
-            if (!seed.first)
-              throw utils::not_enough_emissions{
-                  "`average` operator requires at least one emission to "
-                  "calculate average"};
+template <rpp::constraint::decayed_type Accumulator>
+struct reduce_no_seed_t
+    : lift_operator<reduce_no_seed_t<Accumulator>, Accumulator> {
+  using lift_operator<reduce_no_seed_t<Accumulator>,
+                      Accumulator>::lift_operator;
 
-            return static_cast<CastBeforeDivide>(
-                       std::move(seed.first).value()) /
-                   seed.second;
-          });
+  template <rpp::constraint::decayed_type T>
+  struct operator_traits {
+    static_assert(std::is_invocable_r_v<T, Accumulator, T&&, T>,
+                  "Accumulator is not invocable with T&& abnd T returning T");
+
+    using result_type = T;
+
+    template <rpp::constraint::observer_of_type<result_type> TObserver>
+    using observer_strategy =
+        reduce_no_seed_observer_strategy<TObserver, Accumulator>;
+  };
+
+  template <rpp::details::observables::constraint::disposable_strategy Prev>
+  using updated_disposable_strategy = Prev;
+};
+}  // namespace rpp::operators::details
+
+namespace rpp::operators {
+/**
+ * @brief Apply a function to each item emitted by an Observable, sequentially,
+ and emit the final value
+ *
+ * @marble reduce
+ {
+     source observable                : +--1-2-3--|
+     operator "reduce: s=10, (s,x)=>s+x" : +------16|
+ }
+ *
+ * @param initial_value initial value for seed
+ * @param accumulator function which accepts seed value and new value from
+ observable and return new value of seed. Can accept seed by move-reference.
+ *
+ * @warning #include <rpp/operators/reduce.hpp>
+ *
+ * @par Example
+ * @snippet reduce.cpp reduce
+ *
+ * @ingroup aggregate_operators
+ * @see https://reactivex.io/documentation/operators/reduce.html
+ */
+template <typename Seed, typename Accumulator>
+  requires(!utils::is_not_template_callable<Accumulator> ||
+           std::same_as<std::decay_t<Seed>,
+                        std::invoke_result_t<Accumulator, std::decay_t<Seed> &&,
+                                             rpp::utils::convertible_to_any>>)
+auto reduce(Seed&& seed, Accumulator&& accumulator) {
+  return details::reduce_t<std::decay_t<Seed>, std::decay_t<Accumulator>>{
+      std::forward<Seed>(seed), std::forward<Accumulator>(accumulator)};
 }
 
-template <constraint::observable TObs>
-auto sum_impl(TObs&& observable) {
-  using Type = utils::extract_observable_type_t<std::decay_t<TObs>>;
-  return std::forward<TObs>(observable)
-      .reduce(
-          std::optional<Type>{},
-          [](std::optional<Type>&& seed, auto&& val) {
-            if (!seed)
-              seed = std::forward<decltype(val)>(val);
-            else
-              seed.value() += std::forward<decltype(val)>(val);
-            return std::move(seed);
-          },
-          [](std::optional<Type>&& seed) {
-            if (!seed)
-              throw utils::not_enough_emissions{
-                  "`sum` operator requires at least one emission to calculate "
-                  "sum"};
-
-            return std::move(seed.value());
-          });
+/**
+ * @brief Apply a function to each item emitted by an Observable, sequentially,
+ and emit the final value
+ *
+ * @marble reduce
+ {
+     source observable                : +--1-2-3-|
+     operator "reduce: (s,x)=>s+x"      : +-------6|
+ }
+ *
+ * @details There is no initial value for seed, so, first value would be used as
+ seed value and forwarded as is.
+ *
+ * @param initial_value initial value for seed
+ * @param accumulator function which accepts seed value and new value from
+ observable and return new value of seed. Can accept seed by move-reference.
+ *
+ * @warning #include <rpp/operators/reduce.hpp>
+ *
+ * @par Example
+ * @snippet reduce.cpp reduce_no_seed
+ *
+ * @ingroup aggregate_operators
+ * @see https://reactivex.io/documentation/operators/reduce.html
+ */
+template <typename Accumulator>
+auto reduce(Accumulator&& accumulator) {
+  return details::reduce_no_seed_t<std::decay_t<Accumulator>>{
+      std::forward<Accumulator>(accumulator)};
 }
-
-template <constraint::observable TObs>
-auto count_impl(TObs&& observable) {
-  return std::forward<TObs>(observable)
-      .reduce(size_t{}, [](size_t seed, auto&&) { return ++seed; });
-}
-
-template <constraint::observable TObs, typename Comparator>
-auto min_impl(TObs&& observable, Comparator&& comparator) {
-  using Type = utils::extract_observable_type_t<std::decay_t<TObs>>;
-  return std::forward<TObs>(observable)
-      .reduce(
-          std::optional<Type>{},
-          [comparator](std::optional<Type>&& seed, auto&& val) {
-            if (!seed || comparator(utils::as_const(val), seed.value()))
-              seed = std::forward<decltype(val)>(val);
-            return std::move(seed);
-          },
-          [](std::optional<Type>&& seed) {
-            if (!seed)
-              throw utils::not_enough_emissions{
-                  "`min` operator requires at least one emission to calculate "
-                  "min"};
-
-            return std::move(seed.value());
-          });
-}
-
-template <constraint::observable TObs, typename Comparator>
-auto max_impl(TObs&& observable, Comparator&& comparator) {
-  using Type = utils::extract_observable_type_t<std::decay_t<TObs>>;
-  return std::forward<TObs>(observable)
-      .reduce(
-          std::optional<Type>{},
-          [comparator](std::optional<Type>&& seed, auto&& val) {
-            if (!seed || comparator(seed.value(), utils::as_const(val)))
-              seed = std::forward<decltype(val)>(val);
-            return std::move(seed);
-          },
-          [](std::optional<Type>&& seed) {
-            if (!seed)
-              throw utils::not_enough_emissions{
-                  "`max` operator requires at least one emission to calculate "
-                  "min"};
-
-            return std::move(seed.value());
-          });
-}
-}  // namespace rpp::details
+}  // namespace rpp::operators

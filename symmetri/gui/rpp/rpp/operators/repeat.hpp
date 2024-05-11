@@ -1,6 +1,6 @@
 //                  ReactivePlusPlus library
 //
-//          Copyright Aleksey Loginov 2022 - present.
+//          Copyright Aleksey Loginov 2023 - present.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -10,109 +10,81 @@
 
 #pragma once
 
-#include <rpp/defs.hpp>  // RPP_NO_UNIQUE_ADDRESS
-#include <rpp/operators/details/subscriber_with_state.hpp>  // create_subscriber_with_state
-#include <rpp/operators/fwd/repeat.hpp>                     // own forwarding
-#include <rpp/operators/lift.hpp>  // required due to operator uses lift
-#include <rpp/sources/create.hpp>  // create observable
-#include <rpp/subscribers/constraints.hpp>  // constraint::subscriber
-#include <rpp/utils/functors.hpp>           // forwarding_on_next
+#include <cstddef>
+#include <rpp/operators/fwd.hpp>
+#include <rpp/sources/concat.hpp>
+#include <rpp/utils/utils.hpp>
 
-IMPLEMENTATION_FILE(repeat_tag);
+namespace rpp::operators::details {
+struct repeat_t {
+  size_t count;
 
-namespace rpp::details {
-template <constraint::decayed_type Type, typename SpecificObservable,
-          typename Predicate>
-class repeat_on_completed {
-  struct state_t {
-    state_t(const SpecificObservable& observable, Predicate&& predicate)
-        : observable{observable}, predicate{std::move(predicate)} {}
-
-    RPP_NO_UNIQUE_ADDRESS SpecificObservable observable;
-    RPP_NO_UNIQUE_ADDRESS Predicate predicate;
-  };
-
- public:
-  repeat_on_completed(const SpecificObservable& observable,
-                      Predicate&& predicate)
-      : m_state{std::make_shared<state_t>(observable, std::move(predicate))} {}
-
-  void operator()(const auto& sub) const {
-    if (sub.is_subscribed()) {
-      if (m_state->predicate())
-        subscribe_subscriber_for_repeat(sub);
-      else
-        sub.on_completed();
-    }
+  template <rpp::constraint::observable TObservable>
+  auto operator()(TObservable&& observable) const {
+    return rpp::source::concat(utils::repeated_container{
+        std::forward<TObservable>(observable), count});
   }
-
- private:
-  void subscribe_subscriber_for_repeat(
-      const constraint::subscriber auto& subscriber) const {
-    m_state->observable.subscribe(create_subscriber_with_state<Type>(
-        subscriber.get_subscription().make_child(), utils::forwarding_on_next{},
-        utils::forwarding_on_error{}, *this, subscriber));
-  }
-
-  std::shared_ptr<state_t> m_state;
 };
 
-struct counted_repeat_predicate {
-  counted_repeat_predicate(size_t count) : m_count{count} {}
-
-  bool operator()() { return m_count && m_count--; }
-
- private:
-  size_t m_count{};
-};
-
-template <constraint::decayed_type Type,
-          constraint::observable_of_type<Type> TObs, typename CreatePredicateFn>
-struct repeat_on_subscribe {
-  repeat_on_subscribe(TObs&& observable, CreatePredicateFn&& create_predicate)
-      : m_observable{std::move(observable)},
-        m_create_predicate{std::move(create_predicate)} {}
-
-  repeat_on_subscribe(const TObs& observable,
-                      CreatePredicateFn&& create_predicate)
-      : m_observable{observable},
-        m_create_predicate{std::move(create_predicate)} {}
-
-  template <constraint::subscriber_of_type<Type> TSub>
-  void operator()(const TSub& subscriber) const {
-    repeat_on_completed<Type, std::decay_t<TObs>,
-                        std::invoke_result_t<CreatePredicateFn>>{
-        m_observable, m_create_predicate()}(subscriber);
+struct infinite_repeat_t {
+  template <rpp::constraint::observable TObservable>
+  auto operator()(TObservable&& observable) const {
+    return rpp::source::concat(utils::infinite_repeated_container{
+        std::forward<TObservable>(observable)});
   }
-
- private:
-  RPP_NO_UNIQUE_ADDRESS TObs m_observable;
-  RPP_NO_UNIQUE_ADDRESS CreatePredicateFn m_create_predicate;
 };
+}  // namespace rpp::operators::details
 
-template <constraint::decayed_type Type,
-          constraint::observable_of_type<Type> TObs, typename CreatePredicateFn>
-auto create_repeat_on_subscribe(TObs&& observable,
-                                CreatePredicateFn&& create_predicate) {
-  return source::create<Type>(
-      repeat_on_subscribe<Type, std::decay_t<TObs>,
-                          std::decay_t<CreatePredicateFn>>(
-          std::forward<TObs>(observable),
-          std::forward<CreatePredicateFn>(create_predicate)));
-}
+namespace rpp::operators {
+/**
+ * @brief Repeats the Observabe's sequence of emissions `count` times via
+ re-subscribing on it during `on_completed` call while `count` not reached.
+ *
+ * @marble repeat
+     {
+         source observable    : +-1-2-3-|
+         operator "repeat(2)" : +-1-2-3-1-2-3-|
+     }
+ *
+ * @details Actually this operator is kind of `concat(obs, obs...)` where obs
+ repeated `count` times
+ *
+ * @param count total amount of times subscription happens. For example:
+ *  - `repeat(0)`  - means no any subscription at all
+ *  - `repeat(1)`  - behave like ordinal observable
+ *  - `repeat(10)` - 1 normal subscription and 9 re-subscriptions during
+ `on_completed`
+ *
+ * @warning #include <rpp/operators/repeat.hpp>
+ *
+ * @par Examples:
+ * @snippet repeat.cpp repeat
+ *
+ * @ingroup utility_operators
+ * @see https://reactivex.io/documentation/operators/repeat.html
+ */
 
-template <constraint::decayed_type Type,
-          constraint::observable_of_type<Type> TObs>
-auto repeat_impl(TObs&& observable, size_t count) {
-  return create_repeat_on_subscribe<Type>(
-      std::forward<TObs>(observable),
-      [count] { return counted_repeat_predicate{count}; });
-}
+inline auto repeat(size_t count) { return details::repeat_t{count}; }
 
-template <constraint::decayed_type Type,
-          constraint::observable_of_type<Type> TObs>
-auto repeat_impl(TObs&& observable) {
-  return create_repeat_on_subscribe<Type>(std::forward<TObs>(observable),
-                                          [] { return [] { return true; }; });
-}
-}  // namespace rpp::details
+/**
+ * @brief Repeats the Observabe's sequence of emissions infinite amount of times
+ via re-subscribing on it during `on_completed`.
+ *
+ * @marble repeat_infinitely
+     {
+         source observable : +-1-2-3-|
+         operator "repeat" : +-1-2-3-1-2-3-1-2-3>
+     }
+ *
+ * @details Actually this operator is kind of `concat(obs, obs...)`
+ *
+ * @warning #include <rpp/operators/repeat.hpp>
+ *
+ * @par Examples:
+ * @snippet repeat.cpp repeat_infinitely
+ *
+ * @ingroup utility_operators
+ * @see https://reactivex.io/documentation/operators/repeat.html
+ */
+inline auto repeat() { return details::infinite_repeat_t{}; }
+}  // namespace rpp::operators

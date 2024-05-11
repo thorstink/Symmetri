@@ -1,158 +1,133 @@
-//                  ReactivePlusPlus library
+//                   ReactivePlusPlus library
 //
-//          Copyright Aleksey Loginov 2022 - present.
-// Distributed under the Boost Software License, Version 1.0.
-//    (See accompanying file LICENSE_1_0.txt or copy at
-//          https://www.boost.org/LICENSE_1_0.txt)
+//           Copyright Aleksey Loginov 2023 - present.
+//  Distributed under the Boost Software License, Version 1.0.
+//     (See accompanying file LICENSE_1_0.txt or copy at
+//           https://www.boost.org/LICENSE_1_0.txt)
 //
-// Project home: https://github.com/victimsnino/ReactivePlusPlus
-//
+//  Project home: https://github.com/victimsnino/ReactivePlusPlus
 
 #pragma once
 
 #include <memory>
-#include <rpp/defs.hpp>
-#include <rpp/observers/constraints.hpp>     // wrapping constructor
-#include <rpp/observers/state_observer.hpp>  // base
-#include <rpp/utils/function_traits.hpp>     // extract function args
-#include <rpp/utils/functors.hpp>            // default arguments
+#include <rpp/disposables/fwd.hpp>
+#include <rpp/observers/fwd.hpp>
+#include <rpp/observers/observer.hpp>
+#include <utility>
 
-namespace rpp::details {
-template <constraint::decayed_type T>
-struct dynamic_observer_state_base {
-  virtual ~dynamic_observer_state_base() = default;
+namespace rpp::details::observers {
+template <auto Fn, bool NoExcept>
+struct member_ptr_caller_impl;
 
-  virtual void on_next(const T& v) const = 0;
-  virtual void on_next(T&& v) const = 0;
-  virtual void on_error(const std::exception_ptr& err) const = 0;
-  virtual void on_completed() const = 0;
+template <bool NoExcept, class T, class R, class... Args,
+          R (T::*F)(Args...) noexcept(NoExcept)>
+struct member_ptr_caller_impl<F, NoExcept> {
+  static R call(void* data, Args... args) noexcept(NoExcept) {
+    return (static_cast<T*>(data)->*F)(static_cast<Args>(args)...);
+  }
 };
 
-template <constraint::decayed_type T, constraint::observer_of_type<T> TObserver>
-class dynamic_observer_state final : public dynamic_observer_state_base<T> {
- public:
-  template <typename... Args>
-    requires std::constructible_from<TObserver, Args...>
-  dynamic_observer_state(Args&&... args)
-      : m_observer{std::forward<Args>(args)...} {}
-
-  void on_next(const T& v) const override { m_observer.on_next(v); }
-  void on_next(T&& v) const override { m_observer.on_next(std::move(v)); }
-  void on_error(const std::exception_ptr& err) const override {
-    m_observer.on_error(err);
+template <bool NoExcept, class T, class R, class... Args,
+          R (T::*F)(Args...) const noexcept(NoExcept)>
+struct member_ptr_caller_impl<F, NoExcept> {
+  static R call(const void* data, Args... args) noexcept(NoExcept) {
+    return (static_cast<const T*>(data)->*F)(static_cast<Args>(args)...);
   }
-  void on_completed() const override { m_observer.on_completed(); }
+};
+
+template <auto Fn>
+using member_ptr_caller = member_ptr_caller_impl<Fn, noexcept(Fn)>;
+
+template <rpp::constraint::decayed_type Type>
+class dynamic_strategy final {
+ public:
+  template <rpp::constraint::observer_strategy<Type> Strategy>
+    requires(!rpp::constraint::decayed_same_as<Strategy,
+                                               dynamic_strategy<Type>>)
+  explicit dynamic_strategy(observer<Type, Strategy>&& obs)
+      : m_forwarder{std::make_shared<observer<Type, Strategy>>(std::move(obs))},
+        m_vtable{vtable::template create<observer<Type, Strategy>>()} {}
+
+  void set_upstream(const disposable_wrapper& d) noexcept {
+    m_vtable->set_upstream(m_forwarder.get(), d);
+  }
+
+  bool is_disposed() const noexcept {
+    return m_vtable->is_disposed(m_forwarder.get());
+  }
+
+  void on_next(const Type& v) const noexcept {
+    m_vtable->on_next_lvalue(m_forwarder.get(), v);
+  }
+
+  void on_next(Type&& v) const noexcept {
+    m_vtable->on_next_rvalue(m_forwarder.get(), std::move(v));
+  }
+
+  void on_error(const std::exception_ptr& err) const noexcept {
+    m_vtable->on_error(m_forwarder.get(), err);
+  }
+
+  void on_completed() const noexcept {
+    m_vtable->on_completed(m_forwarder.get());
+  }
 
  private:
-  RPP_NO_UNIQUE_ADDRESS TObserver m_observer;
+  struct vtable {
+    void (*on_next_lvalue)(const void*, const Type&){};
+    void (*on_next_rvalue)(const void*, Type&&){};
+    void (*on_error)(const void*, const std::exception_ptr&){};
+    void (*on_completed)(const void*){};
+
+    void (*set_upstream)(void*, const disposable_wrapper&){};
+    bool (*is_disposed)(const void*){};
+
+    template <rpp::constraint::observer Strategy>
+    static const vtable* create() noexcept {
+      static vtable s_res{
+          .on_next_lvalue =
+              &member_ptr_caller<static_cast<typename Strategy::on_next_lvalue>(
+                  &Strategy::on_next)>::call,
+          .on_next_rvalue =
+              &member_ptr_caller<static_cast<typename Strategy::on_next_rvalue>(
+                  &Strategy::on_next)>::call,
+          .on_error = &member_ptr_caller<&Strategy::on_error>::call,
+          .on_completed = &member_ptr_caller<&Strategy::on_completed>::call,
+          .set_upstream = &member_ptr_caller<&Strategy::set_upstream>::call,
+          .is_disposed = &member_ptr_caller<&Strategy::is_disposed>::call,
+      };
+      return &s_res;
+    }
+  };
+
+ private:
+  std::shared_ptr<void> m_forwarder;
+  const vtable* m_vtable;
 };
-
-template <constraint::decayed_type T, constraint::observer_of_type<T> TObserver,
-          typename... Args>
-std::shared_ptr<dynamic_observer_state_base<T>> make_dynamic_observer_state(
-    Args&&... args)
-  requires std::constructible_from<std::decay_t<TObserver>, Args...>
-{
-  return std::make_shared<dynamic_observer_state<T, std::decay_t<TObserver>>>(
-      std::forward<Args>(args)...);
-}
-
-template <constraint::decayed_type T, typename... Args>
-std::shared_ptr<dynamic_observer_state_base<T>>
-make_dynamic_observer_state_from_fns(Args&&... args) {
-  return make_dynamic_observer_state<
-      T, details::state_observer<T, std::decay_t<Args>...>>(
-      std::forward<Args>(args)...);
-}
-
-template <constraint::decayed_type T, constraint::decayed_type... States>
-class dynamic_state_observer
-    : public state_observer<T, utils::forwarding_on_next_for_pointer,
-                            utils::forwarding_on_error_for_pointer,
-                            utils::forwarding_on_completed_for_pointer,
-                            std::shared_ptr<dynamic_observer_state_base<T>>> {
-  using base = state_observer<T, utils::forwarding_on_next_for_pointer,
-                              utils::forwarding_on_error_for_pointer,
-                              utils::forwarding_on_completed_for_pointer,
-                              std::shared_ptr<dynamic_observer_state_base<T>>>;
-
- public:
-  template <typename... TStates>
-    requires(constraint::decayed_same_as<States, TStates> && ...)
-  dynamic_state_observer(
-      std::invocable<T, States...> auto&& on_next,
-      std::invocable<std::exception_ptr, States...> auto&& on_error,
-      std::invocable<States...> auto&& on_completed, TStates&&... states)
-      : base{utils::forwarding_on_next_for_pointer{},
-             utils::forwarding_on_error_for_pointer{},
-             utils::forwarding_on_completed_for_pointer{},
-             make_dynamic_observer_state_from_fns<T>(
-                 std::forward<decltype(on_next)>(on_next),
-                 std::forward<decltype(on_error)>(on_error),
-                 std::forward<decltype(on_completed)>(on_completed),
-                 std::forward<TStates>(states)...)} {}
-
-  dynamic_state_observer(
-      std::shared_ptr<details::dynamic_observer_state_base<T>> state)
-      : base{utils::forwarding_on_next_for_pointer{},
-             utils::forwarding_on_error_for_pointer{},
-             utils::forwarding_on_completed_for_pointer{}, std::move(state)} {}
-
-  template <constraint::observer_of_type<T> TObserver>
-    requires(!std::is_same_v<std::decay_t<TObserver>,
-                             dynamic_state_observer<T, States...>>)
-  dynamic_state_observer(TObserver&& obs)
-      : dynamic_state_observer{
-            details::make_dynamic_observer_state<T, std::decay_t<TObserver>>(
-                std::forward<TObserver>(obs))} {}
-};
-}  // namespace rpp::details
+}  // namespace rpp::details::observers
 
 namespace rpp {
 /**
- * \brief Dynamic (type-erased) version of observer (comparing to
- * specific_observer) \details It uses type-erasure mechanism to hide types of
- * OnNext, OnError and OnCompleted callbacks. But it has higher cost in the
- * terms of performance due to usage of heap. Use it only when you need to store
- * observer as member variable or make copy of original subscriber. In other
- * cases prefer using "auto" to avoid converting to dynamic_observer \tparam T
- * is type of value handled by this observer \ingroup observers
+ * @brief Type-erased version of the `rpp::observer`. Any observer can be
+ * converted to dynamic_observer via `rpp::observer::as_dynamic` member
+ * function.
+ * @details To provide type-erasure it uses `std::shared_ptr`. As a result it
+ * has worse performance, but it is **ONLY** way to copy observer.
+ *
+ * @tparam Type of value this observer can handle
+ *
+ * @ingroup observers
  */
-template <constraint::decayed_type T>
-class dynamic_observer final : public details::dynamic_state_observer<T> {
+template <constraint::decayed_type Type>
+class dynamic_observer final
+    : public observer<Type, details::observers::dynamic_strategy<Type>> {
+  using base = observer<Type, details::observers::dynamic_strategy<Type>>;
+
  public:
-  template <constraint::on_next_fn<T> OnNext = utils::empty_function_t<T>,
-            constraint::on_error_fn OnError = utils::rethrow_error_t,
-            constraint::on_completed_fn OnCompleted = utils::empty_function_t<>>
-  dynamic_observer(OnNext&& on_next = {}, OnError&& on_error = {},
-                   OnCompleted&& on_completed = {})
-      : details::dynamic_state_observer<T>{
-            std::forward<OnNext>(on_next), std::forward<OnError>(on_error),
-            std::forward<OnCompleted>(on_completed)} {}
+  using base::base;
 
-  dynamic_observer(constraint::on_next_fn<T> auto&& on_next,
-                   constraint::on_completed_fn auto&& on_completed)
-      : details::dynamic_state_observer<T>{
-            std::forward<decltype(on_next)>(on_next), utils::rethrow_error_t{},
-            std::forward<decltype(on_completed)>(on_completed)} {}
+  dynamic_observer(base&& b) : base{std::move(b)} {}
 
-  template <constraint::observer_of_type<T> TObserver>
-    requires(!std::is_same_v<std::decay_t<TObserver>, dynamic_observer<T>>)
-  dynamic_observer(TObserver&& obs)
-      : details::dynamic_state_observer<T>{std::forward<TObserver>(obs)} {}
-
-  /**
-   * \brief Do nothing for rpp::dynamic_observer. Created only for unification
-   * of interfaces with rpp::specific_observer
-   */
-  const dynamic_observer<T>& as_dynamic() const { return *this; }
+  dynamic_observer(const base& b) : base{b} {}
 };
-
-template <constraint::observer TObserver>
-dynamic_observer(TObserver)
-    -> dynamic_observer<utils::extract_observer_type_t<TObserver>>;
-
-template <typename OnNext, typename... Args>
-dynamic_observer(OnNext, Args...)
-    -> dynamic_observer<utils::decayed_function_argument_t<OnNext>>;
 }  // namespace rpp

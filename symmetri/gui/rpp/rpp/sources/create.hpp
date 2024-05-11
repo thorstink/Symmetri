@@ -1,81 +1,104 @@
-//                  ReactivePlusPlus library
+//                   ReactivePlusPlus library
 //
-//          Copyright Aleksey Loginov 2022 - present.
-// Distributed under the Boost Software License, Version 1.0.
-//    (See accompanying file LICENSE_1_0.txt or copy at
-//          https://www.boost.org/LICENSE_1_0.txt)
+//           Copyright Aleksey Loginov 2023 - present.
+//  Distributed under the Boost Software License, Version 1.0.
+//     (See accompanying file LICENSE_1_0.txt or copy at
+//           https://www.boost.org/LICENSE_1_0.txt)
 //
-// Project home: https://github.com/victimsnino/ReactivePlusPlus
-//
+//  Project home: https://github.com/victimsnino/ReactivePlusPlus
 
 #pragma once
 
-#include <rpp/observables/specific_observable.hpp>
+#include <rpp/observables/observable.hpp>
 #include <rpp/sources/fwd.hpp>
-#include <type_traits>
 
-IMPLEMENTATION_FILE(create_tag);
+namespace rpp::details {
+template <constraint::decayed_type Type,
+          constraint::on_subscribe<Type> OnSubscribe>
+struct create_strategy {
+  using value_type = Type;
+  using expected_disposable_strategy =
+      rpp::details::observables::deduce_disposable_strategy_t<OnSubscribe>;
 
-namespace rpp::observable {
+  RPP_NO_UNIQUE_ADDRESS OnSubscribe subscribe;
+};
+}  // namespace rpp::details
+
+namespace rpp {
+template <constraint::decayed_type Type,
+          constraint::on_subscribe<Type> OnSubscribe>
+using create_observable =
+    observable<Type, details::create_strategy<Type, OnSubscribe>>;
+}  // namespace rpp
+
+namespace rpp::source {
 /**
- * \brief Creates rpp::specific_observable with passed action as OnSubscribe
+ * @brief Construct observable specialized with passed callback function. Most
+ easiesest way to construct observable "on the fly" via lambda and etc.
  *
- * \marble create
+ * @marble create
    {
        operator "create:  on_next(1), on_next(3), on_completed()": +--1--3--|
    }
  *
- * \tparam Type manually specified type of value provided by this observable
- * \param on_subscribe is action called after subscription on this observable
- * \return rpp::specific_observable with passed action
+ * @warning Be sure, that your callback doesn't violates observable rules:
+ * 1) observable must to emit emissions in serial way
+ * 2) observable must not to call any callbacks after termination events -
+ on_error/on_completed
+ * @warning Keep in mind, obtained observer is non-copyable, but movable by
+ default. So, prefer perfect-forwarding. In case of you need to copy observer,
+ cast it it dynamic_observer via passing it as argument type or via as_dynamic()
+ member function
  *
- * \par Examples:
- * \snippet create.cpp create
- * \snippet create.cpp create with capture
- * \snippet create.cpp create type deduction
+ * @tparam Type is type of values observable would emit
+ * @tparam OnSubscribe is callback function to implement core logic of
+ observable
  *
- * \ingroup creational_operators
- * \see https://reactivex.io/documentation/operators/create.html
+ * @par Examples:
+ * @snippet create.cpp create
+ * @snippet create.cpp create with capture
+ *
+ * @ingroup creational_operators
+ * @see https://reactivex.io/documentation/operators/create.html
  */
 template <constraint::decayed_type Type,
-          constraint::on_subscribe_fn<Type> OnSubscribeFn>
-auto create(OnSubscribeFn&& on_subscribe)
-  requires rpp::details::is_header_included<rpp::details::create_tag, Type,
-                                            OnSubscribeFn>
-{
-  using CreatedOnSubscribeFn = std::decay_t<OnSubscribeFn>;
-  return specific_observable<Type, CreatedOnSubscribeFn>{
-      std::forward<OnSubscribeFn>(on_subscribe)};
+          constraint::on_subscribe<Type> OnSubscribe>
+auto create(OnSubscribe&& on_subscribe) {
+  return create_observable<Type, std::decay_t<OnSubscribe>>{
+      std::forward<OnSubscribe>(on_subscribe)};
 }
 
 /**
- * \brief Creates rpp::specific_observable with passed action as OnSubscribe
+ * @brief Construct observable specialized with passed callback function. Most
+ easiesest way to construct observable "on the fly" via lambda and etc.
  *
- * \warning this overloading deduce type of observable from passed function
- argument
- *
- * \marble create
+ * @marble create
    {
        operator "create:  on_next(1), on_next(3), on_completed()": +--1--3--|
    }
  *
- * \param on_subscribe is action called after subscription on this observable
- * \return rpp::specific_observable with passed action
+ * @warning Be sure, that your callback doesn't violates observable rules:
+ * 1) observable must to emit emissions in serial way
+ * 2) observable must not to call any callbacks after termination events -
+ on_error/on_completed
+ * @warning Keep in mind, obtained observer is non-copyable, but movable by
+ default. So, prefer perfect-forwarding. In case of you need to copy observer,
+ cast it it dynamic_observer via passing it as argument type or via as_dynamic()
+ member function
  *
- * \par Examples:
- * \snippet create.cpp create
- * \snippet create.cpp create with capture
- * \snippet create.cpp create type deduction
+ * @tparam Type is type of values observable would emit
+ * @tparam OnSubscribe is callback function to implement core logic of
+ observable
  *
- * \ingroup creational_operators
- * \see https://reactivex.io/documentation/operators/create.html
+ * @par Examples:
+ * @snippet create.cpp create
+ * @snippet create.cpp create with capture
+ *
+ * @ingroup creational_operators
+ * @see https://reactivex.io/documentation/operators/create.html
  */
-template <utils::is_callable OnSubscribeFn, constraint::decayed_type Type>
-  requires constraint::on_subscribe_fn<OnSubscribeFn, Type>
-auto create(OnSubscribeFn&& on_subscribe)
-  requires rpp::details::is_header_included<rpp::details::create_tag, Type,
-                                            OnSubscribeFn>
-{
-  return create<Type>(std::forward<OnSubscribeFn>(on_subscribe));
+template <typename OnSubscribe, constraint::decayed_type Type>
+auto create(OnSubscribe&& on_subscribe) {
+  return create<Type>(std::forward<OnSubscribe>(on_subscribe));
 }
-}  // namespace rpp::observable
+}  // namespace rpp::source

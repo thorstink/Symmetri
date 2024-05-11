@@ -1,6 +1,6 @@
 //                  ReactivePlusPlus library
 //
-//          Copyright Aleksey Loginov 2022 - present.
+//          Copyright Aleksey Loginov 2023 - present.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -10,95 +10,97 @@
 
 #pragma once
 
+#include <exception>
 #include <rpp/memory_model.hpp>
 #include <rpp/observables/fwd.hpp>
-#include <rpp/schedulers/constraints.hpp>
+#include <rpp/observers/fwd.hpp>
 #include <rpp/schedulers/fwd.hpp>
-#include <rpp/subscribers/constraints.hpp>
+#include <rpp/utils/constraints.hpp>
 #include <rpp/utils/function_traits.hpp>
-#include <rpp/utils/operator_declaration.hpp>
+#include <rpp/utils/utils.hpp>
 
-namespace rpp::details {
-struct create_tag;
-struct empty_tag;
-struct never_tag;
-struct error_tag;
-struct just_tag;
-struct from_tag;
-struct interval_tag;
+namespace rpp::constraint {
+template <typename S, typename T>
+concept on_subscribe = requires(
+    const S& strategy, rpp::details::observers::fake_observer<T>&& observer) {
+                         {
+                           strategy(std::move(observer))
+                           } -> std::same_as<void>;
+                       };
+}  // namespace rpp::constraint
 
-}  // namespace rpp::details
-
-namespace rpp::observable {
-//**************************** CREATE ****************//
+namespace rpp::source {
 template <constraint::decayed_type Type,
-          constraint::on_subscribe_fn<Type> OnSubscribeFn>
-auto create(OnSubscribeFn&& on_subscribe)
-  requires rpp::details::is_header_included<rpp::details::create_tag, Type,
-                                            OnSubscribeFn>;
+          constraint::on_subscribe<Type> OnSubscribe>
+auto create(OnSubscribe&& on_subscribe);
 
-template <utils::is_callable OnSubscribeFn,
-          constraint::decayed_type Type = utils::extract_subscriber_type_t<
-              utils::function_argument_t<OnSubscribeFn>>>
-  requires constraint::on_subscribe_fn<OnSubscribeFn, Type>
-auto create(OnSubscribeFn&& on_subscribe)
-  requires rpp::details::is_header_included<rpp::details::create_tag, Type,
-                                            OnSubscribeFn>;
+template <utils::is_not_template_callable OnSubscribe,
+          constraint::decayed_type Type = rpp::utils::extract_observer_type_t<
+              rpp::utils::decayed_function_argument_t<OnSubscribe>>>
+auto create(OnSubscribe&& on_subscribe);
 
-//**************************** EMPTY *****************//
-template <constraint::decayed_type Type>
-auto empty()
-  requires rpp::details::is_header_included<rpp::details::empty_tag, Type>;
+template <constraint::memory_model MemoryModel = memory_model::use_stack,
+          constraint::iterable Iterable,
+          schedulers::constraint::scheduler TScheduler =
+              rpp::schedulers::defaults::iteration_scheduler>
+auto from_iterable(Iterable&& iterable,
+                   const TScheduler& scheduler = TScheduler{});
 
-//**************************** NEVER *****************//
-template <constraint::decayed_type Type>
-auto never()
-  requires rpp::details::is_header_included<rpp::details::never_tag, Type>;
+template <constraint::memory_model MemoryModel = memory_model::use_stack,
+          typename T, typename... Ts>
+  requires(constraint::decayed_same_as<T, Ts> && ...)
+auto just(T&& item, Ts&&... items);
 
-//**************************** ERROR *****************//
-template <constraint::decayed_type Type>
-auto error(const std::exception_ptr& err)
-  requires rpp::details::is_header_included<rpp::details::error_tag, Type>;
-
-//************************** FROM ***********************//
-template <memory_model memory_model = memory_model::use_stack, typename T,
+template <constraint::memory_model MemoryModel = memory_model::use_stack,
+          schedulers::constraint::scheduler TScheduler, typename T,
           typename... Ts>
-auto just(const schedulers::constraint::scheduler auto& scheduler, T&& item,
-          Ts&&... items)
-  requires(rpp::details::is_header_included<rpp::details::just_tag, T, Ts...> &&
-           (constraint::decayed_same_as<T, Ts> && ...));
+  requires(constraint::decayed_same_as<T, Ts> && ...)
+auto just(const TScheduler& scheduler, T&& item, Ts&&... items);
 
-template <memory_model memory_model = memory_model::use_stack, typename T,
-          typename... Ts>
-auto just(T&& item, Ts&&... items)
-  requires(rpp::details::is_header_included<rpp::details::just_tag, T, Ts...> &&
-           (constraint::decayed_same_as<T, Ts> && ...));
+template <constraint::memory_model MemoryModel = memory_model::use_stack,
+          std::invocable<> Callable>
+auto from_callable(Callable&& callable);
 
-template <memory_model memory_model = memory_model::use_stack,
-          schedulers::constraint::scheduler TScheduler = schedulers::trampoline>
-auto from_iterable(constraint::iterable auto&& iterable,
-                   const TScheduler& scheduler = TScheduler{})
-  requires rpp::details::is_header_included<rpp::details::from_tag, TScheduler>;
+template <constraint::memory_model MemoryModel = memory_model::use_stack,
+          rpp::constraint::observable TObservable,
+          rpp::constraint::observable... TObservables>
+  requires(std::same_as<rpp::utils::extract_observable_type_t<TObservable>,
+                        rpp::utils::extract_observable_type_t<TObservables>> &&
+           ...)
+auto concat(TObservable&& obs, TObservables&&... others);
 
-template <memory_model memory_model = memory_model::use_stack>
-auto from_callable(std::invocable<> auto&& callable)
-  requires rpp::details::is_header_included<rpp::details::from_tag,
-                                            decltype(callable)>;
+template <constraint::memory_model MemoryModel = memory_model::use_stack,
+          constraint::iterable Iterable>
+  requires constraint::observable<utils::iterable_value_t<Iterable>>
+auto concat(Iterable&& iterable);
 
-//************************ INTERVAL *********************//
-template <schedulers::constraint::scheduler TScheduler = schedulers::trampoline>
-auto interval(schedulers::duration period,
-              const TScheduler& scheduler = TScheduler{})
-  requires rpp::details::is_header_included<rpp::details::interval_tag,
-                                            TScheduler>;
+template <std::invocable Factory>
+  requires rpp::constraint::observable<std::invoke_result_t<Factory>>
+auto defer(Factory&& observable_factory);
 
-template <schedulers::constraint::scheduler TScheduler = schedulers::trampoline>
-auto interval(schedulers::duration first_delay, schedulers::duration period,
-              const TScheduler& scheduler = TScheduler{})
-  requires rpp::details::is_header_included<rpp::details::interval_tag,
-                                            TScheduler>;
-}  // namespace rpp::observable
+template <constraint::decayed_type Type>
+auto error(std::exception_ptr err);
 
-namespace rpp {
-namespace source = observable;
-}  // namespace rpp
+template <constraint::decayed_type Type>
+auto empty();
+
+template <schedulers::constraint::scheduler TScheduler>
+auto interval(rpp::schedulers::duration initial,
+              rpp::schedulers::duration period, TScheduler&& scheduler);
+
+template <schedulers::constraint::scheduler TScheduler>
+auto interval(rpp::schedulers::time_point initial,
+              rpp::schedulers::duration period, TScheduler&& scheduler);
+
+template <schedulers::constraint::scheduler TScheduler>
+auto interval(rpp::schedulers::duration period, TScheduler&& scheduler);
+
+template <constraint::decayed_type Type>
+auto never();
+
+template <schedulers::constraint::scheduler TScheduler>
+auto timer(rpp::schedulers::duration when, TScheduler&& scheduler);
+
+template <schedulers::constraint::scheduler TScheduler>
+auto timer(rpp::schedulers::time_point when, TScheduler&& scheduler);
+}  // namespace rpp::source

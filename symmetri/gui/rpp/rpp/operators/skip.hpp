@@ -1,6 +1,6 @@
 //                  ReactivePlusPlus library
 //
-//          Copyright Aleksey Loginov 2022 - present.
+//          Copyright Aleksey Loginov 2023 - present.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -10,42 +10,80 @@
 
 #pragma once
 
-#include <rpp/operators/details/subscriber_with_state.hpp>  // create_subscriber_with_state
-#include <rpp/operators/fwd/skip.hpp>                       // own forwarding
-#include <rpp/operators/lift.hpp>  // required due to operator uses lift
-#include <rpp/subscribers/constraints.hpp>  // constraint::subscriber
-#include <rpp/utils/functors.hpp>           // forwarding_on_error
+#include <cstddef>
+#include <rpp/defs.hpp>
+#include <rpp/operators/details/strategy.hpp>
+#include <rpp/operators/fwd.hpp>
 
-IMPLEMENTATION_FILE(skip_tag);
+namespace rpp::operators::details {
+template <rpp::constraint::observer TObserver>
+struct skip_observer_strategy {
+  using preferred_disposable_strategy =
+      rpp::details::observers::none_disposable_strategy;
 
-namespace rpp::details {
-struct skip_state {
-  mutable size_t count;
-};
+  RPP_NO_UNIQUE_ADDRESS TObserver observer;
+  mutable size_t count{};
 
-struct skip_on_next {
-  void operator()(auto&& value, const constraint::subscriber auto& subscriber,
-                  const skip_state& state) const {
-    if (state.count == 0)
-      subscriber.on_next(std::forward<decltype(value)>(value));
+  template <typename T>
+  void on_next(T&& v) const {
+    if (count == 0)
+      observer.on_next(std::forward<T>(v));
     else
-      --state.count;
+      --count;
   }
+
+  void on_error(const std::exception_ptr& err) const { observer.on_error(err); }
+
+  void on_completed() const { observer.on_completed(); }
+
+  void set_upstream(const disposable_wrapper& d) { observer.set_upstream(d); }
+
+  bool is_disposed() const { return observer.is_disposed(); }
 };
 
-template <constraint::decayed_type Type>
-struct skip_impl {
-  size_t count;
+struct skip_t : lift_operator<skip_t, size_t> {
+  using lift_operator<skip_t, size_t>::lift_operator;
 
-  template <constraint::subscriber_of_type<Type> TSub>
-  auto operator()(TSub&& subscriber) const {
-    auto subscription = subscriber.get_subscription();
-    // dynamic_state there to make shared_ptr for observer instead of making
-    // shared_ptr for state
-    return create_subscriber_with_dynamic_state<Type>(
-        std::move(subscription), skip_on_next{}, utils::forwarding_on_error{},
-        utils::forwarding_on_completed{}, std::forward<TSub>(subscriber),
-        skip_state{count});
-  }
+  template <rpp::constraint::decayed_type T>
+  struct operator_traits {
+    using result_type = T;
+
+    template <rpp::constraint::observer_of_type<result_type> TObserver>
+    using observer_strategy = skip_observer_strategy<TObserver>;
+  };
+
+  template <rpp::details::observables::constraint::disposable_strategy Prev>
+  using updated_disposable_strategy = Prev;
 };
-}  // namespace rpp::details
+}  // namespace rpp::operators::details
+
+namespace rpp::operators {
+/**
+ * @brief Skip first `count` items provided by observable then send rest items
+ as expected
+ *
+ * @marble skip
+ {
+     source observable  : +--1-2-3-4-5-6-|
+     operator "skip(3)" : +--------4-5-6-|
+ }
+ *
+ * @details Actually this operator just decrements counter and starts to forward
+ emissions when counter reaches zero.
+ *
+ * @par Performance notes:
+ * - No any heap allocations
+ * - No any copies/moves just forwarding of emission
+ * - Just simple `size_t` decrementing
+ *
+ * @param count amount of items to be skipped
+ * @warning #include <rpp/operators/skip.hpp>
+ *
+ * @par Example:
+ * @snippet skip.cpp skip
+ *
+ * @ingroup filtering_operators
+ * @see https://reactivex.io/documentation/operators/skip.html
+ */
+inline auto skip(size_t count) { return details::skip_t{count}; }
+}  // namespace rpp::operators

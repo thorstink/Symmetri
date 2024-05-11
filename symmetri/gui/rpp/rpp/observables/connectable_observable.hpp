@@ -1,6 +1,6 @@
 //                   ReactivePlusPlus library
 //
-//           Copyright Aleksey Loginov 2022 - present.
+//           Copyright Aleksey Loginov 2023 - present.
 //  Distributed under the Boost Software License, Version 1.0.
 //     (See accompanying file LICENSE_1_0.txt or copy at
 //           https://www.boost.org/LICENSE_1_0.txt)
@@ -9,101 +9,164 @@
 
 #pragma once
 
-#include <memory>
 #include <mutex>
-#include <rpp/defs.hpp>                     // RPP_EMPTY_BASES
-#include <rpp/observables/constraints.hpp>  // OriginalObservable type
-#include <rpp/operators/details/subscriber_with_state.hpp>  // create_subscriber_with_state
-#include <rpp/operators/fwd/ref_count.hpp>  // include forwarding for member_overload
-#include <rpp/subjects/constraints.hpp>  // type of subject used
-#include <rpp/subjects/type_traits.hpp>  // deduce observable type by subject type
-#include <rpp/subscriptions/composite_subscription.hpp>  // lifetime
+#include <rpp/disposables/refcount_disposable.hpp>
+#include <rpp/observables/observable.hpp>
+#include <rpp/subjects/fwd.hpp>
+
+namespace rpp::details {
+template <typename T>
+struct ref_count_on_subscribe_t;
+
+template <rpp::constraint::observable OriginalObservable,
+          rpp::constraint::subject Subject>
+struct ref_count_on_subscribe_t<
+    rpp::connectable_observable<OriginalObservable, Subject>> {
+  rpp::connectable_observable<OriginalObservable, Subject> original_observable;
+
+  struct state_t {
+    std::mutex mutex{};
+    disposable_wrapper_impl<rpp::refcount_disposable> disposable =
+        disposable_wrapper_impl<rpp::refcount_disposable>::empty();
+  };
+
+  std::shared_ptr<state_t> m_state = std::make_shared<state_t>();
+
+  using value_type = rpp::utils::extract_observable_type_t<OriginalObservable>;
+  using expected_disposable_strategy =
+      typename rpp::details::observables::deduce_disposable_strategy_t<
+          rpp::connectable_observable<OriginalObservable,
+                                      Subject>>::template add<1>;
+
+  template <constraint::observer_strategy<value_type> Strategy>
+  void subscribe(observer<value_type, Strategy>&& obs) const {
+    auto [disposable, upstream] = on_subscribe();
+
+    obs.set_upstream(disposable);
+    original_observable.subscribe(std::move(obs));
+    if (!upstream.is_disposed())
+      original_observable.connect(std::move(upstream));
+  }
+
+ private:
+  std::pair<rpp::disposable_wrapper, rpp::composite_disposable_wrapper>
+  on_subscribe() const {
+    std::unique_lock lock(m_state->mutex);
+    if (!m_state->disposable.is_disposed())
+      return {m_state->disposable.lock()->add_ref(),
+              composite_disposable_wrapper::empty()};
+
+    m_state->disposable =
+        disposable_wrapper_impl<rpp::refcount_disposable>::make();
+    return {m_state->disposable.lock()->add_ref(), m_state->disposable};
+  }
+};
+}  // namespace rpp::details
 
 namespace rpp {
 /**
- * \brief connectable alternative of observable: extends interface with extra
- * functionality. Common subscription will subscribe on underlying subject, but
- * connect/ref_count will initiate subscription on original observable \tparam
- * Type type of values emitted by this observable \tparam OriginalObservable
- * original observable wrapped by this observable \see
- * https://reactivex.io/documentation/operators/publish.html \ingroup
- * observables
+ * @brief Extension over raw observable with ability to be manually connected at
+ * any time or ref_counting (sharing same observable between multiple observers)
+ *
+ * @ingroup observables
  */
-template <constraint::decayed_type Type,
-          subjects::constraint::subject_of_type<Type> Subject,
-          constraint::observable_of_type<Type> OriginalObservable>
-class RPP_EMPTY_BASES connectable_observable
-    : public decltype(std::declval<Subject>().get_observable()),
-      public details::member_overload<
-          Type, connectable_observable<Type, Subject, OriginalObservable>,
-          details::ref_count_tag> {
+template <rpp::constraint::observable OriginalObservable, typename Subject>
+class connectable_observable final
+    : public decltype(std::declval<Subject>().get_observable()) {
   using base = decltype(std::declval<Subject>().get_observable());
 
  public:
+  static_assert(rpp::constraint::subject<Subject>);
+
   connectable_observable(const OriginalObservable& original_observable,
                          const Subject& subject = Subject{})
       : base{subject.get_observable()},
         m_original_observable{original_observable},
-        m_state{std::make_shared<state_t>(subject)} {}
+        m_subject{subject} {}
 
   connectable_observable(OriginalObservable&& original_observable,
                          const Subject& subject = Subject{})
       : base{subject.get_observable()},
         m_original_observable{std::move(original_observable)},
-        m_state{std::make_shared<state_t>(subject)} {}
+        m_subject{subject} {}
 
-  composite_subscription connect(const composite_subscription& subscription =
-                                     composite_subscription{}) const {
-    auto subscriber = m_state->subject.get_subscriber();
-    const auto& subscriber_subscription = subscriber.get_subscription();
+  /**
+   * @brief Connects to underlying observable right-now making it hot-observable
+   *
+   * @par Example:
+   * @snippet connect.cpp connect
+   *
+   */
+  rpp::disposable_wrapper connect(
+      rpp::composite_disposable_wrapper wrapper =
+          composite_disposable_wrapper::make()) const {
+    std::unique_lock lock(m_state->mutex);
 
-    {
-      std::lock_guard lock(m_state->mutex);
+    if (m_subject.get_disposable().is_disposed())
+      return rpp::disposable_wrapper::empty();
 
-      if (!m_state->sub.is_empty()) return subscription;
+    if (!m_state->disposable.is_disposed()) return m_state->disposable;
 
-      subscriber_subscription.add(subscription);
-      m_state->sub = subscription;
-    }
+    m_state->disposable = wrapper;
+    lock.unlock();
 
-    subscription.add([state = std::weak_ptr{m_state}] {
-      if (const auto locked = state.lock()) {
-        auto current_sub = composite_subscription::empty();
-        {
-          std::lock_guard lock(locked->mutex);
-          std::swap(current_sub, locked->sub);
-        }
-        current_sub.unsubscribe();
-        locked->subject.get_subscriber().get_subscription().remove(current_sub);
-      }
-    });
+    m_original_observable.subscribe(wrapper, m_subject.get_observer());
+    return wrapper;
+  }
 
-    m_original_observable.subscribe(create_subscriber_with_state<Type>(
-        m_state->sub, utils::forwarding_on_next{}, utils::forwarding_on_error{},
-        utils::forwarding_on_completed{}, subscriber.get_observer(),
-        // capture state to be sure that state is alive while ANY subscriber is
-        // alive
-        m_state));
+  /**
+   * @brief Forces rpp::connectable_observable to behave like common observable
+   * @details Connects rpp::connectable_observable on the first subscription and
+   * unsubscribes on last unsubscription
+   *
+   * @par Example
+   * @snippet ref_count.cpp ref_count
+   *
+   * @ingroup connectable_operators
+   * @see https://reactivex.io/documentation/operators/refcount.html
+   */
+  auto ref_count() const {
+    return rpp::observable<
+        rpp::utils::extract_observable_type_t<OriginalObservable>,
+        details::ref_count_on_subscribe_t<
+            connectable_observable<OriginalObservable, Subject>>>{*this};
+  }
 
-    return subscription;
+  template <rpp::constraint::operator_observable_transform<
+      const connectable_observable&>
+                Op>
+  auto operator|(Op&& op) const& {
+    return std::forward<Op>(op)(*this);
+  }
+
+  template <
+      rpp::constraint::operator_observable_transform<connectable_observable&&>
+          Op>
+  auto operator|(Op&& op) && {
+    return std::forward<Op>(op)(std::move(*this));
+  }
+
+  template <typename Op>
+  decltype(std::declval<const base>() | std::declval<Op>()) operator|(
+      Op&& op) const& {
+    return static_cast<const base&>(*this) | std::forward<Op>(op);
+  }
+
+  template <typename Op>
+  decltype(std::declval<base>() | std::declval<Op>()) operator|(Op&& op) && {
+    return static_cast<base&&>(*this) | std::forward<Op>(op);
   }
 
  private:
   OriginalObservable m_original_observable;
-  struct state_t {
-    state_t(const Subject& subj) : subject{subj} {}
+  Subject m_subject;
 
-    Subject subject;
+  struct state_t {
     std::mutex mutex{};
-    composite_subscription sub = composite_subscription::empty();
+    rpp::composite_disposable_wrapper disposable =
+        composite_disposable_wrapper::empty();
   };
 
-  std::shared_ptr<state_t> m_state{};
+  std::shared_ptr<state_t> m_state = std::make_shared<state_t>();
 };
-
-template <constraint::observable OriginalObservable,
-          subjects::constraint::subject Subject>
-connectable_observable(const OriginalObservable&, const Subject&)
-    -> connectable_observable<subjects::utils::extract_subject_type_t<Subject>,
-                              Subject, OriginalObservable>;
 }  // namespace rpp

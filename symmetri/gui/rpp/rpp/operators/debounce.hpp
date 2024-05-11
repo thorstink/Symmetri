@@ -1,6 +1,6 @@
 //                  ReactivePlusPlus library
 //
-//          Copyright Aleksey Loginov 2022 - present.
+//          Copyright Aleksey Loginov 2023 - present.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -10,49 +10,100 @@
 
 #pragma once
 
-#include <rpp/operators/details/early_unsubscribe.hpp>
-#include <rpp/operators/details/serialized_subscriber.hpp>
-#include <rpp/operators/details/subscriber_with_state.hpp>
-#include <rpp/operators/fwd/debounce.hpp>
-#include <rpp/operators/lift.hpp>  // required due to operator uses lift
-#include <rpp/subscribers/constraints.hpp>
-#include <rpp/utils/spinlock.hpp>
-#include <type_traits>
-#include <variant>
+#include <rpp/disposables/composite_disposable.hpp>
+#include <rpp/operators/details/strategy.hpp>
+#include <rpp/operators/fwd.hpp>
+#include <rpp/utils/utils.hpp>
 
-IMPLEMENTATION_FILE(debounce_tag);
+namespace rpp::operators::details {
+template <rpp::constraint::observer Observer, typename Worker,
+          rpp::details::disposables::constraint::disposable_container Container>
+class debounce_disposable;
 
-namespace rpp::details {
-template <typename T, typename Scheduler>
-class debounce_state : public early_unsubscribe_state {
+template <rpp::constraint::observer Observer, typename Worker,
+          rpp::details::disposables::constraint::disposable_container Container>
+struct debounce_disposable_wrapper {
+  std::shared_ptr<debounce_disposable<Observer, Worker, Container>>
+      disposable{};
+
+  bool is_disposed() const { return disposable->is_disposed(); }
+
+  void on_error(const std::exception_ptr& err) const {
+    disposable->get_observer_under_lock()->on_error(err);
+  }
+};
+
+template <rpp::constraint::observer Observer, typename Worker,
+          rpp::details::disposables::constraint::disposable_container Container>
+class debounce_disposable final
+    : public rpp::composite_disposable_impl<Container>,
+      public rpp::details::enable_wrapper_from_this<
+          debounce_disposable<Observer, Worker, Container>> {
+  using T = rpp::utils::extract_observer_type_t<Observer>;
+
  public:
-  debounce_state(schedulers::duration period, const Scheduler& scheduler,
-                 const composite_subscription& subscription_of_subscriber)
-      : early_unsubscribe_state(subscription_of_subscriber),
-        m_period{period},
-        m_worker{scheduler.create_worker(children_subscriptions)} {}
-
-  std::optional<schedulers::time_point> emplace_safe(auto&& v) {
-    std::lock_guard lock{m_mutex};
-    m_value_to_be_emitted.emplace(std::forward<decltype(v)>(v));
-    const bool need_to_scheduled =
-        !m_time_when_value_should_be_emitted.has_value() ||
-        !m_value_to_be_emitted.has_value();
-    m_time_when_value_should_be_emitted = m_worker.now() + m_period;
-    return need_to_scheduled ? m_time_when_value_should_be_emitted
-                             : std::optional<schedulers::time_point>{};
+  debounce_disposable(Observer&& in_observer, Worker&& in_worker,
+                      rpp::schedulers::duration period)
+      : m_observer(std::move(in_observer)),
+        m_worker{std::move(in_worker)},
+        m_period{period} {
+    if constexpr (!Worker::is_none_disposable) {
+      if (auto d = m_worker.get_disposable(); !d.is_disposed())
+        rpp::composite_disposable_impl<Container>::add(std::move(d));
+    }
   }
 
-  std::variant<std::monostate, T, schedulers::duration>
+  template <typename TT>
+  void emplace_safe(TT&& v) {
+    std::lock_guard lock{m_mutex};
+    m_value_to_be_emitted.emplace(std::forward<TT>(v));
+    const bool need_to_scheduled =
+        !m_time_when_value_should_be_emitted.has_value();
+    m_time_when_value_should_be_emitted = m_worker.now() + m_period;
+    if (need_to_scheduled) {
+      schedule();
+    }
+  }
+
+  std::optional<T> extract_value() {
+    std::lock_guard lock{m_mutex};
+    return std::exchange(m_value_to_be_emitted, std::optional<T>{});
+  }
+
+  rpp::utils::pointer_under_lock<Observer> get_observer_under_lock() {
+    return m_observer;
+  }
+
+ private:
+  void schedule() {
+    m_worker.schedule(
+        m_time_when_value_should_be_emitted.value(),
+        [](const debounce_disposable_wrapper<Observer, Worker, Container>&
+               handler) -> schedulers::optional_delay_to {
+          auto value_or_duration = handler.disposable->extract_value_or_time();
+          if (auto* timepoint =
+                  std::get_if<schedulers::time_point>(&value_or_duration))
+            return schedulers::optional_delay_to{*timepoint};
+
+          if (auto* value = std::get_if<T>(&value_or_duration))
+            handler.disposable->get_observer_under_lock()->on_next(
+                std::move(*value));
+
+          return std::nullopt;
+        },
+        debounce_disposable_wrapper<Observer, Worker, Container>{
+            this->wrapper_from_this().lock()});
+  }
+
+  std::variant<std::monostate, T, schedulers::time_point>
   extract_value_or_time() {
     std::lock_guard lock{m_mutex};
     if (!m_time_when_value_should_be_emitted.has_value() ||
         !m_value_to_be_emitted.has_value())
       return std::monostate{};
 
-    const auto now = m_worker.now();
-    if (m_time_when_value_should_be_emitted > now)
-      return m_time_when_value_should_be_emitted.value() - now;
+    if (m_time_when_value_should_be_emitted > m_worker.now())
+      return m_time_when_value_should_be_emitted.value();
 
     m_time_when_value_should_be_emitted.reset();
     auto v = std::move(m_value_to_be_emitted).value();
@@ -60,100 +111,116 @@ class debounce_state : public early_unsubscribe_state {
     return v;
   }
 
-  std::optional<T> extract_value() {
-    std::lock_guard lock{m_mutex};
-    std::optional<T> res{};
-    m_value_to_be_emitted.swap(res);
-    return res;
-  }
+  rpp::utils::value_with_mutex<Observer> m_observer;
+  RPP_NO_UNIQUE_ADDRESS Worker m_worker;
+  rpp::schedulers::duration m_period;
 
-  using Worker = decltype(std::declval<Scheduler>().create_worker(
-      std::declval<composite_subscription>()));
-  const Worker& get_worker() const { return m_worker; }
-
- private:
-  schedulers::duration m_period;
-  Worker m_worker;
   std::mutex m_mutex{};
   std::optional<schedulers::time_point> m_time_when_value_should_be_emitted{};
   std::optional<T> m_value_to_be_emitted{};
 };
 
-struct debounce_on_next {
-  template <typename Value>
-  void operator()(Value&& v, const auto& state_ptr) const {
-    if (const auto time_to_schedule =
-            state_ptr->emplace_safe(std::forward<Value>(v))) {
-      state_ptr->get_worker().schedule(
-          time_to_schedule.value(),
-          [state_ptr]() mutable -> schedulers::optional_duration {
-            auto value_or_duration = state_ptr->extract_value_or_time();
-            if (auto* duration =
-                    std::get_if<schedulers::duration>(&value_or_duration))
-              return *duration;
+template <rpp::constraint::observer Observer, typename Worker,
+          rpp::details::disposables::constraint::disposable_container Container>
+struct debounce_observer_strategy {
+  using preferred_disposable_strategy =
+      rpp::details::observers::none_disposable_strategy;
 
-            if (auto* value =
-                    std::get_if<std::decay_t<Value>>(&value_or_duration))
-              state_ptr->subscriber.on_next(std::move(*value));
+  std::shared_ptr<debounce_disposable<Observer, Worker, Container>>
+      disposable{};
 
-            return std::nullopt;
-          });
-    }
+  void set_upstream(const rpp::disposable_wrapper& d) const {
+    disposable->add(d);
+  }
+
+  bool is_disposed() const { return disposable->is_disposed(); }
+
+  template <typename T>
+  void on_next(T&& v) const {
+    disposable->emplace_safe(std::forward<T>(v));
+  }
+
+  void on_error(const std::exception_ptr& err) const noexcept {
+    disposable->dispose();
+    disposable->get_observer_under_lock()->on_error(err);
+  }
+
+  void on_completed() const noexcept {
+    disposable->dispose();
+    const auto value = disposable->extract_value();
+    const auto observer = disposable->get_observer_under_lock();
+    if (value) observer->on_next(std::move(value).value());
+    observer->on_completed();
   }
 };
 
-struct debounce_on_error {
-  void operator()(const std::exception_ptr& err, const auto& state) const {
-    state->children_subscriptions.unsubscribe();
-    state->subscriber.on_error(err);
+template <rpp::schedulers::constraint::scheduler Scheduler>
+struct debounce_t {
+  template <rpp::constraint::decayed_type T>
+  struct operator_traits {
+    using result_type = T;
+  };
+
+  template <rpp::details::observables::constraint::disposable_strategy Prev>
+  using updated_disposable_strategy =
+      rpp::details::observables::fixed_disposable_strategy_selector<1>;
+
+  rpp::schedulers::duration duration;
+  RPP_NO_UNIQUE_ADDRESS Scheduler scheduler;
+
+  template <rpp::constraint::decayed_type Type,
+            rpp::details::observables::constraint::disposable_strategy
+                DisposableStrategy,
+            rpp::constraint::observer Observer>
+  auto lift_with_disposable_strategy(Observer&& observer) const {
+    using worker_t = rpp::schedulers::utils::get_worker_t<Scheduler>;
+    using container = typename DisposableStrategy::template add<
+        worker_t::is_none_disposable ? 0 : 1>::disposable_container;
+
+    const auto disposable = disposable_wrapper_impl<
+        debounce_disposable<std::decay_t<Observer>, worker_t, container>>::
+        make(std::forward<Observer>(observer), scheduler.create_worker(),
+             duration);
+    auto ptr = disposable.lock();
+    ptr->get_observer_under_lock()->set_upstream(disposable.as_weak());
+    return rpp::observer<Type,
+                         debounce_observer_strategy<std::decay_t<Observer>,
+                                                    worker_t, container>>{
+        std::move(ptr)};
   }
 };
+}  // namespace rpp::operators::details
 
-struct debounce_on_completed {
-  void operator()(const auto& state_ptr) const {
-    state_ptr->children_subscriptions.unsubscribe();
+namespace rpp::operators {
+/**
+ * @brief Only emit emission if specified period of time has passed without any
+ other emission. On each new emission timer reset.
+ *
+ * @marble debounce
+ {
+     source    observable   : +--1-2-----3---|
+     operator "debounce(4)" : +--------2-----3|
+ }
+ *
+ * @details Actually this operator resets time of last emission, schedules
+ action to send this emission after specified period if no any new emissions
+ till this moment.
+ *
+ * @param period is duration of time should be passed since emission from
+ original observable without any new emissions to emit this emission.
+ * @param scheduler is scheduler used to run timer for debounce
 
-    if (auto v = state_ptr->extract_value())
-      state_ptr->subscriber.on_next(std::move(v.value()));
-
-    state_ptr->subscriber.on_completed();
-  }
-};
-
-template <typename T, typename Scheduler, typename TSub>
-struct debounce_state_with_serialized_spinlock : debounce_state<T, Scheduler> {
-  debounce_state_with_serialized_spinlock(auto&& sub,
-                                          schedulers::duration period,
-                                          const Scheduler& scheduler)
-      : debounce_state<T, Scheduler>{std::move(period), scheduler,
-                                     sub.get_subscription()},
-        subscriber(make_serialized_subscriber(std::forward<decltype(sub)>(sub),
-                                              std::ref(spinlock))) {}
-
-  // spinlock because most part of time there is only one thread would be active
-  utils::spinlock spinlock{};
-
-  using InnerSub = decltype(make_serialized_subscriber(
-      std::declval<TSub>(),
-      std::declval<std::reference_wrapper<utils::spinlock>>()));
-  InnerSub subscriber;
-};
-
-template <constraint::decayed_type Type,
-          schedulers::constraint::scheduler TScheduler>
-struct debounce_impl {
-  schedulers::duration period;
-  TScheduler scheduler;
-
-  template <constraint::subscriber_of_type<Type> TSub>
-  auto operator()(TSub&& in_subscriber) const {
-    auto state = std::make_shared<debounce_state_with_serialized_spinlock<
-        Type, TScheduler, std::decay_t<TSub>>>(
-        std::forward<TSub>(in_subscriber), period, scheduler);
-
-    return create_subscriber_with_state<Type>(
-        state->children_subscriptions, debounce_on_next{}, debounce_on_error{},
-        debounce_on_completed{}, std::move(state));
-  }
-};
-}  // namespace rpp::details
+ * @warning #include <rpp/operators/debounce.hpp>
+ *
+ * @par Example
+ * @snippet debounce.cpp debounce
+ *
+ * @ingroup utility_operators
+ * @see https://reactivex.io/documentation/operators/debounce.html
+ */
+template <rpp::schedulers::constraint::scheduler Scheduler>
+auto debounce(rpp::schedulers::duration period, Scheduler&& scheduler) {
+  return details::debounce_t<std::decay_t<Scheduler>>{
+      period, std::forward<Scheduler>(scheduler)};
+}
+}  // namespace rpp::operators

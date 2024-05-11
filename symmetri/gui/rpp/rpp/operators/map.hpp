@@ -1,6 +1,6 @@
 //                  ReactivePlusPlus library
 //
-//          Copyright Aleksey Loginov 2022 - present.
+//          Copyright Aleksey Loginov 2023 - present.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -10,39 +10,91 @@
 
 #pragma once
 
-#include <rpp/defs.hpp>               // RPP_NO_UNIQUE_ADDRESS
-#include <rpp/operators/fwd/map.hpp>  // own forwarding
-#include <rpp/operators/lift.hpp>     // required due to operator uses lift
-#include <rpp/subscribers/constraints.hpp>  // constraint::subscriber_of_type
-#include <rpp/utils/function_traits.hpp>    // decayed_invoke_result_t
-#include <rpp/utils/utilities.hpp>          // as_counst
-#include <utility>
+#include <rpp/defs.hpp>
+#include <rpp/operators/details/strategy.hpp>
+#include <rpp/operators/fwd.hpp>
+#include <type_traits>
 
-IMPLEMENTATION_FILE(map_tag);
+namespace rpp::operators::details {
+template <rpp::constraint::observer TObserver, rpp::constraint::decayed_type Fn>
+struct map_observer_strategy {
+  using preferred_disposable_strategy =
+      rpp::details::observers::none_disposable_strategy;
 
-namespace rpp::details {
-template <constraint::decayed_type Type, std::invocable<Type> Callable>
-struct map_impl_on_next {
-  RPP_NO_UNIQUE_ADDRESS Callable callable;
+  RPP_NO_UNIQUE_ADDRESS TObserver observer;
+  RPP_NO_UNIQUE_ADDRESS Fn fn;
 
-  template <typename TVal, constraint::subscriber_of_type<
-                               utils::decayed_invoke_result_t<Callable, Type>>
-                               TSub>
-  void operator()(TVal&& value, const TSub& subscriber) const {
-    subscriber.on_next(callable(utils::as_const(std::forward<TVal>(value))));
+  template <typename T>
+  void on_next(T&& v) const {
+    observer.on_next(fn(std::forward<T>(v)));
   }
+
+  void on_error(const std::exception_ptr& err) const { observer.on_error(err); }
+
+  void on_completed() const { observer.on_completed(); }
+
+  void set_upstream(const disposable_wrapper& d) { observer.set_upstream(d); }
+
+  bool is_disposed() const { return observer.is_disposed(); }
 };
 
-template <constraint::decayed_type Type, std::invocable<Type> Callable>
-struct map_impl {
-  RPP_NO_UNIQUE_ADDRESS map_impl_on_next<Type, Callable> on_next;
+template <rpp::constraint::decayed_type Fn>
+struct map_t : lift_operator<map_t<Fn>, Fn> {
+  using lift_operator<map_t<Fn>, Fn>::lift_operator;
 
-  template <constraint::subscriber TSub>
-  auto operator()(TSub&& subscriber) const {
-    auto subscription = subscriber.get_subscription();
-    return create_subscriber_with_state<Type>(
-        std::move(subscription), on_next, utils::forwarding_on_error{},
-        utils::forwarding_on_completed{}, std::forward<TSub>(subscriber));
-  }
+  template <rpp::constraint::decayed_type T>
+  struct operator_traits {
+    static_assert(std::invocable<Fn, T>, "Fn is not invocable with T");
+
+    using result_type = std::invoke_result_t<Fn, T>;
+
+    template <rpp::constraint::observer_of_type<result_type> TObserver>
+    using observer_strategy = map_observer_strategy<TObserver, Fn>;
+  };
+
+  template <rpp::details::observables::constraint::disposable_strategy Prev>
+  using updated_disposable_strategy = Prev;
 };
-}  // namespace rpp::details
+}  // namespace rpp::operators::details
+
+namespace rpp::operators {
+/**
+ * @brief Transforms the items emitted by an Observable via applying a function
+ to each item and emitting result
+ * @note The Map operator can keep same type of value or change it to some
+ another type.
+ *
+ * @marble map
+ {
+     source observable       : +--1   -2   --3   -|
+     operator "map: x=>x+10" : +--(11)-(12)--(13)-|
+ }
+ *
+ * @details Actually this operator just applies callable to each obtained
+ emission and emit resulting value
+ *
+ * @par Performance notes:
+ * - No any heap allocations at all
+ * - No any copies/moves of emissions, just forwarding to callable
+ *
+ * @param callable is callable used to provide this transformation. Should
+ accept `Type` of original observable and return type for new observable
+ * @warning #include <rpp/operators/map.hpp>
+ *
+ * @par Example with same type:
+ * @snippet map.cpp Same type
+ *
+ * @par Example with changed type:
+ * @snippet map.cpp Changed type
+ *
+ * @ingroup transforming_operators
+ * @see https://reactivex.io/documentation/operators/map.html
+ */
+template <typename Fn>
+  requires(!utils::is_not_template_callable<Fn> ||
+           !std::same_as<
+               void, std::invoke_result_t<Fn, rpp::utils::convertible_to_any>>)
+auto map(Fn&& callable) {
+  return details::map_t<std::decay_t<Fn>>{std::forward<Fn>(callable)};
+}
+}  // namespace rpp::operators
