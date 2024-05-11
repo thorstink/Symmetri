@@ -25,7 +25,8 @@ model::Reducer updateActiveFile(const std::filesystem::path &file) {
   };
 }
 
-void draw_menu_bar(ImGui::FileBrowser &fileDialog) {
+void draw_menu_bar(const model::ViewModel &vm) {
+  auto &fileDialog = vm.m.data->file_dialog;
   fileDialog.Display();
   if (fileDialog.HasSelected()) {
     rxdispatch::push(updateActiveFile(fileDialog.GetSelected()));

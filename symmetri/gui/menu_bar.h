@@ -1,7 +1,4 @@
 #pragma once
-// clang-format off
-#include "imgui.h"
-// clang-format on
-#include "imfilebrowser.h"
+#include "model.h"
 
-void draw_menu_bar(ImGui::FileBrowser& fileDialog);
+void draw_menu_bar(const model::ViewModel& vm);

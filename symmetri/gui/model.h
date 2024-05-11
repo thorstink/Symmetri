@@ -1,4 +1,8 @@
 #pragma once
+// clang-format off
+#include "imgui.h"
+// clang-format on#include "position_parsers.h"
+
 #include <chrono>
 #include <filesystem>
 #include <functional>
@@ -6,14 +10,15 @@
 #include <optional>
 
 #include "graph.hpp"
-#include "imgui.h"
-#include "menu_bar.h"
-#include "position_parsers.h"
+
 #include "symmetri/parsers.h"
+#include "imfilebrowser.h"
+#include "position_parsers.h"
 
 namespace model {
 
 struct Model {
+  Model() {}
   struct shared {
     std::chrono::steady_clock::time_point timestamp;
     std::filesystem::path working_dir;
@@ -71,7 +76,6 @@ inline Model initializeModel() {
 
 inline void draw(const ViewModel& vm) {
   auto& m = *vm.m.data;
-  draw_menu_bar(m.file_dialog);
   draw(m.graph, vm.data->n_idx, vm.data->a_idx);
   ImGui::End();
 }

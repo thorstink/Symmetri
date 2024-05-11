@@ -9,6 +9,7 @@
 #include "rximgui.h"
 #include "write_graph_to_disk.hpp"
 using namespace rximgui;
+#include "menu_bar.h"
 #include "model.h"
 #include "util.h"
 #define GLFW_INCLUDE_NONE
@@ -91,8 +92,15 @@ int main(int, char **) {
 
   auto draw_frames = frames | rpp::operators::with_latest_from(rxu::take_at<1>(), view_models);
 
-  draw_frames | rpp::operators::tap([](const model::ViewModel &vm) { draw(vm); }) |
-      rpp::operators::subscribe();
+  auto menu_bar =
+      draw_frames | rpp::operators::tap([](const model::ViewModel &vm) { draw_menu_bar(vm); });
+
+  auto window_render =
+      draw_frames | rpp::operators::tap([](const model::ViewModel &vm) { draw(vm); });
+
+  auto renderers = menu_bar | rpp::operators::merge_with(window_render);
+
+  renderers | rpp::operators::subscribe();
 
   // Main loop
   while (!glfwWindowShouldClose(window)) {
