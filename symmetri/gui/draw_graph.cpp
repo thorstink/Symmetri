@@ -5,9 +5,6 @@
 
 #include <math.h>  // fmodf
 
-#include <cmath>
-#include <iostream>
-
 #include "color.hpp"
 #include "graph.hpp"
 #include "imgui.h"
@@ -18,16 +15,58 @@
 // State
 static ImVec2 size;
 static ImVec2 offset;
-static ImDrawList* draw_list;
-static bool open_context_menu = false;
-static const Node* node_selected = nullptr;
-static const Node* node_hovered_in_list = nullptr;
-static const Node* node_hovered_in_scene = nullptr;
-static const Arc* arc_selected = nullptr;
-static const Arc* arc_hovered_in_scene = nullptr;
 
 static const float NODE_SLOT_RADIUS = 4.0f;
 static const ImVec2 NODE_WINDOW_PADDING(8.0f, 8.0f);
+
+void setContextMenuActive() {
+  rxdispatch::push([](model::Model&& m) {
+    m.data->context_menu_active = true;
+    return m;
+  });
+}
+
+void setContextMenuInactive() {
+  rxdispatch::push([](model::Model&& m) {
+    m.data->context_menu_active = false;
+    return m;
+  });
+}
+
+void setSelectedNode(const Node* ptr) {
+  rxdispatch::push([=](model::Model&& m) {
+    m.data->node_selected = ptr;
+    return m;
+  });
+};
+
+void setHoveredNodeInList(const Node* ptr) {
+  rxdispatch::push([=](model::Model&& m) {
+    m.data->node_hovered_in_list = ptr;
+    return m;
+  });
+};
+
+void setHoveredNodeInScene(const Node* ptr) {
+  rxdispatch::push([=](model::Model&& m) {
+    m.data->node_hovered_in_scene = ptr;
+    return m;
+  });
+};
+
+void setSelectedArc(const Arc* ptr) {
+  rxdispatch::push([=](model::Model&& m) {
+    m.data->arc_selected = ptr;
+    return m;
+  });
+};
+
+void setHoveredArcInScene(const Arc* ptr) {
+  rxdispatch::push([=](model::Model&& m) {
+    m.data->arc_hovered_in_scene = ptr;
+    return m;
+  });
+};
 
 template <class T>
 std::size_t GetIndexFromRef(std::vector<T> const& vec, T const& item) {
@@ -55,6 +94,7 @@ ImU32 getColor(symmetri::Token token) {
 };
 
 void draw_grid(const ImVec2& scrolling) {
+  auto draw_list = ImGui::GetWindowDrawList();
   ImU32 GRID_COLOR = IM_COL32(200, 200, 200, 40);
   float GRID_SZ = 64.0f;
   ImVec2 win_pos = ImGui::GetCursorScreenPos();
@@ -67,7 +107,8 @@ void draw_grid(const ImVec2& scrolling) {
                        ImVec2(canvas_sz.x, y) + win_pos, GRID_COLOR);
 };
 
-void draw_arc(const Arc& arc, const std::vector<Node>& nodes) {
+void draw_arc(const Arc& arc, const std::vector<Node>& nodes,
+              const model::ViewModel& vm) {
   const auto& [color, from_to_idx] = arc;
   ImVec2 p1 = offset + Node::GetCenterPos(nodes[from_to_idx[0]].Pos, size);
   ImVec2 p2 = offset + Node::GetCenterPos(nodes[from_to_idx[1]].Pos, size);
@@ -80,25 +121,26 @@ void draw_arc(const Arc& arc, const std::vector<Node>& nodes) {
   ImVec2 mouse_pos_delta_to_segment =
       mouse_pos_projected_on_segment - mouse_pos;
   bool is_segment_hovered =
-      arc_selected == &arc ||
+      vm.m.data->arc_selected == &arc ||
       (ImLengthSqr(mouse_pos_delta_to_segment) <= max_distance * max_distance &&
-       node_hovered_in_scene == nullptr);
+       vm.m.data->node_hovered_in_scene == nullptr);
 
   if (is_segment_hovered) {
-    arc_hovered_in_scene = &arc;
-  } else if (arc_hovered_in_scene == &arc) {
-    arc_hovered_in_scene = nullptr;
+    setHoveredArcInScene(&arc);
+  } else if (vm.m.data->arc_hovered_in_scene == &arc) {
+    setHoveredArcInScene(nullptr);
   }
 
   if (is_segment_hovered && ImGui::IsMouseClicked(0)) {
-    arc_selected = &arc;
-    node_selected = nullptr;
+    setSelectedArc(&arc);
+    setSelectedNode(nullptr);
   }
 
-  ImU32 imcolor =
-      getColor(color) |
-      ((ImU32)IM_F32_TO_INT8_SAT(arc_hovered_in_scene == &arc ? 1.0f : 0.65f))
-          << IM_COL32_A_SHIFT;
+  ImU32 imcolor = getColor(color) |
+                  ((ImU32)IM_F32_TO_INT8_SAT(
+                      vm.m.data->arc_hovered_in_scene == &arc ? 1.0f : 0.65f))
+                      << IM_COL32_A_SHIFT;
+  auto draw_list = ImGui::GetWindowDrawList();
 
   const auto d = p2 - p1;
   const auto theta = std::atan2(d.y, d.x) - M_PI_2;
@@ -112,11 +154,15 @@ void draw_arc(const Arc& arc, const std::vector<Node>& nodes) {
   const auto c = ImRotate(ImVec2(+1.f, -1.f) * r, a_cos, a_sin);
   draw_list->AddTriangleFilled(center + a, center + b, center + c, imcolor);
   draw_list->AddLine(p1, p2, imcolor,
-                     arc_hovered_in_scene == &arc ? 3.0f : 2.0f);
+                     vm.m.data->arc_hovered_in_scene == &arc ? 3.0f : 2.0f);
 };
 
-void draw_nodes(const Node& node, size_t idx) {
-  open_context_menu = false;
+void draw_nodes(const Node& node, size_t idx, const model::ViewModel& vm) {
+  setContextMenuInactive();
+  const auto& node_selected = vm.m.data->node_selected;
+  const auto& node_hovered_in_list = vm.m.data->node_hovered_in_list;
+  const auto& node_hovered_in_scene = vm.m.data->node_hovered_in_scene;
+
   ImGui::PushID(node.name.c_str());
   ImVec2 node_rect_min = offset + node.Pos;
 
@@ -139,13 +185,13 @@ void draw_nodes(const Node& node, size_t idx) {
   // Display node box
   ImGui::SetCursorScreenPos(node_rect_min);
   ImGui::InvisibleButton("node", size);
-  node_hovered_in_scene = ImGui::IsItemHovered()      ? &node
-                          : ImGui::IsAnyItemHovered() ? node_hovered_in_scene
-                                                      : nullptr;
+  setHoveredNodeInScene(ImGui::IsItemHovered()      ? &node
+                        : ImGui::IsAnyItemHovered() ? node_hovered_in_scene
+                                                    : nullptr);
   bool node_moving_active = ImGui::IsItemActive();
   if (node_widgets_active || node_moving_active) {
-    node_selected = &node;
-    arc_selected = nullptr;
+    setSelectedNode(&node);
+    setSelectedArc(nullptr);
   }
   if (node_moving_active && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
     rxdispatch::push(
@@ -155,6 +201,7 @@ void draw_nodes(const Node& node, size_t idx) {
         });
   }
   const int opacity = 255;
+  auto draw_list = ImGui::GetWindowDrawList();
   auto select_color =
       &node == node_selected ? IM_COL32(255, 255, 0, opacity)
       : &node == node_hovered_in_list || &node == node_hovered_in_scene
@@ -177,14 +224,17 @@ void draw_nodes(const Node& node, size_t idx) {
   ImGui::PopID();
 };
 
-// Dummy data structure provided for the example.
-// Note that we storing links as indices (not ID) to make example code shorter.
 void draw_everything(const model::ViewModel& vm) {
   const auto& g = vm.m.data->graph;
   const auto& n_idx = vm.data->n_idx;
   const auto& a_idx = vm.data->a_idx;
   const auto& scrolling = vm.m.data->scrolling;
-  ImGui::Begin("test", NULL, ImGuiWindowFlags_NoTitleBar);
+  const auto& node_selected = vm.m.data->node_selected;
+  const auto& node_hovered_in_list = vm.m.data->node_hovered_in_list;
+  const auto& node_hovered_in_scene = vm.m.data->node_hovered_in_scene;
+  const auto& arc_selected = vm.m.data->arc_selected;
+  const auto& arc_hovered_in_scene = vm.m.data->arc_hovered_in_scene;
+  const auto context_menu_active = vm.m.data->context_menu_active;
 
   ImVec2 WindowSize = ImGui::GetWindowSize();
   WindowSize.y -= 140.0f;
@@ -248,13 +298,12 @@ void draw_everything(const model::ViewModel& vm) {
     if (node.type == Node::Type::Place) {
       ImGui::PushID(idx);
       if (ImGui::Selectable(node.name.c_str(), &node == node_selected)) {
-        node_selected = &node;
-        arc_selected = nullptr;
+        setSelectedNode(&node);
+        setSelectedArc(nullptr);
       }
-      node_hovered_in_list = ImGui::IsItemHovered()      ? &node
-                             : ImGui::IsAnyItemHovered() ? node_hovered_in_list
-                                                         : nullptr;
-
+      setHoveredNodeInList(ImGui::IsItemHovered()      ? &node
+                           : ImGui::IsAnyItemHovered() ? node_hovered_in_list
+                                                       : nullptr);
       ImGui::PopID();
     }
   }
@@ -270,12 +319,13 @@ void draw_everything(const model::ViewModel& vm) {
     if (node.type == Node::Type::Transition) {
       ImGui::PushID(idx);
       if (ImGui::Selectable(node.name.c_str(), &node == node_selected)) {
-        node_selected = &node;
-        arc_selected = nullptr;
+        setSelectedNode(&node);
+        setSelectedArc(nullptr);
       }
-      node_hovered_in_list = ImGui::IsItemHovered()      ? &node
-                             : ImGui::IsAnyItemHovered() ? node_hovered_in_list
-                                                         : nullptr;
+      setHoveredNodeInList(ImGui::IsItemHovered()      ? &node
+                           : ImGui::IsAnyItemHovered() ? node_hovered_in_list
+                                                       : nullptr);
+
       ImGui::PopID();
     }
   }
@@ -302,7 +352,7 @@ void draw_everything(const model::ViewModel& vm) {
   ImGui::PushItemWidth(120.0f);
 
   offset = ImGui::GetCursorScreenPos() + scrolling;
-  draw_list = ImGui::GetWindowDrawList();
+  auto draw_list = ImGui::GetWindowDrawList();
 
   // Display grid
   if (vm.m.data->show_grid) {
@@ -312,28 +362,28 @@ void draw_everything(const model::ViewModel& vm) {
   // draw arcs
   int i = 0;
   for (const auto& idx : g.a_idx) {
-    draw_arc(g.arcs[idx], g.nodes);
+    draw_arc(g.arcs[idx], g.nodes, vm);
   }
 
   // draw places & transitions
   for (auto idx : n_idx) {
-    draw_nodes(g.nodes[idx], idx);
+    draw_nodes(g.nodes[idx], idx, vm);
   }
 
   // Open context menu
   if (ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
     if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) ||
         !ImGui::IsAnyItemHovered()) {
-      node_selected = node_hovered_in_scene;
-      arc_selected = arc_hovered_in_scene;
-      open_context_menu = true;
+      setSelectedNode(node_hovered_in_scene);
+      setSelectedArc(arc_hovered_in_scene);
+      setContextMenuActive();
     } else {
-      node_selected = nullptr;
-      arc_selected = nullptr;
+      setSelectedNode(nullptr);
+      setSelectedArc(nullptr);
     }
   }
 
-  if (open_context_menu) {
+  if (context_menu_active) {
     ImGui::OpenPopup("context_menu");
   }
 
@@ -365,7 +415,7 @@ void draw_everything(const model::ViewModel& vm) {
           }
           return m_ptr;
         });
-        node_selected = nullptr;
+        setSelectedNode(nullptr);
       }
     } else if (arc_selected) {
       ImGui::Text("Arc");
@@ -382,8 +432,8 @@ void draw_everything(const model::ViewModel& vm) {
           m.graph.a_idx.pop_back();
           return m_ptr;
         });
-        arc_selected = nullptr;
-        arc_hovered_in_scene = nullptr;
+        setSelectedArc(nullptr);
+        setHoveredArcInScene(nullptr);
       }
       if (ImGui::BeginMenu("Change color")) {
         for (const auto& arc : symmetri::Color::getColors()) {
@@ -402,8 +452,8 @@ void draw_everything(const model::ViewModel& vm) {
                   {color, m.graph.arcs[idx].from_to_pos_idx});
               return m_ptr;
             });
-            arc_selected = nullptr;
-            arc_hovered_in_scene = nullptr;
+            setSelectedArc(nullptr);
+            setHoveredArcInScene(nullptr);
           }
         }
         ImGui::EndMenu();
@@ -432,11 +482,11 @@ void draw_everything(const model::ViewModel& vm) {
         for (const auto& from_idx : n_idx) {
           const auto& from = g.nodes[from_idx];
           if (ImGui::BeginMenu(from.name.c_str())) {
-            node_hovered_in_scene = &from;
+            setHoveredNodeInScene(&from);
             for (const auto& to_idx : n_idx) {
               const auto& to = g.nodes[to_idx];
               if (from.type != to.type && ImGui::BeginMenu(to.name.c_str())) {
-                node_hovered_in_scene = &to;
+                setHoveredNodeInScene(&to);
                 for (const auto& color : symmetri::Color::getColors()) {
                   if (ImGui::MenuItem(color.second.c_str())) {
                     rxdispatch::push(
@@ -447,7 +497,7 @@ void draw_everything(const model::ViewModel& vm) {
                           m.graph.arcs.push_back(arc);
                           return m_ptr;
                         });
-                    node_hovered_in_scene = nullptr;
+                    setHoveredNodeInScene(nullptr);
                   }
                 }
                 ImGui::EndMenu();
@@ -477,5 +527,4 @@ void draw_everything(const model::ViewModel& vm) {
   ImGui::PopStyleColor();
   ImGui::PopStyleVar();
   ImGui::EndGroup();
-  ImGui::End();
 }

@@ -2,6 +2,7 @@
 
 #include "position_parsers.h"
 #include "rxdispatch.h"
+#include "symmetri/parsers.h"
 #include "write_graph_to_disk.hpp"
 model::Reducer updateActiveFile(const std::filesystem::path &file) {
   return [=](model::Model &&m_ptr) {

@@ -7,7 +7,6 @@
 #include "rpp/rpp.hpp"
 #include "rxdispatch.h"
 #include "rximgui.h"
-#include "write_graph_to_disk.hpp"
 using namespace rximgui;
 #include "draw_graph.h"
 #include "menu_bar.h"
@@ -64,9 +63,6 @@ int main(int, char **) {
 
   float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
 
-  // start event
-  rxdispatch::push([](model::Model &&m) { return m; });
-
   // Flux starts here
   auto reducers = rpp::source::create<model::Reducer>(&rxdispatch::dequeue) |
                   rpp::operators::subscribe_on(rpp::schedulers::new_thread{});
@@ -82,9 +78,7 @@ int main(int, char **) {
           printf("%s", e.what());
           return std::move(m);
         }
-      });
-  //                      |
-  // rpp::operators::sample_with_time(std::chrono::milliseconds{200}, rl);
+      });  // maybe Sample?
 
   auto view_models = models | rpp::operators::filter([=](const model::Model &m) {
                        return m.data->timestamp <= std::chrono::steady_clock::now();
@@ -96,8 +90,11 @@ int main(int, char **) {
   auto menu_bar =
       draw_frames | rpp::operators::tap([](const model::ViewModel &vm) { draw_menu_bar(vm); });
 
-  auto window_render =
-      draw_frames | rpp::operators::tap([](const model::ViewModel &vm) { draw_everything(vm); });
+  auto window_render = draw_frames | rpp::operators::tap([](const model::ViewModel &vm) {
+                         ImGui::Begin("test", NULL, ImGuiWindowFlags_NoTitleBar);
+                         draw_everything(vm);
+                         ImGui::End();
+                       });
 
   auto renderers = menu_bar | rpp::operators::merge_with(window_render);
 
