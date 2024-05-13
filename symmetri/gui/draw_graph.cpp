@@ -121,13 +121,13 @@ void draw_arc(const Arc& arc, const std::vector<Node>& nodes,
   ImVec2 mouse_pos_delta_to_segment =
       mouse_pos_projected_on_segment - mouse_pos;
   bool is_segment_hovered =
-      vm.m.data->arc_selected == &arc ||
+      vm.arc_selected == &arc ||
       (ImLengthSqr(mouse_pos_delta_to_segment) <= max_distance * max_distance &&
-       vm.m.data->node_hovered_in_scene == nullptr);
+       vm.node_hovered_in_scene == nullptr);
 
   if (is_segment_hovered) {
     setHoveredArcInScene(&arc);
-  } else if (vm.m.data->arc_hovered_in_scene == &arc) {
+  } else if (vm.arc_hovered_in_scene == &arc) {
     setHoveredArcInScene(nullptr);
   }
 
@@ -136,10 +136,10 @@ void draw_arc(const Arc& arc, const std::vector<Node>& nodes,
     setSelectedNode(nullptr);
   }
 
-  ImU32 imcolor = getColor(color) |
-                  ((ImU32)IM_F32_TO_INT8_SAT(
-                      vm.m.data->arc_hovered_in_scene == &arc ? 1.0f : 0.65f))
-                      << IM_COL32_A_SHIFT;
+  ImU32 imcolor =
+      getColor(color) | ((ImU32)IM_F32_TO_INT8_SAT(
+                            vm.arc_hovered_in_scene == &arc ? 1.0f : 0.65f))
+                            << IM_COL32_A_SHIFT;
   auto draw_list = ImGui::GetWindowDrawList();
 
   const auto d = p2 - p1;
@@ -154,14 +154,14 @@ void draw_arc(const Arc& arc, const std::vector<Node>& nodes,
   const auto c = ImRotate(ImVec2(+1.f, -1.f) * r, a_cos, a_sin);
   draw_list->AddTriangleFilled(center + a, center + b, center + c, imcolor);
   draw_list->AddLine(p1, p2, imcolor,
-                     vm.m.data->arc_hovered_in_scene == &arc ? 3.0f : 2.0f);
+                     vm.arc_hovered_in_scene == &arc ? 3.0f : 2.0f);
 };
 
 void draw_nodes(const Node& node, size_t idx, const model::ViewModel& vm) {
   setContextMenuInactive();
-  const auto& node_selected = vm.m.data->node_selected;
-  const auto& node_hovered_in_list = vm.m.data->node_hovered_in_list;
-  const auto& node_hovered_in_scene = vm.m.data->node_hovered_in_scene;
+  const auto& node_selected = vm.node_selected;
+  const auto& node_hovered_in_list = vm.node_hovered_in_list;
+  const auto& node_hovered_in_scene = vm.node_hovered_in_scene;
 
   ImGui::PushID(node.name.c_str());
   ImVec2 node_rect_min = offset + node.Pos;
@@ -228,13 +228,17 @@ void draw_everything(const model::ViewModel& vm) {
   const auto& g = vm.m.data->graph;
   const auto& n_idx = vm.data->n_idx;
   const auto& a_idx = vm.data->a_idx;
-  const auto& scrolling = vm.m.data->scrolling;
-  const auto& node_selected = vm.m.data->node_selected;
-  const auto& node_hovered_in_list = vm.m.data->node_hovered_in_list;
-  const auto& node_hovered_in_scene = vm.m.data->node_hovered_in_scene;
-  const auto& arc_selected = vm.m.data->arc_selected;
-  const auto& arc_hovered_in_scene = vm.m.data->arc_hovered_in_scene;
-  const auto context_menu_active = vm.m.data->context_menu_active;
+
+  // const auto& g = vm.graph;
+  // const auto& n_idx = vm.n_idx;
+  // const auto& a_idx = vm.a_idx;
+  const auto& scrolling = vm.scrolling;
+  const auto& node_selected = vm.node_selected;
+  const auto& node_hovered_in_list = vm.node_hovered_in_list;
+  const auto& node_hovered_in_scene = vm.node_hovered_in_scene;
+  const auto& arc_selected = vm.arc_selected;
+  const auto& arc_hovered_in_scene = vm.arc_hovered_in_scene;
+  const auto context_menu_active = vm.context_menu_active;
 
   ImVec2 WindowSize = ImGui::GetWindowSize();
   WindowSize.y -= 140.0f;
@@ -342,7 +346,9 @@ void draw_everything(const model::ViewModel& vm) {
   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
               1000.0f / io.Framerate, io.Framerate);
   ImGui::SameLine(ImGui::GetWindowWidth() - 340);
-  ImGui::Checkbox("Show grid", &vm.m.data->show_grid);
+  static bool yes;
+  ImGui::Checkbox("Show grid", &yes);
+  // ImGui::Checkbox("Show grid", &vm.show_grid);
   ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
   ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(60, 60, 70, 200));
@@ -355,7 +361,7 @@ void draw_everything(const model::ViewModel& vm) {
   auto draw_list = ImGui::GetWindowDrawList();
 
   // Display grid
-  if (vm.m.data->show_grid) {
+  if (vm.show_grid) {
     draw_grid(scrolling);
   }
 

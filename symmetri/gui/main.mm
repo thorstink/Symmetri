@@ -67,18 +67,17 @@ int main(int, char **) {
   auto reducers = rpp::source::create<model::Reducer>(&rxdispatch::dequeue) |
                   rpp::operators::subscribe_on(rpp::schedulers::new_thread{});
 
-  auto models =
-      reducers | rpp::operators::subscribe_on(rximgui::rl) |
-      rpp::operators::scan(model::initializeModel(), [=](model::Model &&m, model::Reducer f) {
-        try {
-          auto &&r = f(std::move(m));
-          r.data->timestamp = std::chrono::steady_clock::now();
-          return r;
-        } catch (const std::exception &e) {
-          printf("%s", e.what());
-          return std::move(m);
-        }
-      });  // maybe Sample?
+  auto models = reducers | rpp::operators::subscribe_on(rximgui::rl) |
+                rpp::operators::scan(model::initializeModel(),
+                                     [=](model::Model &&m, const model::Reducer &f) {
+                                       try {
+                                         m.data->timestamp = std::chrono::steady_clock::now();
+                                         return f(std::move(m));
+                                       } catch (const std::exception &e) {
+                                         printf("%s", e.what());
+                                         return std::move(m);
+                                       }
+                                     });  // maybe Sample?
 
   auto view_models = models | rpp::operators::filter([=](const model::Model &m) {
                        return m.data->timestamp <= std::chrono::steady_clock::now();

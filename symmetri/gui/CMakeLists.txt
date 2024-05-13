@@ -17,6 +17,7 @@ include_directories(
     imgui
     imgui/backends
     ../externals
+    ../
     gui
     extensions
 )
