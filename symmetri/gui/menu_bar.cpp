@@ -11,7 +11,7 @@ model::Reducer updateActiveFile(const std::filesystem::path &file) {
     symmetri::Net net;
     symmetri::Marking marking;
     symmetri::PriorityTable pt;
-    std::map<std::string, std::pair<float, float>> positions;
+    std::map<std::string, ImVec2> positions;
 
     const std::filesystem::path pn_file = m.active_file.value();
     if (pn_file.extension() == std::string(".pnml")) {

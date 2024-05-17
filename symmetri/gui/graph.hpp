@@ -62,8 +62,7 @@ struct Graph {
 };
 
 inline std::shared_ptr<Graph> createGraph(
-    const symmetri::Net net,
-    const std::map<std::string, std::pair<float, float>>& positions) {
+    const symmetri::Net net, const std::map<std::string, ImVec2>& positions) {
   std::vector<Node> nodes;
   std::vector<Arc> arcs;
 
@@ -72,8 +71,7 @@ inline std::shared_ptr<Graph> createGraph(
       if (std::find_if(nodes.begin(), nodes.end(), [&](const auto& n) {
             return s.first == n.name;
           }) == std::end(nodes)) {
-        nodes.push_back(
-            {s.first, Node::Type::Place, toImVec2(positions.at(s.first))});
+        nodes.push_back({s.first, Node::Type::Place, positions.at(s.first)});
       }
     }
 
@@ -81,12 +79,11 @@ inline std::shared_ptr<Graph> createGraph(
       if (std::find_if(nodes.begin(), nodes.end(), [&](const auto& n) {
             return s.first == n.name;
           }) == std::end(nodes)) {
-        nodes.push_back(
-            {s.first, Node::Type::Place, toImVec2(positions.at(s.first))});
+        nodes.push_back({s.first, Node::Type::Place, positions.at(s.first)});
       }
     }
 
-    nodes.push_back({t, Node::Type::Transition, toImVec2(positions.at(t))});
+    nodes.push_back({t, Node::Type::Transition, positions.at(t)});
   }
 
   // make the graph

@@ -201,7 +201,7 @@ struct Petri {
    */
   void fireTransitions();
 
-  struct {
+  struct PTNet {
     /**
      * @brief (ordered) list of string representation of transitions
      *

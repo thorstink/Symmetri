@@ -1,13 +1,14 @@
 #include "position_parsers.h"
 
 #include "tinyxml2/tinyxml2.h"
+
 using namespace tinyxml2;
 
 namespace farbart {
 
-std::map<std::string, std::pair<float, float>> readPnmlPositions(
+std::map<std::string, ImVec2> readPnmlPositions(
     const std::set<std::string> &files) {
-  std::map<std::string, std::pair<float, float>> positions;
+  std::map<std::string, ImVec2> positions;
 
   for (auto file : files) {
     XMLDocument net;
@@ -22,8 +23,8 @@ std::map<std::string, std::pair<float, float>> readPnmlPositions(
       auto place_id = child->Attribute("id");
       auto position =
           child->FirstChildElement("graphics")->FirstChildElement("position");
-      positions[place_id] = {std::stof(position->Attribute("x")),
-                             std::stof(position->Attribute("y"))};
+      positions[place_id] = ImVec2{std::stof(position->Attribute("x")),
+                                   std::stof(position->Attribute("y"))};
     }
 
     // loop transitions
@@ -32,8 +33,8 @@ std::map<std::string, std::pair<float, float>> readPnmlPositions(
       auto transition_id = child->Attribute("id");
       auto position =
           child->FirstChildElement("graphics")->FirstChildElement("position");
-      positions[transition_id] = {std::stof(position->Attribute("x")),
-                                  std::stof(position->Attribute("y"))};
+      positions[transition_id] = ImVec2{std::stof(position->Attribute("x")),
+                                        std::stof(position->Attribute("y"))};
     }
   }
 
