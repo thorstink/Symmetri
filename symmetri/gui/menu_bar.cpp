@@ -21,7 +21,6 @@ model::Reducer updateActiveFile(const std::filesystem::path &file) {
     } else {
       std::tie(net, marking, pt) = symmetri::readGrml({pn_file});
     }
-    m.graph.reset(*createGraph(net, positions));
     return m_ptr;
   };
 }
