@@ -26,18 +26,18 @@ model::Reducer updateActiveFile(const std::filesystem::path &file) {
 }
 
 void draw_menu_bar(const model::ViewModel &vm) {
-  auto fileDialog = vm.file_dialog;
-  fileDialog->Display();
-  if (fileDialog->HasSelected()) {
-    rxdispatch::push(updateActiveFile(fileDialog->GetSelected()));
-    fileDialog->ClearSelected();
+  auto &file_dialog = model::ViewModel::file_dialog;
+  file_dialog.Display();
+  if (file_dialog.HasSelected()) {
+    rxdispatch::push(updateActiveFile(file_dialog.GetSelected()));
+    file_dialog.ClearSelected();
   }
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
       if (ImGui::MenuItem("New")) {
       }
       if (ImGui::MenuItem("Open")) {
-        fileDialog->Open();
+        file_dialog.Open();
       }
       if (ImGui::MenuItem("Save")) {
         rxdispatch::push(farbart::writeToDisk(std::filesystem::path(

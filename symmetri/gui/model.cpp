@@ -1,5 +1,6 @@
 #include "model.h"
 
+#include <mutex>
 #include <numeric>
 
 #include "position_parsers.h"
@@ -47,9 +48,26 @@ Model initializeModel() {
   std::iota(m.t_view.begin(), m.t_view.end(), 0);
   std::iota(m.p_view.begin(), m.p_view.end(), 0);
 
-  m.file_dialog.SetTitle("title");
-  m.file_dialog.SetTypeFilters({".pnml", ".grml"});
-  m.file_dialog.SetPwd(m.working_dir);
   return m_ptr;
 }
+
+ViewModel::ViewModel(const Model& m)
+    : show_grid(m.data->show_grid),
+      context_menu_active(m.data->context_menu_active),
+      scrolling(m.data->scrolling),
+      selected_arc(m.data->selected_arc),
+      selected_node(m.data->selected_node),
+      t_view(m.data->t_view),
+      p_view(m.data->p_view),
+      net(m.data->net),
+      t_positions(m.data->t_positions),
+      p_positions(m.data->p_positions) {
+  static std::once_flag flag;
+  std::call_once(flag, [&] {
+    file_dialog.SetTitle("title");
+    file_dialog.SetTypeFilters({".pnml", ".grml"});
+  });
+  file_dialog.SetPwd(m.data->working_dir);
+}
+
 }  // namespace model
