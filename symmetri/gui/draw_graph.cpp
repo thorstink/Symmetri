@@ -22,6 +22,24 @@ static ImVec2 offset;
 static const float NODE_SLOT_RADIUS = 4.0f;
 static const ImVec2 NODE_WINDOW_PADDING(8.0f, 8.0f);
 
+template <class T>
+std::size_t GetIndexFromRef(std::vector<T> const& vec, T const& item) {
+  T const* data = vec.data();
+
+  if (std::less<T const*>{}(&item, data) ||
+      std::greater_equal<T const*>{}(&item, data + vec.size()))
+    throw std::out_of_range{"The given object is not part of the vector."};
+
+  return static_cast<std::size_t>(&item - vec.data());
+};
+
+template <class T>
+bool isPartOfVector(std::vector<T> const& vec, T const& item) {
+  T const* data = vec.data();
+  return !(std::less<T const*>{}(&item, data) ||
+           std::greater_equal<T const*>{}(&item, data + vec.size()));
+};
+
 void moveView(const ImVec2& d) {
   rxdispatch::push([=](model::Model&& m) mutable {
     m.data->scrolling += d;
@@ -32,6 +50,26 @@ void moveView(const ImVec2& d) {
 void moveNode(bool is_place, size_t idx, const ImVec2& d) {
   rxdispatch::push([=](model::Model&& m) mutable {
     (is_place ? m.data->p_positions[idx] : m.data->t_positions[idx]) += d;
+    return m;
+  });
+}
+
+void removePlace(const std::string* ptr) {
+  rxdispatch::push([=](model::Model&& m) mutable {
+    auto idx = GetIndexFromRef(m.data->net.place, *ptr);
+    m.data->p_view.erase(
+        std::remove(m.data->p_view.begin(), m.data->p_view.end(), idx),
+        m.data->p_view.end());
+    return m;
+  });
+}
+
+void removeTransition(const std::string* ptr) {
+  rxdispatch::push([=](model::Model&& m) mutable {
+    auto idx = GetIndexFromRef(m.data->net.transition, *ptr);
+    m.data->t_view.erase(
+        std::remove(m.data->t_view.begin(), m.data->t_view.end(), idx),
+        m.data->t_view.end());
     return m;
   });
 }
@@ -101,26 +139,10 @@ void renderNodeEntry(const std::string& name, size_t idx, bool selected) {
   ImGui::PopID();
 }
 
-template <class T>
-std::size_t GetIndexFromRef(std::vector<T> const& vec, T const& item) {
-  T const* data = vec.data();
-
-  if (std::less<T const*>{}(&item, data) ||
-      std::greater_equal<T const*>{}(&item, data + vec.size()))
-    throw std::out_of_range{"The given object is not part of the vector."};
-
-  return static_cast<std::size_t>(&item - vec.data());
-};
-
-template <class T>
-bool isPartOfVector(std::vector<T> const& vec, T const& item) {
-  T const* data = vec.data();
-  return !(std::less<T const*>{}(&item, data) ||
-           std::greater_equal<T const*>{}(&item, data + vec.size()));
-};
 static ImVec2 GetCenterPos(const ImVec2& pos, const ImVec2& size) {
   return ImVec2(pos.x + size.x * 0.5f, pos.y + size.y * 0.5f);
 }
+
 ImU32 getColor(symmetri::Token token) {
   using namespace symmetri;
   static std::unordered_map<Token, ImU32> color_table;
@@ -151,6 +173,11 @@ void draw_grid(const ImVec2& scrolling) {
 
 void draw_arc(size_t t_idx, const model::ViewModel& vm) {
   const auto draw = [&](const symmetri::AugmentedToken& t, bool is_input) {
+    if (std::find(vm.p_view.begin(), vm.p_view.end(), t.place) ==
+        vm.p_view.end()) {
+      return;
+    }
+
     const ImVec2 i = offset + GetCenterPos(!is_input ? vm.t_positions[t_idx]
                                                      : vm.p_positions[t.place],
                                            size);
@@ -417,10 +444,10 @@ void draw_everything(const model::ViewModel& vm) {
 
   // Open context menu
   if (ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
-    if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) ||
-        !ImGui::IsAnyItemHovered()) {
+    // if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) ||
+    //     !ImGui::IsAnyItemHovered()) {
+    if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup)) {
       setContextMenuActive();
-      std::cout << "hi" << std::endl;
     }
   }
   if (context_menu_active) {
@@ -434,6 +461,13 @@ void draw_everything(const model::ViewModel& vm) {
       ImGui::Text("Node '%s'", vm.selected_node->c_str());
       ImGui::Separator();
       if (ImGui::MenuItem("Delete")) {
+        auto transition_ptr =
+            std::find(vm.net.transition.begin(), vm.net.transition.end(),
+                      *vm.selected_node);
+
+        bool is_place = transition_ptr == vm.net.transition.end();
+        is_place ? removePlace(vm.selected_node)
+                 : removeTransition(vm.selected_node);
       }
     } else if (vm.selected_arc) {
       ImGui::Text("Arc");
