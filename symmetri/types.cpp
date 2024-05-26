@@ -9,15 +9,13 @@ namespace symmetri {
 bool isSynchronous(const DirectMutation&) { return true; }
 Token fire(const DirectMutation&) { return Color::Success; }
 
-const std::string& Color::toString(Token r) { return Color::map[r]; }
+std::string Color::toString(Token r) { return Color::map[r]; }
 
-const Token& Color::registerToken(const std::string& s) {
+Token Color::registerToken(const std::string& s) {
   return Color::map.insert({impl::HashColor(s.c_str()), s}).first->first;
 }
 
-const std::unordered_map<Token, std::string>& Color::getColors() {
-  return Color::map;
-}
+std::unordered_map<Token, std::string> Color::getColors() { return Color::map; }
 
 bool stateNetEquality(const Net& net1, const Net& net2) {
   if (net1.size() != net2.size()) {

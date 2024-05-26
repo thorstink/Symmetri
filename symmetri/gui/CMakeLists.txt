@@ -25,6 +25,7 @@ include_directories(
 set(SOURCES
     main.mm
     model.cpp
+    load_file.cpp
     menu_bar.cpp
     draw_graph.cpp
     rxdispatch.cpp

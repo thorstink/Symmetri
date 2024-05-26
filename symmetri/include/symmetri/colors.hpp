@@ -59,16 +59,16 @@ class Color {
    *
    * @return const std::unordered_map<Token, std::string>&
    */
-  static const std::unordered_map<Token, std::string>& getColors();
+  static std::unordered_map<Token, std::string> getColors();
 
   /**
    * @brief Get the string representation of a Token. This matches the
    * string-description of the Token-color in the XML if applicable.
    *
    * @param r
-   * @return const std::string&
+   * @return const std::string
    */
-  static const std::string& toString(Token r);
+  static std::string toString(Token r);
 
   /**
    * @brief By registering a color, a Token is calculated that represents that
@@ -76,9 +76,9 @@ class Color {
    * used by Reducers to return.
    *
    * @param color string describing a color
-   * @return const Token&
+   * @return const Token
    */
-  static const Token& registerToken(const std::string& color);
+  static Token registerToken(const std::string& color);
 
  private:
   inline static std::unordered_map<Token, std::string> map = {

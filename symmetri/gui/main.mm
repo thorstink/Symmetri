@@ -120,7 +120,7 @@ int main(int, char **) {
       renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
       id<MTLRenderCommandEncoder> renderEncoder =
           [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
-      // [renderEncoder pushDebugGroup:@"ImGui demo"]; ????
+      // [renderEncoder pushDebugGroup:@"ImGui demo"];
 
       // Start the Dear ImGui frame
       ImGui_ImplMetal_NewFrame(renderPassDescriptor);

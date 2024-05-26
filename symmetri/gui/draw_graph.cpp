@@ -115,6 +115,7 @@ void setContextMenuInactive() {
     return m;
   });
 }
+
 void setSelectedNode(const std::string& idx) {
   rxdispatch::push([ptr = &idx](model::Model&& m) {
     m.data->selected_node = ptr;
@@ -326,6 +327,7 @@ void draw_everything(const model::ViewModel& vm) {
 
     static std::optional<std::pair<size_t, int>> local_priority = std::nullopt;
     if (not local_priority.has_value()) {
+      // ????
       local_priority = {idx, vm.net.priority[idx]};
     } else if (idx == local_priority->first &&
                local_priority->second != vm.net.priority[idx]) {
@@ -345,11 +347,14 @@ void draw_everything(const model::ViewModel& vm) {
         local_color = std::nullopt;
     if (not local_color.has_value()) {
       local_color = {vm.selected_arc, vm.selected_arc->color};
-    } else if (vm.selected_arc == local_color->first &&
+    } else if (local_color->first != nullptr &&
+               vm.selected_arc == local_color->first &&
                local_color->second != vm.selected_arc->color) {
+      // if statement also buggy
       updateArcColor(vm.selected_arc, local_color->second);
       local_color = std::nullopt;
-    } else if (vm.selected_arc != local_color->first) {
+    } else if (local_color->first == nullptr ||
+               vm.selected_arc != local_color->first) {
       local_color.reset();
     }
 
@@ -368,9 +373,10 @@ void draw_everything(const model::ViewModel& vm) {
 
     if (ImGui::BeginMenu(
             symmetri::Color::toString(vm.selected_arc->color).c_str())) {
-      for (const auto& arc : symmetri::Color::getColors()) {
-        if (ImGui::MenuItem(arc.second.c_str())) {
-          local_color = {vm.selected_arc, arc.first};
+      for (const auto& color : vm.net.color) {
+        if (ImGui::MenuItem(color.c_str())) {
+          local_color = {vm.selected_arc,
+                         symmetri::Color::registerToken(color)};
         }
       }
       ImGui::EndMenu();
@@ -444,12 +450,14 @@ void draw_everything(const model::ViewModel& vm) {
 
   // Open context menu
   if (ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
-    // if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) ||
-    //     !ImGui::IsAnyItemHovered()) {
-    if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup)) {
-      setContextMenuActive();
+    if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) ||
+        !ImGui::IsAnyItemHovered()) {
+      if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup)) {
+        // setContextMenuActive();
+      }
     }
   }
+
   if (context_menu_active) {
     ImGui::OpenPopup("context_menu");
   }
@@ -475,8 +483,8 @@ void draw_everything(const model::ViewModel& vm) {
       if (ImGui::MenuItem("Delete")) {
       }
       if (ImGui::BeginMenu("Change color")) {
-        for (const auto& arc : symmetri::Color::getColors()) {
-          if (ImGui::MenuItem(arc.second.c_str())) {
+        for (const auto& color : vm.net.color) {
+          if (ImGui::MenuItem(color.c_str())) {
           }
         }
         ImGui::EndMenu();

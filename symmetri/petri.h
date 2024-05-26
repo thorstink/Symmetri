@@ -12,6 +12,7 @@
 #include "symmetri/types.h"
 
 namespace symmetri {
+
 /**
  * @brief AugmentedToken describes a token with a color in a
  * particular place.
@@ -298,4 +299,16 @@ struct Petri {
   void fireAsynchronous(const size_t t);
 };
 
+std::tuple<std::vector<std::string>, std::vector<std::string>,
+           std::vector<std::string>, std::vector<Callback>>
+convert(const Net &_net);
+std::tuple<std::vector<SmallVectorInput>, std::vector<SmallVectorInput>>
+populateIoLookups(const Net &_net, const std::vector<Place> &ordered_places,
+                  const std::vector<Place> &);
+std::vector<SmallVector> createReversePlaceToTransitionLookup(
+    size_t place_count, size_t transition_count,
+    const std::vector<SmallVectorInput> &input_transitions);
+
+std::vector<int8_t> createPriorityLookup(
+    const std::vector<Transition> transition, const PriorityTable &_priority);
 }  // namespace symmetri
