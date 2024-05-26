@@ -2,15 +2,12 @@
 
 namespace symmetri {
 std::tuple<std::vector<std::string>, std::vector<std::string>,
-           std::vector<std::string>, std::vector<Callback>>
+           std::vector<Callback>>
 convert(const Net &_net) {
   const auto transition_count = _net.size();
   std::vector<std::string> transitions;
   std::vector<std::string> places;
-  std::vector<std::string> colors;
-  for (const auto &[t, c] : Color::getColors()) {
-    colors.push_back(c);
-  }
+
   std::vector<Callback> store;
   transitions.reserve(transition_count);
   store.reserve(transition_count);
@@ -28,12 +25,11 @@ convert(const Net &_net) {
     auto last = std::unique(places.begin(), places.end());
     places.erase(last, places.end());
   }
-  return {transitions, places, colors, store};
+  return {transitions, places, store};
 }
 
 std::tuple<std::vector<SmallVectorInput>, std::vector<SmallVectorInput>>
-populateIoLookups(const Net &_net, const std::vector<Place> &ordered_places,
-                  const std::vector<Place> &) {
+populateIoLookups(const Net &_net, const std::vector<Place> &ordered_places) {
   std::vector<SmallVectorInput> input_n, output_n;
   for (const auto &[t, io] : _net) {
     SmallVectorInput q_in, q_out;
@@ -93,9 +89,8 @@ Petri::Petri(const Net &_net, const PriorityTable &_priority,
   tokens.reserve(100);
   scheduled_callbacks.reserve(10);
 
-  std::tie(net.transition, net.place, net.color, net.store) = convert(_net);
-  std::tie(net.input_n, net.output_n) =
-      populateIoLookups(_net, net.place, net.color);
+  std::tie(net.transition, net.place, net.store) = convert(_net);
+  std::tie(net.input_n, net.output_n) = populateIoLookups(_net, net.place);
   net.p_to_ts_n = createReversePlaceToTransitionLookup(
       net.place.size(), net.transition.size(), net.input_n);
   net.priority = createPriorityLookup(net.transition, _priority);

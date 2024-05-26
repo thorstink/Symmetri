@@ -358,22 +358,9 @@ void draw_everything(const model::ViewModel& vm) {
       local_color.reset();
     }
 
-    // const Node& from = g.nodes[arc_selected->from_to_pos_idx[0]];
-    // const Node& to = g.nodes[arc_selected->from_to_pos_idx[1]];
-    // ImGui::Text("From:");
-    // ImGui::SameLine();
-    // ImGui::PushItemWidth(-1);
-    // // ImGui::Text("%s", from.name.data());
-    // ImGui::PopItemWidth();
-    // ImGui::Text("To:");
-    // ImGui::SameLine();
-    // ImGui::PushItemWidth(-1);
-    // // ImGui::Text("%s", to.name.data());
-    // ImGui::PopItemWidth();
-
     if (ImGui::BeginMenu(
             symmetri::Color::toString(vm.selected_arc->color).c_str())) {
-      for (const auto& color : vm.net.color) {
+      for (const auto& color : vm.colors) {
         if (ImGui::MenuItem(color.c_str())) {
           local_color = {vm.selected_arc,
                          symmetri::Color::registerToken(color)};
@@ -483,7 +470,7 @@ void draw_everything(const model::ViewModel& vm) {
       if (ImGui::MenuItem("Delete")) {
       }
       if (ImGui::BeginMenu("Change color")) {
-        for (const auto& color : vm.net.color) {
+        for (const auto& color : vm.colors) {
           if (ImGui::MenuItem(color.c_str())) {
           }
         }

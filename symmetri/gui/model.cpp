@@ -33,6 +33,7 @@ ViewModel::ViewModel(const Model& m)
       selected_node(m.data->selected_node),
       t_view(m.data->t_view),
       p_view(m.data->p_view),
+      colors(m.data->colors),
       net(m.data->net),
       t_positions(m.data->t_positions),
       p_positions(m.data->p_positions) {

@@ -29,6 +29,7 @@ struct Model {
     std::optional<std::filesystem::path> active_file;
     std::vector<ImVec2> t_positions, p_positions;
     std::vector<size_t> t_view, p_view;
+    std::vector<std::string> colors;
     symmetri::Petri::PTNet net;
   };
   std::shared_ptr<shared> data = std::make_shared<shared>();
@@ -41,6 +42,8 @@ struct ViewModel {
   const std::string *selected_node;
 
   std::vector<size_t> t_view, p_view;
+  std::vector<std::string> colors;
+
   const symmetri::Petri::PTNet &net;
   const std::vector<ImVec2> &t_positions, p_positions;
 

@@ -35,10 +35,10 @@ void loadPetriNet(const std::filesystem::path& file) {
     }
 
     symmetri::Petri::PTNet new_net;
-    std::tie(new_net.transition, new_net.place, new_net.color, new_net.store) =
+    std::tie(new_net.transition, new_net.place, new_net.store) =
         symmetri::convert(net);
     std::tie(new_net.input_n, new_net.output_n) =
-        symmetri::populateIoLookups(net, new_net.place, new_net.color);
+        symmetri::populateIoLookups(net, new_net.place);
     new_net.priority = symmetri::createPriorityLookup(new_net.transition, pt);
 
     for (const auto& transition : new_net.transition) {
@@ -55,10 +55,18 @@ void loadPetriNet(const std::filesystem::path& file) {
 
     // update lookups:
     for (auto& inputs : new_net.input_n) {
-      for (auto& [idx, color] : inputs) idx += old_place_count;
+      for (auto& [idx, color] : inputs) {
+        idx += old_place_count;
+      }
     }
     for (auto& outputs : new_net.output_n) {
-      for (auto& [idx, color] : outputs) idx += old_place_count;
+      for (auto& [idx, color] : outputs) {
+        idx += old_place_count;
+      }
+    }
+    m.colors.clear();
+    for (const auto& [t, c] : symmetri::Color::getColors()) {
+      m.colors.push_back(c);
     }
 
     // Move elements from src to dest.
@@ -78,7 +86,7 @@ void loadPetriNet(const std::filesystem::path& file) {
                           std::make_move_iterator(new_net.priority.begin()),
                           std::make_move_iterator(new_net.priority.end()));
 
-    m.net.color = new_net.color;
+    // m.net.color = new_net.color;
 
     m.t_view.clear();
     m.p_view.clear();

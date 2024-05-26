@@ -216,12 +216,6 @@ struct Petri {
     std::vector<std::string> place;
 
     /**
-     * @brief (ordered) list of string representation of colors
-     *
-     */
-    std::vector<std::string> color;
-
-    /**
      * @brief list of list of inputs to transitions. This vector is indexed like
      * `transition`.
      *
@@ -300,11 +294,10 @@ struct Petri {
 };
 
 std::tuple<std::vector<std::string>, std::vector<std::string>,
-           std::vector<std::string>, std::vector<Callback>>
+           std::vector<Callback>>
 convert(const Net &_net);
 std::tuple<std::vector<SmallVectorInput>, std::vector<SmallVectorInput>>
-populateIoLookups(const Net &_net, const std::vector<Place> &ordered_places,
-                  const std::vector<Place> &);
+populateIoLookups(const Net &_net, const std::vector<Place> &ordered_places);
 std::vector<SmallVector> createReversePlaceToTransitionLookup(
     size_t place_count, size_t transition_count,
     const std::vector<SmallVectorInput> &input_transitions);
