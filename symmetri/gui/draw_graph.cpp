@@ -324,11 +324,10 @@ void draw_everything(const model::ViewModel& vm) {
     }
     ImGui::InputText("input text", view_name, 128);
     ImGui::PopItemWidth();
-
     static std::optional<std::pair<size_t, int>> local_priority = std::nullopt;
     if (not local_priority.has_value()) {
-      // ????
-      local_priority = {idx, vm.net.priority[idx]};
+      local_priority =
+          std::make_pair(idx, static_cast<int>(vm.net.priority[idx]));  // crash
     } else if (idx == local_priority->first &&
                local_priority->second != vm.net.priority[idx]) {
       updateTransitionPriority(idx, local_priority->second);
@@ -336,7 +335,7 @@ void draw_everything(const model::ViewModel& vm) {
       local_priority.reset();
     }
 
-    if (not is_place) {
+    if (not is_place && local_priority.has_value()) {
       ImGui::Text("Priority");
       ImGui::SameLine();
       ImGui::InputInt("##", &(local_priority->second));
@@ -358,7 +357,8 @@ void draw_everything(const model::ViewModel& vm) {
       local_color.reset();
     }
 
-    if (ImGui::BeginMenu(
+    if (local_color.has_value() &&
+        ImGui::BeginMenu(
             symmetri::Color::toString(vm.selected_arc->color).c_str())) {
       for (const auto& color : vm.colors) {
         if (ImGui::MenuItem(color.c_str())) {
@@ -377,7 +377,7 @@ void draw_everything(const model::ViewModel& vm) {
   ImGui::Separator();
   constexpr float height_fraction = 0.8 / 2.0;
   ImGui::BeginChild("place_list", ImVec2(200, height_fraction * WindowSize.y));
-  for (auto&& idx : vm.p_view) {
+  for (const auto& idx : vm.p_view) {
     renderNodeEntry(vm.net.place[idx], idx,
                     &vm.net.place[idx] == vm.selected_node);
   }
@@ -387,7 +387,7 @@ void draw_everything(const model::ViewModel& vm) {
   ImGui::Separator();
   ImGui::BeginChild("transition_list",
                     ImVec2(200, height_fraction * WindowSize.y));
-  for (auto&& idx : vm.t_view) {
+  for (const auto& idx : vm.t_view) {
     renderNodeEntry(vm.net.transition[idx], idx,
                     &vm.net.transition[idx] == vm.selected_node);
   }
@@ -425,10 +425,11 @@ void draw_everything(const model::ViewModel& vm) {
   }
 
   // draw places & transitions
+
   for (auto&& idx : vm.t_view) {
+    draw_arc(idx, vm);
     draw_nodes(false, idx, vm.net.transition[idx], vm.t_positions[idx],
                &vm.net.transition[idx] == vm.selected_node);
-    draw_arc(idx, vm);
   }
   for (auto&& idx : vm.p_view) {
     draw_nodes(true, idx, vm.net.place[idx], vm.p_positions[idx],

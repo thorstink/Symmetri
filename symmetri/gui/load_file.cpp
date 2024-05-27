@@ -64,6 +64,7 @@ void loadPetriNet(const std::filesystem::path& file) {
         idx += old_place_count;
       }
     }
+
     m.colors.clear();
     for (const auto& [t, c] : symmetri::Color::getColors()) {
       m.colors.push_back(c);
@@ -85,8 +86,6 @@ void loadPetriNet(const std::filesystem::path& file) {
     m.net.priority.insert(m.net.priority.end(),
                           std::make_move_iterator(new_net.priority.begin()),
                           std::make_move_iterator(new_net.priority.end()));
-
-    // m.net.color = new_net.color;
 
     m.t_view.clear();
     m.p_view.clear();
