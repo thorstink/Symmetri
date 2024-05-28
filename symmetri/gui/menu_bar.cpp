@@ -3,7 +3,7 @@
 #include "load_file.h"
 #include "rxdispatch.h"
 #include "symmetri/parsers.h"
-#include "write_graph_to_disk.hpp"
+#include "write_graph_to_disk.h"
 
 void draw_menu_bar(const model::ViewModel &vm) {
   auto &file_dialog = model::ViewModel::file_dialog;
@@ -21,7 +21,7 @@ void draw_menu_bar(const model::ViewModel &vm) {
       }
       if (ImGui::MenuItem("Save")) {
         rxdispatch::push(farbart::writeToDisk(std::filesystem::path(
-            "/Users/thomashorstink/Projects/Symmetri/nets/test9001.pnml")));
+            "/Users/thomashorstink/Projects/Symmetri/nets/test9002.pnml")));
       }
       // Exit...
       ImGui::EndMenu();
