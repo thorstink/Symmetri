@@ -95,6 +95,8 @@ void loadPetriNet(const std::filesystem::path& file) {
     std::iota(m.t_view.begin(), m.t_view.end(), old_transition_count);
     std::iota(m.p_view.begin(), m.p_view.end(), old_place_count);
 
+    m.scrolling = ImVec2(0, 0);
+
     return model;
   });
 }
