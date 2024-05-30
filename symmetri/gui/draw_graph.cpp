@@ -5,7 +5,6 @@
 
 #include <math.h>  // fmodf
 
-#include <iostream>
 #include <optional>
 #include <string_view>
 
@@ -124,6 +123,14 @@ void setSelectedNode(const std::string& idx) {
   });
 };
 
+void resetSelection() {
+  rxdispatch::push([](model::Model&& m) {
+    m.data->selected_node = nullptr;
+    m.data->selected_arc = nullptr;
+    return m;
+  });
+};
+
 void setSelectedArc(const symmetri::AugmentedToken& ptr) {
   rxdispatch::push([ptr = &ptr](model::Model&& m) {
     m.data->selected_arc = ptr;
@@ -233,7 +240,6 @@ void draw_nodes(bool is_place, size_t idx, const std::string& name,
   ImVec2 node_rect_min = offset + position;
 
   // Display node contents first
-  bool old_any_active = ImGui::IsAnyItemActive();
   auto textWidth = ImGui::CalcTextSize(name.c_str()).x;
   ImGui::SetCursorScreenPos(node_rect_min + NODE_WINDOW_PADDING +
                             ImVec2(8.0f - textWidth * 0.5f, -20.0f));
@@ -252,12 +258,11 @@ void draw_nodes(bool is_place, size_t idx, const std::string& name,
   ImGui::InvisibleButton("node", size);
 
   const bool node_moving_active = ImGui::IsItemActive();
-
-  if (node_moving_active && ImGui::IsMouseClicked(0)) {
+  const bool is_clicked = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+  if (node_moving_active && is_clicked) {
     setSelectedNode(name);
-  }
-
-  if (node_moving_active && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+  } else if (node_moving_active &&
+             ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
     moveNode(is_place, idx, ImGui::GetIO().MouseDelta);
   }
 
@@ -434,16 +439,23 @@ void draw_everything(const model::ViewModel& vm) {
   }
 
   // Open context menu
-  if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) &&
-      not vm.context_menu_active) {
+  if (not vm.context_menu_active &&
+      ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
     if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) ||
         !ImGui::IsAnyItemHovered()) {
-      if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup)) {
-        setContextMenuActive();
-      }
+      // if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
+      // {
+      setContextMenuActive();
+      // }
     }
-  } else if (vm.context_menu_active) {
+  }
+
+  if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
+      !ImGui::IsAnyItemHovered()) {
     setContextMenuInactive();
+    if (vm.selected_node != nullptr || vm.selected_arc != nullptr) {
+      resetSelection();
+    }
   }
 
   if (vm.context_menu_active) {

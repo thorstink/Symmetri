@@ -82,25 +82,18 @@ int main(int, char **) {
                                        }
                                      });  // maybe Sample?
 
-  auto view_models = models | rpp::operators::filter([=](const model::Model &m) {
-                       return m.data->timestamp <= std::chrono::steady_clock::now();
-                     }) |
-                     rpp::operators::map([](const model::Model &m) { return model::ViewModel{m}; });
+  auto view_models =
+      models | rpp::operators::map([](const model::Model &m) { return model::ViewModel{m}; });
 
-  auto draw_frames = frames | rpp::operators::with_latest_from(rxu::take_at<1>(), view_models);
+  auto draw_frames = frames | rpp::operators::with_latest_from(rxu::take_at<1>(), view_models) |
+                     rpp::operators::tap([](const model::ViewModel &vm) {
+                       draw_menu_bar(vm);
+                       ImGui::Begin("test", NULL, ImGuiWindowFlags_NoTitleBar);
+                       draw_everything(vm);
+                       ImGui::End();
+                     });
+  draw_frames | rpp::operators::subscribe();
 
-  auto menu_bar =
-      draw_frames | rpp::operators::tap([](const model::ViewModel &vm) { draw_menu_bar(vm); });
-
-  auto window_render = draw_frames | rpp::operators::tap([](const model::ViewModel &vm) {
-                         ImGui::Begin("test", NULL, ImGuiWindowFlags_NoTitleBar);
-                         draw_everything(vm);
-                         ImGui::End();
-                       });
-
-  auto renderers = menu_bar | rpp::operators::merge_with(window_render);
-
-  renderers | rpp::operators::subscribe();
   // Main loop
   while (!glfwWindowShouldClose(window)) {
     @autoreleasepool {
