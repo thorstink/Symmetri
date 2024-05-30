@@ -8,6 +8,7 @@
 #include "rxdispatch.h"
 #include "rximgui.h"
 using namespace rximgui;
+#include <iostream>
 #include "draw_graph.h"
 #include "menu_bar.h"
 #include "model.h"
@@ -70,6 +71,8 @@ int main(int, char **) {
   auto models = reducers | rpp::operators::subscribe_on(rximgui::rl) |
                 rpp::operators::scan(model::initializeModel(),
                                      [=](model::Model &&m, const model::Reducer &f) {
+                                       static size_t i = 0;
+                                       std::cout << "update " << i++ << std::endl;
                                        try {
                                          m.data->timestamp = std::chrono::steady_clock::now();
                                          return f(std::move(m));
@@ -98,7 +101,6 @@ int main(int, char **) {
   auto renderers = menu_bar | rpp::operators::merge_with(window_render);
 
   renderers | rpp::operators::subscribe();
-
   // Main loop
   while (!glfwWindowShouldClose(window)) {
     @autoreleasepool {

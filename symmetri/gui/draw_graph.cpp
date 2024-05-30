@@ -228,7 +228,7 @@ void draw_arc(size_t t_idx, const model::ViewModel& vm) {
 
 void draw_nodes(bool is_place, size_t idx, const std::string& name,
                 const ImVec2& position, bool highlight) {
-  setContextMenuInactive();
+  // setContextMenuInactive();
   ImGui::PushID(name.c_str());
   ImVec2 node_rect_min = offset + position;
 
@@ -284,9 +284,6 @@ void draw_nodes(bool is_place, size_t idx, const std::string& name,
 };
 
 void draw_everything(const model::ViewModel& vm) {
-  const auto& scrolling = vm.scrolling;
-  const auto context_menu_active = vm.context_menu_active;
-
   ImVec2 WindowSize = ImGui::GetWindowSize();
   WindowSize.y -= 140.0f;
   // Draw a list of nodes on the left side
@@ -398,8 +395,8 @@ void draw_everything(const model::ViewModel& vm) {
   ImGui::BeginGroup();
 
   // Create our child canvas
-  ImGui::Text("Hold middle mouse button to scroll (%.2f,%.2f)", scrolling.x,
-              scrolling.y);
+  ImGui::Text("Hold middle mouse button to scroll (%.2f,%.2f)", vm.scrolling.x,
+              vm.scrolling.y);
   ImGui::SameLine();
   const auto io = ImGui::GetIO();
   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
@@ -416,12 +413,12 @@ void draw_everything(const model::ViewModel& vm) {
   ImGui::PopStyleVar();  // WindowPadding
   ImGui::PushItemWidth(120.0f);
 
-  offset = ImGui::GetCursorScreenPos() + scrolling;
+  offset = ImGui::GetCursorScreenPos() + vm.scrolling;
   auto draw_list = ImGui::GetWindowDrawList();
 
   // Display grid
   if (vm.show_grid) {
-    draw_grid(scrolling);
+    draw_grid(vm.scrolling);
   }
 
   // draw places & transitions
@@ -437,16 +434,19 @@ void draw_everything(const model::ViewModel& vm) {
   }
 
   // Open context menu
-  if (ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+  if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) &&
+      not vm.context_menu_active) {
     if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) ||
         !ImGui::IsAnyItemHovered()) {
       if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup)) {
-        // setContextMenuActive();
+        setContextMenuActive();
       }
     }
+  } else if (vm.context_menu_active) {
+    setContextMenuInactive();
   }
 
-  if (context_menu_active) {
+  if (vm.context_menu_active) {
     ImGui::OpenPopup("context_menu");
   }
 
@@ -493,6 +493,9 @@ void draw_everything(const model::ViewModel& vm) {
   if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive() &&
       ImGui::IsMouseDragging(ImGuiMouseButton_Right, 0.0f)) {
     moveView(ImGui::GetIO().MouseDelta);
+    if (vm.context_menu_active) {
+      setContextMenuInactive();
+    }
   }
 
   ImGui::PopItemWidth();

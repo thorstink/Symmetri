@@ -10,9 +10,6 @@
 #include "symmetri/parsers.h"
 #include "symmetri/symmetri.h"
 
-void addNet(symmetri::Petri::PTNet& old_net,
-            const symmetri::Petri::PTNet& new_net) {}
-
 void loadPetriNet(const std::filesystem::path& file) {
   rxdispatch::push([=](model::Model&& model) {
     auto& m = *model.data;
