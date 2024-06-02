@@ -69,18 +69,18 @@ int main(int, char **) {
                   rpp::operators::subscribe_on(rpp::schedulers::new_thread{});
 
   auto models = reducers | rpp::operators::subscribe_on(rximgui::rl) |
-                rpp::operators::scan(model::initializeModel(),
-                                     [=](model::Model &&m, const model::Reducer &f) {
-                                       static size_t i = 0;
-                                       std::cout << "update " << i++ << std::endl;
-                                       try {
-                                         m.data->timestamp = std::chrono::steady_clock::now();
-                                         return f(std::move(m));
-                                       } catch (const std::exception &e) {
-                                         printf("%s", e.what());
-                                         return std::move(m);
-                                       }
-                                     });  // maybe Sample?
+                rpp::operators::scan(
+                    model::initializeModel(), [=](model::Model &&m, const model::Reducer &f) {
+                      static size_t i = 0;
+                      std::cout << "update " << i++ << ", ref: " << m.data.use_count() << std::endl;
+                      try {
+                        m.data->timestamp = std::chrono::steady_clock::now();
+                        return f(std::move(m));
+                      } catch (const std::exception &e) {
+                        printf("%s", e.what());
+                        return std::move(m);
+                      }
+                    });  // maybe Sample?
 
   auto view_models =
       models | rpp::operators::map([](const model::Model &m) { return model::ViewModel{m}; });
@@ -92,6 +92,7 @@ int main(int, char **) {
                        draw_everything(vm);
                        ImGui::End();
                      });
+
   draw_frames | rpp::operators::subscribe();
 
   // Main loop

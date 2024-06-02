@@ -53,6 +53,24 @@ void moveNode(bool is_place, size_t idx, const ImVec2& d) {
   });
 }
 
+void addNode(bool is_place, ImVec2 pos) {
+  rxdispatch::push([=](model::Model&& m) mutable {
+    if (is_place) {
+      m.data->net.place.push_back("place");
+      m.data->p_positions.push_back(pos);
+      m.data->p_view.push_back(m.data->net.place.size() - 1);
+    } else {
+      m.data->net.transition.push_back("transition");
+      m.data->net.output_n.push_back({});
+      m.data->net.input_n.push_back({});
+      m.data->net.priority.push_back(0);
+      m.data->t_positions.push_back(pos);
+      m.data->t_view.push_back(m.data->net.transition.size() - 1);
+    }
+    return m;
+  });
+}
+
 void removePlace(const std::string* ptr) {
   rxdispatch::push([=](model::Model&& m) mutable {
     auto idx = GetIndexFromRef(m.data->net.place, *ptr);
@@ -235,8 +253,7 @@ void draw_arc(size_t t_idx, const model::ViewModel& vm) {
 
 void draw_nodes(bool is_place, size_t idx, const std::string& name,
                 const ImVec2& position, bool highlight) {
-  // setContextMenuInactive();
-  ImGui::PushID(name.c_str());
+  ImGui::PushID(is_place ? idx + 10000 : idx);
   ImVec2 node_rect_min = offset + position;
 
   // Display node contents first
@@ -297,15 +314,17 @@ void draw_everything(const model::ViewModel& vm) {
   ImGui::Separator();
   ImGui::BeginChild("selected_node", ImVec2(200, 0.1 * WindowSize.y));
   if (vm.selected_node != nullptr) {
-    auto transition_ptr = std::find(vm.net.transition.begin(),
-                                    vm.net.transition.end(), *vm.selected_node);
+    auto transition_ptr =
+        std::find_if(vm.net.transition.begin(), vm.net.transition.end(),
+                     [=](const auto& p) { return vm.selected_node == &p; });
     bool is_place = transition_ptr == vm.net.transition.end();
     const auto& constainer = is_place ? vm.net.place : vm.net.transition;
     const size_t idx = std::distance(
         constainer.begin(),
-        is_place
-            ? std::find(constainer.begin(), constainer.end(), *vm.selected_node)
-            : transition_ptr);
+        is_place ? std::find_if(
+                       constainer.begin(), constainer.end(),
+                       [=](const auto& p) { return vm.selected_node == &p; })
+                 : transition_ptr);
 
     ImGui::Text("Name");
     ImGui::SameLine();
@@ -470,8 +489,8 @@ void draw_everything(const model::ViewModel& vm) {
       ImGui::Separator();
       if (ImGui::MenuItem("Delete")) {
         auto transition_ptr =
-            std::find(vm.net.transition.begin(), vm.net.transition.end(),
-                      *vm.selected_node);
+            std::find_if(vm.net.transition.begin(), vm.net.transition.end(),
+                         [=](const auto& p) { return vm.selected_node == &p; });
 
         bool is_place = transition_ptr == vm.net.transition.end();
         is_place ? removePlace(vm.selected_node)
@@ -492,8 +511,10 @@ void draw_everything(const model::ViewModel& vm) {
     } else {
       ImVec2 scene_pos = ImGui::GetMousePosOnOpeningCurrentPopup() - offset;
       if (ImGui::MenuItem("Add place")) {
+        addNode(true, scene_pos);
       }
       if (ImGui::MenuItem("Add transition")) {
+        addNode(false, scene_pos);
       }
       if (ImGui::MenuItem("Add arc")) {
       }

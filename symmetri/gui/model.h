@@ -12,10 +12,12 @@
 
 #include "imfilebrowser.h"
 #include "petri.h"
+
 namespace model {
 
 struct Model {
   // Model() {};
+  // Model(const Model&&) = default;
   // Model(const Model&) = delete;
   // Model& operator=(const Model&) = delete;
   struct shared {
