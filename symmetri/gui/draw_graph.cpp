@@ -71,6 +71,32 @@ void addNode(bool is_place, ImVec2 pos) {
   });
 }
 
+void addArc(bool is_place, size_t source, size_t target,
+            symmetri::Token color) {
+  rxdispatch::push([=](model::Model&& m) mutable {
+    const size_t transition_idx = is_place ? target : source;
+    // remove transition from view
+    m.data->t_view.erase(std::remove(m.data->t_view.begin(),
+                                     m.data->t_view.end(), transition_idx),
+                         m.data->t_view.end());
+
+    const size_t new_idx = m.data->net.transition.size();
+    // add it again to the view...
+    m.data->net.transition.push_back(m.data->net.transition[transition_idx]);
+    m.data->net.output_n.push_back(m.data->net.output_n[transition_idx]);
+    m.data->net.input_n.push_back(m.data->net.input_n[transition_idx]);
+    m.data->net.priority.push_back(m.data->net.priority[transition_idx]);
+    m.data->t_positions.push_back(m.data->t_positions[transition_idx]);
+    m.data->t_view.push_back(new_idx);
+
+    // add the arc
+    is_place ? m.data->net.input_n[new_idx].push_back({source, color})
+             : m.data->net.output_n[new_idx].push_back({target, color});
+
+    return m;
+  });
+}
+
 void removePlace(const std::string* ptr) {
   rxdispatch::push([=](model::Model&& m) mutable {
     auto idx = GetIndexFromRef(m.data->net.place, *ptr);
@@ -306,6 +332,17 @@ void draw_nodes(bool is_place, size_t idx, const std::string& name,
 };
 
 void draw_everything(const model::ViewModel& vm) {
+  const bool is_place =
+      std::find_if(vm.net.transition.begin(), vm.net.transition.end(),
+                   [=](const auto& p) { return vm.selected_node == &p; }) ==
+      vm.net.transition.end();
+
+  const auto& constainer = is_place ? vm.net.place : vm.net.transition;
+  const size_t idx = std::distance(
+      constainer.begin(),
+      std::find_if(constainer.begin(), constainer.end(),
+                   [=](const auto& p) { return vm.selected_node == &p; }));
+
   ImVec2 WindowSize = ImGui::GetWindowSize();
   WindowSize.y -= 140.0f;
   // Draw a list of nodes on the left side
@@ -313,19 +350,8 @@ void draw_everything(const model::ViewModel& vm) {
   ImGui::Text("Selected");
   ImGui::Separator();
   ImGui::BeginChild("selected_node", ImVec2(200, 0.1 * WindowSize.y));
-  if (vm.selected_node != nullptr) {
-    auto transition_ptr =
-        std::find_if(vm.net.transition.begin(), vm.net.transition.end(),
-                     [=](const auto& p) { return vm.selected_node == &p; });
-    bool is_place = transition_ptr == vm.net.transition.end();
-    const auto& constainer = is_place ? vm.net.place : vm.net.transition;
-    const size_t idx = std::distance(
-        constainer.begin(),
-        is_place ? std::find_if(
-                       constainer.begin(), constainer.end(),
-                       [=](const auto& p) { return vm.selected_node == &p; })
-                 : transition_ptr);
 
+  if (vm.selected_node != nullptr) {
     ImGui::Text("Name");
     ImGui::SameLine();
     static int i = 0;
@@ -347,8 +373,9 @@ void draw_everything(const model::ViewModel& vm) {
     ImGui::PopItemWidth();
     static std::optional<std::pair<size_t, int>> local_priority = std::nullopt;
     if (not local_priority.has_value()) {
-      local_priority =
-          std::make_pair(idx, static_cast<int>(vm.net.priority[idx]));  // crash
+      // local_priority =
+      //     std::make_pair(idx, static_cast<int>(vm.net.priority[idx]));  //
+      //     crash
     } else if (idx == local_priority->first &&
                local_priority->second != vm.net.priority[idx]) {
       updateTransitionPriority(idx, local_priority->second);
@@ -487,12 +514,28 @@ void draw_everything(const model::ViewModel& vm) {
     if (vm.selected_node) {
       ImGui::Text("Node '%s'", vm.selected_node->c_str());
       ImGui::Separator();
-      if (ImGui::MenuItem("Delete")) {
-        auto transition_ptr =
-            std::find_if(vm.net.transition.begin(), vm.net.transition.end(),
-                         [=](const auto& p) { return vm.selected_node == &p; });
+      if (ImGui::BeginMenu("Add arc to...")) {
+        for (const auto& node_idx : is_place ? vm.t_view : vm.p_view) {
+          if (is_place) {
+            if (ImGui::BeginMenu(vm.net.transition[node_idx].c_str())) {
+              for (const auto& color : vm.colors) {
+                if (ImGui::MenuItem(color.c_str())) {
+                  addArc(is_place, idx, node_idx,
+                         symmetri::Color::registerToken(color));
+                }
+              }
+              ImGui::EndMenu();
+            }
+          } else {
+            if (ImGui::MenuItem((vm.net.place[node_idx].c_str()))) {
+              addArc(is_place, idx, node_idx, symmetri::Color::Success);
+            }
+          }
+        }
+        ImGui::EndMenu();
+      }
 
-        bool is_place = transition_ptr == vm.net.transition.end();
+      if (ImGui::MenuItem("Delete")) {
         is_place ? removePlace(vm.selected_node)
                  : removeTransition(vm.selected_node);
       }
@@ -515,8 +558,6 @@ void draw_everything(const model::ViewModel& vm) {
       }
       if (ImGui::MenuItem("Add transition")) {
         addNode(false, scene_pos);
-      }
-      if (ImGui::MenuItem("Add arc")) {
       }
     }
     ImGui::EndPopup();
