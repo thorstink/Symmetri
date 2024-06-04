@@ -42,6 +42,7 @@ struct ViewModel {
   ImVec2 scrolling;
   const symmetri::AugmentedToken *selected_arc;
   const std::string *selected_node;
+  const std::string active_file;
 
   std::vector<size_t> t_view, p_view;
   std::vector<std::string> colors;

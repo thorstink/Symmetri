@@ -31,6 +31,7 @@ ViewModel::ViewModel(const Model& m)
       scrolling(m.data->scrolling),
       selected_arc(m.data->selected_arc),
       selected_node(m.data->selected_node),
+      active_file(m.data->active_file.value_or("No file")),
       t_view(m.data->t_view),
       p_view(m.data->p_view),
       colors(m.data->colors),

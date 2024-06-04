@@ -446,8 +446,8 @@ void draw_everything(const model::ViewModel& vm) {
   ImGui::BeginGroup();
 
   // Create our child canvas
-  ImGui::Text("Hold middle mouse button to scroll (%.2f,%.2f)", vm.scrolling.x,
-              vm.scrolling.y);
+  ImGui::Text("%s", vm.active_file.c_str());
+
   ImGui::SameLine();
   const auto io = ImGui::GetIO();
   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
