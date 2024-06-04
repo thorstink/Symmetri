@@ -130,10 +130,11 @@ void updateTransitionPriority(const size_t idx, const int8_t priority) {
     return m;
   });
 }
-void updateArcColor(const symmetri::AugmentedToken* ptr,
+void updateArcColor(bool is_input, size_t idx, size_t sub_idx,
                     const symmetri::Token color) {
   rxdispatch::push([=](model::Model&& m) mutable {
-    const_cast<symmetri::AugmentedToken*>(ptr)->color = color;
+    (is_input ? m.data->net.input_n : m.data->net.output_n)[idx][sub_idx]
+        .color = color;
     return m;
   });
 }
@@ -162,7 +163,7 @@ void setContextMenuInactive() {
 void setSelectedNode(const std::string& idx) {
   rxdispatch::push([ptr = &idx](model::Model&& m) {
     m.data->selected_node = ptr;
-    m.data->selected_arc = nullptr;
+    m.data->selected_arc_idxs.reset();
     return m;
   });
 };
@@ -170,15 +171,16 @@ void setSelectedNode(const std::string& idx) {
 void resetSelection() {
   rxdispatch::push([](model::Model&& m) {
     m.data->selected_node = nullptr;
-    m.data->selected_arc = nullptr;
+    m.data->selected_arc_idxs.reset();
     return m;
   });
 };
 
-void setSelectedArc(const symmetri::AugmentedToken& ptr) {
-  rxdispatch::push([ptr = &ptr](model::Model&& m) {
-    m.data->selected_arc = ptr;
+void setSelectedArc(const symmetri::AugmentedToken& ptr, bool is_input,
+                    size_t idx, size_t sub_idx) {
+  rxdispatch::push([=, ptr = &ptr](model::Model&& m) {
     m.data->selected_node = nullptr;
+    m.data->selected_arc_idxs = {is_input, idx, sub_idx};
     return m;
   });
 };
@@ -224,7 +226,8 @@ void draw_grid(const ImVec2& scrolling) {
 };
 
 void draw_arc(size_t t_idx, const model::ViewModel& vm) {
-  const auto draw = [&](const symmetri::AugmentedToken& t, bool is_input) {
+  const auto draw = [&](const symmetri::AugmentedToken& t, bool is_input,
+                        size_t sub_idx) {
     if (std::find(vm.p_view.begin(), vm.p_view.end(), t.place) ==
         vm.p_view.end()) {
       return;
@@ -245,12 +248,18 @@ void draw_arc(size_t t_idx, const model::ViewModel& vm) {
     const bool is_segment_hovered = (ImLengthSqr(mouse_pos_delta_to_segment) <=
                                      max_distance * max_distance);
     if (is_segment_hovered && ImGui::IsMouseClicked(0)) {
-      setSelectedArc(t);
+      setSelectedArc(t, is_input, t_idx, sub_idx);
     }
 
+    const auto is_selected_arc = [&]() {
+      return vm.selected_arc_idxs.has_value() &&
+             std::get<0>(*vm.selected_arc_idxs) == is_input &&
+             std::get<1>(*vm.selected_arc_idxs) == t_idx &&
+             std::get<2>(*vm.selected_arc_idxs) == sub_idx;
+    };
     ImU32 imcolor =
         getColor(t.color) |
-        ((ImU32)IM_F32_TO_INT8_SAT(vm.selected_arc == &t ? 1.0f : 0.65f))
+        ((ImU32)IM_F32_TO_INT8_SAT(is_selected_arc() ? 1.0f : 0.65f))
             << IM_COL32_A_SHIFT;
 
     auto draw_list = ImGui::GetWindowDrawList();
@@ -269,11 +278,13 @@ void draw_arc(size_t t_idx, const model::ViewModel& vm) {
     draw_list->AddLine(i, o, imcolor, is_segment_hovered ? 3.0f : 2.0f);
   };
 
-  for (const auto& token : vm.net.input_n[t_idx]) {
-    draw(token, true);
+  // for (const auto& token : vm.net.input_n[t_idx]) {
+  for (size_t sub_idx = 0; sub_idx < vm.net.input_n[t_idx].size(); sub_idx++) {
+    draw(vm.net.input_n[t_idx][sub_idx], true, sub_idx);
   }
-  for (const auto& token : vm.net.output_n[t_idx]) {
-    draw(token, false);
+  for (size_t sub_idx = 0; sub_idx < vm.net.output_n[t_idx].size(); sub_idx++) {
+    // for (const auto& token : vm.net.output_n[t_idx]) {
+    draw(vm.net.output_n[t_idx][sub_idx], false, sub_idx);
   }
 };
 
@@ -343,6 +354,14 @@ void draw_everything(const model::ViewModel& vm) {
       std::find_if(constainer.begin(), constainer.end(),
                    [=](const auto& p) { return vm.selected_node == &p; }));
 
+  if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
+      !ImGui::IsAnyItemHovered()) {
+    setContextMenuInactive();
+    if (vm.selected_node != nullptr || vm.selected_arc_idxs.has_value()) {
+      resetSelection();
+    }
+  }
+
   ImVec2 WindowSize = ImGui::GetWindowSize();
   WindowSize.y -= 140.0f;
   // Draw a list of nodes on the left side
@@ -388,29 +407,27 @@ void draw_everything(const model::ViewModel& vm) {
       ImGui::SameLine();
       ImGui::InputInt("##", &(local_priority->second));
     }
-  } else if (vm.selected_arc != nullptr) {
+  } else if (vm.selected_arc_idxs.has_value()) {
+    const auto& [is_input, idx, sub_idx] = vm.selected_arc_idxs.value();
+    const auto color =
+        (is_input ? vm.net.input_n : vm.net.output_n)[idx][sub_idx].color;
+
     static std::optional<
-        std::pair<const symmetri::AugmentedToken*, symmetri::Token>>
+        std::pair<std::tuple<bool, size_t, size_t>, symmetri::Token>>
         local_color = std::nullopt;
     if (not local_color.has_value()) {
-      local_color = {vm.selected_arc, vm.selected_arc->color};
-    } else if (local_color->first != nullptr &&
-               vm.selected_arc == local_color->first &&
-               local_color->second != vm.selected_arc->color) {
-      // if statement also buggy
-      updateArcColor(vm.selected_arc, local_color->second);
-      local_color = std::nullopt;
-    } else if (local_color->first == nullptr ||
-               vm.selected_arc != local_color->first) {
-      local_color.reset();
+      local_color = {vm.selected_arc_idxs.value(), color};
+    } else if (vm.selected_arc_idxs.value() == local_color->first &&
+               local_color->second != color) {
+      updateArcColor(is_input, idx, sub_idx, local_color->second);
+    } else if (vm.selected_arc_idxs.value() != local_color->first) {
+      local_color = {vm.selected_arc_idxs.value(), color};
     }
 
-    if (local_color.has_value() &&
-        ImGui::BeginMenu(
-            symmetri::Color::toString(vm.selected_arc->color).c_str())) {
+    if (ImGui::BeginMenu(symmetri::Color::toString(color).c_str())) {
       for (const auto& color : vm.colors) {
         if (ImGui::MenuItem(color.c_str())) {
-          local_color = {vm.selected_arc,
+          local_color = {vm.selected_arc_idxs.value(),
                          symmetri::Color::registerToken(color)};
         }
       }
@@ -489,18 +506,11 @@ void draw_everything(const model::ViewModel& vm) {
       ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
     if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) ||
         !ImGui::IsAnyItemHovered()) {
-      // if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
+      // if
+      // (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
       // {
       setContextMenuActive();
       // }
-    }
-  }
-
-  if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
-      !ImGui::IsAnyItemHovered()) {
-    setContextMenuInactive();
-    if (vm.selected_node != nullptr || vm.selected_arc != nullptr) {
-      resetSelection();
     }
   }
 
@@ -539,17 +549,11 @@ void draw_everything(const model::ViewModel& vm) {
         is_place ? removePlace(vm.selected_node)
                  : removeTransition(vm.selected_node);
       }
-    } else if (vm.selected_arc) {
+    } else if (vm.selected_arc_idxs.has_value()) {
       ImGui::Text("Arc");
       ImGui::Separator();
       if (ImGui::MenuItem("Delete")) {
-      }
-      if (ImGui::BeginMenu("Change color")) {
-        for (const auto& color : vm.colors) {
-          if (ImGui::MenuItem(color.c_str())) {
-          }
-        }
-        ImGui::EndMenu();
+        //
       }
     } else {
       ImVec2 scene_pos = ImGui::GetMousePosOnOpeningCurrentPopup() - offset;

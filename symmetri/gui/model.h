@@ -25,6 +25,7 @@ struct Model {
     ImVec2 scrolling;
     const symmetri::AugmentedToken *selected_arc;
     const std::string *selected_node;
+    std::optional<std::tuple<bool, size_t, size_t>> selected_arc_idxs;
 
     std::chrono::steady_clock::time_point timestamp;
     std::filesystem::path working_dir;
@@ -40,7 +41,8 @@ struct Model {
 struct ViewModel {
   bool show_grid, context_menu_active;
   ImVec2 scrolling;
-  const symmetri::AugmentedToken *selected_arc;
+  // input | output, index, sub-index
+  std::optional<std::tuple<bool, size_t, size_t>> selected_arc_idxs;
   const std::string *selected_node;
   const std::string active_file;
 
