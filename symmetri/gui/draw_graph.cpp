@@ -5,7 +5,9 @@
 
 #include <math.h>  // fmodf
 
+#include <algorithm>
 #include <optional>
+#include <ranges>
 #include <string_view>
 
 #include "color.hpp"
@@ -20,24 +22,6 @@ static ImVec2 offset;
 
 static const float NODE_SLOT_RADIUS = 4.0f;
 static const ImVec2 NODE_WINDOW_PADDING(8.0f, 8.0f);
-
-template <class T>
-std::size_t GetIndexFromRef(std::vector<T> const& vec, T const& item) {
-  T const* data = vec.data();
-
-  if (std::less<T const*>{}(&item, data) ||
-      std::greater_equal<T const*>{}(&item, data + vec.size()))
-    throw std::out_of_range{"The given object is not part of the vector."};
-
-  return static_cast<std::size_t>(&item - vec.data());
-};
-
-template <class T>
-bool isPartOfVector(std::vector<T> const& vec, T const& item) {
-  T const* data = vec.data();
-  return !(std::less<T const*>{}(&item, data) ||
-           std::greater_equal<T const*>{}(&item, data + vec.size()));
-};
 
 void moveView(const ImVec2& d) {
   rxdispatch::push([=](model::Model&& m) mutable {
@@ -67,6 +51,42 @@ void addNode(bool is_place, ImVec2 pos) {
       m.data->t_positions.push_back(pos);
       m.data->t_view.push_back(m.data->net.transition.size() - 1);
     }
+    return m;
+  });
+}
+
+void removeArc(bool is_input, size_t transition_idx, size_t sub_idx) {
+  rxdispatch::push([=](model::Model&& m) mutable {
+    // remove transition from view
+    m.data->t_view.erase(std::remove(m.data->t_view.begin(),
+                                     m.data->t_view.end(), transition_idx),
+                         m.data->t_view.end());
+
+    const size_t new_idx = m.data->net.transition.size();
+    // add it again to the view...
+    m.data->net.transition.push_back(m.data->net.transition[transition_idx]);
+    m.data->net.priority.push_back(m.data->net.priority[transition_idx]);
+    m.data->t_positions.push_back(m.data->t_positions[transition_idx]);
+    m.data->t_view.push_back(new_idx);
+
+    // now copy the arcs, except for the one we want to delete
+    if (is_input) {
+      m.data->net.output_n.push_back(m.data->net.output_n[transition_idx]);
+      m.data->net.input_n.push_back({});
+      std::copy_if(m.data->net.input_n[transition_idx].begin(),
+                   m.data->net.input_n[transition_idx].end(),
+                   std::back_inserter(m.data->net.input_n.back()),
+                   [i = 0, sub_idx](auto) mutable { return i++ != sub_idx; });
+
+    } else {
+      m.data->net.input_n.push_back(m.data->net.input_n[transition_idx]);
+      m.data->net.output_n.push_back({});
+      std::copy_if(m.data->net.output_n[transition_idx].begin(),
+                   m.data->net.output_n[transition_idx].end(),
+                   std::back_inserter(m.data->net.output_n.back()),
+                   [i = 0, sub_idx](auto) mutable { return i++ != sub_idx; });
+    }
+
     return m;
   });
 }
@@ -493,7 +513,6 @@ void draw_everything(const model::ViewModel& vm) {
   }
 
   // draw places & transitions
-
   for (auto&& idx : vm.t_view) {
     draw_arc(idx, vm);
     draw_nodes(false, idx, vm.net.transition[idx], vm.t_positions[idx],
@@ -558,7 +577,8 @@ void draw_everything(const model::ViewModel& vm) {
       ImGui::Text("Arc");
       ImGui::Separator();
       if (ImGui::MenuItem("Delete")) {
-        //
+        const auto& [is_input, idx, sub_idx] = vm.selected_arc_idxs.value();
+        removeArc(is_input, idx, sub_idx);
       }
     } else {
       ImVec2 scene_pos = ImGui::GetMousePosOnOpeningCurrentPopup() - offset;

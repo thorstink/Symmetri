@@ -11,7 +11,6 @@ Model initializeModel() {
   auto& m = *m_ptr.data;
   m.show_grid = true;
   m.context_menu_active = false;
-
   m.scrolling = ImVec2(0.0f, 0.0f);
 
   m.working_dir = "/users/thomashorstink/Projects/symmetri/nets";
