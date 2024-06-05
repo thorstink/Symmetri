@@ -24,6 +24,7 @@ include_directories(
 
 set(SOURCES
     main.mm
+    graph_reducers.cpp
     model.cpp
     load_file.cpp
     menu_bar.cpp
