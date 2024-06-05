@@ -170,21 +170,13 @@ void draw_nodes(bool is_place, size_t idx, const std::string& name,
   ImGui::PopID();
 };
 
-void draw_everything(const model::ViewModel& vm) {
+void drawMenu(const model::ViewModel& vm) {
   // is now also true if there's nothing selected.
   const bool is_a_node_selected = vm.selected_node_idx.has_value();
   const bool is_place = vm.selected_node_idx.has_value() &&
                         std::get<0>(vm.selected_node_idx.value());
   const size_t selected_idx =
       is_a_node_selected ? std::get<1>(vm.selected_node_idx.value()) : 9999;
-
-  if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
-      !ImGui::IsAnyItemHovered()) {
-    setContextMenuInactive();
-    if (vm.selected_node_idx.has_value() || vm.selected_arc_idxs.has_value()) {
-      resetSelection();
-    }
-  }
 
   ImVec2 WindowSize = ImGui::GetWindowSize();
   WindowSize.y -= 140.0f;
@@ -294,6 +286,14 @@ void draw_everything(const model::ViewModel& vm) {
 
   ImGui::EndChild();
   ImGui::EndChild();
+}
+
+void drawGraph(const model::ViewModel& vm) {
+  // is now also true if there's nothing selected.
+  const bool is_a_node_selected = vm.selected_node_idx.has_value();
+  const bool is_place = vm.selected_node_idx.has_value() &&
+                        std::get<0>(vm.selected_node_idx.value());
+
   ImGui::SameLine();
   ImGui::BeginGroup();
 
@@ -328,13 +328,17 @@ void draw_everything(const model::ViewModel& vm) {
   for (auto&& idx : vm.t_view) {
     draw_arc(idx, vm);
     draw_nodes(false, idx, vm.net.transition[idx], vm.t_positions[idx],
-               is_a_node_selected && !is_place && idx == selected_idx);
+               is_a_node_selected && !is_place &&
+                   idx == std::get<1>(vm.selected_node_idx.value()));
   }
   for (auto&& idx : vm.p_view) {
     draw_nodes(true, idx, vm.net.place[idx], vm.p_positions[idx],
-               is_a_node_selected && is_place && idx == selected_idx);
+               is_a_node_selected && is_place &&
+                   idx == std::get<1>(vm.selected_node_idx.value()));
   }
+}
 
+void drawContextMenu(const model::ViewModel& vm) {
   // Open context menu
   if (not vm.context_menu_active &&
       ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
@@ -352,6 +356,8 @@ void draw_everything(const model::ViewModel& vm) {
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
   if (ImGui::BeginPopup("context_menu")) {
     if (vm.selected_node_idx.has_value()) {
+      const bool is_place = std::get<0>(vm.selected_node_idx.value());
+      const size_t selected_idx = std::get<1>(vm.selected_node_idx.value());
       ImGui::Text(
           "Node '%s'",
           (is_place ? vm.net.place : vm.net.transition)[selected_idx].c_str());
@@ -414,4 +420,18 @@ void draw_everything(const model::ViewModel& vm) {
   ImGui::PopStyleColor();
   ImGui::PopStyleVar();
   ImGui::EndGroup();
+}
+
+void draw_everything(const model::ViewModel& vm) {
+  if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
+      !ImGui::IsAnyItemHovered()) {
+    setContextMenuInactive();
+    if (vm.selected_node_idx.has_value() || vm.selected_arc_idxs.has_value()) {
+      resetSelection();
+    }
+  }
+
+  drawMenu(vm);
+  drawGraph(vm);
+  drawContextMenu(vm);
 }
