@@ -21,7 +21,6 @@
 static ImVec2 size;
 static ImVec2 offset;
 
-static const float NODE_SLOT_RADIUS = 4.0f;
 static const ImVec2 NODE_WINDOW_PADDING(8.0f, 8.0f);
 
 static ImVec2 GetCenterPos(const ImVec2& pos, const ImVec2& size) {
@@ -223,20 +222,22 @@ void draw_everything(const model::ViewModel& vm) {
     ImGui::InputText("input text", view_name, 128);
     ImGui::PopItemWidth();
     static std::optional<std::pair<size_t, int>> local_priority = std::nullopt;
-    if (not local_priority.has_value()) {
-      local_priority = std::make_pair(
-          selected_idx, static_cast<int>(vm.net.priority[selected_idx]));
-    } else if (selected_idx == local_priority->first &&
-               local_priority->second != vm.net.priority[selected_idx]) {
-      updateTransitionPriority(selected_idx, local_priority->second);
-    } else if (selected_idx != local_priority->first) {
-      local_priority.reset();
-    }
+    if (is_a_node_selected && not is_place) {
+      if (not local_priority.has_value()) {
+        local_priority = std::make_pair(
+            selected_idx, static_cast<int>(vm.net.priority[selected_idx]));
+      } else if (selected_idx == local_priority->first &&
+                 local_priority->second != vm.net.priority[selected_idx]) {
+        updateTransitionPriority(selected_idx, local_priority->second);
+      } else if (selected_idx != local_priority->first) {
+        local_priority.reset();
+      }
 
-    if (not is_place && local_priority.has_value()) {
-      ImGui::Text("Priority");
-      ImGui::SameLine();
-      ImGui::InputInt("##", &(local_priority->second));
+      if (not is_place && local_priority.has_value()) {
+        ImGui::Text("Priority");
+        ImGui::SameLine();
+        ImGui::InputInt("##", &(local_priority->second));
+      }
     }
   } else if (vm.selected_arc_idxs.has_value()) {
     const auto& [is_input, selected_idx, sub_idx] =
@@ -339,11 +340,7 @@ void draw_everything(const model::ViewModel& vm) {
       ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
     if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) ||
         !ImGui::IsAnyItemHovered()) {
-      // if
-      // (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
-      // {
       setContextMenuActive();
-      // }
     }
   }
 
