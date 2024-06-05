@@ -1,3 +1,4 @@
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include "graph_reducers.h"
 
 #include "imgui_internal.h"

@@ -1,6 +1,9 @@
 #pragma once
+
 // clang-format off
 #include "imgui.h"
+#include "imgui_internal.h"
+
 // clang-format on
 
 #include <chrono>

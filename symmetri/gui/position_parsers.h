@@ -5,7 +5,6 @@
 #include <map>
 #include <set>
 #include <string>
-#define IMGUI_DEFINE_MATH_OPERATORS
 
 #include "imgui.h"
 
