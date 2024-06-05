@@ -97,22 +97,22 @@ void addArc(bool is_place, size_t source, size_t target,
   });
 }
 
-void removePlace(const std::string* ptr) {
+void removePlace(size_t idx) {
   rxdispatch::push([=](model::Model&& m) mutable {
-    auto idx = GetIndexFromRef(m.data->net.place, *ptr);
     m.data->p_view.erase(
         std::remove(m.data->p_view.begin(), m.data->p_view.end(), idx),
         m.data->p_view.end());
+    m.data->selected_node_idx.reset();
     return m;
   });
 }
 
-void removeTransition(const std::string* ptr) {
+void removeTransition(size_t idx) {
   rxdispatch::push([=](model::Model&& m) mutable {
-    auto idx = GetIndexFromRef(m.data->net.transition, *ptr);
     m.data->t_view.erase(
         std::remove(m.data->t_view.begin(), m.data->t_view.end(), idx),
         m.data->t_view.end());
+    m.data->selected_node_idx.reset();
     return m;
   });
 }
@@ -160,9 +160,9 @@ void setContextMenuInactive() {
   });
 }
 
-void setSelectedNode(const std::string& idx) {
-  rxdispatch::push([ptr = &idx](model::Model&& m) {
-    m.data->selected_node = ptr;
+void setSelectedNode(bool is_place, size_t idx) {
+  rxdispatch::push([=](model::Model&& m) {
+    m.data->selected_node_idx = {is_place, idx};
     m.data->selected_arc_idxs.reset();
     return m;
   });
@@ -170,25 +170,25 @@ void setSelectedNode(const std::string& idx) {
 
 void resetSelection() {
   rxdispatch::push([](model::Model&& m) {
-    m.data->selected_node = nullptr;
+    m.data->selected_node_idx.reset();
     m.data->selected_arc_idxs.reset();
     return m;
   });
 };
 
-void setSelectedArc(const symmetri::AugmentedToken& ptr, bool is_input,
-                    size_t idx, size_t sub_idx) {
-  rxdispatch::push([=, ptr = &ptr](model::Model&& m) {
-    m.data->selected_node = nullptr;
+void setSelectedArc(bool is_input, size_t idx, size_t sub_idx) {
+  rxdispatch::push([=](model::Model&& m) {
+    m.data->selected_node_idx.reset();
     m.data->selected_arc_idxs = {is_input, idx, sub_idx};
     return m;
   });
 };
 
-void renderNodeEntry(const std::string& name, size_t idx, bool selected) {
+void renderNodeEntry(bool is_place, const std::string& name, size_t idx,
+                     bool selected) {
   ImGui::PushID(idx);
   if (ImGui::Selectable(name.c_str(), selected)) {
-    setSelectedNode(name);
+    setSelectedNode(idx, is_place);
   }
   ImGui::PopID();
 }
@@ -248,7 +248,7 @@ void draw_arc(size_t t_idx, const model::ViewModel& vm) {
     const bool is_segment_hovered = (ImLengthSqr(mouse_pos_delta_to_segment) <=
                                      max_distance * max_distance);
     if (is_segment_hovered && ImGui::IsMouseClicked(0)) {
-      setSelectedArc(t, is_input, t_idx, sub_idx);
+      setSelectedArc(is_input, t_idx, sub_idx);
     }
 
     const auto is_selected_arc = [&]() {
@@ -278,12 +278,10 @@ void draw_arc(size_t t_idx, const model::ViewModel& vm) {
     draw_list->AddLine(i, o, imcolor, is_segment_hovered ? 3.0f : 2.0f);
   };
 
-  // for (const auto& token : vm.net.input_n[t_idx]) {
   for (size_t sub_idx = 0; sub_idx < vm.net.input_n[t_idx].size(); sub_idx++) {
     draw(vm.net.input_n[t_idx][sub_idx], true, sub_idx);
   }
   for (size_t sub_idx = 0; sub_idx < vm.net.output_n[t_idx].size(); sub_idx++) {
-    // for (const auto& token : vm.net.output_n[t_idx]) {
     draw(vm.net.output_n[t_idx][sub_idx], false, sub_idx);
   }
 };
@@ -314,7 +312,7 @@ void draw_nodes(bool is_place, size_t idx, const std::string& name,
   const bool node_moving_active = ImGui::IsItemActive();
   const bool is_clicked = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
   if (node_moving_active && is_clicked) {
-    setSelectedNode(name);
+    setSelectedNode(is_place, idx);
   } else if (node_moving_active &&
              ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
     moveNode(is_place, idx, ImGui::GetIO().MouseDelta);
@@ -343,21 +341,17 @@ void draw_nodes(bool is_place, size_t idx, const std::string& name,
 };
 
 void draw_everything(const model::ViewModel& vm) {
-  const bool is_place =
-      std::find_if(vm.net.transition.begin(), vm.net.transition.end(),
-                   [=](const auto& p) { return vm.selected_node == &p; }) ==
-      vm.net.transition.end();
-
-  const auto& constainer = is_place ? vm.net.place : vm.net.transition;
-  const size_t idx = std::distance(
-      constainer.begin(),
-      std::find_if(constainer.begin(), constainer.end(),
-                   [=](const auto& p) { return vm.selected_node == &p; }));
+  // is now also true if there's nothing selected.
+  const bool is_a_node_selected = vm.selected_node_idx.has_value();
+  const bool is_place = vm.selected_node_idx.has_value() &&
+                        std::get<0>(vm.selected_node_idx.value());
+  const size_t selected_idx =
+      is_a_node_selected ? std::get<1>(vm.selected_node_idx.value()) : 9999;
 
   if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
       !ImGui::IsAnyItemHovered()) {
     setContextMenuInactive();
-    if (vm.selected_node != nullptr || vm.selected_arc_idxs.has_value()) {
+    if (vm.selected_node_idx.has_value() || vm.selected_arc_idxs.has_value()) {
       resetSelection();
     }
   }
@@ -370,35 +364,41 @@ void draw_everything(const model::ViewModel& vm) {
   ImGui::Separator();
   ImGui::BeginChild("selected_node", ImVec2(200, 0.1 * WindowSize.y));
 
-  if (vm.selected_node != nullptr) {
+  if (vm.selected_node_idx.has_value()) {
     ImGui::Text("Name");
     ImGui::SameLine();
     static int i = 0;
     const auto id = std::string("##") + std::to_string(i++);
     ImGui::PushItemWidth(-1);
-    const auto& model_name = constainer[idx];
+    const auto& model_name =
+        (is_place ? vm.net.place : vm.net.transition)[selected_idx];
     ImGui::Text("%s", model_name.c_str());
     static const char* data = nullptr;
     static char view_name[128] = "";
-    if (data != model_name.data()) {
+    static std::optional<std::tuple<bool, size_t>> local_idx;
+    if (local_idx.has_value() &&
+        vm.selected_node_idx.value() != local_idx.value()) {
+      data = model_name.data();
+      local_idx = vm.selected_node_idx;
+    } else if (data != model_name.data()) {
       data = model_name.data();
       strcpy(view_name, model_name.c_str());
     } else if (std::string_view(view_name).compare(model_name)) {
       // check if name is correct correct...
-      is_place ? updatePlaceName(idx, std::string(view_name))
-               : updateTransitionName(idx, std::string(view_name));
+      is_place ? updatePlaceName(selected_idx, std::string(view_name))
+               : updateTransitionName(selected_idx, std::string(view_name));
     }
+
     ImGui::InputText("input text", view_name, 128);
     ImGui::PopItemWidth();
     static std::optional<std::pair<size_t, int>> local_priority = std::nullopt;
     if (not local_priority.has_value()) {
-      // local_priority =
-      //     std::make_pair(idx, static_cast<int>(vm.net.priority[idx]));  //
-      //     crash
-    } else if (idx == local_priority->first &&
-               local_priority->second != vm.net.priority[idx]) {
-      updateTransitionPriority(idx, local_priority->second);
-    } else if (idx != local_priority->first) {
+      local_priority = std::make_pair(
+          selected_idx, static_cast<int>(vm.net.priority[selected_idx]));
+    } else if (selected_idx == local_priority->first &&
+               local_priority->second != vm.net.priority[selected_idx]) {
+      updateTransitionPriority(selected_idx, local_priority->second);
+    } else if (selected_idx != local_priority->first) {
       local_priority.reset();
     }
 
@@ -408,9 +408,11 @@ void draw_everything(const model::ViewModel& vm) {
       ImGui::InputInt("##", &(local_priority->second));
     }
   } else if (vm.selected_arc_idxs.has_value()) {
-    const auto& [is_input, idx, sub_idx] = vm.selected_arc_idxs.value();
+    const auto& [is_input, selected_idx, sub_idx] =
+        vm.selected_arc_idxs.value();
     const auto color =
-        (is_input ? vm.net.input_n : vm.net.output_n)[idx][sub_idx].color;
+        (is_input ? vm.net.input_n : vm.net.output_n)[selected_idx][sub_idx]
+            .color;
 
     static std::optional<
         std::pair<std::tuple<bool, size_t, size_t>, symmetri::Token>>
@@ -419,7 +421,7 @@ void draw_everything(const model::ViewModel& vm) {
       local_color = {vm.selected_arc_idxs.value(), color};
     } else if (vm.selected_arc_idxs.value() == local_color->first &&
                local_color->second != color) {
-      updateArcColor(is_input, idx, sub_idx, local_color->second);
+      updateArcColor(is_input, selected_idx, sub_idx, local_color->second);
     } else if (vm.selected_arc_idxs.value() != local_color->first) {
       local_color = {vm.selected_arc_idxs.value(), color};
     }
@@ -442,9 +444,10 @@ void draw_everything(const model::ViewModel& vm) {
   ImGui::Separator();
   constexpr float height_fraction = 0.8 / 2.0;
   ImGui::BeginChild("place_list", ImVec2(200, height_fraction * WindowSize.y));
+
   for (const auto& idx : vm.p_view) {
-    renderNodeEntry(vm.net.place[idx], idx,
-                    &vm.net.place[idx] == vm.selected_node);
+    renderNodeEntry(true, vm.net.place[idx], idx,
+                    is_a_node_selected && is_place && idx == selected_idx);
   }
   ImGui::EndChild();
   ImGui::Dummy(ImVec2(0.0f, 20.0f));
@@ -453,8 +456,8 @@ void draw_everything(const model::ViewModel& vm) {
   ImGui::BeginChild("transition_list",
                     ImVec2(200, height_fraction * WindowSize.y));
   for (const auto& idx : vm.t_view) {
-    renderNodeEntry(vm.net.transition[idx], idx,
-                    &vm.net.transition[idx] == vm.selected_node);
+    renderNodeEntry(false, vm.net.transition[idx], idx,
+                    is_a_node_selected && !is_place && idx == selected_idx);
   }
 
   ImGui::EndChild();
@@ -494,11 +497,11 @@ void draw_everything(const model::ViewModel& vm) {
   for (auto&& idx : vm.t_view) {
     draw_arc(idx, vm);
     draw_nodes(false, idx, vm.net.transition[idx], vm.t_positions[idx],
-               &vm.net.transition[idx] == vm.selected_node);
+               is_a_node_selected && !is_place && idx == selected_idx);
   }
   for (auto&& idx : vm.p_view) {
     draw_nodes(true, idx, vm.net.place[idx], vm.p_positions[idx],
-               &vm.net.place[idx] == vm.selected_node);
+               is_a_node_selected && is_place && idx == selected_idx);
   }
 
   // Open context menu
@@ -521,8 +524,10 @@ void draw_everything(const model::ViewModel& vm) {
   // Draw context menu
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
   if (ImGui::BeginPopup("context_menu")) {
-    if (vm.selected_node) {
-      ImGui::Text("Node '%s'", vm.selected_node->c_str());
+    if (vm.selected_node_idx.has_value()) {
+      ImGui::Text(
+          "Node '%s'",
+          (is_place ? vm.net.place : vm.net.transition)[selected_idx].c_str());
       ImGui::Separator();
       if (ImGui::BeginMenu("Add arc to...")) {
         for (const auto& node_idx : is_place ? vm.t_view : vm.p_view) {
@@ -530,7 +535,7 @@ void draw_everything(const model::ViewModel& vm) {
             if (ImGui::BeginMenu(vm.net.transition[node_idx].c_str())) {
               for (const auto& color : vm.colors) {
                 if (ImGui::MenuItem(color.c_str())) {
-                  addArc(is_place, idx, node_idx,
+                  addArc(is_place, selected_idx, node_idx,
                          symmetri::Color::registerToken(color));
                 }
               }
@@ -538,7 +543,8 @@ void draw_everything(const model::ViewModel& vm) {
             }
           } else {
             if (ImGui::MenuItem((vm.net.place[node_idx].c_str()))) {
-              addArc(is_place, idx, node_idx, symmetri::Color::Success);
+              addArc(is_place, selected_idx, node_idx,
+                     symmetri::Color::Success);
             }
           }
         }
@@ -546,8 +552,7 @@ void draw_everything(const model::ViewModel& vm) {
       }
 
       if (ImGui::MenuItem("Delete")) {
-        is_place ? removePlace(vm.selected_node)
-                 : removeTransition(vm.selected_node);
+        is_place ? removePlace(selected_idx) : removeTransition(selected_idx);
       }
     } else if (vm.selected_arc_idxs.has_value()) {
       ImGui::Text("Arc");
