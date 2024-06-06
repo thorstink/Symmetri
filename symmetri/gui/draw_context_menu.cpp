@@ -4,7 +4,7 @@
 #include "graph_reducers.h"
 #include "imgui_internal.h"
 
-void drawContextMenu(const model::ViewModel& vm) {
+void draw_context_menu(const model::ViewModel& vm) {
   // Open context menu
   if (not vm.context_menu_active &&
       ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
@@ -86,5 +86,4 @@ void drawContextMenu(const model::ViewModel& vm) {
   ImGui::EndChild();
   ImGui::PopStyleColor();
   ImGui::PopStyleVar();
-  ImGui::EndGroup();
 }

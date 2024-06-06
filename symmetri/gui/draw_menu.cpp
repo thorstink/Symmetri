@@ -5,7 +5,7 @@
 #include "graph_reducers.h"
 #include "imgui_internal.h"
 
-void drawMenu(const model::ViewModel& vm) {
+void draw_menu(const model::ViewModel& vm) {
   // is now also true if there's nothing selected.
   const bool is_a_node_selected = vm.selected_node_idx.has_value();
   const bool is_place = vm.selected_node_idx.has_value() &&

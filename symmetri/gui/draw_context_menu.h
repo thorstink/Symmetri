@@ -1,3 +1,3 @@
 #pragma once
 #include "model.h"
-void drawContextMenu(const model::ViewModel& vm);
+void draw_context_menu(const model::ViewModel& vm);

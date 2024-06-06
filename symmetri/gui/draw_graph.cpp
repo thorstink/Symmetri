@@ -9,8 +9,7 @@
 #include <string_view>
 
 #include "color.hpp"
-#include "draw_context_menu.h"
-#include "draw_menu.h"
+#include "draw_graph.h"
 #include "graph_reducers.h"
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -170,14 +169,11 @@ void draw_nodes(bool is_place, size_t idx, const std::string& name,
   ImGui::PopID();
 };
 
-void drawGraph(const model::ViewModel& vm) {
+void draw_graph(const model::ViewModel& vm) {
   // is now also true if there's nothing selected.
   const bool is_a_node_selected = vm.selected_node_idx.has_value();
   const bool is_place = vm.selected_node_idx.has_value() &&
                         std::get<0>(vm.selected_node_idx.value());
-
-  ImGui::SameLine();
-  ImGui::BeginGroup();
 
   // Create our child canvas
   ImGui::Text("%s", vm.active_file.c_str());
@@ -218,18 +214,4 @@ void drawGraph(const model::ViewModel& vm) {
                is_a_node_selected && is_place &&
                    idx == std::get<1>(vm.selected_node_idx.value()));
   }
-}
-
-void draw_everything(const model::ViewModel& vm) {
-  if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
-      !ImGui::IsAnyItemHovered()) {
-    setContextMenuInactive();
-    if (vm.selected_node_idx.has_value() || vm.selected_arc_idxs.has_value()) {
-      resetSelection();
-    }
-  }
-
-  drawMenu(vm);
-  drawGraph(vm);
-  drawContextMenu(vm);
 }
