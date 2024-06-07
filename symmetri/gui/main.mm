@@ -70,30 +70,25 @@ int main(int, char **) {
   auto reducers = rpp::source::create<model::Reducer>(&rxdispatch::dequeue) |
                   rpp::operators::subscribe_on(rpp::schedulers::new_thread{});
 
-  auto models = reducers | rpp::operators::subscribe_on(rximgui::rl) |
-                rpp::operators::scan(
-                    model::initializeModel(), [=](model::Model &&m, const model::Reducer &f) {
-                      static size_t i = 0;
-                      std::cout << "update " << i++ << ", ref: " << m.data.use_count() << std::endl;
-                      try {
-                        m.data->timestamp = std::chrono::steady_clock::now();
-                        return f(std::move(m));
-                      } catch (const std::exception &e) {
-                        printf("%s", e.what());
-                        return std::move(m);
-                      }
-                    });  // maybe Sample?
+  auto models =
+      reducers | rpp::operators::subscribe_on(rximgui::rl) |
+      rpp::operators::scan(model::initializeModel(), [](model::Model &&m, const model::Reducer &f) {
+        static size_t i = 0;
+        std::cout << "update " << i++ << ", ref: " << m.data.use_count() << std::endl;
+        try {
+          m.data->timestamp = std::chrono::steady_clock::now();
+          return f(std::move(m));
+        } catch (const std::exception &e) {
+          printf("%s", e.what());
+          return std::move(m);
+        }
+      });  // maybe Sample?
 
   auto view_models =
       models | rpp::operators::map([](const model::Model &m) { return model::ViewModel{m}; });
 
   auto draw_frames = frames | rpp::operators::with_latest_from(rxu::take_at<1>(), view_models) |
-                     rpp::operators::tap([](const model::ViewModel &vm) {
-                       draw_menu_bar(vm);
-                       ImGui::Begin("test", NULL, ImGuiWindowFlags_NoTitleBar);
-                       draw_everything(vm);
-                       ImGui::End();
-                     });
+                     rpp::operators::tap(&draw_everything);
 
   draw_frames | rpp::operators::subscribe();
 

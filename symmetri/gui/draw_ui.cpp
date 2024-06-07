@@ -7,8 +7,12 @@
 #include "draw_menu.h"
 #include "graph_reducers.h"
 #include "imgui.h"
+#include "menu_bar.h"
 
 void draw_everything(const model::ViewModel& vm) {
+  draw_menu_bar(vm);
+  ImGui::Begin("test", NULL, ImGuiWindowFlags_NoTitleBar);
+
   if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
       !ImGui::IsAnyItemHovered()) {
     setContextMenuInactive();
@@ -23,4 +27,5 @@ void draw_everything(const model::ViewModel& vm) {
   draw_graph(vm);
   draw_context_menu(vm);
   ImGui::EndGroup();
+  ImGui::End();
 }
