@@ -4,6 +4,7 @@
 
 #include "graph_reducers.h"
 #include "imgui_internal.h"
+#include "shared.h"
 
 void draw_menu(const model::ViewModel& vm) {
   // is now also true if there's nothing selected.
@@ -85,15 +86,11 @@ void draw_menu(const model::ViewModel& vm) {
       local_color = {vm.selected_arc_idxs.value(), color};
     }
 
-    if (ImGui::BeginMenu(symmetri::Color::toString(color).c_str())) {
-      for (const auto& color : vm.colors) {
-        if (ImGui::MenuItem(color.c_str())) {
-          local_color = {vm.selected_arc_idxs.value(),
-                         symmetri::Color::registerToken(color)};
-        }
-      }
-      ImGui::EndMenu();
-    }
+    drawColorDropdownMenu(symmetri::Color::toString(color), vm.colors,
+                          [&](const std::string& c) {
+                            local_color = {vm.selected_arc_idxs.value(),
+                                           symmetri::Color::registerToken(c)};
+                          });
   }
   ImGui::EndChild();
 

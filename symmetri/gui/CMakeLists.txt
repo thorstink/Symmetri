@@ -36,6 +36,7 @@ set(SOURCES
     rxdispatch.cpp
     position_parsers.cpp
     write_graph_to_disk.cpp
+    shared.cpp
 )
 
 set(IMGUI_SOURCES

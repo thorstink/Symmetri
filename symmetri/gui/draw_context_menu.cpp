@@ -3,6 +3,7 @@
 #include "draw_menu.h"
 #include "graph_reducers.h"
 #include "imgui_internal.h"
+#include "shared.h"
 
 void draw_context_menu(const model::ViewModel& vm) {
   // Open context menu
@@ -25,26 +26,20 @@ void draw_context_menu(const model::ViewModel& vm) {
       const bool is_place = std::get<0>(vm.selected_node_idx.value());
       const size_t selected_idx = std::get<1>(vm.selected_node_idx.value());
       ImGui::Text(
-          "Node '%s'",
+          "%s '%s'", (is_place ? "Place" : "Transition"),
           (is_place ? vm.net.place : vm.net.transition)[selected_idx].c_str());
       ImGui::Separator();
       if (ImGui::BeginMenu("Add arc to...")) {
         for (const auto& node_idx : is_place ? vm.t_view : vm.p_view) {
           if (is_place) {
-            if (ImGui::BeginMenu(vm.net.transition[node_idx].c_str())) {
-              for (const auto& color : vm.colors) {
-                if (ImGui::MenuItem(color.c_str())) {
-                  addArc(is_place, selected_idx, node_idx,
-                         symmetri::Color::registerToken(color));
-                }
-              }
-              ImGui::EndMenu();
-            }
-          } else {
-            if (ImGui::MenuItem((vm.net.place[node_idx].c_str()))) {
-              addArc(is_place, selected_idx, node_idx,
-                     symmetri::Color::Success);
-            }
+            drawColorDropdownMenu(vm.net.transition[node_idx], vm.colors,
+                                  [&](const std::string& c) {
+                                    addArc(is_place, selected_idx, node_idx,
+                                           symmetri::Color::registerToken(c));
+                                  });
+
+          } else if (ImGui::MenuItem((vm.net.place[node_idx].c_str()))) {
+            addArc(is_place, selected_idx, node_idx, symmetri::Color::Success);
           }
         }
         ImGui::EndMenu();
