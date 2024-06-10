@@ -9,6 +9,7 @@
 #include <string_view>
 
 #include "color.hpp"
+#include "draw_context_menu.h"
 #include "draw_graph.h"
 #include "graph_reducers.h"
 #include "imgui.h"
@@ -170,6 +171,15 @@ void draw_nodes(bool is_place, size_t idx, const std::string& name,
 };
 
 void draw_graph(const model::ViewModel& vm) {
+  if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
+      !ImGui::IsAnyItemHovered()) {
+    setContextMenuInactive();
+    if (vm.selected_node_idx.has_value() || vm.selected_arc_idxs.has_value()) {
+      resetSelection();
+    }
+  }
+  offset = ImGui::GetCursorScreenPos() + vm.scrolling;
+
   // is now also true if there's nothing selected.
   const bool is_a_node_selected = vm.selected_node_idx.has_value();
   const bool is_place = vm.selected_node_idx.has_value() &&
@@ -177,25 +187,21 @@ void draw_graph(const model::ViewModel& vm) {
 
   // Create our child canvas
   ImGui::Text("%s", vm.active_file.c_str());
-
-  ImGui::SameLine();
   const auto io = ImGui::GetIO();
   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
               1000.0f / io.Framerate, io.Framerate);
-  ImGui::SameLine(ImGui::GetWindowWidth() - 340);
   static bool yes;
   ImGui::Checkbox("Show grid", &yes);
-  // ImGui::Checkbox("Show grid", &vm.show_grid);
+
   ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
   ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(60, 60, 70, 200));
   ImGui::BeginChild("scrolling_region", ImVec2(0, 0), true,
                     ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
-  ImGui::PopStyleVar();  // WindowPadding
-  ImGui::PushItemWidth(120.0f);
+  ImGui::PushItemWidth(-1);
 
-  offset = ImGui::GetCursorScreenPos() + vm.scrolling;
-  auto draw_list = ImGui::GetWindowDrawList();
+  // draw popup menu
+  draw_context_menu(vm);
 
   // Display grid
   if (vm.show_grid) {
@@ -214,4 +220,18 @@ void draw_graph(const model::ViewModel& vm) {
                is_a_node_selected && is_place &&
                    idx == std::get<1>(vm.selected_node_idx.value()));
   }
+
+  // Scrolling
+  if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive() &&
+      ImGui::IsMouseDragging(ImGuiMouseButton_Right, 0.0f)) {
+    moveView(ImGui::GetIO().MouseDelta);
+    if (vm.context_menu_active) {
+      setContextMenuInactive();
+    }
+  }
+
+  ImGui::EndChild();
+  ImGui::PopStyleVar();
+  ImGui::PopStyleVar();
+  ImGui::PopStyleColor();
 }

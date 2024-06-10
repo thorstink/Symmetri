@@ -9,23 +9,25 @@
 #include "imgui.h"
 #include "menu_bar.h"
 
+constexpr float menu_width = 250;
+
 void draw_everything(const model::ViewModel& vm) {
   draw_menu_bar(vm);
-  ImGui::Begin("test", NULL, ImGuiWindowFlags_NoTitleBar);
-
-  if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
-      !ImGui::IsAnyItemHovered()) {
-    setContextMenuInactive();
-    if (vm.selected_node_idx.has_value() || vm.selected_arc_idxs.has_value()) {
-      resetSelection();
-    }
-  }
-
-  draw_menu(vm);
+  const auto no_move_draw_resize = ImGuiWindowFlags_NoResize |
+                                   ImGuiWindowFlags_NoTitleBar |
+                                   ImGuiWindowFlags_NoMove;
+  ImGui::Begin("main", NULL, no_move_draw_resize);
+  ImGui::SetNextWindowSize(
+      ImVec2(menu_width, ImGui::GetIO().DisplaySize.y - 20));
+  ImGui::Begin("tools", NULL, no_move_draw_resize);
+  draw_menu(vm, menu_width);
+  ImGui::End();
   ImGui::SameLine();
-  ImGui::BeginGroup();
+  ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x - menu_width,
+                                  ImGui::GetIO().DisplaySize.y));
+  ImGui::SetNextWindowPos(ImVec2(menu_width, 20));
+  ImGui::Begin("draw", NULL, no_move_draw_resize);
   draw_graph(vm);
-  draw_context_menu(vm);
-  ImGui::EndGroup();
+  ImGui::End();
   ImGui::End();
 }

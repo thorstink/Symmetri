@@ -6,7 +6,7 @@
 #include "imgui_internal.h"
 #include "shared.h"
 
-void draw_menu(const model::ViewModel& vm) {
+void draw_menu(const model::ViewModel& vm, float width) {
   // is now also true if there's nothing selected.
   const bool is_a_node_selected = vm.selected_node_idx.has_value();
   const bool is_place = vm.selected_node_idx.has_value() &&
@@ -14,13 +14,10 @@ void draw_menu(const model::ViewModel& vm) {
   const size_t selected_idx =
       is_a_node_selected ? std::get<1>(vm.selected_node_idx.value()) : 9999;
 
-  ImVec2 WindowSize = ImGui::GetWindowSize();
-  WindowSize.y -= 140.0f;
-  // Draw a list of nodes on the left side
-  ImGui::BeginChild("some", ImVec2(200, 0));
   ImGui::Text("Selected");
   ImGui::Separator();
-  ImGui::BeginChild("selected_node", ImVec2(200, 0.1 * WindowSize.y));
+  const float selected_node_height = 100.0;
+  ImGui::BeginChild("selected_node", ImVec2(0.9 * width, selected_node_height));
 
   if (vm.selected_node_idx.has_value()) {
     ImGui::Text("Name");
@@ -45,6 +42,8 @@ void draw_menu(const model::ViewModel& vm) {
       // check if name is correct correct...
       is_place ? updatePlaceName(selected_idx, std::string(view_name))
                : updateTransitionName(selected_idx, std::string(view_name));
+    } else {
+      local_idx.reset();
     }
 
     ImGui::InputText("input text", view_name, 128);
@@ -93,29 +92,23 @@ void draw_menu(const model::ViewModel& vm) {
                           });
   }
   ImGui::EndChild();
-
-  ImGui::Dummy(ImVec2(0.0f, 20.0f));
-
+  const float rest_height =
+      0.4f * (ImGui::GetIO().DisplaySize.y - selected_node_height);
   ImGui::Text("Places");
   ImGui::Separator();
-  constexpr float height_fraction = 0.8 / 2.0;
-  ImGui::BeginChild("place_list", ImVec2(200, height_fraction * WindowSize.y));
-
+  ImGui::BeginChild("place_list", ImVec2(0.9 * width, rest_height));
   for (const auto& idx : vm.p_view) {
     renderNodeEntry(true, vm.net.place[idx], idx,
                     is_a_node_selected && is_place && idx == selected_idx);
   }
   ImGui::EndChild();
-  ImGui::Dummy(ImVec2(0.0f, 20.0f));
   ImGui::Text("Transitions");
   ImGui::Separator();
-  ImGui::BeginChild("transition_list",
-                    ImVec2(200, height_fraction * WindowSize.y));
+  ImGui::BeginChild("transition_list", ImVec2(0.9 * width, rest_height));
   for (const auto& idx : vm.t_view) {
     renderNodeEntry(false, vm.net.transition[idx], idx,
                     is_a_node_selected && !is_place && idx == selected_idx);
   }
 
-  ImGui::EndChild();
   ImGui::EndChild();
 }

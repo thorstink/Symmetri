@@ -68,17 +68,5 @@ void draw_context_menu(const model::ViewModel& vm) {
     ImGui::EndPopup();
   }
   ImGui::PopStyleVar();
-  // Scrolling
-  if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive() &&
-      ImGui::IsMouseDragging(ImGuiMouseButton_Right, 0.0f)) {
-    moveView(ImGui::GetIO().MouseDelta);
-    if (vm.context_menu_active) {
-      setContextMenuInactive();
-    }
-  }
-
   ImGui::PopItemWidth();
-  ImGui::EndChild();
-  ImGui::PopStyleColor();
-  ImGui::PopStyleVar();
 }

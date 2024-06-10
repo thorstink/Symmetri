@@ -5,7 +5,7 @@
 #include "symmetri/parsers.h"
 #include "write_graph_to_disk.h"
 
-void draw_menu_bar(const model::ViewModel &vm) {
+void draw_menu_bar(const model::ViewModel &) {
   auto &file_dialog = model::ViewModel::file_dialog;
   file_dialog.Display();
   if (file_dialog.HasSelected()) {

@@ -54,18 +54,20 @@ void removeArc(bool is_input, size_t transition_idx, size_t sub_idx) {
     if (is_input) {
       m.data->net.output_n.push_back(m.data->net.output_n[transition_idx]);
       m.data->net.input_n.push_back({});
-      std::copy_if(m.data->net.input_n[transition_idx].begin(),
-                   m.data->net.input_n[transition_idx].end(),
-                   std::back_inserter(m.data->net.input_n.back()),
-                   [i = 0, sub_idx](auto) mutable { return i++ != sub_idx; });
+      std::copy_if(
+          m.data->net.input_n[transition_idx].begin(),
+          m.data->net.input_n[transition_idx].end(),
+          std::back_inserter(m.data->net.input_n.back()),
+          [i = size_t(0), sub_idx](auto) mutable { return i++ != sub_idx; });
 
     } else {
       m.data->net.input_n.push_back(m.data->net.input_n[transition_idx]);
       m.data->net.output_n.push_back({});
-      std::copy_if(m.data->net.output_n[transition_idx].begin(),
-                   m.data->net.output_n[transition_idx].end(),
-                   std::back_inserter(m.data->net.output_n.back()),
-                   [i = 0, sub_idx](auto) mutable { return i++ != sub_idx; });
+      std::copy_if(
+          m.data->net.output_n[transition_idx].begin(),
+          m.data->net.output_n[transition_idx].end(),
+          std::back_inserter(m.data->net.output_n.back()),
+          [i = size_t(0), sub_idx](auto) mutable { return i++ != sub_idx; });
     }
 
     return m;
@@ -189,7 +191,7 @@ void renderNodeEntry(bool is_place, const std::string& name, size_t idx,
                      bool selected) {
   ImGui::PushID(idx);
   if (ImGui::Selectable(name.c_str(), selected)) {
-    setSelectedNode(idx, is_place);
+    setSelectedNode(is_place, idx);
   }
   ImGui::PopID();
 }
