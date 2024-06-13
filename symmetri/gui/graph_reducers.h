@@ -38,3 +38,5 @@ void setSelectedArc(bool is_input, size_t idx, size_t sub_idx);
 
 void renderNodeEntry(bool is_place, const std::string& name, size_t idx,
                      bool selected);
+
+int updateActiveFile(ImGuiInputTextCallbackData* data);

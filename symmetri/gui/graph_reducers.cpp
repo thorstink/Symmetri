@@ -1,6 +1,8 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "graph_reducers.h"
 
+#include <filesystem>
+
 #include "imgui_internal.h"
 #include "rxdispatch.h"
 
@@ -194,4 +196,14 @@ void renderNodeEntry(bool is_place, const std::string& name, size_t idx,
     setSelectedNode(is_place, idx);
   }
   ImGui::PopID();
+}
+
+int updateActiveFile(ImGuiInputTextCallbackData* data) {
+  if (data->Buf != nullptr) {
+    rxdispatch::push([file_name = std::string(data->Buf)](model::Model&& m) {
+      m.data->active_file = std::filesystem::path(file_name);
+      return m;
+    });
+  }
+  return 0;
 }

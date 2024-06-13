@@ -5,7 +5,7 @@
 #include "symmetri/parsers.h"
 #include "write_graph_to_disk.h"
 
-void draw_menu_bar(const model::ViewModel &) {
+void draw_menu_bar(const model::ViewModel &vm) {
   auto &file_dialog = model::ViewModel::file_dialog;
   file_dialog.Display();
   if (file_dialog.HasSelected()) {
@@ -20,8 +20,8 @@ void draw_menu_bar(const model::ViewModel &) {
         file_dialog.Open();
       }
       if (ImGui::MenuItem("Save")) {
-        rxdispatch::push(farbart::writeToDisk(std::filesystem::path(
-            "/Users/thomashorstink/Projects/Symmetri/nets/test9002.pnml")));
+        rxdispatch::push(
+            farbart::writeToDisk(std::filesystem::path(vm.active_file)));
       }
       // Exit...
       ImGui::EndMenu();

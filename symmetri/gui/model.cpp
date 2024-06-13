@@ -18,6 +18,7 @@ Model initializeModel() {
       "/Users/thomashorstink/Projects/Symmetri/examples/combinations/"
       "DualProcessWorker.pnml";
   loadPetriNet(p);
+  m.active_file = p;
 
   return m_ptr;
 }

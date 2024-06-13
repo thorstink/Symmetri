@@ -185,8 +185,16 @@ void draw_graph(const model::ViewModel& vm) {
   const bool is_place = vm.selected_node_idx.has_value() &&
                         std::get<0>(vm.selected_node_idx.value());
 
-  // Create our child canvas
+  static char view_name[256] = "";
+  strcpy(view_name, vm.active_file.c_str());
+
+  ImGui::PushItemWidth(-1);
+  ImGui::InputText("##filepath", view_name, 256,
+                   ImGuiInputTextFlags_CallbackEdit, &updateActiveFile);
+  ImGui::PopItemWidth();
+
   ImGui::Text("%s", vm.active_file.c_str());
+
   const auto io = ImGui::GetIO();
   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
               1000.0f / io.Framerate, io.Framerate);
