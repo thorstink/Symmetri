@@ -122,13 +122,6 @@ void removeTransition(size_t idx) {
   });
 }
 
-void updateTransitionName(const size_t idx, const std::string& d) {
-  rxdispatch::push([=](model::Model&& m) mutable {
-    m.data->net.transition[idx] = d;
-    return m;
-  });
-}
-
 void updateTransitionPriority(const size_t idx, const int8_t priority) {
   rxdispatch::push([=](model::Model&& m) mutable {
     m.data->net.priority[idx] = priority;
@@ -144,11 +137,28 @@ void updateArcColor(bool is_input, size_t idx, size_t sub_idx,
   });
 }
 
-void updatePlaceName(const size_t idx, const std::string& d) {
-  rxdispatch::push([=](model::Model&& m) mutable {
-    m.data->net.place[idx] = d;
-    return m;
-  });
+ImGuiInputTextCallback updatePlaceName(const size_t id) {
+  static size_t idx = id;
+  return [](ImGuiInputTextCallbackData* data) -> int {
+    rxdispatch::push(
+        [=, name = std::string(data->Buf)](model::Model&& m) mutable {
+          m.data->net.place[idx] = name;
+          return m;
+        });
+    return 0;
+  };
+}
+
+ImGuiInputTextCallback updateTransitionName(const size_t id) {
+  static size_t idx = id;
+  return [](ImGuiInputTextCallbackData* data) -> int {
+    rxdispatch::push(
+        [=, name = std::string(data->Buf)](model::Model&& m) mutable {
+          m.data->net.transition[idx] = name;
+          return m;
+        });
+    return 0;
+  };
 }
 
 void setContextMenuActive() {

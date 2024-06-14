@@ -1,6 +1,7 @@
 #pragma once
 
 #include "imgui.h"
+#include "rxdispatch.h"
 #include "symmetri/colors.hpp"
 
 void moveView(const ImVec2& d);
@@ -17,14 +18,13 @@ void removePlace(size_t idx);
 
 void removeTransition(size_t idx);
 
-void updateTransitionName(const size_t idx, const std::string& d);
-
 void updateTransitionPriority(const size_t idx, const int8_t priority);
 
 void updateArcColor(bool is_input, size_t idx, size_t sub_idx,
                     const symmetri::Token color);
 
-void updatePlaceName(const size_t idx, const std::string& d);
+ImGuiInputTextCallback updatePlaceName(const size_t id);
+ImGuiInputTextCallback updateTransitionName(const size_t id);
 
 void setContextMenuActive();
 

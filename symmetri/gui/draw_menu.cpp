@@ -28,25 +28,15 @@ void draw_menu(const model::ViewModel& vm, float width) {
     const auto& model_name =
         (is_place ? vm.net.place : vm.net.transition)[selected_idx];
     ImGui::Text("%s", model_name.c_str());
-    static const char* data = nullptr;
-    static char view_name[128] = "";
-    static std::optional<std::tuple<bool, size_t>> local_idx;
-    if (local_idx.has_value() &&
-        vm.selected_node_idx.value() != local_idx.value()) {
-      data = model_name.data();
-      local_idx = vm.selected_node_idx;
-    } else if (data != model_name.data()) {
-      data = model_name.data();
-      strcpy(view_name, model_name.c_str());
-    } else if (std::string_view(view_name).compare(model_name)) {
-      // check if name is correct correct...
-      is_place ? updatePlaceName(selected_idx, std::string(view_name))
-               : updateTransitionName(selected_idx, std::string(view_name));
-    } else {
-      local_idx.reset();
-    }
 
-    ImGui::InputText("input text", view_name, 128);
+    static char view_name[128] = "";
+    strcpy(view_name, model_name.c_str());
+    ImGui::PushItemWidth(-1);
+    ImGui::InputText("input tex", view_name, 128,
+                     ImGuiInputTextFlags_CallbackEdit,
+                     is_place ? updatePlaceName(selected_idx)
+                              : updateTransitionName(selected_idx));
+
     ImGui::PopItemWidth();
     static std::optional<std::pair<size_t, int>> local_priority = std::nullopt;
     if (is_a_node_selected && not is_place) {

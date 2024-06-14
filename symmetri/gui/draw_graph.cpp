@@ -193,8 +193,6 @@ void draw_graph(const model::ViewModel& vm) {
                    ImGuiInputTextFlags_CallbackEdit, &updateActiveFile);
   ImGui::PopItemWidth();
 
-  ImGui::Text("%s", vm.active_file.c_str());
-
   const auto io = ImGui::GetIO();
   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
               1000.0f / io.Framerate, io.Framerate);
