@@ -27,7 +27,8 @@ struct Model {
     bool show_grid, context_menu_active;
     ImVec2 scrolling;
     std::optional<std::tuple<bool, size_t, size_t>> selected_arc_idxs;
-    std::optional<std::tuple<bool, size_t>> selected_node_idx;
+    std::optional<std::tuple<bool, size_t>> selected_node_idx,
+        selected_target_node_idx;
 
     std::chrono::steady_clock::time_point timestamp;
     std::filesystem::path working_dir;
@@ -46,7 +47,8 @@ struct ViewModel {
   // input | output, index, sub-index
   std::optional<std::tuple<bool, size_t, size_t>> selected_arc_idxs;
   // place | transition | index
-  std::optional<std::tuple<bool, size_t>> selected_node_idx;
+  std::optional<std::tuple<bool, size_t>> selected_node_idx,
+      selected_target_node_idx;
   const std::string active_file;
 
   std::vector<size_t> t_view, p_view;

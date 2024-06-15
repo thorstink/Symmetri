@@ -197,6 +197,7 @@ void setContextMenuActive() {
 void setContextMenuInactive() {
   rxdispatch::push([](model::Model&& m) {
     m.data->context_menu_active = false;
+    m.data->selected_target_node_idx.reset();
     return m;
   });
 }
@@ -205,6 +206,13 @@ void setSelectedNode(bool is_place, size_t idx) {
   rxdispatch::push([=](model::Model&& m) {
     m.data->selected_node_idx = {is_place, idx};
     m.data->selected_arc_idxs.reset();
+    return m;
+  });
+};
+
+void setSelectedTargetNode(bool is_place, size_t idx) {
+  rxdispatch::push([=](model::Model&& m) {
+    m.data->selected_target_node_idx = {is_place, idx};
     return m;
   });
 };

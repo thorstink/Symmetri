@@ -39,6 +39,9 @@ void draw_context_menu(const model::ViewModel& vm) {
               addArc(is_place, selected_idx, node_idx,
                      symmetri::Color::Success);
             }
+            if (ImGui::IsItemHovered()) {
+              setSelectedTargetNode(is_place, node_idx);
+            }
           }
           ImGui::EndMenu();
         }

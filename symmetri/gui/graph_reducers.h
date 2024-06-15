@@ -33,6 +33,8 @@ void setContextMenuInactive();
 
 void setSelectedNode(bool is_place, size_t idx);
 
+void setSelectedTargetNode(bool is_place, size_t idx);
+
 void resetSelection();
 
 void setSelectedArc(bool is_input, size_t idx, size_t sub_idx);

@@ -180,11 +180,6 @@ void draw_graph(const model::ViewModel& vm) {
   }
   offset = ImGui::GetCursorScreenPos() + vm.scrolling;
 
-  // is now also true if there's nothing selected.
-  const bool is_a_node_selected = vm.selected_node_idx.has_value();
-  const bool is_place = vm.selected_node_idx.has_value() &&
-                        std::get<0>(vm.selected_node_idx.value());
-
   char view_name[256] = "";
   strcpy(view_name, vm.active_file.c_str());
 
@@ -218,17 +213,33 @@ void draw_graph(const model::ViewModel& vm) {
     draw_grid(vm.scrolling);
   }
 
+  // is now also true if there's nothing selected.
+  const bool is_selected_node = vm.selected_node_idx.has_value();
+  const bool is_target_node = vm.selected_target_node_idx.has_value();
   // draw places & transitions
   for (auto&& idx : vm.t_view) {
     draw_arc(idx, vm);
+    const bool should_hightlight =
+        (is_selected_node &&
+         (!std::get<0>(vm.selected_node_idx.value()) &&
+          idx == std::get<1>(vm.selected_node_idx.value()))) ||
+        (is_target_node &&
+         (std::get<0>(vm.selected_target_node_idx.value()) &&
+          idx == std::get<1>(vm.selected_target_node_idx.value())));
+
     draw_nodes(false, idx, vm.net.transition[idx], vm.t_positions[idx],
-               is_a_node_selected && !is_place &&
-                   idx == std::get<1>(vm.selected_node_idx.value()));
+               should_hightlight);
   }
   for (auto&& idx : vm.p_view) {
+    const bool should_hightlight =
+        (is_selected_node &&
+         (std::get<0>(vm.selected_node_idx.value()) &&
+          idx == std::get<1>(vm.selected_node_idx.value()))) ||
+        (is_target_node &&
+         (!std::get<0>(vm.selected_target_node_idx.value()) &&
+          idx == std::get<1>(vm.selected_target_node_idx.value())));
     draw_nodes(true, idx, vm.net.place[idx], vm.p_positions[idx],
-               is_a_node_selected && is_place &&
-                   idx == std::get<1>(vm.selected_node_idx.value()));
+               should_hightlight);
   }
 
   // Scrolling
