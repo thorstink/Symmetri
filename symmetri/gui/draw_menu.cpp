@@ -59,27 +59,20 @@ void draw_menu(const model::ViewModel& vm, float width) {
   } else if (vm.selected_arc_idxs.has_value()) {
     const auto& [is_input, selected_idx, sub_idx] =
         vm.selected_arc_idxs.value();
+
     const auto color =
         (is_input ? vm.net.input_n : vm.net.output_n)[selected_idx][sub_idx]
             .color;
 
-    static std::optional<
-        std::pair<std::tuple<bool, size_t, size_t>, symmetri::Token>>
-        local_color = std::nullopt;
-    if (not local_color.has_value()) {
-      local_color = {vm.selected_arc_idxs.value(), color};
-    } else if (vm.selected_arc_idxs.value() == local_color->first &&
-               local_color->second != color) {
-      updateArcColor(is_input, selected_idx, sub_idx, local_color->second);
-    } else if (vm.selected_arc_idxs.value() != local_color->first) {
-      local_color = {vm.selected_arc_idxs.value(), color};
+    if (is_input) {
+      drawColorDropdownMenu(symmetri::Color::toString(color), vm.colors,
+                            [=](const std::string& c) {
+                              updateArcColor(is_input, selected_idx, sub_idx,
+                                             symmetri::Color::registerToken(c));
+                            });
+    } else {
+      ImGui::Text("%s", symmetri::Color::toString(color).c_str());
     }
-
-    drawColorDropdownMenu(symmetri::Color::toString(color), vm.colors,
-                          [&](const std::string& c) {
-                            local_color = {vm.selected_arc_idxs.value(),
-                                           symmetri::Color::registerToken(c)};
-                          });
   }
   ImGui::EndChild();
   const float rest_height =
