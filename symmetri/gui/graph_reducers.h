@@ -18,6 +18,8 @@ void removePlace(size_t idx);
 
 void removeTransition(size_t idx);
 
+void showGrid(bool show_grid);
+
 void updateArcColor(bool is_input, size_t idx, size_t sub_idx,
                     const symmetri::Token color);
 

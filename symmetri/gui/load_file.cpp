@@ -68,21 +68,16 @@ void loadPetriNet(const std::filesystem::path& file) {
     }
 
     // Move elements from src to dest.
-    m.net.transition.insert(m.net.transition.end(),
-                            std::make_move_iterator(new_net.transition.begin()),
-                            std::make_move_iterator(new_net.transition.end()));
-    m.net.place.insert(m.net.place.end(),
-                       std::make_move_iterator(new_net.place.begin()),
-                       std::make_move_iterator(new_net.place.end()));
-    m.net.input_n.insert(m.net.input_n.end(),
-                         std::make_move_iterator(new_net.input_n.begin()),
-                         std::make_move_iterator(new_net.input_n.end()));
-    m.net.output_n.insert(m.net.output_n.end(),
-                          std::make_move_iterator(new_net.output_n.begin()),
-                          std::make_move_iterator(new_net.output_n.end()));
-    m.net.priority.insert(m.net.priority.end(),
-                          std::make_move_iterator(new_net.priority.begin()),
-                          std::make_move_iterator(new_net.priority.end()));
+    m.net.transition.insert(m.net.transition.end(), new_net.transition.begin(),
+                            new_net.transition.end());
+    m.net.place.insert(m.net.place.end(), new_net.place.begin(),
+                       new_net.place.end());
+    m.net.input_n.insert(m.net.input_n.end(), new_net.input_n.begin(),
+                         new_net.input_n.end());
+    m.net.output_n.insert(m.net.output_n.end(), new_net.output_n.begin(),
+                          new_net.output_n.end());
+    m.net.priority.insert(m.net.priority.end(), new_net.priority.begin(),
+                          new_net.priority.end());
 
     m.t_view.clear();
     m.p_view.clear();

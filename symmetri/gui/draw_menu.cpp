@@ -36,7 +36,6 @@ void draw_menu(const model::ViewModel& vm, float width) {
                      ImGuiInputTextFlags_CallbackEdit,
                      is_place ? updatePlaceName(selected_idx)
                               : updateTransitionName(selected_idx));
-
     ImGui::PopItemWidth();
 
     if (not is_place) {

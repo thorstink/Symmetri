@@ -20,6 +20,13 @@ void moveNode(bool is_place, size_t idx, const ImVec2& d) {
   });
 }
 
+void showGrid(bool show_grid) {
+  rxdispatch::push([=](model::Model&& m) mutable {
+    m.data->show_grid = show_grid;
+    return m;
+  });
+}
+
 void addNode(bool is_place, ImVec2 pos) {
   rxdispatch::push([=](model::Model&& m) mutable {
     if (is_place) {
