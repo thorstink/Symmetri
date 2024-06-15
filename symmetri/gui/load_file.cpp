@@ -1,5 +1,6 @@
 #include "load_file.h"
 
+#include <iostream>
 #include <map>
 #include <numeric>
 #include <vector>
@@ -87,8 +88,29 @@ void loadPetriNet(const std::filesystem::path& file) {
     std::iota(m.t_view.begin(), m.t_view.end(), old_transition_count);
     std::iota(m.p_view.begin(), m.p_view.end(), old_place_count);
 
-    m.scrolling = ImVec2(0, 0);
+    double min_x = std::numeric_limits<double>::max();
+    double min_y = std::numeric_limits<double>::max();
 
+    for (auto&& idx : m.t_view) {
+      if (min_x > m.t_positions[idx].x) {
+        min_x = m.t_positions[idx].x;
+      }
+      if (min_y > m.t_positions[idx].y) {
+        min_y = m.t_positions[idx].y;
+      }
+    }
+
+    for (auto&& idx : m.p_view) {
+      if (min_x > m.p_positions[idx].x) {
+        min_x = m.p_positions[idx].x;
+      }
+      if (min_y > m.p_positions[idx].y) {
+        min_y = m.p_positions[idx].y;
+      }
+    }
+
+    // maybe this can be improved to have a better initialization :-)
+    m.scrolling = ImVec2(min_x, min_y + 50);
     return model;
   });
 }
