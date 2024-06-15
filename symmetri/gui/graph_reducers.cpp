@@ -41,6 +41,7 @@ void addNode(bool is_place, ImVec2 pos) {
       m.data->t_positions.push_back(pos);
       m.data->t_view.push_back(m.data->net.transition.size() - 1);
     }
+    m.data->context_menu_active = false;
     return m;
   });
 }
@@ -78,6 +79,7 @@ void removeArc(bool is_input, size_t transition_idx, size_t sub_idx) {
           std::back_inserter(m.data->net.output_n.back()),
           [i = size_t(0), sub_idx](auto) mutable { return i++ != sub_idx; });
     }
+    m.data->context_menu_active = false;
 
     return m;
   });
@@ -104,6 +106,8 @@ void addArc(bool is_place, size_t source, size_t target,
     // add the arc
     is_place ? m.data->net.input_n[new_idx].push_back({source, color})
              : m.data->net.output_n[new_idx].push_back({target, color});
+
+    m.data->context_menu_active = false;
 
     return m;
   });
