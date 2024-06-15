@@ -38,23 +38,18 @@ void draw_menu(const model::ViewModel& vm, float width) {
                               : updateTransitionName(selected_idx));
 
     ImGui::PopItemWidth();
-    static std::optional<std::pair<size_t, int>> local_priority = std::nullopt;
-    if (is_a_node_selected && not is_place) {
-      if (not local_priority.has_value()) {
-        local_priority = std::make_pair(
-            selected_idx, static_cast<int>(vm.net.priority[selected_idx]));
-      } else if (selected_idx == local_priority->first &&
-                 local_priority->second != vm.net.priority[selected_idx]) {
-        updateTransitionPriority(selected_idx, local_priority->second);
-      } else if (selected_idx != local_priority->first) {
-        local_priority.reset();
-      }
 
-      if (not is_place && local_priority.has_value()) {
-        ImGui::Text("Priority");
-        ImGui::SameLine();
-        ImGui::InputInt("##", &(local_priority->second));
-      }
+    if (not is_place) {
+      ImGui::Text("Priority");
+      ImGui::SameLine();
+      static char view_priority[4] = "";
+      strcpy(view_priority,
+             std::to_string(vm.net.priority[selected_idx]).c_str());
+      ImGui::InputText("##", view_priority, 4,
+                       ImGuiInputTextFlags_CharsDecimal |
+                           ImGuiInputTextFlags_CharsNoBlank |
+                           ImGuiInputTextFlags_CallbackEdit,
+                       updatePriority(selected_idx));
     }
   } else if (vm.selected_arc_idxs.has_value()) {
     const auto& [is_input, selected_idx, sub_idx] =

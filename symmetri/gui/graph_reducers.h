@@ -18,13 +18,12 @@ void removePlace(size_t idx);
 
 void removeTransition(size_t idx);
 
-void updateTransitionPriority(const size_t idx, const int8_t priority);
-
 void updateArcColor(bool is_input, size_t idx, size_t sub_idx,
                     const symmetri::Token color);
 
 ImGuiInputTextCallback updatePlaceName(const size_t id);
 ImGuiInputTextCallback updateTransitionName(const size_t id);
+ImGuiInputTextCallback updatePriority(const size_t id);
 
 void setContextMenuActive();
 

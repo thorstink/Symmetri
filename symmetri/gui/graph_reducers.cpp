@@ -122,12 +122,6 @@ void removeTransition(size_t idx) {
   });
 }
 
-void updateTransitionPriority(const size_t idx, const int8_t priority) {
-  rxdispatch::push([=](model::Model&& m) mutable {
-    m.data->net.priority[idx] = priority;
-    return m;
-  });
-}
 void updateArcColor(bool is_input, size_t idx, size_t sub_idx,
                     const symmetri::Token color) {
   rxdispatch::push([=](model::Model&& m) mutable {
@@ -137,8 +131,28 @@ void updateArcColor(bool is_input, size_t idx, size_t sub_idx,
   });
 }
 
+ImGuiInputTextCallback updatePriority(const size_t id) {
+  static size_t idx;
+  idx = id;
+  return [](ImGuiInputTextCallbackData* data) -> int {
+    if ((data->Buf != NULL) && (data->Buf[0] == '\0')) {
+    } else if (strcmp(data->Buf, "-") == 0) {
+    } else {
+      const auto priority =
+          std::clamp(std::stoi(data->Buf), INT8_MIN, INT8_MAX);
+      rxdispatch::push([=](model::Model&& m) mutable {
+        m.data->net.priority[idx] = priority;
+        return m;
+      });
+    }
+    return 0;
+  };
+}
+
 ImGuiInputTextCallback updatePlaceName(const size_t id) {
-  static size_t idx = id;
+  static size_t idx;
+  idx = id;
+
   return [](ImGuiInputTextCallbackData* data) -> int {
     rxdispatch::push(
         [=, name = std::string(data->Buf)](model::Model&& m) mutable {
@@ -150,7 +164,8 @@ ImGuiInputTextCallback updatePlaceName(const size_t id) {
 }
 
 ImGuiInputTextCallback updateTransitionName(const size_t id) {
-  static size_t idx = id;
+  static size_t idx;
+  idx = id;
   return [](ImGuiInputTextCallbackData* data) -> int {
     rxdispatch::push(
         [=, name = std::string(data->Buf)](model::Model&& m) mutable {
