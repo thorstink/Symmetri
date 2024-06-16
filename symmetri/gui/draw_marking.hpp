@@ -44,6 +44,20 @@ std::vector<ImVec2> getTokenCoordinates(size_t count) {
       return {{ImVec2(0, 0), ImVec2(0, s), ImVec2(0, -s), ImVec2(s1, c1),
                ImVec2(-s1, c1), ImVec2(-s1, -c1), ImVec2(s1, -c1)}};
     }
+    case 8: {
+      static double c1 = 8;
+      static double c2 = 0.5 * c1 * std::sqrt(2.0);
+      return {{ImVec2(c1, 0), ImVec2(c2, c2), ImVec2(0, c1), ImVec2(-c2, c2),
+               ImVec2(-c1, 0), ImVec2(-c2, -c2), ImVec2(0, -c1),
+               ImVec2(c2, -c2)}};
+    }
+    case 9: {
+      static double c1 = 9;
+      static double c2 = 0.5 * c1;
+      return {{ImVec2(0, 0), ImVec2(0, c1), ImVec2(0, -c1), ImVec2(-c1, 0),
+               ImVec2(c1, 0), ImVec2(c2, c2), ImVec2(c2, -c2), ImVec2(-c2, -c2),
+               ImVec2(-c2, c2)}};
+    }
     default:
       return {{}};
   }
