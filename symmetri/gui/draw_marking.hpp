@@ -22,7 +22,7 @@ std::vector<ImVec2> getTokenCoordinates(size_t count) {
     }
     case 5: {
       // https://mathworld.wolfram.com/RegularPentagon.html
-      static double s = 7;
+      static double s = 6;
       static double c1 = s * 0.25 * (std::sqrt(5) - 1);
       static double c2 = s * 0.25 * (std::sqrt(5) + 1);
       static double s1 = s * 0.25 * std::sqrt((10 + 2 * std::sqrt(5)));
