@@ -73,6 +73,15 @@ void draw_menu(const model::ViewModel& vm, float width) {
   ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
   if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
     if (ImGui::BeginTabItem("Places")) {
+      static char new_place[128] = "Not yet available...";
+      ImGui::PushItemWidth(-37);
+      ImGui::InputText("##2", new_place, 128, ImGuiInputTextFlags_CharsNoBlank);
+      ImGui::SameLine();
+      if (ImGui::Button("Add")) {
+        memset(new_place, 0, sizeof(new_place));
+      }
+      ImGui::Separator();
+
       for (const auto& idx : vm.p_view) {
         renderNodeEntry(true, vm.net.place[idx], idx,
                         is_a_node_selected && is_place && idx == selected_idx);
@@ -80,6 +89,15 @@ void draw_menu(const model::ViewModel& vm, float width) {
       ImGui::EndTabItem();
     }
     if (ImGui::BeginTabItem("Transitions")) {
+      static char new_transition[128] = "Not yet available...";
+      ImGui::PushItemWidth(-37);
+      ImGui::InputText("##3", new_transition, 128,
+                       ImGuiInputTextFlags_CharsNoBlank);
+      ImGui::SameLine();
+      if (ImGui::Button("Add")) {
+        memset(new_transition, 0, sizeof(new_transition));
+      }
+      ImGui::Separator();
       for (const auto& idx : vm.t_view) {
         renderNodeEntry(false, vm.net.transition[idx], idx,
                         is_a_node_selected && !is_place && idx == selected_idx);
@@ -87,9 +105,17 @@ void draw_menu(const model::ViewModel& vm, float width) {
 
       ImGui::EndTabItem();
     }
+    if (ImGui::BeginTabItem("Marking")) {
+      for (const auto& [place, color] : vm.tokens) {
+        ImGui::Text("(%s,%s)", vm.net.place[place].c_str(),
+                    symmetri::Color::toString(color).c_str());
+      }
+      ImGui::EndTabItem();
+    }
     if (ImGui::BeginTabItem("Colors")) {
-      static char new_color[100] = "";
-      ImGui::InputText("##", new_color, 100, ImGuiInputTextFlags_CharsNoBlank);
+      static char new_color[128] = "";
+      ImGui::PushItemWidth(-79);
+      ImGui::InputText("##4", new_color, 128, ImGuiInputTextFlags_CharsNoBlank);
       ImGui::SameLine();
       if (ImGui::Button("Add Color")) {
         symmetri::Color::registerToken(std::string(new_color));

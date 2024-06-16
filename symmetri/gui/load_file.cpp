@@ -80,6 +80,11 @@ void loadPetriNet(const std::filesystem::path& file) {
     m.net.priority.insert(m.net.priority.end(), new_net.priority.begin(),
                           new_net.priority.end());
 
+    m.tokens.clear();
+    for (const auto& [p, c] : marking) {
+      m.tokens.push_back({symmetri::toIndex(m.net.place, p), c});
+    }
+
     m.t_view.clear();
     m.p_view.clear();
     m.t_view.resize(new_transition_count);

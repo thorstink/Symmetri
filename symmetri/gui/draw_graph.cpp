@@ -6,11 +6,13 @@
 
 #include <algorithm>
 #include <optional>
+#include <ranges>
 #include <string_view>
 
 #include "color.hpp"
 #include "draw_context_menu.h"
 #include "draw_graph.h"
+#include "draw_marking.hpp"
 #include "graph_reducers.h"
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -104,7 +106,8 @@ void draw_arc(size_t t_idx, const model::ViewModel& vm) {
 };
 
 void draw_nodes(bool is_place, size_t idx, const std::string& name,
-                const ImVec2& position, bool highlight) {
+                const ImVec2& position, bool highlight,
+                const std::vector<symmetri::AugmentedToken>& tokens) {
   ImGui::PushID(is_place ? idx + 10000 : idx);
   ImVec2 node_rect_min = offset + position;
 
@@ -147,6 +150,16 @@ void draw_nodes(bool is_place, size_t idx, const std::string& name,
     draw_list->AddCircle(offset + GetCenterPos(position, size), 0.5f * size.x,
                          select_color, -5, 3.0f);
 
+    if (auto token_count = std::ranges::count_if(
+            tokens, [idx](const auto token) { return token.place == idx; })) {
+      // oh yay
+      std::ranges::for_each(
+          getTokenCoordinates(token_count), [&](const ImVec2 coord) {
+            draw_list->AddCircle(coord + offset + GetCenterPos(position, size),
+                                 0.05f * size.x, IM_COL32(0, 0, 0, opacity), -5,
+                                 3.0f);
+          });
+    }
   } else {
     draw_list->AddRectFilled(node_rect_min, node_rect_max,
                              IM_COL32(200, 200, 200, opacity), 4.0f);
@@ -215,7 +228,7 @@ void draw_graph(const model::ViewModel& vm) {
           idx == std::get<1>(vm.selected_target_node_idx.value())));
 
     draw_nodes(false, idx, vm.net.transition[idx], vm.t_positions[idx],
-               should_hightlight);
+               should_hightlight, vm.tokens);
   }
   for (auto&& idx : vm.p_view) {
     const bool should_hightlight =
@@ -226,7 +239,7 @@ void draw_graph(const model::ViewModel& vm) {
          (!std::get<0>(vm.selected_target_node_idx.value()) &&
           idx == std::get<1>(vm.selected_target_node_idx.value())));
     draw_nodes(true, idx, vm.net.place[idx], vm.p_positions[idx],
-               should_hightlight);
+               should_hightlight, vm.tokens);
   }
 
   // Scrolling
