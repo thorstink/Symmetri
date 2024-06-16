@@ -15,6 +15,7 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "rxdispatch.h"
+#include "shared.h"
 #include "symmetri/colors.hpp"
 
 // State
@@ -26,20 +27,6 @@ static const ImVec2 NODE_WINDOW_PADDING(8.0f, 8.0f);
 static ImVec2 GetCenterPos(const ImVec2& pos, const ImVec2& size) {
   return ImVec2(pos.x + size.x * 0.5f, pos.y + size.y * 0.5f);
 }
-
-ImU32 getColor(symmetri::Token token) {
-  using namespace symmetri;
-  static std::unordered_map<Token, ImU32> color_table;
-  const auto ptr = color_table.find(token);
-  if (ptr != std::end(color_table)) {
-    return ptr->second;
-  } else {
-    const auto rgb = hsv_to_rgb(ratio(), 0.6, 0.95);
-    const auto color = IM_COL32(rgb[0], rgb[1], rgb[2], 128);
-    color_table.insert({token, color});
-    return color;
-  }
-};
 
 void draw_grid(const ImVec2& scrolling) {
   auto draw_list = ImGui::GetWindowDrawList();

@@ -69,23 +69,32 @@ void draw_menu(const model::ViewModel& vm, float width) {
     }
   }
   ImGui::EndChild();
-  const float rest_height =
-      0.4f * (ImGui::GetIO().DisplaySize.y - selected_node_height);
-  ImGui::Text("Places");
-  ImGui::Separator();
-  ImGui::BeginChild("place_list", ImVec2(0.9 * width, rest_height));
-  for (const auto& idx : vm.p_view) {
-    renderNodeEntry(true, vm.net.place[idx], idx,
-                    is_a_node_selected && is_place && idx == selected_idx);
-  }
-  ImGui::EndChild();
-  ImGui::Text("Transitions");
-  ImGui::Separator();
-  ImGui::BeginChild("transition_list", ImVec2(0.9 * width, rest_height));
-  for (const auto& idx : vm.t_view) {
-    renderNodeEntry(false, vm.net.transition[idx], idx,
-                    is_a_node_selected && !is_place && idx == selected_idx);
-  }
 
-  ImGui::EndChild();
+  ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+  if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
+    if (ImGui::BeginTabItem("Places")) {
+      for (const auto& idx : vm.p_view) {
+        renderNodeEntry(true, vm.net.place[idx], idx,
+                        is_a_node_selected && is_place && idx == selected_idx);
+      }
+      ImGui::EndTabItem();
+    }
+    if (ImGui::BeginTabItem("Transitions")) {
+      for (const auto& idx : vm.t_view) {
+        renderNodeEntry(false, vm.net.transition[idx], idx,
+                        is_a_node_selected && !is_place && idx == selected_idx);
+      }
+
+      ImGui::EndTabItem();
+    }
+    if (ImGui::BeginTabItem("Colors")) {
+      for (const auto& color : vm.colors) {
+        ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(
+                               getColor(symmetri::Color::registerToken(color))),
+                           "%s", color.c_str());
+      }
+      ImGui::EndTabItem();
+    }
+    ImGui::EndTabBar();
+  }
 }
