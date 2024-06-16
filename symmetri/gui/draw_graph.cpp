@@ -149,16 +149,20 @@ void draw_nodes(bool is_place, size_t idx, const std::string& name,
                                -5);
     draw_list->AddCircle(offset + GetCenterPos(position, size), 0.5f * size.x,
                          select_color, -5, 3.0f);
-
-    if (auto token_count = std::ranges::count_if(
-            tokens, [idx](const auto token) { return token.place == idx; })) {
+    const auto is_token_in_place = [idx](const auto token) {
+      return token.place == idx;
+    };
+    if (auto token_count = std::ranges::count_if(tokens, is_token_in_place)) {
       // oh yay
-      std::ranges::for_each(
-          getTokenCoordinates(token_count), [&](const ImVec2 coord) {
-            draw_list->AddCircle(coord + offset + GetCenterPos(position, size),
-                                 0.05f * size.x, IM_COL32(0, 0, 0, opacity), -5,
-                                 3.0f);
-          });
+      const auto coordinates = getTokenCoordinates(token_count);
+      int i = 0;
+      for (auto color :
+           tokens | std::views::filter(is_token_in_place) |
+               std::views::transform([](const auto& t) { return t.color; })) {
+        draw_list->AddCircle(
+            coordinates[i++] + offset + GetCenterPos(position, size),
+            0.05f * size.x, getColor(color), -5, 3.0f);
+      }
     }
   } else {
     draw_list->AddRectFilled(node_rect_min, node_rect_max,
