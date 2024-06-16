@@ -43,3 +43,5 @@ void renderNodeEntry(bool is_place, const std::string& name, size_t idx,
                      bool selected);
 
 int updateActiveFile(ImGuiInputTextCallbackData* data);
+
+void updateColorTable();

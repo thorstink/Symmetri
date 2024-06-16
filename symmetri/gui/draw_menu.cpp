@@ -88,6 +88,15 @@ void draw_menu(const model::ViewModel& vm, float width) {
       ImGui::EndTabItem();
     }
     if (ImGui::BeginTabItem("Colors")) {
+      static char new_color[100] = "";
+      ImGui::InputText("##", new_color, 100, ImGuiInputTextFlags_CharsNoBlank);
+      ImGui::SameLine();
+      if (ImGui::Button("Add Color")) {
+        symmetri::Color::registerToken(std::string(new_color));
+        memset(new_color, 0, sizeof(new_color));
+        updateColorTable();
+      }
+      ImGui::Separator();
       for (const auto& color : vm.colors) {
         ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(
                                getColor(symmetri::Color::registerToken(color))),
