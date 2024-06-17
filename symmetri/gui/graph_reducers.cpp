@@ -2,6 +2,7 @@
 #include "graph_reducers.h"
 
 #include <filesystem>
+#include <ranges>
 
 #include "imgui_internal.h"
 #include "rxdispatch.h"
@@ -262,9 +263,19 @@ void updateColorTable() {
   });
 }
 
-void addMarkingToPlace(symmetri::AugmentedToken token) {
+void addTokenToPlace(symmetri::AugmentedToken token) {
   rxdispatch::push([=](model::Model&& m) {
     m.data->tokens.push_back(token);
+    return m;
+  });
+}
+
+void removeTokenFromPlace(symmetri::AugmentedToken token) {
+  rxdispatch::push([=](model::Model&& m) {
+    if (auto it = std::ranges::find(m.data->tokens, token);
+        it != m.data->tokens.end()) {
+      m.data->tokens.erase(it);
+    }
     return m;
   });
 }

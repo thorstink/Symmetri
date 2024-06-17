@@ -48,7 +48,7 @@ void draw_context_menu(const model::ViewModel& vm) {
         if (is_place) {
           drawColorDropdownMenu(
               "Add marking", vm.colors, [=](const std::string& c) {
-                addMarkingToPlace(symmetri::AugmentedToken{
+                addTokenToPlace(symmetri::AugmentedToken{
                     selected_idx, symmetri::Color::registerToken(c)});
               });
         }

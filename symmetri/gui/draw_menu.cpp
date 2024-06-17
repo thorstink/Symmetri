@@ -2,9 +2,32 @@
 
 #include "draw_menu.h"
 
+#include <iostream>
+#include <ranges>
+
 #include "graph_reducers.h"
 #include "imgui_internal.h"
 #include "shared.h"
+static size_t label_id = 5;
+void drawTokenLine(const symmetri::AugmentedToken& at) {
+  ImGui::PushID(++label_id);
+  ImGui::PushStyleColor(ImGuiCol_Button,
+                        (ImVec4)ImColor::HSV(0 / 7.0f, 0.6f, 0.6f));
+  ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+                        (ImVec4)ImColor::HSV(0 / 7.0f, 0.7f, 0.7f));
+  ImGui::PushStyleColor(ImGuiCol_ButtonActive,
+                        (ImVec4)ImColor::HSV(0 / 7.0f, 0.8f, 0.8f));
+  ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0, 1.0, 1.0, 1.0));
+
+  if (ImGui::Button("-")) {
+    removeTokenFromPlace(at);
+  };
+  ImGui::PopStyleColor(4);
+  ImGui::PopID();
+  ImGui::SameLine();
+  ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(getColor(at.color)), "%s",
+                     symmetri::Color::toString(at.color).c_str());
+}
 
 void draw_menu(const model::ViewModel& vm) {
   // is now also true if there's nothing selected.
@@ -34,8 +57,14 @@ void draw_menu(const model::ViewModel& vm) {
                      is_place ? updatePlaceName(selected_idx)
                               : updateTransitionName(selected_idx));
     ImGui::PopItemWidth();
-
-    if (not is_place) {
+    label_id = 0;
+    if (is_place) {
+      ImGui::Text("Marking");
+      std::ranges::for_each(vm.tokens | std::views::filter([=](const auto& at) {
+                              return at.place == selected_idx;
+                            }),
+                            &drawTokenLine);
+    } else if (not is_place) {
       ImGui::Text("Priority");
       ImGui::SameLine();
       static char view_priority[4] = "";
@@ -103,12 +132,10 @@ void draw_menu(const model::ViewModel& vm) {
     }
     if (ImGui::BeginTabItem("Marking")) {
       for (const auto& [place, color] : vm.tokens) {
-        ImGui::Text("(%s,", vm.net.place[place].c_str());
+        ImGui::Text("%s,", vm.net.place[place].c_str());
         ImGui::SameLine();
         ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(getColor(color)),
                            "%s", symmetri::Color::toString(color).c_str());
-        ImGui::SameLine();
-        ImGui::Text(")");
       }
       ImGui::EndTabItem();
     }

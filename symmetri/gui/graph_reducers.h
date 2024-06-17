@@ -46,4 +46,6 @@ int updateActiveFile(ImGuiInputTextCallbackData* data);
 
 void updateColorTable();
 
-void addMarkingToPlace(symmetri::AugmentedToken);
+void addTokenToPlace(symmetri::AugmentedToken);
+
+void removeTokenFromPlace(symmetri::AugmentedToken);

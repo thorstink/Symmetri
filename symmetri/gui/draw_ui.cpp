@@ -9,7 +9,7 @@
 #include "imgui.h"
 #include "menu_bar.h"
 
-constexpr float menu_width = 250;
+constexpr float menu_width = 350;
 
 void draw_everything(const model::ViewModel& vm) {
   draw_menu_bar(vm);
@@ -19,6 +19,8 @@ void draw_everything(const model::ViewModel& vm) {
   ImGui::Begin("main", NULL, no_move_draw_resize);
   ImGui::SetNextWindowSize(
       ImVec2(menu_width, ImGui::GetIO().DisplaySize.y - 20));
+  ImGui::SetNextWindowPos(ImVec2(0, 20));
+
   ImGui::Begin("tools", NULL, no_move_draw_resize);
   draw_menu(vm);
   ImGui::End();
