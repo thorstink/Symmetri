@@ -45,6 +45,13 @@ void draw_context_menu(const model::ViewModel& vm) {
           }
           ImGui::EndMenu();
         }
+        if (is_place) {
+          drawColorDropdownMenu(
+              "Add marking", vm.colors, [=](const std::string& c) {
+                addMarkingToPlace(symmetri::AugmentedToken{
+                    selected_idx, symmetri::Color::registerToken(c)});
+              });
+        }
 
         if (ImGui::MenuItem("Delete")) {
           is_place ? removePlace(selected_idx) : removeTransition(selected_idx);

@@ -145,7 +145,7 @@ void draw_nodes(bool is_place, size_t idx, const std::string& name,
 
   if (is_place) {
     draw_list->AddCircleFilled(offset + GetCenterPos(position, size),
-                               0.5f * size.x, IM_COL32(135, 135, 135, opacity),
+                               0.5f * size.x, IM_COL32(200, 200, 200, opacity),
                                -5);
     draw_list->AddCircle(offset + GetCenterPos(position, size), 0.5f * size.x,
                          select_color, -5, 3.0f);
@@ -164,7 +164,7 @@ void draw_nodes(bool is_place, size_t idx, const std::string& name,
     }
   } else {
     draw_list->AddRectFilled(node_rect_min, node_rect_max,
-                             IM_COL32(200, 200, 200, opacity), 4.0f);
+                             IM_COL32(135, 135, 135, opacity), 4.0f);
     draw_list->AddRect(node_rect_min, node_rect_max, select_color, 4.0f, 0,
                        3.0f);
   }

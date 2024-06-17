@@ -261,3 +261,10 @@ void updateColorTable() {
     return m;
   });
 }
+
+void addMarkingToPlace(symmetri::AugmentedToken token) {
+  rxdispatch::push([=](model::Model&& m) {
+    m.data->tokens.push_back(token);
+    return m;
+  });
+}

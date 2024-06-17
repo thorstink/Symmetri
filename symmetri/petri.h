@@ -19,7 +19,8 @@ namespace symmetri {
  *
  */
 struct AugmentedToken {
-  size_t place, color;
+  size_t place;
+  Token color;
 };
 inline bool operator==(const AugmentedToken &lhs, const AugmentedToken &rhs) {
   return lhs.place == rhs.place && lhs.color == rhs.color;

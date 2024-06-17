@@ -45,3 +45,5 @@ void renderNodeEntry(bool is_place, const std::string& name, size_t idx,
 int updateActiveFile(ImGuiInputTextCallbackData* data);
 
 void updateColorTable();
+
+void addMarkingToPlace(symmetri::AugmentedToken);
