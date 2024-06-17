@@ -6,7 +6,7 @@
 #include "imgui_internal.h"
 #include "shared.h"
 
-void draw_menu(const model::ViewModel& vm, float width) {
+void draw_menu(const model::ViewModel& vm) {
   // is now also true if there's nothing selected.
   const bool is_a_node_selected = vm.selected_node_idx.has_value();
   const bool is_place = vm.selected_node_idx.has_value() &&
@@ -16,9 +16,6 @@ void draw_menu(const model::ViewModel& vm, float width) {
 
   ImGui::Text("Selected");
   ImGui::Separator();
-  const float selected_node_height = 100.0;
-  ImGui::BeginChild("selected_node", ImVec2(0.9 * width, selected_node_height));
-
   if (vm.selected_node_idx.has_value()) {
     ImGui::Text("Name");
     ImGui::SameLine();
@@ -32,7 +29,7 @@ void draw_menu(const model::ViewModel& vm, float width) {
     static char view_name[128] = "";
     strcpy(view_name, model_name.c_str());
     ImGui::PushItemWidth(-1);
-    ImGui::InputText("input tex", view_name, 128,
+    ImGui::InputText("##input tex", view_name, 128,
                      ImGuiInputTextFlags_CallbackEdit,
                      is_place ? updatePlaceName(selected_idx)
                               : updateTransitionName(selected_idx));
@@ -68,7 +65,6 @@ void draw_menu(const model::ViewModel& vm, float width) {
       ImGui::Text("%s", symmetri::Color::toString(color).c_str());
     }
   }
-  ImGui::EndChild();
 
   ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
   if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
@@ -107,8 +103,12 @@ void draw_menu(const model::ViewModel& vm, float width) {
     }
     if (ImGui::BeginTabItem("Marking")) {
       for (const auto& [place, color] : vm.tokens) {
-        ImGui::Text("(%s,%s)", vm.net.place[place].c_str(),
-                    symmetri::Color::toString(color).c_str());
+        ImGui::Text("(%s,", vm.net.place[place].c_str());
+        ImGui::SameLine();
+        ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(getColor(color)),
+                           "%s", symmetri::Color::toString(color).c_str());
+        ImGui::SameLine();
+        ImGui::Text(")");
       }
       ImGui::EndTabItem();
     }

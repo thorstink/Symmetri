@@ -20,7 +20,7 @@ void draw_everything(const model::ViewModel& vm) {
   ImGui::SetNextWindowSize(
       ImVec2(menu_width, ImGui::GetIO().DisplaySize.y - 20));
   ImGui::Begin("tools", NULL, no_move_draw_resize);
-  draw_menu(vm, menu_width);
+  draw_menu(vm);
   ImGui::End();
   ImGui::SameLine();
   ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x - menu_width,
