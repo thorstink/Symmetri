@@ -24,11 +24,12 @@ include_directories(
 
 set(SOURCES
     main.mm
-    graph_reducers.cpp
+    reducers.cpp
     draw_context_menu.cpp
     draw_graph.cpp
     draw_menu.cpp
     draw_ui.cpp
+    simulation_menu.cpp
     model.cpp
     load_file.cpp
     menu_bar.cpp

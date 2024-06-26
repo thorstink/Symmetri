@@ -5,9 +5,11 @@
 #include <iostream>
 #include <ranges>
 
-#include "graph_reducers.h"
 #include "imgui_internal.h"
+#include "reducers.h"
 #include "shared.h"
+#include "simulation_menu.h"
+
 static size_t label_id = 5;
 void drawTokenLine(const symmetri::AugmentedToken& at) {
   ImGui::PushID(++label_id);
@@ -36,6 +38,7 @@ void draw_menu(const model::ViewModel& vm) {
                         std::get<0>(vm.selected_node_idx.value());
   const size_t selected_idx =
       is_a_node_selected ? std::get<1>(vm.selected_node_idx.value()) : 9999;
+  draw_simulation_menu(vm);
 
   ImGui::Text("Selected");
   ImGui::Separator();

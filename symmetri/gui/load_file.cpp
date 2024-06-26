@@ -35,6 +35,9 @@ void loadPetriNet(const std::filesystem::path& file) {
     symmetri::Petri::PTNet new_net;
     std::tie(new_net.transition, new_net.place, new_net.store) =
         symmetri::convert(net);
+    new_net.p_to_ts_n = createReversePlaceToTransitionLookup(
+        new_net.place.size(), new_net.transition.size(), new_net.input_n);
+
     std::tie(new_net.input_n, new_net.output_n) =
         symmetri::populateIoLookups(net, new_net.place);
     new_net.priority = symmetri::createPriorityLookup(new_net.transition, pt);
@@ -79,6 +82,8 @@ void loadPetriNet(const std::filesystem::path& file) {
                           new_net.output_n.end());
     m.net.priority.insert(m.net.priority.end(), new_net.priority.begin(),
                           new_net.priority.end());
+    m.net.p_to_ts_n.insert(m.net.p_to_ts_n.end(), new_net.p_to_ts_n.begin(),
+                           new_net.p_to_ts_n.end());
 
     m.tokens.clear();
     for (const auto& [p, c] : marking) {

@@ -13,9 +13,9 @@
 #include "draw_context_menu.h"
 #include "draw_graph.h"
 #include "draw_marking.hpp"
-#include "graph_reducers.h"
 #include "imgui.h"
 #include "imgui_internal.h"
+#include "reducers.h"
 #include "rxdispatch.h"
 #include "shared.h"
 #include "symmetri/colors.hpp"
@@ -115,8 +115,8 @@ void draw_nodes(bool is_place, size_t idx, const std::string& name,
   auto textWidth = ImGui::CalcTextSize(name.c_str()).x;
   ImGui::SetCursorScreenPos(node_rect_min + NODE_WINDOW_PADDING +
                             ImVec2(8.0f - textWidth * 0.5f, -20.0f));
-  ImGui::BeginGroup();  // Lock horizontal position
-  ImGui::Text("%s", name.c_str());
+  ImGui::BeginGroup();              // Lock horizontal position
+  ImGui::Text("%s", name.c_str());  // this crashed once..
   ImGui::EndGroup();
 
   // Save the size of what we have emitted and whether any of the widgets are
@@ -174,11 +174,10 @@ void draw_nodes(bool is_place, size_t idx, const std::string& name,
 
 void draw_graph(const model::ViewModel& vm) {
   if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
-      !ImGui::IsAnyItemHovered()) {
-    setContextMenuInactive();
-    if (vm.selected_node_idx.has_value() || vm.selected_arc_idxs.has_value()) {
-      resetSelection();
-    }
+      ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) &&
+      !ImGui::IsAnyItemHovered() &&
+      (vm.selected_node_idx.has_value() || vm.selected_arc_idxs.has_value())) {
+    resetSelection();
   }
   offset = ImGui::GetCursorScreenPos() + vm.scrolling;
 
@@ -207,8 +206,10 @@ void draw_graph(const model::ViewModel& vm) {
                     ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
   ImGui::PushItemWidth(-1);
 
-  // draw popup menu
-  draw_context_menu(vm);
+  // Open context menu
+  if (vm.context_menu_active) {
+    draw_context_menu(vm);
+  }
 
   // Display grid
   if (vm.show_grid) {

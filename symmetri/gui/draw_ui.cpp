@@ -5,9 +5,9 @@
 #include "draw_context_menu.h"
 #include "draw_graph.h"
 #include "draw_menu.h"
-#include "graph_reducers.h"
 #include "imgui.h"
 #include "menu_bar.h"
+#include "reducers.h"
 
 constexpr float menu_width = 350;
 
@@ -28,7 +28,17 @@ void draw_everything(const model::ViewModel& vm) {
   ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x - menu_width,
                                   ImGui::GetIO().DisplaySize.y));
   ImGui::SetNextWindowPos(ImVec2(menu_width, 20));
-  ImGui::Begin("draw", NULL, no_move_draw_resize);
+  ImGui::Begin("graph", NULL, no_move_draw_resize);
+
+  if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) &&
+      ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
+    setContextMenuActive();
+  } else if (vm.context_menu_active &&
+             ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
+             !ImGui::IsAnyItemHovered()) {
+    setContextMenuInactive();
+  }
+
   draw_graph(vm);
   ImGui::End();
   ImGui::End();
