@@ -97,6 +97,7 @@ void draw_menu(const model::ViewModel& vm) {
       ImGui::Text("%s", symmetri::Color::toString(color).c_str());
     }
   }
+  ImGui::Dummy(ImVec2(0.0f, 20.0f));
 
   ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
   if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {

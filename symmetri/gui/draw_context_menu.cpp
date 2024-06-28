@@ -33,10 +33,11 @@ void draw_context_menu(const model::ViewModel& vm) {
             addArc(is_place, selected_idx, node_idx, symmetri::Color::Success);
           }
           if (ImGui::IsItemHovered()) {
+            bool is_target_place = not is_place;
             if (not vm.selected_target_node_idx.has_value() ||
                 vm.selected_target_node_idx.value() !=
-                    std::tuple<bool, size_t>{is_place, node_idx}) {
-              setSelectedTargetNode(is_place, node_idx);
+                    std::tuple<bool, size_t>{is_target_place, node_idx}) {
+              setSelectedTargetNode(is_target_place, node_idx);
             }
           }
         }

@@ -227,7 +227,7 @@ void draw_graph(const model::ViewModel& vm) {
          (!std::get<0>(vm.selected_node_idx.value()) &&
           idx == std::get<1>(vm.selected_node_idx.value()))) ||
         (is_target_node &&
-         (std::get<0>(vm.selected_target_node_idx.value()) &&
+         (!std::get<0>(vm.selected_target_node_idx.value()) &&
           idx == std::get<1>(vm.selected_target_node_idx.value())));
 
     draw_nodes(false, idx, vm.net.transition[idx], vm.t_positions[idx],
@@ -239,7 +239,7 @@ void draw_graph(const model::ViewModel& vm) {
          (std::get<0>(vm.selected_node_idx.value()) &&
           idx == std::get<1>(vm.selected_node_idx.value()))) ||
         (is_target_node &&
-         (!std::get<0>(vm.selected_target_node_idx.value()) &&
+         (std::get<0>(vm.selected_target_node_idx.value()) &&
           idx == std::get<1>(vm.selected_target_node_idx.value())));
     draw_nodes(true, idx, vm.net.place[idx], vm.p_positions[idx],
                should_hightlight, vm.tokens);

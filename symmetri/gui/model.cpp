@@ -4,6 +4,7 @@
 #include <numeric>
 
 #include "load_file.h"
+#include "petri.h"
 namespace model {
 
 Model initializeModel() {
@@ -33,6 +34,8 @@ ViewModel::ViewModel(const Model& m)
       active_file(m.data->active_file.value_or("No file")),
       t_view(m.data->t_view),
       p_view(m.data->p_view),
+      t_fireable(possibleTransitions(m.data->tokens, m.data->net.input_n,
+                                     m.data->net.p_to_ts_n)),
       colors(m.data->colors),
       tokens(m.data->tokens),
       net(m.data->net),
