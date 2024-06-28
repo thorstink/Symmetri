@@ -2,9 +2,11 @@
 
 #include <mutex>
 #include <numeric>
+#include <ranges>
 
 #include "load_file.h"
 #include "petri.h"
+#include "util.h"
 namespace model {
 
 Model initializeModel() {
@@ -35,8 +37,12 @@ ViewModel::ViewModel(const Model& m)
       active_file(m.data->active_file.value_or("No file")),
       t_view(m.data->t_view),
       p_view(m.data->p_view),
-      t_fireable(possibleTransitions(m.data->tokens, m.data->net.input_n,
-                                     m.data->net.p_to_ts_n)),
+      t_fireable(symranges::to_vector(
+          possibleTransitions(m.data->tokens, m.data->net.input_n,
+                              m.data->net.p_to_ts_n) |
+          std::views::filter([&](size_t t_idx) {
+            return canFire(m.data->net.input_n[t_idx], m.data->tokens);
+          }))),
       colors(m.data->colors),
       tokens(m.data->tokens),
       net(m.data->net),

@@ -53,7 +53,8 @@ struct ViewModel {
   const std::string active_file;
 
   std::vector<size_t> t_view, p_view;
-  gch::small_vector<size_t, 32> t_fireable;
+  std::vector<size_t> t_fireable;
+  // gch::small_vector<size_t, 32> t_fireable;
   std::vector<std::string> colors;
   std::vector<symmetri::AugmentedToken> tokens;
 
