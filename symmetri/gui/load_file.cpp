@@ -39,9 +39,6 @@ void loadPetriNet(const std::filesystem::path& file) {
     std::tie(new_net.input_n, new_net.output_n) =
         symmetri::populateIoLookups(net, new_net.place);
 
-    // new_net.p_to_ts_n = createReversePlaceToTransitionLookup(
-    //     new_net.place.size(), new_net.transition.size(), new_net.input_n);
-
     new_net.priority = symmetri::createPriorityLookup(new_net.transition, pt);
 
     for (const auto& transition : new_net.transition) {
@@ -124,6 +121,9 @@ void loadPetriNet(const std::filesystem::path& file) {
 
     // maybe this can be improved to have a better initialization :-)
     m.scrolling = ImVec2(min_x, min_y + 50);
+
+    m.active_file = file;
+
     return model;
   });
 }

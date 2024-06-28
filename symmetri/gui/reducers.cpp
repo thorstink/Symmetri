@@ -304,10 +304,14 @@ void resetSelectedTargetNode() {
 void tryFire(size_t transition_idx) {
   rxdispatch::push([=](model::Model&& m) {
     if (canFire(m.data->net.input_n[transition_idx], m.data->tokens)) {
+      // deduct
       deductMarking(m.data->tokens, m.data->net.input_n[transition_idx]);
-      // isSynchronous(net.store[t_idx]) ? fireSynchronous(t_idx)
-      //                                 : fireAsynchronous(t_idx);
-    } else {
+      // add
+      const auto& lookup_t = m.data->net.output_n[transition_idx];
+      m.data->tokens.reserve(m.data->tokens.size() + lookup_t.size());
+      for (const auto& [p, c] : lookup_t) {
+        m.data->tokens.push_back({p, symmetri::Color::Success});
+      }
     }
     return m;
   });

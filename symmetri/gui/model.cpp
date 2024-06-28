@@ -16,10 +16,11 @@ Model initializeModel() {
 
   m.working_dir = "/users/thomashorstink/Projects/symmetri/nets";
   std::filesystem::path p =
-      "/Users/thomashorstink/Projects/Symmetri/examples/combinations/"
-      "DualProcessWorker.pnml";
+      "/users/thomashorstink/Projects/symmetri/nets/n1.pnml"
+      // "/Users/thomashorstink/Projects/Symmetri/examples/combinations/"
+      // "DualProcessWorker.pnml"
+      ;
   loadPetriNet(p);
-  m.active_file = p;
 
   return m_ptr;
 }

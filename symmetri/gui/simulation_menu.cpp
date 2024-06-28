@@ -7,7 +7,6 @@
 void draw_simulation_menu(const model::ViewModel& vm) {
   ImGui::Text("Simulation");
   ImGui::Separator();
-  //   for (auto transition_idx : vm.t_fireable) {
   auto can_fire = [&](size_t t_idx) {
     return canFire(vm.net.input_n[t_idx], vm.tokens);
   };
@@ -22,6 +21,7 @@ void draw_simulation_menu(const model::ViewModel& vm) {
              std::tuple<bool, size_t>{false, transition_idx})) {
       setSelectedTargetNode(false, transition_idx);
     }
+    // fix me deselect
     // if (vm.selected_target_node_idx.has_value() &&
     //     vm.selected_target_node_idx.value() ==
     //         std::tuple<bool, size_t>{false, transition_idx} &&
