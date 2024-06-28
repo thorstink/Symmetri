@@ -45,16 +45,15 @@ struct Model {
 struct ViewModel {
   bool show_grid, context_menu_active;
   ImVec2 scrolling;
-  // input | output, index, sub-index
+  // is place, index, sub-index
   std::optional<std::tuple<bool, size_t, size_t>> selected_arc_idxs;
-  // place | transition | index
+  // is place | index
   std::optional<std::tuple<bool, size_t>> selected_node_idx,
       selected_target_node_idx;
   const std::string active_file;
 
   std::vector<size_t> t_view, p_view;
   std::vector<size_t> t_fireable;
-  // gch::small_vector<size_t, 32> t_fireable;
   std::vector<std::string> colors;
   std::vector<symmetri::AugmentedToken> tokens;
 
