@@ -310,9 +310,15 @@ void tryFire(size_t transition_idx) {
       const auto& lookup_t = m.data->net.output_n[transition_idx];
       m.data->tokens.reserve(m.data->tokens.size() + lookup_t.size());
       for (const auto& [p, c] : lookup_t) {
-        m.data->tokens.push_back({p, symmetri::Color::Success});
+        m.data->tokens.push_back({p, fire(m.data->net.store[transition_idx])});
       }
     }
+    return m;
+  });
+}
+void updateTransitionOutputColor(size_t transition_idx, symmetri::Token color) {
+  rxdispatch::push([=](model::Model&& m) {
+    m.data->net.store[transition_idx] = [=] { return color; };
     return m;
   });
 }

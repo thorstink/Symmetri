@@ -246,8 +246,8 @@ void draw_graph(const model::ViewModel& vm) {
   }
 
   // Scrolling
-  if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive() &&
-      ImGui::IsMouseDragging(ImGuiMouseButton_Middle, 0.0f)) {
+  if (ImGui::IsWindowHovered() &&
+      ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.0f)) {
     moveView(ImGui::GetIO().MouseDelta);
     if (vm.context_menu_active) {
       setContextMenuInactive();

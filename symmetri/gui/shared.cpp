@@ -30,7 +30,7 @@ ImU32 getColor(symmetri::Token token) {
   if (ptr != std::end(color_table)) {
     return ptr->second;
   } else {
-    const auto rgb = hsv_to_rgb(ratio(), 0.9, 0.6);
+    const auto rgb = hsv_to_rgb(ratio(), 1., 1.);
     const auto color = IM_COL32(rgb[0], rgb[1], rgb[2], 128);
     color_table.insert({token, color});
     return color;

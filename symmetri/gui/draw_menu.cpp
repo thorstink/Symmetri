@@ -73,11 +73,24 @@ void draw_menu(const model::ViewModel& vm) {
       static char view_priority[4] = "";
       strcpy(view_priority,
              std::to_string(vm.net.priority[selected_idx]).c_str());
-      ImGui::InputText("##", view_priority, 4,
+      ImGui::InputText("##priority", view_priority, 4,
                        ImGuiInputTextFlags_CharsDecimal |
                            ImGuiInputTextFlags_CharsNoBlank |
                            ImGuiInputTextFlags_CallbackEdit,
                        updatePriority(selected_idx));
+      ImGui::Text("Output");
+      ImGui::SameLine();
+      if (ImGui::BeginCombo("##output", symmetri::Color::toString(
+                                            fire(vm.net.store[selected_idx]))
+                                            .c_str())) {
+        for (const auto& color : vm.colors) {
+          if (ImGui::Selectable(color.c_str())) {
+            updateTransitionOutputColor(selected_idx,
+                                        symmetri::Color::registerToken(color));
+          }
+        }
+        ImGui::EndCombo();
+      }
     }
   } else if (vm.selected_arc_idxs.has_value()) {
     const auto& [is_input, selected_idx, sub_idx] =

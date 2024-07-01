@@ -81,6 +81,9 @@ void loadPetriNet(const std::filesystem::path& file) {
                           new_net.output_n.end());
     m.net.priority.insert(m.net.priority.end(), new_net.priority.begin(),
                           new_net.priority.end());
+    m.net.store.insert(m.net.store.begin(), new_net.store.begin(),
+                       new_net.store.end());
+
     m.net.p_to_ts_n = createReversePlaceToTransitionLookup(
         m.net.place.size(), m.net.transition.size(), m.net.input_n);
 

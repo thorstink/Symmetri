@@ -53,3 +53,5 @@ void addTokenToPlace(symmetri::AugmentedToken);
 void removeTokenFromPlace(symmetri::AugmentedToken);
 
 void tryFire(size_t transition_idx);
+
+void updateTransitionOutputColor(size_t transition_idx, symmetri::Token color);

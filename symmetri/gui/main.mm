@@ -31,12 +31,16 @@ int main(int, char **) {
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
   (void)io;
+
+  io.Fonts->AddFontFromFileTTF(
+      "/Users/thomashorstink/Projects/Symmetri/symmetri/gui/imgui/misc/fonts/DroidSans.ttf", 15);
+
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
 
   // Setup style
-  // ImGui::StyleColorsDark();
-  ImGui::StyleColorsLight();
+  ImGui::StyleColorsDark();
+  // ImGui::StyleColorsLight();
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
