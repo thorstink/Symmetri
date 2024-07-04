@@ -53,12 +53,12 @@ struct ViewModel {
   const std::string active_file;
 
   std::vector<size_t> t_view, p_view;
-  std::vector<size_t> t_fireable;
   std::vector<std::string> colors;
   std::vector<symmetri::AugmentedToken> tokens;
 
   const symmetri::Petri::PTNet &net;
   const std::vector<ImVec2> &t_positions, p_positions;
+  std::vector<size_t> t_fireable;
 
   static inline ImGui::FileBrowser file_dialog;
   ViewModel() = delete;

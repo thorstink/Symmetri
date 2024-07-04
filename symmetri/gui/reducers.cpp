@@ -34,6 +34,7 @@ void addNode(bool is_place, ImVec2 pos) {
   rxdispatch::push([=](model::Model&& m) mutable {
     if (is_place) {
       m.data->net.place.push_back("place");
+      m.data->net.p_to_ts_n.push_back({});
       m.data->p_positions.push_back(pos);
       m.data->p_view.push_back(m.data->net.place.size() - 1);
     } else {
@@ -41,6 +42,7 @@ void addNode(bool is_place, ImVec2 pos) {
       m.data->net.output_n.push_back({});
       m.data->net.input_n.push_back({});
       m.data->net.priority.push_back(0);
+      m.data->net.store.push_back(symmetri::DirectMutation{});
       m.data->t_positions.push_back(pos);
       m.data->t_view.push_back(m.data->net.transition.size() - 1);
     }
@@ -92,23 +94,33 @@ void addArc(bool is_place, size_t source, size_t target,
             symmetri::Token color) {
   rxdispatch::push([=](model::Model&& m) mutable {
     const size_t transition_idx = is_place ? target : source;
+    // const size_t place_idx = is_place ? source : target;
     // remove transition from view
     m.data->t_view.erase(std::remove(m.data->t_view.begin(),
                                      m.data->t_view.end(), transition_idx),
                          m.data->t_view.end());
 
-    const size_t new_idx = m.data->net.transition.size();
     // add it again to the view...
+    const size_t new_transition_idx = m.data->net.transition.size();
     m.data->net.transition.push_back(m.data->net.transition[transition_idx]);
     m.data->net.output_n.push_back(m.data->net.output_n[transition_idx]);
     m.data->net.input_n.push_back(m.data->net.input_n[transition_idx]);
     m.data->net.priority.push_back(m.data->net.priority[transition_idx]);
+    m.data->net.store.push_back(m.data->net.store[transition_idx]);
     m.data->t_positions.push_back(m.data->t_positions[transition_idx]);
-    m.data->t_view.push_back(new_idx);
+    m.data->t_view.push_back(new_transition_idx);
 
     // add the arc
-    is_place ? m.data->net.input_n[new_idx].push_back({source, color})
-             : m.data->net.output_n[new_idx].push_back({target, color});
+    if (is_place) {
+      auto& p_to_ts = m.data->net.p_to_ts_n[source];
+      m.data->net.input_n[new_transition_idx].push_back({source, color});
+      if (std::find(p_to_ts.begin(), p_to_ts.end(), transition_idx) ==
+          p_to_ts.end()) {
+        p_to_ts.push_back(new_transition_idx);
+      }
+    } else {
+      m.data->net.output_n[new_transition_idx].push_back({source, color});
+    }
 
     m.data->context_menu_active = false;
 

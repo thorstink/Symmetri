@@ -37,17 +37,19 @@ ViewModel::ViewModel(const Model& m)
       active_file(m.data->active_file.value_or("No file")),
       t_view(m.data->t_view),
       p_view(m.data->p_view),
-      t_fireable(symranges::to_vector(
-          possibleTransitions(m.data->tokens, m.data->net.input_n,
-                              m.data->net.p_to_ts_n) |
-          std::views::filter([&](size_t t_idx) {
-            return canFire(m.data->net.input_n[t_idx], m.data->tokens);
-          }))),
       colors(m.data->colors),
       tokens(m.data->tokens),
       net(m.data->net),
       t_positions(m.data->t_positions),
-      p_positions(m.data->p_positions) {
+      p_positions(m.data->p_positions),
+      t_fireable(symranges::to_vector(
+          possibleTransitions(tokens, m.data->net.input_n,
+                              m.data->net.p_to_ts_n) |
+          std::views::filter([&](size_t t_idx) {
+            // it should be in the current view & fireable
+            return std::ranges::find(t_view, t_idx) != t_view.end() &&
+                   canFire(m.data->net.input_n[t_idx], tokens);
+          }))) {
   static std::once_flag flag;
   std::call_once(flag, [&] {
     file_dialog.SetTitle("title");
