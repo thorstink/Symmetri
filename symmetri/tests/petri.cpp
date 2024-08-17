@@ -19,27 +19,22 @@ void petri0() {
 auto petri1() {
   auto inc = T1_COUNTER.load() + 1;
   T1_COUNTER.store(inc);
-  return Color::Success;
+  return Success;
 }
 
 std::tuple<Net, PriorityTable, Marking> PetriTestNet() {
   T0_COUNTER.store(0);
   T1_COUNTER.store(0);
 
-  Net net = {{"t0",
-              {{{"Pa", Color::Success}, {"Pb", Color::Success}},
-               {{"Pc", Color::Success}}}},
+  Net net = {{"t0", {{{"Pa", Success}, {"Pb", Success}}, {{"Pc", Success}}}},
              {"t1",
-              {{{"Pc", Color::Success}, {"Pc", Color::Success}},
-               {{"Pb", Color::Success},
-                {"Pb", Color::Success},
-                {"Pd", Color::Success}}}}};
+              {{{"Pc", Success}, {"Pc", Success}},
+               {{"Pb", Success}, {"Pb", Success}, {"Pd", Success}}}}};
 
   PriorityTable priority;
 
-  Marking m0 = {{"Pa", Color::Success}, {"Pa", Color::Success},
-                {"Pa", Color::Success}, {"Pa", Color::Success},
-                {"Pb", Color::Success}, {"Pb", Color::Success}};
+  Marking m0 = {{"Pa", Success}, {"Pa", Success}, {"Pa", Success},
+                {"Pa", Success}, {"Pb", Success}, {"Pb", Success}};
   return {net, priority, m0};
 }
 
@@ -53,7 +48,7 @@ TEST_CASE("Test equaliy of nets") {
   CHECK(!stateNetEquality(net, net2));
 
   // same transitions but different places.
-  net3.at("t0").second.push_back({"px", Color::Success});
+  net3.at("t0").second.push_back({"px", Success});
   CHECK(!stateNetEquality(net, net3));
 }
 
@@ -70,7 +65,7 @@ TEST_CASE("Run one transition iteration in a petri net") {
   // t0 is dispatched but it's reducer has not yet run, so pre-conditions are
   // processed but post are not:
   {
-    Marking expected = {{"Pa", Color::Success}, {"Pa", Color::Success}};
+    Marking expected = {{"Pa", Success}, {"Pa", Success}};
     CHECK(MarkingEquality(m.getMarking(), expected));
   }
   // now there should be two reducers;
@@ -83,7 +78,7 @@ TEST_CASE("Run one transition iteration in a petri net") {
   CHECK(T0_COUNTER.load() == 2);
   // the marking should still be the same.
   {
-    Marking expected = {{"Pa", Color::Success}, {"Pa", Color::Success}};
+    Marking expected = {{"Pa", Success}, {"Pa", Success}};
     CHECK(MarkingEquality(m.getMarking(), expected));
   }
 
@@ -93,10 +88,8 @@ TEST_CASE("Run one transition iteration in a petri net") {
   // and now the post-conditions are processed:
   CHECK(m.scheduled_callbacks.empty());
   {
-    Marking expected = {{"Pa", Color::Success},
-                        {"Pa", Color::Success},
-                        {"Pc", Color::Success},
-                        {"Pc", Color::Success}};
+    Marking expected = {
+        {"Pa", Success}, {"Pa", Success}, {"Pc", Success}, {"Pc", Success}};
     CHECK(MarkingEquality(m.getMarking(), expected));
   }
 }
@@ -122,10 +115,8 @@ TEST_CASE("Run until net dies") {
   } while (m.scheduled_callbacks.size() > 0);
 
   // For this specific net we expect:
-  Marking expected = {{"Pb", Color::Success},
-                      {"Pb", Color::Success},
-                      {"Pd", Color::Success},
-                      {"Pd", Color::Success}};
+  Marking expected = {
+      {"Pb", Success}, {"Pb", Success}, {"Pd", Success}, {"Pd", Success}};
   CHECK(MarkingEquality(m.getMarking(), expected));
 
   CHECK(T0_COUNTER.load() == 4);
@@ -151,10 +142,8 @@ TEST_CASE("Run until net dies with DirectMutations") {
     }
   } while (m.scheduled_callbacks.size() > 0);
   // For this specific net we expect:
-  Marking expected = {{"Pb", Color::Success},
-                      {"Pb", Color::Success},
-                      {"Pd", Color::Success},
-                      {"Pd", Color::Success}};
+  Marking expected = {
+      {"Pb", Success}, {"Pb", Success}, {"Pd", Success}, {"Pd", Success}};
 
   CHECK(MarkingEquality(m.getMarking(), expected));
 }
@@ -162,17 +151,15 @@ TEST_CASE("Run until net dies with DirectMutations") {
 TEST_CASE("Step through transitions") {
   std::map<std::string, size_t> hitmap;
   {
-    Net net = {{"a", {{{"Pa", Color::Success}}, {}}},
-               {"b", {{{"Pa", Color::Success}}, {}}},
-               {"c", {{{"Pa", Color::Success}}, {}}},
-               {"d", {{{"Pa", Color::Success}}, {}}},
-               {"e", {{{"Pb", Color::Success}}, {}}}};
+    Net net = {{"a", {{{"Pa", Success}}, {}}},
+               {"b", {{{"Pa", Success}}, {}}},
+               {"c", {{{"Pa", Success}}, {}}},
+               {"d", {{{"Pa", Success}}, {}}},
+               {"e", {{{"Pb", Success}}, {}}}};
     auto threadpool = std::make_shared<TaskSystem>(1);
     // with this initial marking, all but transition e are possible.
-    Marking m0 = {{"Pa", Color::Success},
-                  {"Pa", Color::Success},
-                  {"Pa", Color::Success},
-                  {"Pa", Color::Success}};
+    Marking m0 = {
+        {"Pa", Success}, {"Pa", Success}, {"Pa", Success}, {"Pa", Success}};
     Petri m(net, {}, m0, {}, "s", threadpool);
     for (const auto& [t, dm] : net) {
       hitmap.insert({t, 0});

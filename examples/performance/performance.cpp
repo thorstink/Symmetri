@@ -7,7 +7,7 @@ int i = 0;
 bool isSynchronous(const Simple &) { return true; }
 symmetri::Token fire(const Simple &) {
   i++;
-  return symmetri::Color::Success;
+  return symmetri::Success;
 }
 
 int main(int argc, char *argv[]) {
@@ -18,20 +18,16 @@ int main(int argc, char *argv[]) {
       const auto pnml = std::string(argv[1]);
       return PetriNet({pnml}, "benchmark", pool);
     } else {
-      Net net = {{"t0",
-                  {{{"Pa", Color::Success}, {"Pb", Color::Success}},
-                   {{"Pc", Color::Success}}}},
-                 {"t1",
-                  {{{"Pc", Color::Success}, {"Pc", Color::Success}},
-                   {{"Pb", Color::Success}, {"Pb", Color::Success}}}}};
-      Marking initial_marking = {
-          {"Pa", Color::Success}, {"Pa", Color::Success},
-          {"Pa", Color::Success}, {"Pa", Color::Success},
-          {"Pb", Color::Success}, {"Pb", Color::Success}};
-      Marking goal_marking = {{"Pb", Color::Success},
-                              {"Pb", Color::Success},
-                              {"Pc", Color::Success},
-                              {"Pc", Color::Success}};
+      Net net = {
+          {"t0", {{{"Pa", Success}, {"Pb", Success}}, {{"Pc", Success}}}},
+          {"t1",
+           {{{"Pc", Success}, {"Pc", Success}},
+            {{"Pb", Success}, {"Pb", Success}}}}};
+      Marking initial_marking = {{"Pa", Success}, {"Pa", Success},
+                                 {"Pa", Success}, {"Pa", Success},
+                                 {"Pb", Success}, {"Pb", Success}};
+      Marking goal_marking = {
+          {"Pb", Success}, {"Pb", Success}, {"Pc", Success}, {"Pc", Success}};
 
       PetriNet petri(net, "benchmark", pool, initial_marking, goal_marking);
       petri.registerCallback("t0", Simple{});
@@ -39,15 +35,16 @@ int main(int argc, char *argv[]) {
       return petri;
     }
   }();
-  const auto begin = Clock::now();
   std::cout << "start" << std::endl;
+  const auto begin = Clock::now();
   const auto result = fire(petri);
   const auto end = Clock::now();
   std::cout << i << " transitions in "
             << std::chrono::duration_cast<std::chrono::microseconds>(end -
                                                                      begin)
                    .count()
-            << ", execution trace: " << calculateTrace(getLog(petri))
+            << " [us], execution trace: " << calculateTrace(getLog(petri))
             << std::endl;
-  return result == Color::Success ? 0 : -1;
+
+  return result == Success ? 0 : -1;
 }

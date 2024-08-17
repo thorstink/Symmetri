@@ -27,12 +27,12 @@ This Petri net can be described using Symmetri:
 ```cpp
 using namespace symmetri;
 Net net = {{"foo",
-            {{{"B", Color::Success}, {"C", Color::Success}},
-              {{"Z", Color::Success}, {"B", Color::Success}}}},
+            {{{"B", Success}, {"C", Success}},
+              {{"Z", Success}, {"B", Success}}}},
             {"bar",
-            {{{"Z", Color::Success}},
-              {{"B", Color::Success}, {"C", Color::Success}}}}};
-Marking initial = {{"Z", Color::Success}};
+            {{{"Z", Success}},
+              {{"B", Success}, {"C", Success}}}}};
+Marking initial = {{"Z", Success}};
 Marking goal = {};
 auto task_system = std::make_shared<TaskSystem>(4);
 PetriNet app(net, "test_net_without_end", pool, initial, goal);

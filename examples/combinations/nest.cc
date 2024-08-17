@@ -14,12 +14,10 @@ int main(int, char *argv[]) {
 
   auto pool = std::make_shared<TaskSystem>(2);
   // the child net
-  PetriNet child_net(std::get<Net>(readPnml({dual_step_processor})),
-                     "child_net", pool,
-                     {{"TaskBucket", Color::Success},
-                      {"ResourceDualProcessor", Color::Success}},
-                     {{"SuccessfulTasks", Color::Success},
-                      {"ResourceDualProcessor", Color::Success}});
+  PetriNet child_net(
+      std::get<Net>(readPnml({dual_step_processor})), "child_net", pool,
+      {{"TaskBucket", Success}, {"ResourceDualProcessor", Success}},
+      {{"SuccessfulTasks", Success}, {"ResourceDualProcessor", Success}});
 
   child_net.registerCallback("StepOne", Foo{0.75, 1ms});
   child_net.registerCallback("StepTwo", Foo{0.75, 2ms});
@@ -40,7 +38,7 @@ int main(int, char *argv[]) {
 
   printLog(getLog(parent_net));
 
-  std::cout << "Token of this net: " << Color::toString(result) << ". It took "
+  std::cout << "Token of this net: " << result.getName() << ". It took "
             << dt.count()
             << " ms, token count: " << parent_net.getMarking().size()
             << std::endl;

@@ -50,19 +50,11 @@ Reducer createReducerForCallback(const size_t t_i, const Token result) {
     const auto it = std::find(model.scheduled_callbacks.cbegin(),
                               model.scheduled_callbacks.cend(), t_i);
     if (it != model.scheduled_callbacks.cend()) {
-      switch (result) {
-        case Color::Scheduled:
-        case Color::Started:
-        case Color::Paused:
-          break;
-        default: {
-          const auto &place_list = model.net.output_n[t_i];
-          model.tokens.reserve(model.tokens.size() + place_list.size());
-          for (const auto &[p, c] : place_list) {
-            model.tokens.push_back({p, result});
-          }
-        }
-      };
+      const auto &place_list = model.net.output_n[t_i];
+      model.tokens.reserve(model.tokens.size() + place_list.size());
+      for (const auto &[p, c] : place_list) {
+        model.tokens.push_back({p, result});
+      }
       model.scheduled_callbacks.erase(it);
     };
     model.log.push_back({t_i, result, t_end});
@@ -74,7 +66,7 @@ Reducer scheduleCallback(
     const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
         &reducer_queue) {
   reducer_queue->enqueue([start_time = Clock::now(), t_i](Petri &model) {
-    model.log.push_back({t_i, Color::Started, start_time});
+    model.log.push_back({t_i, Started, start_time});
   });
 
   return createReducerForCallback(t_i, fire(task));

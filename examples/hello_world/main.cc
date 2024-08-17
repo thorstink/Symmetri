@@ -25,15 +25,14 @@ void helloWorld() { std::this_thread::sleep_for(std::chrono::seconds(1)); }
 // states re meant when the function is a nested petri-net.
 symmetri::Token helloResult() {
   std::this_thread::sleep_for(std::chrono::seconds(1));
-  return symmetri::Color::Success;
+  return symmetri::Success;
 }
 
 // Tokens with custom colors can be created like this:
-const static symmetri::Token CustomToken(
-    symmetri::Color::registerToken("ACustomTokenColor"));
+CREATE_CUSTOM_TOKEN(ACustomToken)
 
 // which can be used as a result like any other ordinary token;
-symmetri::Token returnCustomToken() { return CustomToken; }
+symmetri::Token returnCustomToken() { return symmetri::ACustomToken; }
 
 // The main is simply the body of a cpp program. It has to start somewhere, so
 // that's here.
@@ -57,12 +56,11 @@ int main(int, char *argv[]) {
 
   // this simply prints the event log
   for (const auto &[caseid, t, s, c] : getLog(net)) {
-    std::cout << "Eventlog: " << caseid << ", " << t << ", "
-              << symmetri::Color::toString(s) << ", "
-              << c.time_since_epoch().count() << std::endl;
+    std::cout << "Eventlog: " << caseid << ", " << t << ", " << s.getName()
+              << ", " << c.time_since_epoch().count() << std::endl;
   }
 
   // return the result! If everything went well, you typically return
   // 0 as exit code.
-  return result == symmetri::Color::Success ? 0 : -1;
+  return result == symmetri::Success ? 0 : -1;
 }

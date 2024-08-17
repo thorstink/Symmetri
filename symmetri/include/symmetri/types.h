@@ -90,7 +90,7 @@ Token fire(const PetriNet &);
  * child Callbacks that are running. The cancel function will return before the
  * PetriNet is preempted completely.
  *
- * @return Token
+ * @return void
  */
 void cancel(const PetriNet &);
 

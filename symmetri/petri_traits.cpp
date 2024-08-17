@@ -1,9 +1,9 @@
 #include <future>
+#include <iostream>
 
 #include "petri.h"
 #include "symmetri/symmetri.h"
 #include "symmetri/utilities.hpp"
-#include <iostream>
 namespace symmetri {
 
 /**
@@ -20,48 +20,48 @@ unsigned int getThreadId() {
 
 Token fire(const PetriNet &app) {
   if (app.impl->thread_id_.load().has_value()) {
-    return Color::Failed;
+    return Failed;
   }
   auto &m = *app.impl;
   m.thread_id_.store(getThreadId());
   m.scheduled_callbacks.clear();
   m.tokens = m.initial_tokens;
-  m.state = Color::Started;
+  m.state = Started;
   Reducer f;
   while (m.reducer_queue->try_dequeue(f)) { /* get rid of old reducers  */
   }
 
   // start!
   m.reducer_queue->enqueue([=](Petri &) {});
-  while ((m.state == Color::Started || m.state == Color::Paused) &&
+  while ((m.state == Started || m.state == Paused) &&
          m.reducer_queue->wait_dequeue_timed(f, -1)) {
     do {
       f(m);
     } while (m.reducer_queue->try_dequeue(f));
 
     if (MarkingReached(m.tokens, m.final_marking)) {
-      m.state = Color::Success;
+      m.state = Success;
     }
 
-    if (m.state == Color::Started) {
+    if (m.state == Started) {
       // we're firing
       m.fireTransitions();
       // if there's nothing to fire; we deadlocked
-       if (MarkingReached(m.tokens, m.final_marking)) {
-        m.state = Color::Success;
-      } else if  (m.scheduled_callbacks.size() == 0) {
-        m.state = Color::Deadlocked;
+      if (MarkingReached(m.tokens, m.final_marking)) {
+        m.state = Success;
+      } else if (m.scheduled_callbacks.size() == 0) {
+        m.state = Deadlocked;
       }
     }
   }
 
   if (MarkingReached(m.tokens, m.final_marking)) {
-    m.state = Color::Success;
+    m.state = Success;
   }
-  
+
   for (const auto transition_index : m.scheduled_callbacks) {
     cancel(m.net.store.at(transition_index));
-    m.log.push_back({transition_index, Color::Canceled, Clock::now()});
+    m.log.push_back({transition_index, Canceled, Clock::now()});
   }
 
   while (!m.scheduled_callbacks.empty()) {
@@ -77,17 +77,17 @@ Token fire(const PetriNet &app) {
 
 void cancel(const PetriNet &app) {
   app.impl->reducer_queue->enqueue([=](Petri &model) {
-    model.state = Color::Canceled;
+    model.state = Canceled;
     for (const auto transition_index : model.scheduled_callbacks) {
       cancel(model.net.store.at(transition_index));
-      model.log.push_back({transition_index, Color::Canceled, Clock::now()});
+      model.log.push_back({transition_index, Canceled, Clock::now()});
     }
   });
 }
 
 void pause(const PetriNet &app) {
   app.impl->reducer_queue->enqueue([](Petri &model) {
-    model.state = Color::Paused;
+    model.state = Paused;
     for (const auto transition_index : model.scheduled_callbacks) {
       pause(model.net.store.at(transition_index));
     }
@@ -96,7 +96,7 @@ void pause(const PetriNet &app) {
 
 void resume(const PetriNet &app) {
   app.impl->reducer_queue->enqueue([](Petri &model) {
-    model.state = Color::Started;
+    model.state = Started;
     for (const auto transition_index : model.scheduled_callbacks) {
       resume(model.net.store.at(transition_index));
     }

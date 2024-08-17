@@ -6,9 +6,8 @@
 
 void printLog(const symmetri::Eventlog &eventlog) {
   for (const auto &[caseid, t, s, c] : eventlog) {
-    std::cout << "Eventlog: " << caseid << ", " << t << ", "
-              << symmetri::Color::toString(s) << ", "
-              << c.time_since_epoch().count() << std::endl;
+    std::cout << "Eventlog: " << caseid << ", " << t << ", " << s.getName()
+              << ", " << c.time_since_epoch().count() << std::endl;
   }
 }
 
@@ -16,12 +15,12 @@ symmetri::Marking getGoal(const symmetri::Marking &initial_marking) {
   auto goal = initial_marking;
   for (auto &[p, c] : goal) {
     p = (p == "TaskBucket") ? "SuccessfulTasks" : p;
-    c = symmetri::Color::Success;
+    c = symmetri::Success;
   }
   return goal;
 }
 
-const static symmetri::Token Red(symmetri::Color::registerToken("Red"));
+CREATE_CUSTOM_TOKEN(Red)
 
 struct Foo {
   Foo(double success_rate, std::chrono::milliseconds sleep_time)
@@ -37,7 +36,11 @@ symmetri::Token fire(const Foo &f) {
   auto now = symmetri::Clock::now();
   while (symmetri::Clock::now() - now < f.sleep_time) {
   }
-  return f.distribution(f.generator) ? symmetri::Color::Success : Red;
+  if (f.distribution(f.generator)) {
+    return symmetri::Success;
+  } else {
+    return symmetri::Red;
+  }
 }
 
 bool isSynchronous(const Foo &) { return false; }
