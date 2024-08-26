@@ -10,6 +10,13 @@ symmetri::Token fire(const Simple &) {
   return symmetri::Success;
 }
 
+void printLog(const symmetri::Eventlog &eventlog) {
+  for (const auto &[caseid, t, s, c] : eventlog) {
+    std::cout << "Eventlog: " << caseid << ", " << t << ", " << s.toString()
+              << ", " << c.time_since_epoch().count() << std::endl;
+  }
+}
+
 int main(int argc, char *argv[]) {
   using namespace symmetri;
   auto pool = std::make_shared<TaskSystem>(1);
@@ -45,6 +52,8 @@ int main(int argc, char *argv[]) {
                    .count()
             << " [us], execution trace: " << calculateTrace(getLog(petri))
             << std::endl;
+
+  printLog(getLog(petri));
 
   return result == Success ? 0 : -1;
 }

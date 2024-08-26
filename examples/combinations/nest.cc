@@ -38,7 +38,7 @@ int main(int, char *argv[]) {
 
   printLog(getLog(parent_net));
 
-  std::cout << "Token of this net: " << result.getName() << ". It took "
+  std::cout << "Token of this net: " << result.toString() << ". It took "
             << dt.count()
             << " ms, token count: " << parent_net.getMarking().size()
             << std::endl;

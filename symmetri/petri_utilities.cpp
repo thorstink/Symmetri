@@ -24,7 +24,7 @@ gch::small_vector<size_t, 32> possibleTransitions(
   gch::small_vector<size_t, 32> possible_transition_list_n;
   for (const AugmentedToken &place : tokens) {
     // transition index
-    for (size_t t : p_to_ts_n[place.place]) {
+    for (size_t t : p_to_ts_n[std::get<size_t>(place)]) {
       const auto &inputs = input_n[t];
       // current colored place is an input of t
       const bool is_input =

@@ -56,7 +56,7 @@ int main(int, char *argv[]) {
 
   // this simply prints the event log
   for (const auto &[caseid, t, s, c] : getLog(net)) {
-    std::cout << "Eventlog: " << caseid << ", " << t << ", " << s.getName()
+    std::cout << "Eventlog: " << caseid << ", " << t << ", " << s.toString()
               << ", " << c.time_since_epoch().count() << std::endl;
   }
 

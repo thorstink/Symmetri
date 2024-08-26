@@ -48,7 +48,7 @@ size_t calculateTrace(const Eventlog& event_log) noexcept {
   return std::hash<std::string>{}(std::accumulate(
       event_log.begin(), event_log.end(), std::string(""),
       [](const auto& acc, const Event& n) {
-        return acc + n.case_id + n.transition + std::string(n.state.getName());
+        return acc + n.case_id + n.transition + std::string(n.state.toString());
       }));
 }
 

@@ -6,7 +6,7 @@
 
 void printLog(const symmetri::Eventlog &eventlog) {
   for (const auto &[caseid, t, s, c] : eventlog) {
-    std::cout << "Eventlog: " << caseid << ", " << t << ", " << s.getName()
+    std::cout << "Eventlog: " << caseid << ", " << t << ", " << s.toString()
               << ", " << c.time_since_epoch().count() << std::endl;
   }
 }

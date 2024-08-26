@@ -128,7 +128,7 @@ TEST_CASE("Deadlocked transition shows up in marking") {
   fire(app);
   const auto marking = app.getMarking();
   for (auto [p, t] : marking) {
-    std::cout << t.getName() << ", " << p << ", " << t << ", "
+    std::cout << t.toString() << ", " << p << ", " << t.toIndex() << ", "
               << (Deadlocked == t) << (t == Deadlocked) << std::endl;
   }
   const bool has_deadlock_token =
@@ -187,28 +187,31 @@ CREATE_CUSTOM_TOKEN(CustomState);
 
 TEST_CASE("Types") {
   using namespace symmetri;
-  CHECK(Scheduled != ExternalState);
-  CHECK(Started != ExternalState);
-  CHECK(Success != ExternalState);
-  CHECK(Deadlocked != ExternalState);
-  CHECK(Paused != ExternalState);
-  CHECK(Canceled != ExternalState);
-  CHECK(Failed != ExternalState);
-  CHECK(ExternalState == ExternalState);
-  CHECK(ExternalState.getName() != "");
+  CHECK(not bool(Scheduled == ExternalState));
+  CHECK(not bool(Started == ExternalState));
+  CHECK(not bool(Success == ExternalState));
+  CHECK(not bool(Deadlocked == ExternalState));
+  CHECK(not bool(Paused == ExternalState));
+  CHECK(not bool(Canceled == ExternalState));
+  CHECK(not bool(Failed == ExternalState));
+  CHECK(bool(ExternalState == ExternalState));
+  CHECK(bool(ExternalState.toString() != ""));
 }
 
 TEST_CASE("Print some Types") {
   using namespace symmetri;
-  std::cout << Scheduled.getName() << ", " << Scheduled << std::endl;
-  std::cout << Started.getName() << ", " << Started << std::endl;
-  std::cout << Success.getName() << ", " << Success << std::endl;
-  std::cout << Deadlocked.getName() << ", " << Deadlocked << std::endl;
-  std::cout << Paused.getName() << ", " << Paused << std::endl;
-  std::cout << Canceled.getName() << ", " << Canceled << std::endl;
-  std::cout << Failed.getName() << ", " << Failed << std::endl;
-  std::cout << ExternalState.getName() << ", " << ExternalState << std::endl;
-  std::cout << CustomState.getName() << ", " << CustomState << std::endl;
+  std::cout << Scheduled.toString() << ", " << Scheduled.toIndex() << std::endl;
+  std::cout << Started.toString() << ", " << Started.toIndex() << std::endl;
+  std::cout << Success.toString() << ", " << Success.toIndex() << std::endl;
+  std::cout << Deadlocked.toString() << ", " << Deadlocked.toIndex()
+            << std::endl;
+  std::cout << Paused.toString() << ", " << Paused.toIndex() << std::endl;
+  std::cout << Canceled.toString() << ", " << Canceled.toIndex() << std::endl;
+  std::cout << Failed.toString() << ", " << Failed.toIndex() << std::endl;
+  std::cout << ExternalState.toString() << ", " << ExternalState.toIndex()
+            << std::endl;
+  std::cout << CustomState.toString() << ", " << CustomState.toIndex()
+            << std::endl;
 }
 
 TEST_CASE("Print all Types") {

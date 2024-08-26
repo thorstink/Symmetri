@@ -89,10 +89,27 @@ constexpr auto unique_id() {
   }
 }
 
+/**
+ * @brief Tokens are elements that can reside in places. Tokens can have a color
+ * which makes them distinguishable from other tokens. Tokens that have the same
+ * color are not distinguishable. Users can create their own tokens-colors by
+ * either using the CREATE_CUSTOM_TOKEN-macro (compile-time) or by calling
+ * Token's public constructor which takes a token-name.
+ *
+ */
 class Token {
+  size_t idx;  ///< A numerical id ("color") for this particular token
+  inline static std::array<std::string_view, 100>
+      v{};  ///< The human read-able string representation of the "color" is
+            ///< stored in this buffer using the numerical id as index.
+
  protected:
-  inline static std::array<std::string_view, 100> v{};
-  size_t idx;
+  /**
+   * @brief Creates a Token with a unique numerical id and a string
+   * representation based on the name of the argument-type.
+   *
+   * @tparam T the type representing the token-color
+   */
   template <class T>
   constexpr Token(T* const) : idx(unique_id<T>()) {
     static_assert(unique_id<T>() < v.size(), "Token is not big enough");
@@ -100,6 +117,13 @@ class Token {
   }
 
  public:
+  /**
+   * @brief Construct a new Token object from a string at run-time. A unique id
+   * is generated and if it fails it will exit the application through a failing
+   * assert.
+   *
+   * @param s string-representation of the color
+   */
   Token(const char* s)
       : idx([&]() -> size_t {
           static size_t i = 0;
@@ -119,6 +143,11 @@ class Token {
 
   Token() = delete;
 
+  /**
+   * @brief Get a list of all the colors
+   *
+   * @return std::vector<std::string_view>
+   */
   static std::vector<std::string_view> getColors() {
     std::vector<std::string_view> colors;
     colors.reserve(v.size());
@@ -126,10 +155,25 @@ class Token {
                  [](const auto& color) { return not color.empty(); });
     return colors;
   }
+  constexpr bool operator<(const Token& rhs) const {
+    return idx < rhs.toIndex();
+  }
+  constexpr bool operator>(const Token& rhs) const {
+    return idx > rhs.toIndex();
+  }
+  /**
+   * @brief returns the unique index for this color.
+   *
+   * @return constexpr size_t
+   */
+  constexpr size_t toIndex() const { return idx; }
 
-  constexpr operator size_t() const { return idx; }
-  constexpr auto getIdx() const { return idx; }
-  constexpr const auto& getName() const { return v[idx]; }
+  /**
+   * @brief returns the string-representation for this color.
+   *
+   * @return constexpr const auto&
+   */
+  constexpr const auto& toString() const { return v[idx]; }
   constexpr bool operator==(const Token& c) const { return idx == c.idx; }
   template <class T>
   constexpr bool operator==(const T&) const {
@@ -139,12 +183,17 @@ class Token {
 
 }  // namespace symmetri
 
+/**
+ * @brief A macro from which we can create token-colors. Colors ceated this way
+ * end up in the symmetri namespace.
+ *
+ */
 #define CREATE_CUSTOM_TOKEN(name)                     \
   namespace symmetri {                                \
   struct name : public Token {                        \
     constexpr name() : Token(this) {}                 \
     constexpr bool operator==(const Token& c) const { \
-      return idx == c.getIdx();                       \
+      return toIndex() == c.toIndex();                \
     }                                                 \
   };                                                  \
   static inline name name;                            \

@@ -33,7 +33,8 @@ populateIoLookups(const Net &_net, const std::vector<Place> &ordered_places) {
   for (const auto &[t, io] : _net) {
     SmallVectorInput q_in, q_out;
     for (const auto &p : io.first) {
-      q_in.push_back({toIndex(ordered_places, p.first), p.second});
+      q_in.push_back(
+          std::make_tuple(toIndex(ordered_places, p.first), p.second));
     }
     input_n.push_back(q_in);
     for (const auto &p : io.second) {
@@ -132,7 +133,7 @@ void Petri::fireAsynchronous(const size_t t) {
 
 void deductMarking(std::vector<AugmentedToken> &tokens,
                    const SmallVectorInput &inputs) {
-  for (const auto place : inputs) {
+  for (const auto &place : inputs) {
     // erase one by one. using std::remove_if would remove all tokens at
     // a particular place.
     tokens.erase(std::find(tokens.begin(), tokens.end(), place));
@@ -206,7 +207,8 @@ Marking Petri::getMarking() const {
   marking.reserve(tokens.size());
   std::transform(tokens.cbegin(), tokens.cend(), std::back_inserter(marking),
                  [&](auto place_index) -> std::pair<std::string, Token> {
-                   return {net.place[place_index.place], place_index.color};
+                   return {net.place[std::get<size_t>(place_index)],
+                           std::get<Token>(place_index)};
                  });
   return marking;
 }

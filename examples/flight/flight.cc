@@ -35,7 +35,7 @@ void resume(const Foo &f) { f.resume(); }
  */
 void printLog(const symmetri::Eventlog &eventlog) {
   for (const auto &[caseid, t, s, c] : eventlog) {
-    std::cout << "Eventlog: " << caseid << ", " << t << ", " << s.getName()
+    std::cout << "Eventlog: " << caseid << ", " << t << ", " << s.toString()
               << ", " << c.time_since_epoch().count() << std::endl;
   }
 }
@@ -111,7 +111,7 @@ int main(int, char *argv[]) {
   // print the results and eventlog
 
   printLog(getLog(bignet));
-  std::cout << "Token of this net: " << result.getName()
+  std::cout << "Token of this net: " << result.toString()
             << ", token count: " << bignet.getMarking().size() << std::endl;
   t.join();  // clean up
   return 0;
