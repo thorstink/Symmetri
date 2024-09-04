@@ -98,8 +98,10 @@ constexpr auto unique_id() {
  *
  */
 class Token {
+  const static size_t kMaxTokenColors =
+      100;     ///< Maximum amount of different colors
   size_t idx;  ///< A numerical id ("color") for this particular token
-  inline static std::array<std::string_view, 100>
+  inline static std::array<std::string_view, kMaxTokenColors>
       v{};  ///< The human read-able string representation of the "color" is
             ///< stored in this buffer using the numerical id as index.
 
@@ -112,7 +114,8 @@ class Token {
    */
   template <class T>
   constexpr Token(T* const) : idx(unique_id<T>()) {
-    static_assert(unique_id<T>() < v.size(), "Token is not big enough");
+    static_assert(unique_id<T>() < v.size(),
+                  "There can only be 100 different token-colors.");
     v[idx] = type_name<T>();
   }
 
@@ -136,7 +139,7 @@ class Token {
           }
         }()) {
     if (std::find(v.cbegin(), v.cend(), s) == std::cend(v)) {
-      assert(v[idx].empty() && "Token is not big enough");
+      assert(v[idx].empty() && "There can only be 100 different token-colors.");
       v[idx] = s;
     }
   }
