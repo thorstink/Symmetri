@@ -12,6 +12,8 @@
 #include <vector>
 namespace symmetri {
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 // https://rodusek.com/posts/2021/03/09/getting-an-unmangled-type-name-at-compile-time/
 
 template <std::size_t... Idxs>
@@ -89,10 +91,12 @@ constexpr auto unique_id() {
   }
 }
 
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
+
 /**
  * @brief Tokens are elements that can reside in places. Tokens can have a color
  * which makes them distinguishable from other tokens. Tokens that have the same
- * color are not distinguishable. Users can create their own tokens-colors by
+ * color are not distinguishable. Users can create their own token-colors by
  * either using the CREATE_CUSTOM_TOKEN-macro (compile-time) or by calling
  * Token's public constructor which takes a token-name.
  *
@@ -108,7 +112,7 @@ class Token {
  protected:
   /**
    * @brief Creates a Token with a unique numerical id and a string
-   * representation based on the name of the argument-type.
+   * representation based on the name of the argument-type at compile-time.
    *
    * @tparam T the type representing the token-color
    */
