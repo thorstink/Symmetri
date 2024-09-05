@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['issynchronous_0',['isSynchronous',['../callback_8h.html#aa0f94b8de344a14936f05f67078711ca',1,'symmetri::isSynchronous(const T &amp;)'],['../types_8h.html#a36437109bfa83caee93ad77a73c97863',1,'symmetri::isSynchronous(const DirectMutation &amp;)']]]
+  ['markingequality_0',['MarkingEquality',['../utilities_8hpp.html#a663f9de17f04a2b8e0d290e47e1dc92d',1,'symmetri']]],
+  ['markingreached_1',['MarkingReached',['../utilities_8hpp.html#a731a816c7c159ed33f41f7e6e3a94b2b',1,'symmetri']]]
 ];

@@ -1,8 +1,8 @@
 var petri_8h =
 [
-    [ "symmetri::AugmentedToken", "structsymmetri_1_1AugmentedToken.html", null ],
     [ "symmetri::SmallEvent", "structsymmetri_1_1SmallEvent.html", "structsymmetri_1_1SmallEvent" ],
     [ "symmetri::Petri", "structsymmetri_1_1Petri.html", "structsymmetri_1_1Petri" ],
+    [ "AugmentedToken", "petri_8h.html#a0cb56bc14f2139dbf94d0ed229d34f9c", null ],
     [ "Reducer", "petri_8h.html#acbe7ea854ba6be3596fab040e6e27c87", null ],
     [ "SmallLog", "petri_8h.html#a328f12c35d4af766dbcbfad4f47ac492", null ],
     [ "SmallVector", "petri_8h.html#afb64ea9b68f8eaea5b0a4c8df1c7ceb9", null ],

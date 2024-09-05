@@ -7,5 +7,5 @@ var searchData=
   ['architecture_4',['Architecture',['../md_docs_2symmetri__lib.html#autotoc_md13',1,'']]],
   ['as_20callbacks_5',['Transitions as callbacks',['../md_docs_2symmetri__nets.html#autotoc_md2',1,'']]],
   ['at_20the_20level_20of_20transitions_6',['Failure at the level of transitions',['../md_docs_2symmetri__nets.html#autotoc_md4',1,'']]],
-  ['augmentedtoken_7',['AugmentedToken',['../structsymmetri_1_1AugmentedToken.html',1,'symmetri']]]
+  ['augmentedtoken_7',['AugmentedToken',['../petri_8h.html#a0cb56bc14f2139dbf94d0ed229d34f9c',1,'symmetri']]]
 ];

@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['level_20of_20transitions_0',['Failure at the level of transitions',['../md_docs_2symmetri__nets.html#autotoc_md4',1,'']]],
-  ['library_1',['Symmetri library',['../md_docs_2symmetri__lib.html',1,'']]],
-  ['log_2',['log',['../structsymmetri_1_1Petri.html#a480b5841ccff81ba112a8759cfdbd103',1,'symmetri::Petri']]],
-  ['log_3',['The event log',['../md_docs_2symmetri__nets.html#autotoc_md7',1,'']]]
+  ['marking_0',['Marking',['../types_8h.html#a2c4038fc3f61d80e28984156f7d5f3b2',1,'symmetri']]],
+  ['markingequality_1',['MarkingEquality',['../utilities_8hpp.html#a663f9de17f04a2b8e0d290e47e1dc92d',1,'symmetri']]],
+  ['markingreached_2',['MarkingReached',['../utilities_8hpp.html#a731a816c7c159ed33f41f7e6e3a94b2b',1,'symmetri']]]
 ];

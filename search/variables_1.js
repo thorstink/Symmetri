@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['deadlocked_0',['Deadlocked',['../classsymmetri_1_1Color.html#ae6744c78e3f2be0ea0e5bf8239235696',1,'symmetri::Color']]]
+  ['final_5fmarking_0',['final_marking',['../structsymmetri_1_1Petri.html#abecb436860f487c3dc96b03d19098654',1,'symmetri::Petri']]]
 ];

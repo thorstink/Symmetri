@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['clock_0',['Clock',['../types_8h.html#aff3ccd3ad42abdcb67cc9be634edb814',1,'symmetri']]]
+  ['augmentedtoken_0',['AugmentedToken',['../petri_8h.html#a0cb56bc14f2139dbf94d0ed229d34f9c',1,'symmetri']]]
 ];

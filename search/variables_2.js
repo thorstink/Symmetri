@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['failed_0',['Failed',['../classsymmetri_1_1Color.html#aa2a28bb7cd602f1a5982e0501994011e',1,'symmetri::Color']]],
-  ['final_5fmarking_1',['final_marking',['../structsymmetri_1_1Petri.html#abecb436860f487c3dc96b03d19098654',1,'symmetri::Petri']]]
+  ['initial_5ftokens_0',['initial_tokens',['../structsymmetri_1_1Petri.html#a30687d1a0a6b177d10bb9c675bcd38ee',1,'symmetri::Petri']]],
+  ['input_5fn_1',['input_n',['../structsymmetri_1_1Petri.html#a7e997c5e80e9ca6e6dd41af430bb8a7e',1,'symmetri::Petri']]]
 ];

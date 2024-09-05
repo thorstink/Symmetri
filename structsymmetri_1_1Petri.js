@@ -7,7 +7,6 @@ var structsymmetri_1_1Petri =
     [ "toTokens", "structsymmetri_1_1Petri.html#a1e76fcc186384956938477f8cd3ba174", null ],
     [ "tryFire", "structsymmetri_1_1Petri.html#a0cb5d70572c4ab7be99b37f3376b4b9b", null ],
     [ "case_id", "structsymmetri_1_1Petri.html#aa2acc8bf32bcd39c86f5eb029586c34b", null ],
-    [ "color", "structsymmetri_1_1Petri.html#a34c9a293eef43263b65fbae72de80e55", null ],
     [ "final_marking", "structsymmetri_1_1Petri.html#abecb436860f487c3dc96b03d19098654", null ],
     [ "initial_tokens", "structsymmetri_1_1Petri.html#a30687d1a0a6b177d10bb9c675bcd38ee", null ],
     [ "input_n", "structsymmetri_1_1Petri.html#a7e997c5e80e9ca6e6dd41af430bb8a7e", null ],
