@@ -10,9 +10,9 @@ void drawColorDropdownMenu(
   if (ImGui::BeginMenu(menu_name.c_str())) {
     for (const auto& color : colors) {
       ImGui::PushStyleColor(ImGuiCol_Text,
-                            getColor(symmetri::Color::registerToken(color)));
+                            getColor(symmetri::Token(color.c_str())));
       ImGui::PushStyleColor(ImGuiCol_HeaderHovered,
-                            getColor(symmetri::Color::registerToken(color)));
+                            getColor(symmetri::Token(color.c_str())));
       if (ImGui::MenuItem(color.c_str())) {
         func(color);
       }

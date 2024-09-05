@@ -138,8 +138,9 @@ void removePlace(size_t idx) {
     m.data->selected_node_idx.reset();
     // remove marking for this node
     auto [b, e] = std::ranges::remove_if(
-        m.data->tokens,
-        [idx](const symmetri::AugmentedToken at) { return at.place == idx; });
+        m.data->tokens, [idx](const symmetri::AugmentedToken at) {
+          return std::get<size_t>(at) == idx;
+        });
     m.data->tokens.erase(b, e);
     m.data->context_menu_active = false;
 
@@ -162,8 +163,9 @@ void removeTransition(size_t idx) {
 void updateArcColor(bool is_input, size_t idx, size_t sub_idx,
                     const symmetri::Token color) {
   rxdispatch::push([=](model::Model&& m) mutable {
-    (is_input ? m.data->net.input_n : m.data->net.output_n)[idx][sub_idx]
-        .color = color;
+    std::get<symmetri::Token>(
+        (is_input ? m.data->net.input_n : m.data->net.output_n)[idx][sub_idx]) =
+        color;
     return m;
   });
 }
@@ -281,8 +283,8 @@ int updateActiveFile(ImGuiInputTextCallbackData* data) {
 void updateColorTable() {
   rxdispatch::push([](model::Model&& m) {
     m.data->colors.clear();
-    for (const auto& [t, c] : symmetri::Color::getColors()) {
-      m.data->colors.push_back(c);
+    for (const auto& c : symmetri::Token::getColors()) {
+      m.data->colors.push_back(std::string(c));
     }
     return m;
   });

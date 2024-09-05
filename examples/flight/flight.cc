@@ -16,10 +16,10 @@
  * all - if nothing is defined, a default version is used.
  *
  */
-const static symmetri::Token FooFail(symmetri::Color::registerToken("FooFail"));
+const static symmetri::Token FooFail("FooFail");
 
 symmetri::Token fire(const Foo &f) {
-  return f.fire() ? FooFail : symmetri::Color::Success;
+  return f.fire() ? FooFail : symmetri::Success;
 }
 
 void cancel(const Foo &f) { f.cancel(); }
@@ -35,9 +35,8 @@ void resume(const Foo &f) { f.resume(); }
  */
 void printLog(const symmetri::Eventlog &eventlog) {
   for (const auto &[caseid, t, s, c] : eventlog) {
-    std::cout << "Eventlog: " << caseid << ", " << t << ", "
-              << symmetri::Color::toString(s) << ", "
-              << c.time_since_epoch().count() << std::endl;
+    std::cout << "Eventlog: " << caseid << ", " << t << ", " << s.toString()
+              << ", " << c.time_since_epoch().count() << std::endl;
   }
 }
 
@@ -57,7 +56,7 @@ int main(int, char *argv[]) {
   // Here we create the first PetriNet based on composing pnml1 and pnml2
   // using flat composition. The associated transitions are two instance of
   // the Foo-class.
-  Marking sub_goal_marking = {{"P2", Color::Success}};
+  Marking sub_goal_marking = {{"P2", Success}};
   std::set<std::string> pnmls = {pnml1, pnml2};
   PetriNet subnet(pnmls, "SubNet", pool, sub_goal_marking);
   subnet.registerCallback("T0", Foo("SubFoo"));
@@ -66,11 +65,11 @@ int main(int, char *argv[]) {
   // We create another PetriNet by flatly composing all three petri nets.
   // Again we have 2 Foo-transitions, and the first transition (T0) is the
   // subnet. This show how you can also nest PetriNets.
-  Marking big_goal_marking = {{"P3", Color::Success},
-                              {"P3", Color::Success},
-                              {"P3", Color::Success},
-                              {"P3", Color::Success},
-                              {"P3", Color::Success}};
+  Marking big_goal_marking = {{"P3", Success},
+                              {"P3", Success},
+                              {"P3", Success},
+                              {"P3", Success},
+                              {"P3", Success}};
   PetriNet bignet({pnml1, pnml2, pnml3}, "RootNet", pool, big_goal_marking);
   bignet.registerCallback("T0", subnet);
   bignet.registerCallback("T1", Foo("Bar"));
@@ -112,7 +111,7 @@ int main(int, char *argv[]) {
   // print the results and eventlog
 
   printLog(getLog(bignet));
-  std::cout << "Token of this net: " << Color::toString(result)
+  std::cout << "Token of this net: " << result.toString()
             << ", token count: " << bignet.getMarking().size() << std::endl;
   t.join();  // clean up
   return 0;

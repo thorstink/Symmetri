@@ -41,18 +41,22 @@ model::Reducer writeToDisk(const std::filesystem::path& path) {
 
       for (const auto& token : m.net.input_n[idx]) {
         XMLElement* child = doc.NewElement("arc");
-        child->SetAttribute("source", m.net.place[token.place].c_str());
+        child->SetAttribute("source",
+                            m.net.place[std::get<size_t>(token)].c_str());
         child->SetAttribute("target", m.net.transition[idx].c_str());
-        child->SetAttribute("color",
-                            symmetri::Color::toString(token.color).c_str());
+        child->SetAttribute(
+            "color",
+            std::string(std::get<symmetri::Token>(token).toString()).c_str());
         root->InsertEndChild(child);
       }
       for (const auto& token : m.net.output_n[idx]) {
         XMLElement* child = doc.NewElement("arc");
         child->SetAttribute("source", m.net.transition[idx].c_str());
-        child->SetAttribute("target", m.net.place[token.place].c_str());
-        child->SetAttribute("color",
-                            symmetri::Color::toString(token.color).c_str());
+        child->SetAttribute("target",
+                            m.net.place[std::get<size_t>(token)].c_str());
+        child->SetAttribute(
+            "color",
+            std::string(std::get<symmetri::Token>(token).toString()).c_str());
         root->InsertEndChild(child);
       }
     }

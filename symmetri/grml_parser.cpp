@@ -46,7 +46,7 @@ std::tuple<Net, Marking, PriorityTable> readGrml(
           }
         }
         for (int i = 0; i < initial_marking; i++) {
-          place_initialMarking.push_back({place_id, Color::Success});
+          place_initialMarking.push_back({place_id, Success});
         }
         places.insert(place_id);
         id_lookup_table.insert({id, place_id});
@@ -88,8 +88,7 @@ std::tuple<Net, Marking, PriorityTable> readGrml(
                                               ->GetText());
 
       for (int i = 0; i < multiplicity; i++) {
-        const auto arc_color =
-            NULL == color ? Color::Success : Color::registerToken(color);
+        const auto arc_color = NULL == color ? Success : Token(color);
         if (places.find(source_id) != places.end()) {
           // if the source is a place, tokens are consumed.
           if (state_net.find(target_id) != state_net.end()) {

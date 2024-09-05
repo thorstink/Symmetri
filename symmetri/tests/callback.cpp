@@ -25,7 +25,7 @@ class Foo {
 bool custom_used = false;
 symmetri::Token fire(const Foo&) {
   custom_used = true;
-  return symmetri::Color::Success;
+  return symmetri::Success;
 }
 
 void resume(const Foo& f) {

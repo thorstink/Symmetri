@@ -26,11 +26,11 @@ void draw_context_menu(const model::ViewModel& vm) {
             drawColorDropdownMenu(vm.net.transition[node_idx], vm.colors,
                                   [&](const std::string& c) {
                                     addArc(is_place, selected_idx, node_idx,
-                                           symmetri::Color::registerToken(c));
+                                           symmetri::Token(c.c_str()));
                                   });
 
           } else if (ImGui::MenuItem((vm.net.place[node_idx].c_str()))) {
-            addArc(is_place, selected_idx, node_idx, symmetri::Color::Success);
+            addArc(is_place, selected_idx, node_idx, symmetri::Success);
           }
           if (ImGui::IsItemHovered()) {
             bool is_target_place = not is_place;
@@ -44,11 +44,11 @@ void draw_context_menu(const model::ViewModel& vm) {
         ImGui::EndMenu();
       }
       if (is_place) {
-        drawColorDropdownMenu(
-            "Add marking", vm.colors, [=](const std::string& c) {
-              addTokenToPlace(symmetri::AugmentedToken{
-                  selected_idx, symmetri::Color::registerToken(c)});
-            });
+        drawColorDropdownMenu("Add marking", vm.colors,
+                              [=](const std::string& c) {
+                                addTokenToPlace(symmetri::AugmentedToken{
+                                    selected_idx, symmetri::Token(c.c_str())});
+                              });
       }
 
       if (ImGui::MenuItem("Delete")) {

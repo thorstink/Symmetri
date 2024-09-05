@@ -34,7 +34,7 @@ std::tuple<Net, Marking> readPnml(const std::set<std::string> &files) {
                               ->FirstChildElement("text")
                               ->GetText());
       for (int i = 0; i < initial_marking; i++) {
-        place_initialMarking.push_back({place_id, Color::Success});
+        place_initialMarking.push_back({place_id, Success});
       }
       places.insert(std::string(place_id));
     }
@@ -62,8 +62,7 @@ std::tuple<Net, Marking> readPnml(const std::set<std::string> &files) {
                               ->GetText());
 
       for (int i = 0; i < multiplicity; i++) {
-        const auto arc_color =
-            NULL == color ? Color::Success : Color::registerToken(color);
+        const auto arc_color = NULL == color ? Success : Token(color);
         if (places.find(source_id) != places.end()) {
           // if the source is a place, tokens are consumed.
           if (state_net.find(target_id) != state_net.end()) {

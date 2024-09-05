@@ -25,8 +25,8 @@ namespace symmetri {
  */
 template <typename T>
 bool MarkingEquality(const std::vector<T>& m1, const std::vector<T>& m2) {
-  auto m1_sorted = m1;
-  auto m2_sorted = m2;
+  std::vector<T> m1_sorted = m1;
+  std::vector<T> m2_sorted = m2;
   std::sort(m1_sorted.begin(), m1_sorted.end());
   std::sort(m2_sorted.begin(), m2_sorted.end());
   return m1_sorted == m2_sorted;

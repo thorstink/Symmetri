@@ -66,8 +66,8 @@ void loadPetriNet(const std::filesystem::path& file) {
     }
 
     m.colors.clear();
-    for (const auto& [t, c] : symmetri::Color::getColors()) {
-      m.colors.push_back(c);
+    for (const auto& c : symmetri::Token::getColors()) {
+      m.colors.push_back(std::string(c));
     }
 
     // Move elements from src to dest.

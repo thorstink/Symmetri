@@ -27,12 +27,12 @@ This Petri net can be described using Symmetri:
 ```cpp
 using namespace symmetri;
 Net net = {{"foo",
-            {{{"B", Color::Success}, {"C", Color::Success}},
-              {{"Z", Color::Success}, {"B", Color::Success}}}},
+            {{{"B", Success}, {"C", Success}},
+              {{"Z", Success}, {"B", Success}}}},
             {"bar",
-            {{{"Z", Color::Success}},
-              {{"B", Color::Success}, {"C", Color::Success}}}}};
-Marking initial = {{"Z", Color::Success}};
+            {{{"Z", Success}},
+              {{"B", Success}, {"C", Success}}}}};
+Marking initial = {{"Z", Success}};
 Marking goal = {};
 auto task_system = std::make_shared<TaskSystem>(4);
 PetriNet app(net, "test_net_without_end", pool, initial, goal);
@@ -45,7 +45,7 @@ auto log = getLog(app); // get the event log
 - `net` is a multiset description of a Petri net
 - `initial` is the initial token distribution (also known as _initial marking_)
 - `goal` is the goal marking, the net terminates if this is reached
-- `task_system` is a simple SPMC-queue based based threadpool
+- `task_system` is a simple SPMC-queue based threadpool
 - `&foo` and `&bar` are user-supplied *Callbacks*
 - `app` is all the ingredients put together - creating something that can be *fired*! it outputs a result (`res`) and at all times an event log can be queried
 

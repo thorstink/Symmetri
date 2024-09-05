@@ -4,6 +4,7 @@
 
 #include <functional>
 #include <optional>
+#include <tuple>
 
 #include "externals/blockingconcurrentqueue.h"
 #include "externals/small_vector.hpp"
@@ -18,19 +19,7 @@ namespace symmetri {
  * particular place.
  *
  */
-struct AugmentedToken {
-  size_t place;
-  Token color;
-};
-inline bool operator==(const AugmentedToken &lhs, const AugmentedToken &rhs) {
-  return lhs.place == rhs.place && lhs.color == rhs.color;
-}
-inline bool operator<(const AugmentedToken &lhs, const AugmentedToken &rhs) {
-  return lhs.place < rhs.place && lhs.color < rhs.color;
-}
-inline bool operator>(const AugmentedToken &lhs, const AugmentedToken &rhs) {
-  return lhs.place > rhs.place && lhs.color > rhs.color;
-}
+using AugmentedToken = std::tuple<size_t, Token>;
 
 /**
  * @brief a minimal Event representation.

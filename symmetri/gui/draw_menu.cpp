@@ -27,8 +27,9 @@ void drawTokenLine(const symmetri::AugmentedToken& at) {
   ImGui::PopStyleColor(4);
   ImGui::PopID();
   ImGui::SameLine();
-  ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(getColor(at.color)), "%s",
-                     symmetri::Color::toString(at.color).c_str());
+  ImGui::TextColored(
+      ImGui::ColorConvertU32ToFloat4(getColor(std::get<symmetri::Token>(at))),
+      "%s", std::string(std::get<symmetri::Token>(at).toString()).c_str());
 }
 
 void draw_menu(const model::ViewModel& vm) {
@@ -64,7 +65,7 @@ void draw_menu(const model::ViewModel& vm) {
     if (is_place) {
       ImGui::Text("Marking");
       std::ranges::for_each(vm.tokens | std::views::filter([=](const auto& at) {
-                              return at.place == selected_idx;
+                              return std::get<size_t>(at) == selected_idx;
                             }),
                             &drawTokenLine);
     } else if (not is_place) {
@@ -80,13 +81,14 @@ void draw_menu(const model::ViewModel& vm) {
                        updatePriority(selected_idx));
       ImGui::Text("Output");
       ImGui::SameLine();
-      if (ImGui::BeginCombo("##output", symmetri::Color::toString(
-                                            fire(vm.net.store[selected_idx]))
-                                            .c_str())) {
+      if (ImGui::BeginCombo(
+              "##output",
+              std::string(fire(vm.net.store[selected_idx]).toString())
+                  .c_str())) {
         for (const auto& color : vm.colors) {
           if (ImGui::Selectable(color.c_str())) {
             updateTransitionOutputColor(selected_idx,
-                                        symmetri::Color::registerToken(color));
+                                        symmetri::Token(color.c_str()));
           }
         }
         ImGui::EndCombo();
@@ -96,18 +98,17 @@ void draw_menu(const model::ViewModel& vm) {
     const auto& [is_input, selected_idx, sub_idx] =
         vm.selected_arc_idxs.value();
 
-    const auto color =
-        (is_input ? vm.net.input_n : vm.net.output_n)[selected_idx][sub_idx]
-            .color;
+    const auto color = std::get<symmetri::Token>(
+        (is_input ? vm.net.input_n : vm.net.output_n)[selected_idx][sub_idx]);
 
     if (is_input) {
-      drawColorDropdownMenu(symmetri::Color::toString(color), vm.colors,
+      drawColorDropdownMenu(std::string(color.toString()), vm.colors,
                             [=](const std::string& c) {
                               updateArcColor(is_input, selected_idx, sub_idx,
-                                             symmetri::Color::registerToken(c));
+                                             symmetri::Token(c.c_str()));
                             });
     } else {
-      ImGui::Text("%s", symmetri::Color::toString(color).c_str());
+      ImGui::Text("%s", std::string(color.toString()).c_str());
     }
   }
   ImGui::Dummy(ImVec2(0.0f, 20.0f));
@@ -152,7 +153,7 @@ void draw_menu(const model::ViewModel& vm) {
         ImGui::Text("%s,", vm.net.place[place].c_str());
         ImGui::SameLine();
         ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(getColor(color)),
-                           "%s", symmetri::Color::toString(color).c_str());
+                           "%s", std::string(color.toString()).c_str());
       }
       ImGui::EndTabItem();
     }
@@ -162,14 +163,14 @@ void draw_menu(const model::ViewModel& vm) {
       ImGui::InputText("##4", new_color, 128, ImGuiInputTextFlags_CharsNoBlank);
       ImGui::SameLine();
       if (ImGui::Button("Add Color")) {
-        symmetri::Color::registerToken(std::string(new_color));
+        symmetri::Token(std::string(new_color).c_str());
         memset(new_color, 0, sizeof(new_color));
-        updateColorTable();
+        // updateColorTable();
       }
       ImGui::Separator();
       for (const auto& color : vm.colors) {
         ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(
-                               getColor(symmetri::Color::registerToken(color))),
+                               getColor(symmetri::Token(color.c_str()))),
                            "%s", color.c_str());
       }
       ImGui::EndTabItem();

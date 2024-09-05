@@ -47,17 +47,19 @@ void draw_grid(const ImVec2& scrolling) {
 void draw_arc(size_t t_idx, const model::ViewModel& vm) {
   const auto draw = [&](const symmetri::AugmentedToken& t, bool is_input,
                         size_t sub_idx) {
-    if (std::find(vm.p_view.begin(), vm.p_view.end(), t.place) ==
+    if (std::find(vm.p_view.begin(), vm.p_view.end(), std::get<size_t>(t)) ==
         vm.p_view.end()) {
       return;
     }
 
-    const ImVec2 i = offset + GetCenterPos(!is_input ? vm.t_positions[t_idx]
-                                                     : vm.p_positions[t.place],
-                                           size);
-    const ImVec2 o = offset + GetCenterPos(is_input ? vm.t_positions[t_idx]
-                                                    : vm.p_positions[t.place],
-                                           size);
+    const ImVec2 i =
+        offset + GetCenterPos(!is_input ? vm.t_positions[t_idx]
+                                        : vm.p_positions[std::get<size_t>(t)],
+                              size);
+    const ImVec2 o =
+        offset + GetCenterPos(is_input ? vm.t_positions[t_idx]
+                                       : vm.p_positions[std::get<size_t>(t)],
+                              size);
 
     const float max_distance = 2.f;
     const auto mouse_pos = ImGui::GetIO().MousePos;
@@ -77,7 +79,7 @@ void draw_arc(size_t t_idx, const model::ViewModel& vm) {
              std::get<2>(*vm.selected_arc_idxs) == sub_idx;
     };
     ImU32 imcolor =
-        getColor(t.color) |
+        getColor(std::get<symmetri::Token>(t)) |
         ((ImU32)IM_F32_TO_INT8_SAT(is_selected_arc() ? 1.0f : 0.65f))
             << IM_COL32_A_SHIFT;
 
@@ -150,14 +152,15 @@ void draw_nodes(bool is_place, size_t idx, const std::string& name,
     draw_list->AddCircle(offset + GetCenterPos(position, size), 0.5f * size.x,
                          select_color, -5, 3.0f);
     const auto is_token_in_place = [idx](const auto token) {
-      return token.place == idx;
+      return std::get<size_t>(token) == idx;
     };
     const auto coordinates =
         getTokenCoordinates(std::ranges::count_if(tokens, is_token_in_place));
     int i = 0;
-    for (auto color :
-         tokens | std::views::filter(is_token_in_place) |
-             std::views::transform([](const auto& t) { return t.color; })) {
+    for (auto color : tokens | std::views::filter(is_token_in_place) |
+                          std::views::transform([](const auto& t) {
+                            return std::get<symmetri::Token>(t);
+                          })) {
       draw_list->AddCircle(
           coordinates[i++] + offset + GetCenterPos(position, size),
           0.05f * size.x, getColor(color), -5, 3.0f);
