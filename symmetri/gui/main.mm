@@ -39,8 +39,8 @@ int main(int, char **) {
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
 
   // Setup style
-  ImGui::StyleColorsDark();
-  // ImGui::StyleColorsLight();
+  // ImGui::StyleColorsDark();
+  ImGui::StyleColorsLight();
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
