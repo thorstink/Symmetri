@@ -61,6 +61,7 @@ void removeArc(bool is_input, size_t transition_idx, size_t sub_idx) {
     const size_t new_idx = m.data->net.transition.size();
     // add it again to the view...
     m.data->net.transition.push_back(m.data->net.transition[transition_idx]);
+    m.data->net.store.push_back(m.data->net.store[transition_idx]);
     m.data->net.priority.push_back(m.data->net.priority[transition_idx]);
     m.data->t_positions.push_back(m.data->t_positions[transition_idx]);
     m.data->t_view.push_back(new_idx);

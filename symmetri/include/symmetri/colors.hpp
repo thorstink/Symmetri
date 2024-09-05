@@ -143,7 +143,7 @@ class Token {
           }
         }()) {
     if (std::find(v.cbegin(), v.cend(), s) == std::cend(v)) {
-      assert(v[idx].empty() && "There can only be 100 different token-colors.");
+      assert(v[idx] == NULL && "There can only be 100 different token-colors.");
       v[idx] = strdup(s);
     }
   }
