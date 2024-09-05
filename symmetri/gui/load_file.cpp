@@ -65,10 +65,7 @@ void loadPetriNet(const std::filesystem::path& file) {
       }
     }
 
-    m.colors.clear();
-    for (const auto& c : symmetri::Token::getColors()) {
-      m.colors.push_back(std::string(c));
-    }
+    m.colors = symmetri::Token::getColors();
 
     // Move elements from src to dest.
     m.net.transition.insert(m.net.transition.end(), new_net.transition.begin(),

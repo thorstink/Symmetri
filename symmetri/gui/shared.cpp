@@ -5,15 +5,33 @@
 #include "symmetri/types.h"
 
 void drawColorDropdownMenu(
-    const std::string& menu_name, const std::vector<std::string>& colors,
+    const char* menu_name, const std::vector<std::string>& colors,
     const std::function<void(const std::string&)>& func) {
-  if (ImGui::BeginMenu(menu_name.c_str())) {
+  if (ImGui::BeginMenu(menu_name)) {
     for (const auto& color : colors) {
       ImGui::PushStyleColor(ImGuiCol_Text,
                             getColor(symmetri::Token(color.c_str())));
       ImGui::PushStyleColor(ImGuiCol_HeaderHovered,
                             getColor(symmetri::Token(color.c_str())));
       if (ImGui::MenuItem(color.c_str())) {
+        func(color);
+      }
+      ImGui::PopStyleColor();
+      ImGui::PopStyleColor();
+    }
+    ImGui::EndMenu();
+  };
+}
+
+void drawColorDropdownMenu(const char* menu_name,
+                           const std::vector<const char*>& colors,
+                           const std::function<void(const char*)>& func) {
+  if (ImGui::BeginMenu(menu_name)) {
+    for (const auto& color : colors) {
+      ImGui::PushStyleColor(ImGuiCol_Text, getColor(symmetri::Token(color)));
+      ImGui::PushStyleColor(ImGuiCol_HeaderHovered,
+                            getColor(symmetri::Token(color)));
+      if (ImGui::MenuItem(color)) {
         func(color);
       }
       ImGui::PopStyleColor();

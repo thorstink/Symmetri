@@ -282,10 +282,7 @@ int updateActiveFile(ImGuiInputTextCallbackData* data) {
 
 void updateColorTable() {
   rxdispatch::push([](model::Model&& m) {
-    m.data->colors.clear();
-    for (const auto& c : symmetri::Token::getColors()) {
-      m.data->colors.push_back(std::string(c));
-    }
+    m.data->colors = symmetri::Token::getColors();
     return m;
   });
 }

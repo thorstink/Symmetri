@@ -195,7 +195,7 @@ TEST_CASE("Types") {
   CHECK(not bool(Canceled == ExternalState));
   CHECK(not bool(Failed == ExternalState));
   CHECK(bool(ExternalState == ExternalState));
-  CHECK(bool(ExternalState.toString() != ""));
+  CHECK(bool(ExternalState.toString() != NULL));
 }
 
 TEST_CASE("Print some Types") {

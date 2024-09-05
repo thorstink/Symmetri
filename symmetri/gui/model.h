@@ -35,7 +35,7 @@ struct Model {
     std::optional<std::filesystem::path> active_file;
     std::vector<ImVec2> t_positions, p_positions;
     std::vector<size_t> t_view, p_view;
-    std::vector<std::string> colors;
+    std::vector<const char *> colors;
     std::vector<symmetri::AugmentedToken> tokens;
     symmetri::Petri::PTNet net;
   };
@@ -53,7 +53,7 @@ struct ViewModel {
   const std::string active_file;
 
   std::vector<size_t> t_view, p_view;
-  std::vector<std::string> colors;
+  std::vector<const char *> colors;
   std::vector<symmetri::AugmentedToken> tokens;
 
   const symmetri::Petri::PTNet &net;

@@ -23,10 +23,10 @@ void draw_context_menu(const model::ViewModel& vm) {
       if (ImGui::BeginMenu("Add arc to...")) {
         for (const auto& node_idx : is_place ? vm.t_view : vm.p_view) {
           if (is_place) {
-            drawColorDropdownMenu(vm.net.transition[node_idx], vm.colors,
-                                  [&](const std::string& c) {
+            drawColorDropdownMenu(vm.net.transition[node_idx].c_str(),
+                                  vm.colors, [&](const char* c) {
                                     addArc(is_place, selected_idx, node_idx,
-                                           symmetri::Token(c.c_str()));
+                                           symmetri::Token(c));
                                   });
 
           } else if (ImGui::MenuItem((vm.net.place[node_idx].c_str()))) {
@@ -44,11 +44,10 @@ void draw_context_menu(const model::ViewModel& vm) {
         ImGui::EndMenu();
       }
       if (is_place) {
-        drawColorDropdownMenu("Add marking", vm.colors,
-                              [=](const std::string& c) {
-                                addTokenToPlace(symmetri::AugmentedToken{
-                                    selected_idx, symmetri::Token(c.c_str())});
-                              });
+        drawColorDropdownMenu("Add marking", vm.colors, [=](const char* c) {
+          addTokenToPlace(
+              symmetri::AugmentedToken{selected_idx, symmetri::Token(c)});
+        });
       }
 
       if (ImGui::MenuItem("Delete")) {

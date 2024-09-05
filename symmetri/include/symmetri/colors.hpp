@@ -19,7 +19,7 @@ namespace symmetri {
 template <std::size_t... Idxs>
 constexpr auto substring_as_array(std::string_view str,
                                   std::index_sequence<Idxs...>) {
-  return std::array{str[Idxs]...};
+  return std::array{str[Idxs]..., '\0'};
 }
 
 template <typename T>
@@ -105,9 +105,9 @@ class Token {
   const static size_t kMaxTokenColors =
       100;     ///< Maximum amount of different colors
   size_t idx;  ///< A numerical id ("color") for this particular token
-  inline static std::array<std::string_view, kMaxTokenColors>
-      v{};  ///< The human read-able string representation of the "color" is
-            ///< stored in this buffer using the numerical id as index.
+  inline static std::array<const char*, kMaxTokenColors> v{
+      NULL};  ///< The human read-able string representation of the "color" is
+              ///< stored in this buffer using the numerical id as index.
 
  protected:
   /**
@@ -120,7 +120,7 @@ class Token {
   constexpr Token(T* const) : idx(unique_id<T>()) {
     static_assert(unique_id<T>() < v.size(),
                   "There can only be 100 different token-colors.");
-    v[idx] = type_name<T>();
+    v[idx] = type_name<T>().data();
   }
 
  public:
@@ -144,7 +144,7 @@ class Token {
         }()) {
     if (std::find(v.cbegin(), v.cend(), s) == std::cend(v)) {
       assert(v[idx].empty() && "There can only be 100 different token-colors.");
-      v[idx] = s;
+      v[idx] = strdup(s);
     }
   }
 
@@ -153,13 +153,13 @@ class Token {
   /**
    * @brief Get a list of all the colors
    *
-   * @return std::vector<std::string_view>
+   * @return std::vector<const char *>
    */
-  static std::vector<std::string_view> getColors() {
-    std::vector<std::string_view> colors;
+  static std::vector<const char*> getColors() {
+    std::vector<const char*> colors;
     colors.reserve(v.size());
     std::copy_if(v.begin(), v.end(), std::back_inserter(colors),
-                 [](const auto& color) { return not color.empty(); });
+                 [](const auto& color) { return color != NULL; });
     return colors;
   }
   constexpr bool operator<(const Token& rhs) const {
@@ -180,7 +180,7 @@ class Token {
    *
    * @return constexpr const auto&
    */
-  constexpr const auto& toString() const { return v[idx]; }
+  constexpr auto toString() const { return v[idx]; }
   constexpr bool operator==(const Token& c) const { return idx == c.idx; }
   template <class T>
   constexpr bool operator==(const T&) const {
