@@ -14,14 +14,12 @@ void tAllowExitInput() {
 
 TEST_CASE("Test external input.") {
   {
-    Net net = {{"t0", {{}, {{"Pb", Color::Success}}}},
-               {"t1", {{{"Pa", Color::Success}}, {{"Pb", Color::Success}}}},
-               {"t2",
-                {{{"Pb", Color::Success}, {"Pb", Color::Success}},
-                 {{"Pc", Color::Success}}}}};
+    Net net = {{"t0", {{}, {{"Pb", Success}}}},
+               {"t1", {{{"Pa", Success}}, {{"Pb", Success}}}},
+               {"t2", {{{"Pb", Success}, {"Pb", Success}}, {{"Pc", Success}}}}};
 
-    Marking initial_marking = {{"Pa", Color::Success}, {"Pa", Color::Success}};
-    Marking goal_marking = {{"Pc", Color::Success}};
+    Marking initial_marking = {{"Pa", Success}, {"Pa", Success}};
+    Marking goal_marking = {{"Pc", Success}};
     auto threadpool = std::make_shared<TaskSystem>(3);
 
     PetriNet app(net, "test_net_ext_input", threadpool, initial_marking,
@@ -42,6 +40,6 @@ TEST_CASE("Test external input.") {
     auto res = fire(app);
 
     CHECK(can_continue);
-    CHECK(res == Color::Success);
+    CHECK(res == Success);
   }
 }

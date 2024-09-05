@@ -4,6 +4,7 @@
 
 #include <functional>
 #include <optional>
+#include <tuple>
 
 #include "externals/blockingconcurrentqueue.h"
 #include "externals/small_vector.hpp"
@@ -12,23 +13,13 @@
 #include "symmetri/types.h"
 
 namespace symmetri {
+
 /**
  * @brief AugmentedToken describes a token with a color in a
  * particular place.
  *
  */
-struct AugmentedToken {
-  size_t place, color;
-};
-inline bool operator==(const AugmentedToken &lhs, const AugmentedToken &rhs) {
-  return lhs.place == rhs.place && lhs.color == rhs.color;
-}
-inline bool operator<(const AugmentedToken &lhs, const AugmentedToken &rhs) {
-  return lhs.place < rhs.place && lhs.color < rhs.color;
-}
-inline bool operator>(const AugmentedToken &lhs, const AugmentedToken &rhs) {
-  return lhs.place > rhs.place && lhs.color > rhs.color;
-}
+using AugmentedToken = std::tuple<size_t, Token>;
 
 /**
  * @brief a minimal Event representation.
@@ -213,12 +204,6 @@ struct Petri {
      *
      */
     std::vector<std::string> place;
-
-    /**
-     * @brief (ordered) list of string representation of colors
-     *
-     */
-    std::vector<std::string> color;
 
     /**
      * @brief list of list of inputs to transitions. This vector is indexed like

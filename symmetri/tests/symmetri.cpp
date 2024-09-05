@@ -11,20 +11,15 @@ void t0() {}
 auto t1() {}
 
 std::tuple<Net, PriorityTable, Marking> SymmetriTestNet() {
-  Net net = {{"t0",
-              {{{"Pa", Color::Success}, {"Pb", Color::Success}},
-               {{"Pc", Color::Success}}}},
+  Net net = {{"t0", {{{"Pa", Success}, {"Pb", Success}}, {{"Pc", Success}}}},
              {"t1",
-              {{{"Pc", Color::Success}, {"Pc", Color::Success}},
-               {{"Pb", Color::Success},
-                {"Pb", Color::Success},
-                {"Pd", Color::Success}}}}};
+              {{{"Pc", Success}, {"Pc", Success}},
+               {{"Pb", Success}, {"Pb", Success}, {"Pd", Success}}}}};
 
   PriorityTable priority;
 
-  Marking m0 = {{"Pa", Color::Success}, {"Pa", Color::Success},
-                {"Pa", Color::Success}, {"Pa", Color::Success},
-                {"Pb", Color::Success}, {"Pb", Color::Success}};
+  Marking m0 = {{"Pa", Success}, {"Pa", Success}, {"Pa", Success},
+                {"Pa", Success}, {"Pb", Success}, {"Pb", Success}};
   return {net, priority, m0};
 }
 
@@ -40,17 +35,15 @@ TEST_CASE("Create a using the net constructor without end condition.") {
   auto res = fire(app);
   auto ev = getLog(app);
   // because there's no final marking, but the net is finite, it deadlocks.
-  CHECK(res == Color::Deadlocked);
+  CHECK(res == Deadlocked);
   CHECK(!ev.empty());
 }
 
 TEST_CASE("Create a using the net constructor with end condition.") {
   auto threadpool = std::make_shared<TaskSystem>(1);
   auto [net, priority, initial_marking] = SymmetriTestNet();
-  Marking goal_marking({{"Pb", Color::Success},
-                        {"Pb", Color::Success},
-                        {"Pd", Color::Success},
-                        {"Pd", Color::Success}});
+  Marking goal_marking(
+      {{"Pb", Success}, {"Pb", Success}, {"Pd", Success}, {"Pd", Success}});
   PetriNet app(net, "test_net_with_end", threadpool, initial_marking,
                goal_marking, priority);
   app.registerCallback("t0", &t0);
@@ -60,7 +53,7 @@ TEST_CASE("Create a using the net constructor with end condition.") {
   auto ev = getLog(app);
 
   // now there is an end condition.
-  CHECK(res == Color::Success);
+  CHECK(res == Success);
   CHECK(!ev.empty());
 }
 
@@ -70,7 +63,7 @@ TEST_CASE("Create a using pnml constructor.") {
 
   auto threadpool = std::make_shared<TaskSystem>(1);
   PriorityTable priority;
-  Marking final_marking({{"P1", Color::Success}});
+  Marking final_marking({{"P1", Success}});
   const auto case_id = "success";
   PetriNet app({pnml_file}, case_id, threadpool, final_marking, priority);
   app.registerCallback("T0", &t0);
@@ -78,7 +71,7 @@ TEST_CASE("Create a using pnml constructor.") {
   auto res = fire(app);
   auto ev = getLog(app);
   // and the result is properly completed.
-  CHECK(res == Color::Success);
+  CHECK(res == Success);
   CHECK(!ev.empty());
 }
 
@@ -131,12 +124,16 @@ TEST_CASE("Deadlocked transition shows up in marking") {
   auto threadpool = std::make_shared<TaskSystem>(1);
   PetriNet app(net, initial_id, threadpool, initial_marking, goal_marking,
                priority);
-  app.registerCallback("t0", [] { return Color::Deadlocked; });
+  app.registerCallback("t0", [] { return Deadlocked; });
   fire(app);
   const auto marking = app.getMarking();
+  for (auto [p, t] : marking) {
+    std::cout << t.toString() << ", " << p << ", " << t.toIndex() << ", "
+              << (Deadlocked == t) << (t == Deadlocked) << std::endl;
+  }
   const bool has_deadlock_token =
       std::find_if(marking.cbegin(), marking.cend(), [=](const auto& pc) {
-        return Color::Deadlocked == pc.second && pc.first == "Pc";
+        return Deadlocked == pc.second && pc.first == "Pc";
       }) != marking.end();
   CHECK(has_deadlock_token);
 }
@@ -148,23 +145,23 @@ TEST_CASE("Error'd transition shows up in marking") {
   auto threadpool = std::make_shared<TaskSystem>(1);
   PetriNet app(net, initial_id, threadpool, initial_marking, goal_marking,
                priority);
-  app.registerCallback("t0", [] { return Color::Failed; });
+  app.registerCallback("t0", [] { return Failed; });
   fire(app);
   const auto marking = app.getMarking();
   const bool has_failed_token =
       std::find_if(marking.cbegin(), marking.cend(), [=](const auto& pc) {
-        return Color::Failed == pc.second && pc.first == "Pc";
+        return Failed == pc.second && pc.first == "Pc";
       }) != marking.end();
   CHECK(has_failed_token);
 }
 
 TEST_CASE("Test pause and resume") {
   std::atomic<int> i = 0;
-  Net net = {{"t0", {{{"Pa", Color::Success}}, {{"Pa", Color::Success}}}},
-             {"t1", {{}, {{"Pb", Color::Success}}}}};
+  Net net = {{"t0", {{{"Pa", Success}}, {{"Pa", Success}}}},
+             {"t1", {{}, {{"Pb", Success}}}}};
   auto threadpool = std::make_shared<TaskSystem>(2);
-  Marking initial_marking = {{"Pa", Color::Success}};
-  Marking goal_marking = {{"Pb", Color::Success}};
+  Marking initial_marking = {{"Pa", Success}};
+  Marking goal_marking = {{"Pb", Success}};
   PetriNet app(net, "random_id", threadpool, initial_marking, goal_marking);
   app.registerCallback("t0", [&] { i++; });
   int check1, check2;
@@ -185,40 +182,40 @@ TEST_CASE("Test pause and resume") {
   CHECK(i.load() > check2);
   CHECK(i.load() > check2 + 1);
 }
-namespace symmetri {
-namespace state {
-const static Token ExternalState(Color::registerToken("ExternalState"));
-}
-}  // namespace symmetri
+const static Token ExternalState("ExternalState");
+CREATE_CUSTOM_TOKEN(CustomState);
 
 TEST_CASE("Types") {
-  using namespace state;
-  CHECK(Color::Scheduled != ExternalState);
-  CHECK(Color::Started != ExternalState);
-  CHECK(Color::Success != ExternalState);
-  CHECK(Color::Deadlocked != ExternalState);
-  CHECK(Color::Paused != ExternalState);
-  CHECK(Color::Canceled != ExternalState);
-  CHECK(Color::Failed != ExternalState);
-  CHECK(ExternalState == ExternalState);
-  CHECK(Color::toString(ExternalState) != "");
+  using namespace symmetri;
+  CHECK(not bool(Scheduled == ExternalState));
+  CHECK(not bool(Started == ExternalState));
+  CHECK(not bool(Success == ExternalState));
+  CHECK(not bool(Deadlocked == ExternalState));
+  CHECK(not bool(Paused == ExternalState));
+  CHECK(not bool(Canceled == ExternalState));
+  CHECK(not bool(Failed == ExternalState));
+  CHECK(bool(ExternalState == ExternalState));
+  CHECK(bool(ExternalState.toString() != ""));
 }
 
-TEST_CASE("Print Types") {
-  using namespace state;
-  std::cout << Color::toString(Color::Scheduled) << ", " << Color::Scheduled
+TEST_CASE("Print some Types") {
+  using namespace symmetri;
+  std::cout << Scheduled.toString() << ", " << Scheduled.toIndex() << std::endl;
+  std::cout << Started.toString() << ", " << Started.toIndex() << std::endl;
+  std::cout << Success.toString() << ", " << Success.toIndex() << std::endl;
+  std::cout << Deadlocked.toString() << ", " << Deadlocked.toIndex()
             << std::endl;
-  std::cout << Color::toString(Color::Started) << ", " << Color::Started
+  std::cout << Paused.toString() << ", " << Paused.toIndex() << std::endl;
+  std::cout << Canceled.toString() << ", " << Canceled.toIndex() << std::endl;
+  std::cout << Failed.toString() << ", " << Failed.toIndex() << std::endl;
+  std::cout << ExternalState.toString() << ", " << ExternalState.toIndex()
             << std::endl;
-  std::cout << Color::Success << ", " << Color::Success << std::endl;
-  std::cout << Color::toString(Color::Deadlocked) << ", " << Color::Deadlocked
+  std::cout << CustomState.toString() << ", " << CustomState.toIndex()
             << std::endl;
-  std::cout << Color::toString(Color::Paused) << ", " << Color::Paused
-            << std::endl;
-  std::cout << Color::toString(Color::Canceled) << ", " << Color::Canceled
-            << std::endl;
-  std::cout << Color::toString(Color::Failed) << ", " << Color::Canceled
-            << std::endl;
-  std::cout << Color::toString(ExternalState) << ", " << ExternalState
-            << std::endl;
+}
+
+TEST_CASE("Print all Types") {
+  for (auto color : symmetri::Token::getColors()) {
+    std::cout << color << std::endl;
+  }
 }

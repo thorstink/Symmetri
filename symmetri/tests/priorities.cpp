@@ -13,9 +13,9 @@ TEST_CASE(
   std::list<PriorityTable> priorities = {{{"t0", 1}, {"t1", 0}},
                                          {{"t0", 0}, {"t1", 1}}};
   for (auto priority : priorities) {
-    Net net = {{"t0", {{{"Pa", Color::Success}}, {{"Pb", Color::Success}}}},
-               {"t1", {{{"Pa", Color::Success}}, {{"Pc", Color::Success}}}}};
-    Marking m0 = {{"Pa", Color::Success}};
+    Net net = {{"t0", {{{"Pa", Success}}, {{"Pb", Success}}}},
+               {"t1", {{{"Pa", Success}}, {{"Pc", Success}}}}};
+    Marking m0 = {{"Pa", Success}};
     auto threadpool = std::make_shared<TaskSystem>(1);
 
     auto m = Petri(net, priority, m0, {}, "s", threadpool);
@@ -36,10 +36,10 @@ TEST_CASE(
                      return e.first == "t1";
                    })->second;
     if (prio_t0 > prio_t1) {
-      Marking expected = {{"Pb", Color::Success}};
+      Marking expected = {{"Pb", Success}};
       CHECK(MarkingEquality(m.getMarking(), expected));
     } else {
-      Marking expected = {{"Pc", Color::Success}};
+      Marking expected = {{"Pc", Success}};
       CHECK(MarkingEquality(m.getMarking(), expected));
     }
   }
@@ -49,10 +49,10 @@ TEST_CASE("Using DirectMutation does not queue reducers.") {
   std::list<PriorityTable> priorities = {{{"t0", 1}, {"t1", 0}},
                                          {{"t0", 0}, {"t1", 1}}};
   for (auto priority : priorities) {
-    Net net = {{"t0", {{{"Pa", Color::Success}}, {{"Pb", Color::Success}}}},
-               {"t1", {{{"Pa", Color::Success}}, {{"Pc", Color::Success}}}}};
+    Net net = {{"t0", {{{"Pa", Success}}, {{"Pb", Success}}}},
+               {"t1", {{{"Pa", Success}}, {{"Pc", Success}}}}};
 
-    Marking m0 = {{"Pa", Color::Success}};
+    Marking m0 = {{"Pa", Success}};
     auto threadpool = std::make_shared<TaskSystem>(1);
 
     auto m = Petri(net, priority, m0, {}, "s", threadpool);
@@ -65,10 +65,10 @@ TEST_CASE("Using DirectMutation does not queue reducers.") {
                      return e.first == "t1";
                    })->second;
     if (prio_t0 > prio_t1) {
-      Marking expected = {{"Pb", Color::Success}};
+      Marking expected = {{"Pb", Success}};
       CHECK(MarkingEquality(m.getMarking(), expected));
     } else {
-      Marking expected = {{"Pc", Color::Success}};
+      Marking expected = {{"Pc", Success}};
       CHECK(MarkingEquality(m.getMarking(), expected));
     }
   }

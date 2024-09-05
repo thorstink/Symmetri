@@ -2,15 +2,11 @@
 
 namespace symmetri {
 std::tuple<std::vector<std::string>, std::vector<std::string>,
-           std::vector<std::string>, std::vector<Callback>>
+           std::vector<Callback>>
 convert(const Net &_net) {
   const auto transition_count = _net.size();
   std::vector<std::string> transitions;
   std::vector<std::string> places;
-  std::vector<std::string> colors;
-  for (const auto &[t, c] : Color::getColors()) {
-    colors.push_back(c);
-  }
   std::vector<Callback> store;
   transitions.reserve(transition_count);
   store.reserve(transition_count);
@@ -28,17 +24,17 @@ convert(const Net &_net) {
     auto last = std::unique(places.begin(), places.end());
     places.erase(last, places.end());
   }
-  return {transitions, places, colors, store};
+  return {transitions, places, store};
 }
 
 std::tuple<std::vector<SmallVectorInput>, std::vector<SmallVectorInput>>
-populateIoLookups(const Net &_net, const std::vector<Place> &ordered_places,
-                  const std::vector<Place> &) {
+populateIoLookups(const Net &_net, const std::vector<Place> &ordered_places) {
   std::vector<SmallVectorInput> input_n, output_n;
   for (const auto &[t, io] : _net) {
     SmallVectorInput q_in, q_out;
     for (const auto &p : io.first) {
-      q_in.push_back({toIndex(ordered_places, p.first), p.second});
+      q_in.push_back(
+          std::make_tuple(toIndex(ordered_places, p.first), p.second));
     }
     input_n.push_back(q_in);
     for (const auto &p : io.second) {
@@ -83,7 +79,7 @@ Petri::Petri(const Net &_net, const PriorityTable &_priority,
              const std::string &_case_id,
              std::shared_ptr<TaskSystem> threadpool)
     : log({}),
-      state(Color::Scheduled),
+      state(Scheduled),
       case_id(_case_id),
       thread_id_(std::nullopt),
       reducer_queue(
@@ -93,9 +89,8 @@ Petri::Petri(const Net &_net, const PriorityTable &_priority,
   tokens.reserve(100);
   scheduled_callbacks.reserve(10);
 
-  std::tie(net.transition, net.place, net.color, net.store) = convert(_net);
-  std::tie(net.input_n, net.output_n) =
-      populateIoLookups(_net, net.place, net.color);
+  std::tie(net.transition, net.place, net.store) = convert(_net);
+  std::tie(net.input_n, net.output_n) = populateIoLookups(_net, net.place);
   net.p_to_ts_n = createReversePlaceToTransitionLookup(
       net.place.size(), net.transition.size(), net.input_n);
   net.priority = createPriorityLookup(net.transition, _priority);
@@ -117,28 +112,19 @@ void Petri::fireSynchronous(const size_t t) {
   const auto &task = net.store[t];
   const auto &lookup_t = net.output_n[t];
   const auto now = Clock::now();
-  log.push_back({t, Color::Started, now});
+  log.push_back({t, Started, now});
   auto result = fire(task);
   log.push_back({t, result, now});
-
-  switch (result) {
-    case Color::Scheduled:
-    case Color::Started:
-    case Color::Paused:
-      break;
-    default: {
-      tokens.reserve(tokens.size() + lookup_t.size());
-      for (const auto &[p, c] : lookup_t) {
-        tokens.push_back({p, result});
-      }
-    }
-  };
+  tokens.reserve(tokens.size() + lookup_t.size());
+  for (const auto &[p, c] : lookup_t) {
+    tokens.push_back({p, result});
+  }
 }
 
 void Petri::fireAsynchronous(const size_t t) {
   const auto &task = net.store[t];
   scheduled_callbacks.push_back(t);
-  log.push_back({t, Color::Scheduled, Clock::now()});
+  log.push_back({t, Scheduled, Clock::now()});
 
   pool->push([=] {
     reducer_queue->enqueue(scheduleCallback(t, task, reducer_queue));
@@ -147,7 +133,7 @@ void Petri::fireAsynchronous(const size_t t) {
 
 void deductMarking(std::vector<AugmentedToken> &tokens,
                    const SmallVectorInput &inputs) {
-  for (const auto place : inputs) {
+  for (const auto &place : inputs) {
     // erase one by one. using std::remove_if would remove all tokens at
     // a particular place.
     tokens.erase(std::find(tokens.begin(), tokens.end(), place));
@@ -221,7 +207,8 @@ Marking Petri::getMarking() const {
   marking.reserve(tokens.size());
   std::transform(tokens.cbegin(), tokens.cend(), std::back_inserter(marking),
                  [&](auto place_index) -> std::pair<std::string, Token> {
-                   return {net.place[place_index.place], place_index.color};
+                   return {net.place[std::get<size_t>(place_index)],
+                           std::get<Token>(place_index)};
                  });
   return marking;
 }

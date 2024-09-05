@@ -64,9 +64,11 @@ template <typename T>
 Token fire(const T &callback) {
   if constexpr (std::is_same_v<Token, decltype(callback())>) {
     return callback();
+  } else if constexpr (std::is_convertible_v<decltype(callback()), Token>) {
+    return callback();
   } else if constexpr (std::is_same_v<void, decltype(callback())>) {
     callback();
-    return Color::Success;
+    return Success;
   }
 }
 

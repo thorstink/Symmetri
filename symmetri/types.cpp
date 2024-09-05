@@ -7,17 +7,7 @@
 namespace symmetri {
 
 bool isSynchronous(const DirectMutation&) { return true; }
-Token fire(const DirectMutation&) { return Color::Success; }
-
-const std::string& Color::toString(Token r) { return Color::map[r]; }
-
-const Token& Color::registerToken(const std::string& s) {
-  return Color::map.insert({impl::HashColor(s.c_str()), s}).first->first;
-}
-
-const std::unordered_map<Token, std::string>& Color::getColors() {
-  return Color::map;
-}
+Token fire(const DirectMutation&) { return Success; }
 
 bool stateNetEquality(const Net& net1, const Net& net2) {
   if (net1.size() != net2.size()) {
@@ -58,7 +48,7 @@ size_t calculateTrace(const Eventlog& event_log) noexcept {
   return std::hash<std::string>{}(std::accumulate(
       event_log.begin(), event_log.end(), std::string(""),
       [](const auto& acc, const Event& n) {
-        return acc + n.case_id + n.transition + Color::toString(n.state);
+        return acc + n.case_id + n.transition + std::string(n.state.toString());
       }));
 }
 
