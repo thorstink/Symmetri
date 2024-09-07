@@ -42,14 +42,14 @@ ViewModel::ViewModel(const Model& m)
       net(m.data->net),
       t_positions(m.data->t_positions),
       p_positions(m.data->p_positions),
-      t_fireable(symranges::to_vector(
-          possibleTransitions(tokens, m.data->net.input_n,
-                              m.data->net.p_to_ts_n) |
-          std::views::filter([&](size_t t_idx) {
-            // it should be in the current view & fireable
-            return std::ranges::find(t_view, t_idx) != t_view.end() &&
-                   canFire(m.data->net.input_n[t_idx], tokens);
-          }))) {
+      t_fireable(
+          std::reduce(t_view.begin(), t_view.end(), std::vector<size_t>{},
+                      [&](std::vector<size_t>&& t_fireable, size_t t_idx) {
+                        if (canFire(m.data->net.input_n[t_idx], tokens)) {
+                          t_fireable.push_back(t_idx);
+                        }
+                        return std::move(t_fireable);
+                      })) {
   static std::once_flag flag;
   std::call_once(flag, [&] {
     file_dialog.SetTitle("title");

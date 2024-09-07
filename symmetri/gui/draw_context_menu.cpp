@@ -57,7 +57,6 @@ void draw_context_menu(const model::ViewModel& vm) {
       ImGui::Text("Arc");
       ImGui::Separator();
       if (ImGui::MenuItem("Delete")) {
-        printf("delete");
         const auto& [is_input, idx, sub_idx] = vm.selected_arc_idxs.value();
         removeArc(is_input, idx, sub_idx);
       }
