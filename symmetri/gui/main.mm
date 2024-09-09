@@ -12,7 +12,6 @@
 using namespace rximgui;
 #include <iostream>
 #include "draw_ui.h"
-#include "menu_bar.h"
 #include "model.h"
 #include "util.h"
 #define GLFW_INCLUDE_NONE
@@ -136,6 +135,7 @@ int main(int, char **) {
     }
   }
   rxdispatch::unsubscribe();
+  root_subscription.dispose();
 
   ImGui_ImplMetal_Shutdown();
   ImGui_ImplGlfw_Shutdown();
