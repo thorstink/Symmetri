@@ -68,14 +68,12 @@ int main(int, char **) {
 
   MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor new];
 
-  float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
-
   // Flux starts here
   auto reducers = rpp::source::create<model::Reducer>(&rxdispatch::dequeue) |
                   rpp::operators::subscribe_on(rpp::schedulers::new_thread{});
 
   auto models =
-      reducers | rpp::operators::subscribe_on(rximgui::rl) |
+      reducers |
       rpp::operators::scan(model::initializeModel(), [](model::Model &&m, const model::Reducer &f) {
         static size_t i = 0;
         std::cout << "update " << i++ << ", ref: " << m.data.use_count() << std::endl;
@@ -88,13 +86,13 @@ int main(int, char **) {
         }
       });  // maybe Sample?
 
-  auto view_models =
-      models | rpp::operators::map([](const model::Model &m) { return model::ViewModel{m}; });
+  auto view_models = models | rpp::operators::observe_on(rximgui::rl) |
+                     rpp::operators::map([](const model::Model &m) { return model::ViewModel{m}; });
 
   auto draw_frames = frames | rpp::operators::with_latest_from(rxu::take_at<1>(), view_models) |
                      rpp::operators::tap(&draw_everything);
 
-  draw_frames | rpp::operators::subscribe();
+  auto root_subscription = draw_frames | rpp::operators::subscribe_with_disposable();
 
   // Main loop
   while (!glfwWindowShouldClose(window)) {
@@ -107,11 +105,6 @@ int main(int, char **) {
       id<CAMetalDrawable> drawable = [layer nextDrawable];
 
       id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
-      // colors
-      renderPassDescriptor.colorAttachments[0].clearColor =
-          MTLClearColorMake(clear_color[0] * clear_color[3], clear_color[1] * clear_color[3],
-                            clear_color[2] * clear_color[3], clear_color[3]);
-
       renderPassDescriptor.colorAttachments[0].texture = drawable.texture;
       renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
       renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
@@ -123,12 +116,13 @@ int main(int, char **) {
       ImGui_ImplMetal_NewFrame(renderPassDescriptor);
       ImGui_ImplGlfw_NewFrame();
       ImGui::NewFrame();
-
-      while (rl.is_any_ready_schedulable()) rl.dispatch();
-
+      while (!rl.is_empty()) {
+        rl.dispatch();
+      };
       sendframe();
-
-      while (rl.is_any_ready_schedulable()) rl.dispatch();
+      while (!rl.is_empty()) {
+        rl.dispatch();
+      };
 
       // Rendering
       ImGui::Render();
