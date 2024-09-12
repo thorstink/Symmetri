@@ -67,7 +67,6 @@ int main(int, char **) {
 
   MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor new];
 
-  // Flux starts here
   auto reducers = rpp::source::create<model::Reducer>(&rxdispatch::dequeue) |
                   rpp::operators::subscribe_on(rpp::schedulers::new_thread{});
 
@@ -83,15 +82,14 @@ int main(int, char **) {
           printf("%s", e.what());
           return std::move(m);
         }
-      });  // maybe Sample?
+      });
 
-  auto view_models = models | rpp::operators::observe_on(rximgui::rl) |
-                     rpp::operators::map([](const model::Model &m) { return model::ViewModel{m}; });
-
-  auto draw_frames = frames | rpp::operators::with_latest_from(rxu::take_at<1>(), view_models) |
-                     rpp::operators::tap(&draw_everything);
-
-  auto root_subscription = draw_frames | rpp::operators::subscribe_with_disposable();
+  auto root_subscription =
+      frames | rpp::operators::subscribe_on(rximgui::rl) |
+      rpp::operators::with_latest_from(
+          rxu::take_at<1>(),
+          models | rpp::operators::map([](const model::Model &m) { return model::ViewModel{m}; })) |
+      rpp::operators::tap(&draw_everything) | rpp::operators::subscribe_with_disposable();
 
   // Main loop
   while (!glfwWindowShouldClose(window)) {
