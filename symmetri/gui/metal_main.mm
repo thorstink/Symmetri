@@ -86,9 +86,10 @@ int main(int, char **) {
 
   auto root_subscription =
       frames | rpp::operators::subscribe_on(rximgui::rl) |
-      rpp::operators::with_latest_from(
-          rxu::take_at<1>(),
-          models | rpp::operators::map([](const model::Model &m) { return model::ViewModel{m}; })) |
+      rpp::operators::with_latest_from(rxu::take_at<1>(),
+                                       models | rpp::operators::map([](const model::Model &m) {
+                                         return model::ViewModel{std::move(m)};
+                                       })) |
       rpp::operators::tap(&draw_everything) | rpp::operators::subscribe_with_disposable();
 
   // Main loop

@@ -2,6 +2,8 @@
 
 /** @file colors.hpp */
 
+#include <string.h>
+
 #include <algorithm>
 #include <array>  // std::array
 #include <cassert>

@@ -19,10 +19,6 @@
 namespace model {
 
 struct Model {
-  // Model() {};
-  // Model(const Model&&) = default;
-  // Model(const Model&) = delete;
-  // Model& operator=(const Model&) = delete;
   struct shared {
     bool show_grid, context_menu_active;
     ImVec2 scrolling;
@@ -60,7 +56,7 @@ struct ViewModel {
   const std::vector<ImVec2> &t_positions, p_positions;
   std::vector<size_t> t_fireable;
 
-  static inline ImGui::FileBrowser file_dialog;
+  static inline ImGui::FileBrowser file_dialog = ImGui::FileBrowser();
   ViewModel() = delete;
   explicit ViewModel(const Model &m);
 };

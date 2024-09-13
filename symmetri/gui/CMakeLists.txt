@@ -4,13 +4,15 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(glfw3 REQUIRED)
-find_package(ogdf REQUIRED)
 
 if(ASAN_BUILD AND NOT TSAN_BUILD)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address,undefined -fno-omit-frame-pointer -O0")
 elseif(TSAN_BUILD AND NOT ASAN_BUILD)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=thread -fno-omit-frame-pointer -O0")
 endif()
+
+# just because metal it seems
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-variable")
 
 include_directories(
     rpp
@@ -22,8 +24,7 @@ include_directories(
     extensions
 )
 
-set(SOURCES
-    main.mm
+set(APP_SOURCES
     reducers.cpp
     draw_context_menu.cpp
     draw_graph.cpp
@@ -47,28 +48,25 @@ set(IMGUI_SOURCES
     imgui/imgui_widgets.cpp
     imgui/imgui_tables.cpp
     imgui/backends/imgui_impl_glfw.cpp
-    imgui/backends/imgui_impl_metal.mm
 )
 
+find_library(OPENGL_LIBRARY OpenGL)
+set(EXTRA_LIBS
+    ${OPENGL_LIBRARY}
+    glfw
+)
 if(APPLE)
+    message("Using Metal backend")
     include_directories(/opt/homebrew/include)
     find_library(COCOA_LIBRARY Cocoa)
-    find_library(OPENGL_LIBRARY OpenGL)
     find_library(IOKIT_LIBRARY IOKit)
     find_library(COREVIDEO_LIBRARY CoreVideo)
-    set(EXTRA_LIBS
-        ${COCOA_LIBRARY}
-        ${OPENGL_LIBRARY}
-        ${IOKIT_LIBRARY}
-        ${COREVIDEO_LIBRARY}
-        glfw
-        "-framework Metal"
-        "-framework MetalKit"
-        "-framework AppKit"
-        "-framework Foundation"
-        "-framework QuartzCore"
-    )
-endif(APPLE)
+    set(ALL_SOURCES ${APP_SOURCES} ${IMGUI_SOURCES} imgui/backends/imgui_impl_metal.mm metal_main.mm)
+    set(EXTRA_LIBS ${EXTRA_LIBS} ${COCOA_LIBRARY} ${IOKIT_LIBRARY} ${COREVIDEO_LIBRARY} "-framework Metal" "-framework MetalKit" "-framework AppKit" "-framework Foundation" "-framework QuartzCore")
+else()
+    message("Using OpenGL3 backend")
+    set(ALL_SOURCES ${APP_SOURCES} ${IMGUI_SOURCES} imgui/backends/imgui_impl_opengl3.cpp opengl3_main.cpp)
+endif()
 
-add_executable(Farbart ${SOURCES} ${IMGUI_SOURCES})
+add_executable(Farbart ${ALL_SOURCES})
 target_link_libraries(Farbart symmetri ${EXTRA_LIBS})
