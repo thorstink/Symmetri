@@ -6,17 +6,15 @@
 #include "draw_graph.h"
 #include "draw_menu.h"
 #include "imgui.h"
-#include "menu_bar.h"
 #include "reducers.h"
 
 constexpr float menu_width = 350;
 
-void draw_everything(const model::ViewModel& vm) {
-  draw_menu_bar(vm);
-  const auto no_move_draw_resize = ImGuiWindowFlags_NoResize |
-                                   ImGuiWindowFlags_NoTitleBar |
-                                   ImGuiWindowFlags_NoMove;
-  ImGui::Begin("main", NULL, no_move_draw_resize);
+const auto no_move_draw_resize = ImGuiWindowFlags_NoResize |
+                                 ImGuiWindowFlags_NoTitleBar |
+                                 ImGuiWindowFlags_NoMove;
+
+void draw_interface(const model::ViewModel& vm) {
   ImGui::SetNextWindowSize(
       ImVec2(menu_width, ImGui::GetIO().DisplaySize.y - 20));
   ImGui::SetNextWindowPos(ImVec2(0, 20));
@@ -40,6 +38,5 @@ void draw_everything(const model::ViewModel& vm) {
   }
 
   draw_graph(vm);
-  ImGui::End();
   ImGui::End();
 }

@@ -18,6 +18,10 @@
 
 namespace model {
 
+struct ViewModel;
+
+using Drawable = void (*)(const ViewModel &);
+
 struct Model {
   struct shared {
     bool show_grid, context_menu_active;
@@ -39,6 +43,7 @@ struct Model {
 };
 
 struct ViewModel {
+  std::vector<Drawable> drawables;
   bool show_grid, context_menu_active;
   ImVec2 scrolling;
   // is place, index, sub-index
@@ -58,7 +63,7 @@ struct ViewModel {
 
   static inline ImGui::FileBrowser file_dialog = ImGui::FileBrowser();
   ViewModel() = delete;
-  explicit ViewModel(const Model &m);
+  ViewModel(Model m);
 };
 
 using Reducer = std::function<Model(Model &&)>;

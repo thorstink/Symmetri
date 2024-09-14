@@ -14,6 +14,7 @@
 #include <stdio.h>
 
 #include <chrono>
+#include <iostream>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -24,15 +25,10 @@
 #endif
 #include <GLFW/glfw3.h>  // Will drag system OpenGL headers
 
+#include "draw.h"
 #include "rpp/rpp.hpp"
 #include "rxdispatch.h"
 #include "rximgui.h"
-using namespace rximgui;
-#include <iostream>
-
-#include "draw_ui.h"
-#include "model.h"
-#include "util.h"
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to
 // maximize ease of testing and compatibility with old VS compilers. To link
@@ -50,6 +46,8 @@ using namespace rximgui;
 #ifdef __EMSCRIPTEN__
 #include "../libs/emscripten/emscripten_mainloop_stub.h"
 #endif
+
+using namespace rximgui;
 
 static void glfw_error_callback(int error, const char* description) {
   fprintf(stderr, "GLFW Error %d: %s\n", error, description);
@@ -115,31 +113,29 @@ int main(int, char**) {
   auto reducers = rpp::source::create<model::Reducer>(&rxdispatch::dequeue) |
                   rpp::operators::subscribe_on(rpp::schedulers::new_thread{});
 
-  auto models = reducers |
-                rpp::operators::scan(
-                    model::initializeModel(),
-                    [](model::Model&& m, const model::Reducer& f) {
-                      static size_t i = 0;
-                      std::cout << "update " << i++
-                                << ", ref: " << m.data.use_count() << std::endl;
-                      try {
-                        m.data->timestamp = std::chrono::steady_clock::now();
-                        return f(std::move(m));
-                      } catch (const std::exception& e) {
-                        printf("%s", e.what());
-                        return std::move(m);
-                      }
-                    });
+  auto models =
+      reducers |
+      rpp::operators::scan(
+          model::Model{}, [](model::Model&& m, const model::Reducer& f) {
+            static size_t i = 0;
+            std::cout << "update " << i++ << ", ref: " << m.data.use_count()
+                      << std::endl;
+            try {
+              m.data->timestamp = std::chrono::steady_clock::now();
+              return f(std::move(m));
+            } catch (const std::exception& e) {
+              printf("%s", e.what());
+              return std::move(m);
+            }
+          });
 
-  auto root_subscription =
-      frames | rpp::operators::subscribe_on(rximgui::rl) |
-      rpp::operators::with_latest_from(
-          rxu::take_at<1>(),
-          models | rpp::operators::map([](const model::Model& m) {
-            return model::ViewModel{m};
-          })) |
-      rpp::operators::tap(&draw_everything) |
-      rpp::operators::subscribe_with_disposable();
+  auto root_subscription = frames | rpp::operators::subscribe_on(rximgui::rl) |
+                           rpp::operators::with_latest_from(
+                               [](auto&&, auto&& model) {
+                                 return model::ViewModel(std::move(model));
+                               },
+                               std::move(models)) |
+                           rpp::operators::subscribe_with_disposable(&drawUi);
 
   // Main loop
 #ifdef __EMSCRIPTEN__

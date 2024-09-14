@@ -4,14 +4,17 @@
 #include <numeric>
 #include <ranges>
 
+#include "draw_ui.h"
 #include "load_file.h"
+#include "menu_bar.h"
 #include "petri.h"
 #include "util.h"
+
 namespace model {
 
 Model initializeModel() {
-  Model m_ptr;
-  auto& m = *m_ptr.data;
+  Model model;
+  auto& m = *model.data;
   m.show_grid = true;
   m.context_menu_active = false;
   m.scrolling = ImVec2(0.0f, 0.0f);
@@ -24,11 +27,12 @@ Model initializeModel() {
       ;
   loadPetriNet(p);
 
-  return m_ptr;
+  return model;
 }
 
-ViewModel::ViewModel(const Model& m)
-    : show_grid(m.data->show_grid),
+ViewModel::ViewModel(Model m)
+    : drawables({&draw_menu_bar, &draw_interface}),
+      show_grid(m.data->show_grid),
       context_menu_active(m.data->context_menu_active),
       scrolling(m.data->scrolling),
       selected_arc_idxs(m.data->selected_arc_idxs),

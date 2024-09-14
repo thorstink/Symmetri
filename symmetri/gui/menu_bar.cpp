@@ -38,7 +38,8 @@ void draw_menu_bar(const model::ViewModel &vm) {
     }
 
     if (ImGui::BeginMenu("Help")) {
-      //...
+      if (ImGui::MenuItem("About")) {
+      }
       ImGui::EndMenu();
     }
 
