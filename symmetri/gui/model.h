@@ -3,7 +3,6 @@
 // clang-format off
 #include "imgui.h"
 #include "imgui_internal.h"
-
 // clang-format on
 
 #include <chrono>
@@ -13,7 +12,6 @@
 #include <optional>
 #include <span>
 
-#include "imfilebrowser.h"
 #include "petri.h"
 
 namespace model {
@@ -62,7 +60,6 @@ struct ViewModel {
   const std::vector<ImVec2> &t_positions, p_positions;
   std::vector<size_t> t_fireable;
 
-  static inline ImGui::FileBrowser file_dialog = ImGui::FileBrowser();
   ViewModel() = delete;
   ViewModel(Model m);
 };

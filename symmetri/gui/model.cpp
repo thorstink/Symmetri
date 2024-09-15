@@ -57,13 +57,6 @@ ViewModel::ViewModel(Model m)
               t_fireable.push_back(t_idx);
             }
             return std::move(t_fireable);
-          })) {
-  static std::once_flag flag;
-  std::call_once(flag, [&] {
-    file_dialog.SetTitle("title");
-    file_dialog.SetTypeFilters({".pnml", ".grml"});
-    file_dialog.SetPwd(m.data->working_dir);
-  });
-}
+          })) {}
 
 }  // namespace model

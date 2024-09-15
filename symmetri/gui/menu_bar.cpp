@@ -1,13 +1,21 @@
 #include "menu_bar.h"
 
+#include <mutex>
+
+#include "imfilebrowser.h"
 #include "load_file.h"
 #include "reducers.h"
 #include "rxdispatch.h"
 #include "symmetri/parsers.h"
 #include "write_graph_to_disk.h"
+ImGui::FileBrowser file_dialog = ImGui::FileBrowser();
 
 void draw_menu_bar(const model::ViewModel &vm) {
-  auto &file_dialog = model::ViewModel::file_dialog;
+  static std::once_flag flag;
+  std::call_once(flag, [&] {
+    file_dialog.SetTitle("Open a Symmetri-net");
+    file_dialog.SetTypeFilters({".pnml", ".grml"});
+  });
   file_dialog.Display();
   if (file_dialog.HasSelected()) {
     loadPetriNet(file_dialog.GetSelected());
