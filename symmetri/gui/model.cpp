@@ -8,8 +8,6 @@
 #include "load_file.h"
 #include "menu_bar.h"
 #include "petri.h"
-#include "util.h"
-
 namespace model {
 
 Model initializeModel() {
@@ -21,17 +19,23 @@ Model initializeModel() {
 
   m.working_dir = "/users/thomashorstink/Projects/symmetri/nets";
   std::filesystem::path p =
-      "/users/thomashorstink/Projects/symmetri/nets/n1.pnml"
-      // "/Users/thomashorstink/Projects/Symmetri/examples/combinations/"
-      // "DualProcessWorker.pnml"
-      ;
+      "/users/thomashorstink/Projects/symmetri/nets/n1.pnml";
   loadPetriNet(p);
 
   return model;
 }
 
 ViewModel::ViewModel(Model m)
-    : drawables({&draw_menu_bar, &draw_interface}),
+    : drawables([&] {
+        std::vector<Drawable> drawables;
+        drawables.push_back(&draw_menu_bar);
+        drawables.push_back(&draw_interface);
+
+        for (auto&& drawable : m.data->drawables) {
+          drawables.push_back(drawable);
+        }
+        return drawables;
+      }()),
       show_grid(m.data->show_grid),
       context_menu_active(m.data->context_menu_active),
       scrolling(m.data->scrolling),

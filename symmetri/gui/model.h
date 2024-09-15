@@ -35,8 +35,9 @@ struct Model {
     std::optional<std::filesystem::path> active_file;
     std::vector<ImVec2> t_positions, p_positions;
     std::vector<size_t> t_view, p_view;
-    std::vector<const char *> colors;
+    std::vector<const char *> colors = symmetri::Token::getColors();
     std::vector<symmetri::AugmentedToken> tokens;
+    std::vector<Drawable> drawables;
     symmetri::Petri::PTNet net;
   };
   std::shared_ptr<shared> data = std::make_shared<shared>();

@@ -1,6 +1,7 @@
 #include "menu_bar.h"
 
 #include "load_file.h"
+#include "reducers.h"
 #include "rxdispatch.h"
 #include "symmetri/parsers.h"
 #include "write_graph_to_disk.h"
@@ -39,6 +40,7 @@ void draw_menu_bar(const model::ViewModel &vm) {
 
     if (ImGui::BeginMenu("Help")) {
       if (ImGui::MenuItem("About")) {
+        addAboutView();
       }
       ImGui::EndMenu();
     }

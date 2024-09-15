@@ -30,6 +30,7 @@ set(APP_SOURCES
     draw_graph.cpp
     draw_menu.cpp
     draw_ui.cpp
+    draw_about.cpp
     simulation_menu.cpp
     model.cpp
     load_file.cpp

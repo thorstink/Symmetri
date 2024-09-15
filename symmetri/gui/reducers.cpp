@@ -6,10 +6,10 @@
 #include <ranges>
 #include <tuple>
 
+#include "draw_about.h"
 #include "imgui_internal.h"
 #include "petri.h"
 #include "rxdispatch.h"
-
 void moveView(const ImVec2& d) {
   rxdispatch::push([=](model::Model&& m) mutable {
     m.data->scrolling += d;
@@ -329,6 +329,20 @@ void tryFire(size_t transition_idx) {
 void updateTransitionOutputColor(size_t transition_idx, symmetri::Token color) {
   rxdispatch::push([=](model::Model&& m) {
     m.data->net.store[transition_idx] = [=] { return color; };
+    return m;
+  });
+}
+
+void addAboutView() {
+  rxdispatch::push([=](model::Model&& m) {
+    m.data->drawables.push_back(&draw_about);
+    return m;
+  });
+}
+
+void removeAboutView() {
+  rxdispatch::push([=](model::Model&& m) {
+    std::erase(m.data->drawables, &draw_about);
     return m;
   });
 }
