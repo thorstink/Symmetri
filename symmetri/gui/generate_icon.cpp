@@ -11,7 +11,7 @@ auto tohex(const auto rgb) {
   return ss.str();
 };
 
-int_fast32_t main(int argc, char** argv) {
+int main(int argc, char** argv) {
   if (argc != 3) {
     return 1;
   }
