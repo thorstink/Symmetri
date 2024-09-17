@@ -73,5 +73,4 @@ void draw_context_menu(const model::ViewModel& vm) {
     ImGui::EndPopup();
   }
   ImGui::PopStyleVar();
-  ImGui::PopItemWidth();
 }

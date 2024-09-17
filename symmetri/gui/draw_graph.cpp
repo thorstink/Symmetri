@@ -207,12 +207,6 @@ void draw_graph(const model::ViewModel& vm) {
   ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(60, 60, 70, 200));
   ImGui::BeginChild("scrolling_region", ImVec2(0, 0), true,
                     ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
-  ImGui::PushItemWidth(-1);
-
-  // Open context menu
-  if (vm.context_menu_active) {
-    draw_context_menu(vm);
-  }
 
   // Display grid
   if (vm.show_grid) {
@@ -236,7 +230,7 @@ void draw_graph(const model::ViewModel& vm) {
     draw_nodes(false, idx, vm.net.transition[idx], vm.t_positions[idx],
                should_hightlight, vm.tokens);
   }
-  for (auto&& idx : vm.p_view) {
+  for (auto idx : vm.p_view) {
     const bool should_hightlight =
         (is_selected_node &&
          (std::get<0>(vm.selected_node_idx.value()) &&
@@ -252,7 +246,8 @@ void draw_graph(const model::ViewModel& vm) {
   if (ImGui::IsWindowHovered() &&
       ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.0f)) {
     moveView(ImGui::GetIO().MouseDelta);
-    if (vm.context_menu_active) {
+    if (std::find(vm.drawables.begin(), vm.drawables.end(),
+                  &draw_context_menu) != vm.drawables.end()) {
       setContextMenuInactive();
     }
   }

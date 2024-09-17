@@ -113,21 +113,20 @@ int main(int, char**) {
   auto reducers = rpp::source::create<model::Reducer>(&rxdispatch::dequeue) |
                   rpp::operators::subscribe_on(rpp::schedulers::new_thread{});
 
-  auto models =
-      reducers |
-      rpp::operators::scan(
-          model::Model{}, [](model::Model&& m, const model::Reducer& f) {
-            static size_t i = 0;
-            std::cout << "update " << i++ << ", ref: " << m.data.use_count()
-                      << std::endl;
-            try {
-              m.data->timestamp = std::chrono::steady_clock::now();
-              return f(std::move(m));
-            } catch (const std::exception& e) {
-              printf("%s", e.what());
-              return std::move(m);
-            }
-          });
+  auto models = reducers | rpp::operators::scan(
+                               model::Model{},
+                               [](model::Model&& m, const model::Reducer& f) {
+                                 static size_t i = 0;
+                                 std::cout << "update " << i++
+                                           << ", ref: " << m.data.use_count()
+                                           << std::endl;
+                                 try {
+                                   return f(std::move(m));
+                                 } catch (const std::exception& e) {
+                                   printf("%s", e.what());
+                                   return std::move(m);
+                                 }
+                               });
 
   auto root_subscription = frames | rpp::operators::subscribe_on(rximgui::rl) |
                            rpp::operators::with_latest_from(

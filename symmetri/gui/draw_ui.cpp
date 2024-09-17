@@ -27,16 +27,15 @@ void draw_interface(const model::ViewModel& vm) {
                                   ImGui::GetIO().DisplaySize.y));
   ImGui::SetNextWindowPos(ImVec2(menu_width, 20));
   ImGui::Begin("graph", NULL, no_move_draw_resize);
-
   if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) &&
       ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
     setContextMenuActive();
-  } else if (vm.context_menu_active &&
+  } else if (std::find(vm.drawables.begin(), vm.drawables.end(),
+                       &draw_context_menu) != vm.drawables.end() &&
              ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
              !ImGui::IsAnyItemHovered()) {
     setContextMenuInactive();
   }
-
   draw_graph(vm);
   ImGui::End();
 }

@@ -3,7 +3,6 @@
 #include <numeric>
 
 #include "draw_ui.h"
-// #include "load_file.h"
 #include "menu_bar.h"
 #include "petri.h"
 namespace model {
@@ -22,14 +21,12 @@ ViewModel::ViewModel(Model m)
         std::vector<Drawable> drawables;
         drawables.push_back(&draw_menu_bar);
         drawables.push_back(&draw_interface);
-
         for (auto&& drawable : m.data->drawables) {
           drawables.push_back(drawable);
         }
         return drawables;
       }()),
       show_grid(m.data->show_grid),
-      context_menu_active(m.data->context_menu_active),
       scrolling(m.data->scrolling),
       selected_arc_idxs(m.data->selected_arc_idxs),
       selected_node_idx(m.data->selected_node_idx),

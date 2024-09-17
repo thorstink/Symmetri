@@ -7,6 +7,7 @@
 #include <tuple>
 
 #include "draw_about.h"
+#include "draw_context_menu.h"
 #include "imgui_internal.h"
 #include "petri.h"
 #include "rxdispatch.h"
@@ -49,7 +50,7 @@ void addNode(bool is_place, ImVec2 pos) {
       m.data->t_positions.push_back(model::Coordinate{pos.x, pos.y});
       m.data->t_view.push_back(m.data->net.transition.size() - 1);
     }
-    m.data->context_menu_active = false;
+    std::erase(m.data->drawables, &draw_context_menu);
     return m;
   });
 }
@@ -85,7 +86,7 @@ void removeArc(bool is_input, size_t transition_idx, size_t sub_idx) {
                    std::back_inserter(m.data->net.output_n.back()),
                    [=, i = size_t(0)](auto) mutable { return i++ != sub_idx; });
     }
-    m.data->context_menu_active = false;
+    std::erase(m.data->drawables, &draw_context_menu);
 
     return m;
   });
@@ -123,7 +124,7 @@ void addArc(bool is_place, size_t source, size_t target,
       m.data->net.output_n[new_transition_idx].push_back({source, color});
     }
 
-    m.data->context_menu_active = false;
+    std::erase(m.data->drawables, &draw_context_menu);
 
     return m;
   });
@@ -143,7 +144,7 @@ void removePlace(size_t idx) {
           return std::get<size_t>(at) == idx;
         });
     m.data->tokens.erase(b, e);
-    m.data->context_menu_active = false;
+    std::erase(m.data->drawables, &draw_context_menu);
 
     return m;
   });
@@ -155,7 +156,7 @@ void removeTransition(size_t idx) {
         std::remove(m.data->t_view.begin(), m.data->t_view.end(), idx),
         m.data->t_view.end());
     m.data->selected_node_idx.reset();
-    m.data->context_menu_active = false;
+    std::erase(m.data->drawables, &draw_context_menu);
 
     return m;
   });
@@ -218,14 +219,14 @@ ImGuiInputTextCallback updateTransitionName(const size_t id) {
 
 void setContextMenuActive() {
   rxdispatch::push([](model::Model&& m) {
-    m.data->context_menu_active = true;
+    m.data->drawables.push_back(&draw_context_menu);
     return m;
   });
 }
 
 void setContextMenuInactive() {
   rxdispatch::push([](model::Model&& m) {
-    m.data->context_menu_active = false;
+    std::erase(m.data->drawables, &draw_context_menu);
     m.data->selected_target_node_idx.reset();
     return m;
   });
@@ -291,7 +292,7 @@ void updateColorTable() {
 void addTokenToPlace(symmetri::AugmentedToken token) {
   rxdispatch::push([=](model::Model&& m) {
     m.data->tokens.push_back(token);
-    m.data->context_menu_active = false;
+    std::erase(m.data->drawables, &draw_context_menu);
     return m;
   });
 }

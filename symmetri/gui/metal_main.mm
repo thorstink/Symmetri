@@ -76,7 +76,6 @@ int main(int, char **) {
                   static size_t i = 0;
                   std::cout << "update " << i++ << ", ref: " << m.data.use_count() << std::endl;
                   try {
-                    m.data->timestamp = std::chrono::steady_clock::now();
                     return f(std::move(m));
                   } catch (const std::exception &e) {
                     printf("%s", e.what());

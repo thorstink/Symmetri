@@ -1,11 +1,8 @@
 #pragma once
 
-#include <chrono>
 #include <filesystem>
-#include <functional>
 #include <memory>
 #include <optional>
-#include <span>
 
 #include "petri.h"
 
@@ -24,13 +21,12 @@ Coordinate &operator+=(Coordinate &lhs, const Coordinate &rhs);
 
 struct Model {
   struct shared {
-    bool show_grid, context_menu_active;
+    bool show_grid;
     Coordinate scrolling;
     std::optional<std::tuple<bool, size_t, size_t>> selected_arc_idxs;
     std::optional<std::tuple<bool, size_t>> selected_node_idx,
         selected_target_node_idx;
 
-    std::chrono::steady_clock::time_point timestamp;
     std::filesystem::path working_dir;
     std::optional<std::filesystem::path> active_file;
     std::vector<Coordinate> t_positions, p_positions;
@@ -45,7 +41,7 @@ struct Model {
 
 struct ViewModel {
   std::vector<Drawable> drawables;
-  bool show_grid, context_menu_active;
+  bool show_grid;
   Coordinate scrolling;
   // is place, index, sub-index
   std::optional<std::tuple<bool, size_t, size_t>> selected_arc_idxs;
