@@ -2,7 +2,6 @@
 
 #include "draw_menu.h"
 
-#include <iostream>
 #include <ranges>
 
 #include "imgui_internal.h"

@@ -2,7 +2,6 @@
 #include "reducers.h"
 
 #include <filesystem>
-#include <iostream>
 #include <ranges>
 #include <tuple>
 

@@ -1,7 +1,5 @@
 #include "rxdispatch.h"
 
-#include <iostream>
-
 #include "blockingconcurrentqueue.h"
 namespace rxdispatch {
 

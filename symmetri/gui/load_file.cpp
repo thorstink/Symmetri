@@ -1,6 +1,5 @@
 #include "load_file.h"
 
-#include <iostream>
 #include <map>
 #include <numeric>
 #include <vector>

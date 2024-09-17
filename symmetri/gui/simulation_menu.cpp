@@ -1,6 +1,5 @@
 #include "simulation_menu.h"
 
-#include <iostream>
 #include <ranges>
 
 #include "petri.h"

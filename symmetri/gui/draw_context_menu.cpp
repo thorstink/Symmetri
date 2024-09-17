@@ -1,7 +1,5 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 
-#include <iostream>
-
 #include "draw_menu.h"
 #include "imgui_internal.h"
 #include "reducers.h"
