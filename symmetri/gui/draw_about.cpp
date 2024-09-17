@@ -35,7 +35,7 @@ void draw_about(const model::ViewModel&) {
     removeAboutView();
   }
   ImGui::SameLine();
-  ImGui::InvisibleButton("Fixed", ImVec2(100.0f, 0.0f));  // Fixed size
+  ImGui::InvisibleButton("Fixed", ImVec2(100.0f, 1.0f));  // Fixed size
   ImGui::SameLine();
   if (ImGui::Button("Copy")) {
     // Copy usefull things to clipboard

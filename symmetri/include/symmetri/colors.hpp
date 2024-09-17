@@ -12,10 +12,9 @@
 #include <type_traits>
 #include <utility>  // std::index_sequence
 #include <vector>   // hash
-namespace symmetri {
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-
+namespace sym_impl {
 // https://rodusek.com/posts/2021/03/09/getting-an-unmangled-type-name-at-compile-time/
 
 template <std::size_t... Idxs>
@@ -94,6 +93,8 @@ constexpr auto unique_id() {
 }
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
+}
+namespace symmetri {
 
 /**
  * @brief Tokens are elements that can reside in places. Tokens can have a color
@@ -119,10 +120,10 @@ class Token {
    * @tparam T the type representing the token-color
    */
   template <class T>
-  constexpr Token(T* const) : idx(unique_id<T>()) {
-    static_assert(unique_id<T>() < v.size(),
+  constexpr Token(T* const) : idx(sym_impl::unique_id<T>()) {
+    static_assert(sym_impl::unique_id<T>() < v.size(),
                   "There can only be 100 different token-colors.");
-    v[idx] = type_name<T>().data();
+    v[idx] = sym_impl::type_name<T>().data();
   }
 
  public:
@@ -186,7 +187,7 @@ class Token {
   constexpr bool operator==(const Token& c) const { return idx == c.idx; }
   template <class T>
   constexpr bool operator==(const T&) const {
-    return idx == unique_id<T>();
+    return idx == sym_impl::unique_id<T>();
   }
 };
 
@@ -195,7 +196,7 @@ class Token {
 // Custom specialization of std::hash can be injected in namespace std.
 template <>
 struct std::hash<symmetri::Token> {
-  std::size_t operator()(const symmetri::Token& s) const noexcept {
+  constexpr std::size_t operator()(const symmetri::Token& s) const noexcept {
     return s.toIndex();
   }
 };
