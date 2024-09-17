@@ -1,11 +1,9 @@
 #include "model.h"
 
-#include <mutex>
 #include <numeric>
-#include <ranges>
 
 #include "draw_ui.h"
-#include "load_file.h"
+// #include "load_file.h"
 #include "menu_bar.h"
 #include "petri.h"
 namespace model {
@@ -17,21 +15,6 @@ Coordinate operator+=(Coordinate lhs, const Coordinate& rhs) {
   lhs.x = rhs.x;
   lhs.y = rhs.y;
   return lhs;
-}
-
-Model initializeModel() {
-  Model model;
-  auto& m = *model.data;
-  m.show_grid = true;
-  m.context_menu_active = false;
-  m.scrolling = Coordinate({0.0f, 0.0f});
-
-  m.working_dir = "/users/thomashorstink/Projects/symmetri/nets";
-  std::filesystem::path p =
-      "/users/thomashorstink/Projects/symmetri/nets/n1.pnml";
-  loadPetriNet(p);
-
-  return model;
 }
 
 ViewModel::ViewModel(Model m)
