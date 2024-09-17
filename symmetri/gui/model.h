@@ -20,7 +20,7 @@ struct Coordinate {
 };
 
 Coordinate operator+(Coordinate &lhs, Coordinate &rhs);
-Coordinate operator+=(Coordinate lhs, const Coordinate &rhs);
+Coordinate &operator+=(Coordinate &lhs, const Coordinate &rhs);
 
 struct Model {
   struct shared {

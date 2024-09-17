@@ -11,9 +11,9 @@ namespace model {
 Coordinate operator+(Coordinate& lhs, Coordinate& rhs) {
   return {lhs.x + rhs.x, lhs.y + rhs.y};
 }
-Coordinate operator+=(Coordinate lhs, const Coordinate& rhs) {
-  lhs.x = rhs.x;
-  lhs.y = rhs.y;
+Coordinate& operator+=(Coordinate& lhs, const Coordinate& rhs) {
+  lhs.x += rhs.x;
+  lhs.y += rhs.y;
   return lhs;
 }
 
