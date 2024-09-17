@@ -198,6 +198,13 @@ TEST_CASE("Types") {
   CHECK(bool(ExternalState.toString() != NULL));
 }
 
+TEST_CASE("Test color names") {
+  CHECK_EQ(ExternalState.toString(), "ExternalState");
+  CHECK_EQ(Canceled.toString(), "Canceled");
+  CHECK_EQ(Started.toString(), "Started");
+  CHECK_EQ(Failed.toString(), "Failed");
+}
+
 TEST_CASE("Print some Types") {
   using namespace symmetri;
   std::cout << Scheduled.toString() << ", " << Scheduled.toIndex() << std::endl;
