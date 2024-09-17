@@ -98,8 +98,8 @@ void loadPetriNet(const std::filesystem::path& file) {
     std::iota(m.t_view.begin(), m.t_view.end(), old_transition_count);
     std::iota(m.p_view.begin(), m.p_view.end(), old_place_count);
 
-    double min_x = std::numeric_limits<double>::max();
-    double min_y = std::numeric_limits<double>::max();
+    float min_x = std::numeric_limits<float>::max();
+    float min_y = std::numeric_limits<float>::max();
 
     for (auto&& idx : m.t_view) {
       if (min_x > m.t_positions[idx].x) {
@@ -120,7 +120,7 @@ void loadPetriNet(const std::filesystem::path& file) {
     }
 
     // maybe this can be improved to have a better initialization :-)
-    m.scrolling = ImVec2(min_x, min_y + 50);
+    m.scrolling = {min_x, min_y + 50.f};
 
     m.active_file = file;
 

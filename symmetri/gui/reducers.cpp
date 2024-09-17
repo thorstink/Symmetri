@@ -12,7 +12,8 @@
 #include "rxdispatch.h"
 void moveView(const ImVec2& d) {
   rxdispatch::push([=](model::Model&& m) mutable {
-    m.data->scrolling += d;
+    m.data->scrolling.x += d.x;
+    m.data->scrolling.y += d.y;
     return m;
   });
 }

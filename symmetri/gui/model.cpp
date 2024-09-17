@@ -15,7 +15,7 @@ Model initializeModel() {
   auto& m = *model.data;
   m.show_grid = true;
   m.context_menu_active = false;
-  m.scrolling = ImVec2(0.0f, 0.0f);
+  m.scrolling = Coordinate({0.0f, 0.0f});
 
   m.working_dir = "/users/thomashorstink/Projects/symmetri/nets";
   std::filesystem::path p =

@@ -20,10 +20,14 @@ struct ViewModel;
 
 using Drawable = void (*)(const ViewModel &);
 
+struct Coordinate {
+  float x, y;
+};
+
 struct Model {
   struct shared {
     bool show_grid, context_menu_active;
-    ImVec2 scrolling;
+    Coordinate scrolling;
     std::optional<std::tuple<bool, size_t, size_t>> selected_arc_idxs;
     std::optional<std::tuple<bool, size_t>> selected_node_idx,
         selected_target_node_idx;
@@ -44,7 +48,7 @@ struct Model {
 struct ViewModel {
   std::vector<Drawable> drawables;
   bool show_grid, context_menu_active;
-  ImVec2 scrolling;
+  Coordinate scrolling;
   // is place, index, sub-index
   std::optional<std::tuple<bool, size_t, size_t>> selected_arc_idxs;
   // is place | index

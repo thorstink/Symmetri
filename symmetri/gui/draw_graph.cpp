@@ -30,7 +30,7 @@ static ImVec2 GetCenterPos(const ImVec2& pos, const ImVec2& size) {
   return ImVec2(pos.x + size.x * 0.5f, pos.y + size.y * 0.5f);
 }
 
-void draw_grid(const ImVec2& scrolling) {
+void draw_grid(const model::Coordinate& scrolling) {
   auto draw_list = ImGui::GetWindowDrawList();
   ImU32 GRID_COLOR = IM_COL32(200, 200, 200, 40);
   float GRID_SZ = 64.0f;
@@ -182,7 +182,7 @@ void draw_graph(const model::ViewModel& vm) {
       (vm.selected_node_idx.has_value() || vm.selected_arc_idxs.has_value())) {
     resetSelection();
   }
-  offset = ImGui::GetCursorScreenPos() + vm.scrolling;
+  offset = ImGui::GetCursorScreenPos() + ImVec2(vm.scrolling.x, vm.scrolling.y);
 
   char view_name[256] = "";
   strcpy(view_name, vm.active_file.c_str());
