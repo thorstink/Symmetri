@@ -95,12 +95,10 @@ void addArc(bool is_place, size_t source, size_t target,
             symmetri::Token color) {
   rxdispatch::push([=](model::Model&& m) mutable {
     const size_t transition_idx = is_place ? target : source;
-    // const size_t place_idx = is_place ? source : target;
     // remove transition from view
     m.data->t_view.erase(std::remove(m.data->t_view.begin(),
                                      m.data->t_view.end(), transition_idx),
                          m.data->t_view.end());
-
     // add it again to the view...
     const size_t new_transition_idx = m.data->net.transition.size();
     m.data->net.transition.push_back(m.data->net.transition[transition_idx]);
@@ -120,7 +118,7 @@ void addArc(bool is_place, size_t source, size_t target,
         p_to_ts.push_back(new_transition_idx);
       }
     } else {
-      m.data->net.output_n[new_transition_idx].push_back({source, color});
+      m.data->net.output_n[new_transition_idx].push_back({target, color});
     }
 
     std::erase(m.data->drawables, &draw_context_menu);
