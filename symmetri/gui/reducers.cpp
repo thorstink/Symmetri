@@ -20,7 +20,8 @@ void moveView(const ImVec2& d) {
 
 void moveNode(bool is_place, size_t idx, const ImVec2& d) {
   rxdispatch::push([=](model::Model&& m) mutable {
-    (is_place ? m.data->p_positions[idx] : m.data->t_positions[idx]) += d;
+    (is_place ? m.data->p_positions[idx] : m.data->t_positions[idx]) +=
+        model::Coordinate{d.x, d.y};
     return m;
   });
 }
@@ -37,7 +38,7 @@ void addNode(bool is_place, ImVec2 pos) {
     if (is_place) {
       m.data->net.place.push_back("place");
       m.data->net.p_to_ts_n.push_back({});
-      m.data->p_positions.push_back(pos);
+      m.data->p_positions.push_back(model::Coordinate{pos.x, pos.y});
       m.data->p_view.push_back(m.data->net.place.size() - 1);
     } else {
       m.data->net.transition.push_back("transition");
@@ -45,7 +46,7 @@ void addNode(bool is_place, ImVec2 pos) {
       m.data->net.input_n.push_back({});
       m.data->net.priority.push_back(0);
       m.data->net.store.push_back(symmetri::DirectMutation{});
-      m.data->t_positions.push_back(pos);
+      m.data->t_positions.push_back(model::Coordinate{pos.x, pos.y});
       m.data->t_view.push_back(m.data->net.transition.size() - 1);
     }
     m.data->context_menu_active = false;

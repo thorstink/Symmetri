@@ -6,13 +6,11 @@
 #include <set>
 #include <string>
 
-#include "imgui.h"
+#include "model.h"
 
 namespace farbart {
 
-// std::map<std::string, std::pair<float,float>> readGrmlPositions(
-//     const std::set<std::string> &files);
-std::map<std::string, ImVec2> readPnmlPositions(
+std::map<std::string, model::Coordinate> readPnmlPositions(
     const std::set<std::string> &files);
 
 }  // namespace farbart

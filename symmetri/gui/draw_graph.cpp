@@ -26,7 +26,7 @@ static ImVec2 offset;
 
 static const ImVec2 NODE_WINDOW_PADDING(8.0f, 8.0f);
 
-static ImVec2 GetCenterPos(const ImVec2& pos, const ImVec2& size) {
+static ImVec2 GetCenterPos(const model::Coordinate& pos, const ImVec2& size) {
   return ImVec2(pos.x + size.x * 0.5f, pos.y + size.y * 0.5f);
 }
 
@@ -108,10 +108,10 @@ void draw_arc(size_t t_idx, const model::ViewModel& vm) {
 };
 
 void draw_nodes(bool is_place, size_t idx, const std::string& name,
-                const ImVec2& position, bool highlight,
+                const model::Coordinate& position, bool highlight,
                 const std::vector<symmetri::AugmentedToken>& tokens) {
   ImGui::PushID(is_place ? idx + 10000 : idx);
-  ImVec2 node_rect_min = offset + position;
+  ImVec2 node_rect_min = offset + ImVec2(position.x, position.y);
 
   // Display node contents first
   auto textWidth = ImGui::CalcTextSize(name.c_str()).x;

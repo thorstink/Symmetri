@@ -1,8 +1,10 @@
 #include "menu_bar.h"
 
 #include <mutex>
-
+// clang-format off
+#include "imgui.h"
 #include "imfilebrowser.h"
+// clang-format on
 #include "load_file.h"
 #include "reducers.h"
 #include "rxdispatch.h"

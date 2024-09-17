@@ -23,7 +23,7 @@ void loadPetriNet(const std::filesystem::path& file) {
     symmetri::Net net;
     symmetri::Marking marking;
     symmetri::PriorityTable pt;
-    std::map<std::string, ImVec2> positions;
+    std::map<std::string, model::Coordinate> positions;
     const std::filesystem::path pn_file = m.active_file.value();
     if (pn_file.extension() == std::string(".pnml")) {
       std::tie(net, marking) = symmetri::readPnml({pn_file});
