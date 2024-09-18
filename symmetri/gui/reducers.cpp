@@ -33,15 +33,29 @@ void showGrid(bool show_grid) {
   });
 }
 
+std::string viewContainsNameAlready(const std::vector<size_t>& view,
+                                    const std::vector<std::string>& names,
+                                    const std::string& name, size_t j = 0) {
+  for (size_t i : view) {
+    if (names[i] == name) {
+      return viewContainsNameAlready(view, names,
+                                     name + "_" + std::to_string(j), j + 1);
+    }
+  }
+  return name;
+}
+
 void addNode(bool is_place, ImVec2 pos) {
   rxdispatch::push([=](model::Model&& m) mutable {
     if (is_place) {
-      m.data->net.place.push_back("place");
+      m.data->net.place.push_back(
+          viewContainsNameAlready(m.data->p_view, m.data->net.place, "place"));
       m.data->net.p_to_ts_n.push_back({});
       m.data->p_positions.push_back(model::Coordinate{pos.x, pos.y});
       m.data->p_view.push_back(m.data->net.place.size() - 1);
     } else {
-      m.data->net.transition.push_back("transition");
+      m.data->net.transition.push_back(viewContainsNameAlready(
+          m.data->t_view, m.data->net.transition, "transition"));
       m.data->net.output_n.push_back({});
       m.data->net.input_n.push_back({});
       m.data->net.priority.push_back(0);

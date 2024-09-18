@@ -26,7 +26,8 @@ void draw_interface(const model::ViewModel& vm) {
   ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x - menu_width,
                                   ImGui::GetIO().DisplaySize.y));
   ImGui::SetNextWindowPos(ImVec2(menu_width, 20));
-  ImGui::Begin("graph", NULL, no_move_draw_resize);
+  ImGui::Begin("graph", NULL,
+               no_move_draw_resize | ImGuiWindowFlags_NoBringToFrontOnFocus);
   if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) &&
       ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
     setContextMenuActive();
