@@ -35,14 +35,14 @@ void showGrid(bool show_grid) {
 
 std::string viewContainsNameAlready(const std::vector<size_t>& view,
                                     const std::vector<std::string>& names,
-                                    const std::string& name, size_t j = 0) {
+                                    std::string&& name, size_t j = 0) {
   for (size_t i : view) {
     if (names[i] == name) {
-      return viewContainsNameAlready(view, names,
-                                     name + "_" + std::to_string(j), j + 1);
+      return viewContainsNameAlready(
+          view, names, std::move(name) + "_" + std::to_string(j), j + 1);
     }
   }
-  return name;
+  return std::move(name);
 }
 
 void addNode(bool is_place, ImVec2 pos) {

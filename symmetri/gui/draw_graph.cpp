@@ -30,16 +30,16 @@ static ImVec2 GetCenterPos(const model::Coordinate& pos, const ImVec2& size) {
   return ImVec2(pos.x + size.x * 0.5f, pos.y + size.y * 0.5f);
 }
 
-void draw_grid(const model::Coordinate& scrolling) {
+void draw_grid(const model::ViewModel& vm) {
   auto draw_list = ImGui::GetWindowDrawList();
   ImU32 GRID_COLOR = IM_COL32(200, 200, 200, 40);
   float GRID_SZ = 64.0f;
   ImVec2 win_pos = ImGui::GetCursorScreenPos();
   ImVec2 canvas_sz = ImGui::GetWindowSize();
-  for (float x = fmodf(scrolling.x, GRID_SZ); x < canvas_sz.x; x += GRID_SZ)
+  for (float x = fmodf(vm.scrolling.x, GRID_SZ); x < canvas_sz.x; x += GRID_SZ)
     draw_list->AddLine(ImVec2(x, 0.0f) + win_pos,
                        ImVec2(x, canvas_sz.y) + win_pos, GRID_COLOR);
-  for (float y = fmodf(scrolling.y, GRID_SZ); y < canvas_sz.y; y += GRID_SZ)
+  for (float y = fmodf(vm.scrolling.y, GRID_SZ); y < canvas_sz.y; y += GRID_SZ)
     draw_list->AddLine(ImVec2(0.0f, y) + win_pos,
                        ImVec2(canvas_sz.x, y) + win_pos, GRID_COLOR);
 };
@@ -210,7 +210,7 @@ void draw_graph(const model::ViewModel& vm) {
 
   // Display grid
   if (vm.show_grid) {
-    draw_grid(vm.scrolling);
+    draw_grid(vm);
   }
 
   // is now also true if there's nothing selected.
