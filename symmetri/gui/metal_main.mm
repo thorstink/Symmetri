@@ -88,7 +88,7 @@ int main(int, char **) {
       rpp::operators::map([](auto &&model) { return model::ViewModel(std::move(model)); });
 
   auto root_subscription =
-      frames | rpp::operators::subscribe_on(rximgui::rl) |
+      frames | rpp::operators::observe_on(rximgui::rl) |
       rpp::operators::with_latest_from([](auto &&, auto &&vm) { return std::move(vm); },
                                        std::move(models)) |
       rpp::operators::subscribe_with_disposable(&drawUi);
