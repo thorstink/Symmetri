@@ -71,7 +71,7 @@ int main(int, char **) {
   auto reducers = rpp::source::create<model::Reducer>(&rxdispatch::dequeue) |
                   rpp::operators::subscribe_on(rpp::schedulers::new_thread{});
 
-  auto models =
+  auto view_models =
       reducers |
       rpp::operators::scan(model::Model{},
                            [](model::Model &&m, const model::Reducer &f) {
@@ -88,9 +88,9 @@ int main(int, char **) {
       rpp::operators::map([](auto &&model) { return model::ViewModel(std::move(model)); });
 
   auto root_subscription =
-      frames | rpp::operators::observe_on(rximgui::rl) |
+      frames |
       rpp::operators::with_latest_from([](auto &&, auto &&vm) { return std::move(vm); },
-                                       std::move(models)) |
+                                       std::move(view_models)) |
       rpp::operators::subscribe_with_disposable(&drawUi);
 
   // Main loop
