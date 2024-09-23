@@ -199,10 +199,10 @@ TEST_CASE("Types") {
 }
 
 TEST_CASE("Test color names") {
-  CHECK_EQ(ExternalState.toString(), "ExternalState");
-  CHECK_EQ(Canceled.toString(), "Canceled");
-  CHECK_EQ(Started.toString(), "Started");
-  CHECK_EQ(Failed.toString(), "Failed");
+  CHECK_EQ(std::string(ExternalState.toString()), "ExternalState");
+  CHECK_EQ(std::string(Canceled.toString()), "Canceled");
+  CHECK_EQ(std::string(Started.toString()), "Started");
+  CHECK_EQ(std::string(Failed.toString()), "Failed");
 }
 
 TEST_CASE("Print some Types") {

@@ -4,20 +4,14 @@
 
 #include <chrono>
 #include <iostream>
-#include "draw.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_metal.h"
-#include "model.h"
-#include "rpp/rpp.hpp"
-#include "rxdispatch.h"
-#include "rximgui.h"
+#include "reactive.h"
 #define GLFW_INCLUDE_NONE
 #define GLFW_EXPOSE_NATIVE_COCOA
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
-
-using namespace rximgui;
 
 #import <Metal/Metal.h>
 #import <QuartzCore/QuartzCore.h>
@@ -26,6 +20,8 @@ static void glfw_error_callback(int error, const char *description) {
 }
 
 int main(int, char **) {
+  std::cout << "main " << std::this_thread::get_id() << std::endl;
+
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -68,30 +64,7 @@ int main(int, char **) {
 
   MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor new];
 
-  auto reducers = rpp::source::create<model::Reducer>(&rxdispatch::dequeue) |
-                  rpp::operators::subscribe_on(rpp::schedulers::new_thread{});
-
-  auto view_models =
-      reducers |
-      rpp::operators::scan(model::Model{},
-                           [](model::Model &&m, const model::Reducer &f) {
-                             static size_t i = 0;
-                             std::cout << "update " << i++ << ", ref: " << m.data.use_count()
-                                       << std::endl;
-                             try {
-                               return f(std::move(m));
-                             } catch (const std::exception &e) {
-                               printf("%s", e.what());
-                               return std::move(m);
-                             }
-                           }) |
-      rpp::operators::map([](auto &&model) { return model::ViewModel(std::move(model)); });
-
-  auto root_subscription =
-      frames |
-      rpp::operators::with_latest_from([](auto &&, auto &&vm) { return std::move(vm); },
-                                       std::move(view_models)) |
-      rpp::operators::subscribe_with_disposable(&drawUi);
+  auto root_subscription = go();
 
   // Main loop
   while (!glfwWindowShouldClose(window)) {
@@ -115,13 +88,10 @@ int main(int, char **) {
       ImGui_ImplMetal_NewFrame(renderPassDescriptor);
       ImGui_ImplGlfw_NewFrame();
       ImGui::NewFrame();
-      while (!rl.is_empty()) {
-        rl.dispatch();
+      while (!rximgui::rl.is_empty()) {
+        rximgui::rl.dispatch();
       };
-      sendframe();
-      while (!rl.is_empty()) {
-        rl.dispatch();
-      };
+      rximgui::sendframe();
 
       // Rendering
       ImGui::Render();

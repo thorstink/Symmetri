@@ -25,10 +25,7 @@
 #endif
 #include <GLFW/glfw3.h>  // Will drag system OpenGL headers
 
-#include "draw.h"
-#include "rpp/rpp.hpp"
-#include "rxdispatch.h"
-#include "rximgui.h"
+#include "reactive.h"
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to
 // maximize ease of testing and compatibility with old VS compilers. To link
@@ -46,8 +43,6 @@
 #ifdef __EMSCRIPTEN__
 #include "../libs/emscripten/emscripten_mainloop_stub.h"
 #endif
-
-using namespace rximgui;
 
 static void glfw_error_callback(int error, const char* description) {
   fprintf(stderr, "GLFW Error %d: %s\n", error, description);
@@ -110,31 +105,7 @@ int main(int, char**) {
 #endif
   ImGui_ImplOpenGL3_Init(glsl_version);
 
-  auto reducers = rpp::source::create<model::Reducer>(&rxdispatch::dequeue) |
-                  rpp::operators::subscribe_on(rpp::schedulers::new_thread{});
-
-  auto models = reducers | rpp::operators::scan(
-                               model::Model{},
-                               [](model::Model&& m, const model::Reducer& f) {
-                                 static size_t i = 0;
-                                 std::cout << "update " << i++
-                                           << ", ref: " << m.data.use_count()
-                                           << std::endl;
-                                 try {
-                                   return f(std::move(m));
-                                 } catch (const std::exception& e) {
-                                   printf("%s", e.what());
-                                   return std::move(m);
-                                 }
-                               });
-
-  auto root_subscription = frames | rpp::operators::subscribe_on(rximgui::rl) |
-                           rpp::operators::with_latest_from(
-                               [](auto&&, auto&& model) {
-                                 return model::ViewModel(std::move(model));
-                               },
-                               std::move(models)) |
-                           rpp::operators::subscribe_with_disposable(&drawUi);
+  auto root_subscription = go();
 
   // Main loop
 #ifdef __EMSCRIPTEN__
@@ -166,13 +137,10 @@ int main(int, char**) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-    while (!rl.is_empty()) {
-      rl.dispatch();
+    while (!rximgui::rl.is_empty()) {
+      rximgui::rl.dispatch();
     };
-    sendframe();
-    while (!rl.is_empty()) {
-      rl.dispatch();
-    };
+    rximgui::sendframe();
     // Rendering
     ImGui::Render();
     int display_w, display_h;
