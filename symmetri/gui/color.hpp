@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include <cmath>
+
 // https://extremelearning.com.au/unreasonable-effectiveness-of-quasirandom-sequences/
 inline double ratio() {
   const static double phi = (std::sqrt(5) + 1.0) / 2.0;
