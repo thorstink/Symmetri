@@ -16,13 +16,11 @@ jobs:
         cd build
         bash -c 'cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=ON ..'
         make
-
-    - name: "Upload Artifact"
-    - uses: actions/upload-artifact@v4
-    - with:
+    - name: Upload gui
+      uses: actions/upload-artifact@v4
+      with:
         name: Farbart
         path: build/symmetri/gui/Farbart
-        retention-days: 5
 
     - name: "tests with ASAN"
       run: |
