@@ -12,6 +12,19 @@ add_library(${PROJECT_NAME} SHARED
   grml_parser.cpp
   submodules/tinyxml2/tinyxml2.cpp
 )
+
+add_library(static_${PROJECT_NAME} STATIC
+  types.cpp
+  tasks.cpp
+  symmetri.cpp
+  petri.cpp
+  petri_traits.cpp
+  petri_utilities.cpp
+  pnml_parser.cpp
+  grml_parser.cpp
+  submodules/tinyxml2/tinyxml2.cpp
+)
+
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 target_link_libraries(${PROJECT_NAME} PUBLIC pthread)
 

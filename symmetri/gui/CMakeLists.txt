@@ -69,7 +69,7 @@ else()
 endif()
 
 add_executable(Farbart ${ALL_SOURCES})
-target_link_libraries(Farbart symmetri ${EXTRA_LIBS})
+target_link_libraries(Farbart static_symmetri ${EXTRA_LIBS})
 
 add_executable(generate_icon generate_icon.cpp  ../submodules/tinyxml2/tinyxml2.cpp
 )
