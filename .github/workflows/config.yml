@@ -9,17 +9,18 @@ jobs:
     - uses: actions/checkout@v1
     - name: "build mac"
       run: |
-        brew install glfw
+        brew install glfw svg2png
         git submodule update --init --recursive
         mkdir build
         cd build
         bash -c 'cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=ON ..'
         make
+        bash ../.github/workflows/macos/create_app_bundle.sh
     - name: Upload macos
       uses: actions/upload-artifact@v4
       with:
         name: Farbart macos
-        path: build/symmetri/gui/Farbart
+        path: build/Farbart.tar.gz
 
   build-linux:
     runs-on: ubuntu-latest
