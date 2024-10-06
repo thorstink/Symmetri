@@ -71,5 +71,12 @@ endif()
 add_executable(Farbart ${ALL_SOURCES})
 target_link_libraries(Farbart static_symmetri ${EXTRA_LIBS})
 
-add_executable(generate_icon generate_icon.cpp  ../submodules/tinyxml2/tinyxml2.cpp
+if (APPLE)
+    add_executable(generate_icon generate_icon.cpp  ../submodules/tinyxml2/tinyxml2.cpp)
+    add_dependencies(generate_icon Farbart)
+    add_custom_command(TARGET generate_icon POST_BUILD
+    COMMAND bash -c "bash ../.github/workflows/macos/create_app_bundle.sh"
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/build
+    COMMENT "Creating MacOS app-bundle"
 )
+endif()

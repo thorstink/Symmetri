@@ -8,5 +8,4 @@ mkdir -p Farbart.app/Contents Farbart.app/Contents/MacOS Farbart.app/Contents/Re
 cp icons/icon.icns Farbart.app/Contents/Resources/farbart.icns
 cp ../.github/workflows/macos/Info.plist Farbart.app/Contents/Info.plist
 cp symmetri/gui/Farbart Farbart.app/Contents/MacOS/Farbart
-xattr -cr Farbart.app
 tar -czf Farbart.tar.gz Farbart.app
