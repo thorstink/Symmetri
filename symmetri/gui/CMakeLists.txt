@@ -14,6 +14,9 @@ endif()
 # just because metal it seems
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-variable")
 
+execute_process(COMMAND git describe --dirty --always --tags OUTPUT_VARIABLE FOO)
+message(${FOO})
+
 include_directories(
     rpp
     imgui
@@ -70,6 +73,7 @@ endif()
 
 add_executable(Farbart ${ALL_SOURCES})
 target_link_libraries(Farbart static_symmetri ${EXTRA_LIBS})
+target_compile_definitions(Farbart PRIVATE VERSION=${FOO})
 
 if (APPLE)
     add_executable(generate_icon generate_icon.cpp  ../submodules/tinyxml2/tinyxml2.cpp)

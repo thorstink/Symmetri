@@ -1,6 +1,8 @@
 #include "draw_about.h"
 
 #include "reducers.h"
+#define QUOTE(x) #x
+#define STR(x) QUOTE(x)
 
 const auto no_move_draw_resize =
     ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar |
@@ -19,8 +21,9 @@ void draw_about(const model::ViewModel&) {
 
   ImGui::Begin("About", NULL, no_move_draw_resize);
   ImGui::Text(
-      "Farbart version 0.0.1\nA GUI for creating and simulating "
-      "Symmetri-nets.");
+      "Farbart version %s\nA GUI for creating and simulating "
+      "Symmetri-nets.",
+      STR(VERSION));
 
   ImGuiStyle& style = ImGui::GetStyle();
   float width = 0.0f;
