@@ -10,48 +10,37 @@
 
 #pragma once
 
-#include <rpp/disposables/composite_disposable.hpp>
 #include <rpp/operators/details/strategy.hpp>
 #include <rpp/operators/fwd.hpp>
 #include <rpp/utils/utils.hpp>
 
 namespace rpp::operators::details {
-template <rpp::constraint::observer Observer, typename Worker,
-          rpp::details::disposables::constraint::disposable_container Container>
-class debounce_disposable;
+template <rpp::constraint::observer Observer, typename Worker>
+class debounce_state;
 
-template <rpp::constraint::observer Observer, typename Worker,
-          rpp::details::disposables::constraint::disposable_container Container>
-struct debounce_disposable_wrapper {
-  std::shared_ptr<debounce_disposable<Observer, Worker, Container>>
-      disposable{};
+template <rpp::constraint::observer Observer, typename Worker>
+struct debounce_state_wrapper {
+  std::shared_ptr<debounce_state<Observer, Worker>> state{};
 
-  bool is_disposed() const { return disposable->is_disposed(); }
+  bool is_disposed() const { return state->is_disposed(); }
 
   void on_error(const std::exception_ptr& err) const {
-    disposable->get_observer_under_lock()->on_error(err);
+    state->get_observer_under_lock()->on_error(err);
   }
 };
 
-template <rpp::constraint::observer Observer, typename Worker,
-          rpp::details::disposables::constraint::disposable_container Container>
-class debounce_disposable final
-    : public rpp::composite_disposable_impl<Container>,
-      public rpp::details::enable_wrapper_from_this<
-          debounce_disposable<Observer, Worker, Container>> {
+template <rpp::constraint::observer Observer, typename Worker>
+class debounce_state final : public rpp::details::enable_wrapper_from_this<
+                                 debounce_state<Observer, Worker>>,
+                             public rpp::details::base_disposable {
   using T = rpp::utils::extract_observer_type_t<Observer>;
 
  public:
-  debounce_disposable(Observer&& in_observer, Worker&& in_worker,
-                      rpp::schedulers::duration period)
+  debounce_state(Observer&& in_observer, Worker&& in_worker,
+                 rpp::schedulers::duration period)
       : m_observer(std::move(in_observer)),
         m_worker{std::move(in_worker)},
-        m_period{period} {
-    if constexpr (!Worker::is_none_disposable) {
-      if (auto d = m_worker.get_disposable(); !d.is_disposed())
-        rpp::composite_disposable_impl<Container>::add(std::move(d));
-    }
-  }
+        m_period{period} {}
 
   template <typename TT>
   void emplace_safe(TT&& v) {
@@ -78,20 +67,20 @@ class debounce_disposable final
   void schedule() {
     m_worker.schedule(
         m_time_when_value_should_be_emitted.value(),
-        [](const debounce_disposable_wrapper<Observer, Worker, Container>&
-               handler) -> schedulers::optional_delay_to {
-          auto value_or_duration = handler.disposable->extract_value_or_time();
+        [](const debounce_state_wrapper<Observer, Worker>& handler)
+            -> schedulers::optional_delay_to {
+          auto value_or_duration = handler.state->extract_value_or_time();
           if (auto* timepoint =
                   std::get_if<schedulers::time_point>(&value_or_duration))
             return schedulers::optional_delay_to{*timepoint};
 
           if (auto* value = std::get_if<T>(&value_or_duration))
-            handler.disposable->get_observer_under_lock()->on_next(
+            handler.state->get_observer_under_lock()->on_next(
                 std::move(*value));
 
           return std::nullopt;
         },
-        debounce_disposable_wrapper<Observer, Worker, Container>{
+        debounce_state_wrapper<Observer, Worker>{
             this->wrapper_from_this().lock()});
   }
 
@@ -120,36 +109,32 @@ class debounce_disposable final
   std::optional<T> m_value_to_be_emitted{};
 };
 
-template <rpp::constraint::observer Observer, typename Worker,
-          rpp::details::disposables::constraint::disposable_container Container>
+template <rpp::constraint::observer Observer, typename Worker>
 struct debounce_observer_strategy {
   using preferred_disposable_strategy =
       rpp::details::observers::none_disposable_strategy;
 
-  std::shared_ptr<debounce_disposable<Observer, Worker, Container>>
-      disposable{};
+  std::shared_ptr<debounce_state<Observer, Worker>> state{};
 
   void set_upstream(const rpp::disposable_wrapper& d) const {
-    disposable->add(d);
+    state->get_observer_under_lock()->set_upstream(d);
   }
 
-  bool is_disposed() const { return disposable->is_disposed(); }
+  bool is_disposed() const { return state->is_disposed(); }
 
   template <typename T>
   void on_next(T&& v) const {
-    disposable->emplace_safe(std::forward<T>(v));
+    state->emplace_safe(std::forward<T>(v));
   }
 
   void on_error(const std::exception_ptr& err) const noexcept {
-    disposable->dispose();
-    disposable->get_observer_under_lock()->on_error(err);
+    state->get_observer_under_lock()->on_error(err);
   }
 
   void on_completed() const noexcept {
-    disposable->dispose();
-    const auto value = disposable->extract_value();
-    const auto observer = disposable->get_observer_under_lock();
-    if (value) observer->on_next(std::move(value).value());
+    const auto observer = state->get_observer_under_lock();
+    if (const auto value = state->extract_value())
+      observer->on_next(std::move(value).value());
     observer->on_completed();
   }
 };
@@ -162,30 +147,24 @@ struct debounce_t {
   };
 
   template <rpp::details::observables::constraint::disposable_strategy Prev>
-  using updated_disposable_strategy =
-      rpp::details::observables::fixed_disposable_strategy_selector<1>;
+  using updated_disposable_strategy = typename Prev::template add<1>;
 
   rpp::schedulers::duration duration;
   RPP_NO_UNIQUE_ADDRESS Scheduler scheduler;
 
   template <rpp::constraint::decayed_type Type,
-            rpp::details::observables::constraint::disposable_strategy
-                DisposableStrategy,
             rpp::constraint::observer Observer>
-  auto lift_with_disposable_strategy(Observer&& observer) const {
+  auto lift(Observer&& observer) const {
     using worker_t = rpp::schedulers::utils::get_worker_t<Scheduler>;
-    using container = typename DisposableStrategy::template add<
-        worker_t::is_none_disposable ? 0 : 1>::disposable_container;
 
-    const auto disposable = disposable_wrapper_impl<
-        debounce_disposable<std::decay_t<Observer>, worker_t, container>>::
-        make(std::forward<Observer>(observer), scheduler.create_worker(),
-             duration);
-    auto ptr = disposable.lock();
-    ptr->get_observer_under_lock()->set_upstream(disposable.as_weak());
-    return rpp::observer<Type,
-                         debounce_observer_strategy<std::decay_t<Observer>,
-                                                    worker_t, container>>{
+    auto d = rpp::disposable_wrapper_impl<
+        debounce_state<std::decay_t<Observer>,
+                       worker_t>>::make(std::forward<Observer>(observer),
+                                        scheduler.create_worker(), duration);
+    auto ptr = d.lock();
+    ptr->get_observer_under_lock()->set_upstream(d.as_weak());
+    return rpp::observer<
+        Type, debounce_observer_strategy<std::decay_t<Observer>, worker_t>>{
         std::move(ptr)};
   }
 };
@@ -210,7 +189,7 @@ namespace rpp::operators {
  original observable without any new emissions to emit this emission.
  * @param scheduler is scheduler used to run timer for debounce
 
- * @warning #include <rpp/operators/debounce.hpp>
+ * @note `#include <rpp/operators/debounce.hpp>`
  *
  * @par Example
  * @snippet debounce.cpp debounce

@@ -23,10 +23,8 @@ namespace rpp::constraint {
 template <typename S, typename T>
 concept on_subscribe = requires(
     const S& strategy, rpp::details::observers::fake_observer<T>&& observer) {
-                         {
-                           strategy(std::move(observer))
-                           } -> std::same_as<void>;
-                       };
+  { strategy(std::move(observer)) } -> std::same_as<void>;
+};
 }  // namespace rpp::constraint
 
 namespace rpp::source {

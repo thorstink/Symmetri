@@ -12,7 +12,6 @@
 
 #include <atomic>
 #include <rpp/defs.hpp>
-#include <rpp/disposables/composite_disposable.hpp>
 #include <rpp/operators/details/strategy.hpp>
 #include <rpp/operators/fwd.hpp>
 #include <rpp/schedulers/current_thread.hpp>
@@ -21,9 +20,11 @@
 
 namespace rpp::operators::details {
 template <rpp::constraint::observer TObserver>
-class merge_disposable final : public composite_disposable {
+class merge_state final {
  public:
-  merge_disposable(TObserver&& observer) : m_observer(std::move(observer)) {}
+  merge_state(TObserver&& observer) : m_observer(std::move(observer)) {
+    get_observer_under_lock()->set_upstream(m_disposable);
+  }
 
   // just need atomicity, not guarding anything
   void increment_on_completed() {
@@ -39,45 +40,49 @@ class merge_disposable final : public composite_disposable {
     return m_observer;
   }
 
+  const rpp::composite_disposable_wrapper& get_disposable() const {
+    return m_disposable;
+  }
+
  private:
   rpp::utils::value_with_mutex<TObserver> m_observer{};
+  rpp::composite_disposable_wrapper m_disposable =
+      composite_disposable_wrapper::make();
   std::atomic_size_t m_on_completed_needed{1};
 };
 
 template <rpp::constraint::observer TObserver>
 struct merge_observer_base_strategy {
-  merge_observer_base_strategy(
-      std::shared_ptr<merge_disposable<TObserver>>&& disposable)
-      : m_disposable{std::move(disposable)} {}
+  merge_observer_base_strategy(std::shared_ptr<merge_state<TObserver>>&& state)
+      : m_state{std::move(state)} {}
 
   merge_observer_base_strategy(
-      const std::shared_ptr<merge_disposable<TObserver>>& disposable)
-      : m_disposable{disposable} {}
+      const std::shared_ptr<merge_state<TObserver>>& state)
+      : m_state{state} {}
 
   void set_upstream(const rpp::disposable_wrapper& d) const {
-    m_disposable->add(d);
+    m_state->get_disposable().add(d);
     m_disposables.push_back(d);
   }
 
-  bool is_disposed() const { return m_disposable->is_disposed(); }
+  bool is_disposed() const { return m_state->get_disposable().is_disposed(); }
 
   void on_error(const std::exception_ptr& err) const {
-    m_disposable->get_observer_under_lock()->on_error(err);
-    m_disposable->dispose();
+    m_state->get_observer_under_lock()->on_error(err);
   }
 
   void on_completed() const {
-    if (m_disposable->decrement_on_completed()) {
+    if (m_state->decrement_on_completed()) {
+      m_state->get_observer_under_lock()->on_completed();
+    } else {
       for (const auto& v : m_disposables) {
-        m_disposable->remove(v);
+        m_state->get_disposable().remove(v);
       }
-      m_disposable->get_observer_under_lock()->on_completed();
-      m_disposable->dispose();
     }
   }
 
  protected:
-  std::shared_ptr<merge_disposable<TObserver>> m_disposable;
+  std::shared_ptr<merge_state<TObserver>> m_state;
   mutable std::vector<rpp::disposable_wrapper> m_disposables{};
 };
 
@@ -88,8 +93,7 @@ struct merge_observer_inner_strategy final
 
   template <typename T>
   void on_next(T&& v) const {
-    merge_observer_base_strategy<TObserver>::m_disposable
-        ->get_observer_under_lock()
+    merge_observer_base_strategy<TObserver>::m_state->get_observer_under_lock()
         ->on_next(std::forward<T>(v));
   }
 };
@@ -100,27 +104,16 @@ class merge_observer_strategy final
  public:
   explicit merge_observer_strategy(TObserver&& observer)
       : merge_observer_base_strategy<TObserver>{
-            init_state(std::move(observer))} {}
+            std::make_shared<merge_state<TObserver>>(std::move(observer))} {}
 
   template <typename T>
   void on_next(T&& v) const {
-    merge_observer_base_strategy<TObserver>::m_disposable
-        ->increment_on_completed();
+    merge_observer_base_strategy<TObserver>::m_state->increment_on_completed();
     std::forward<T>(v).subscribe(
         rpp::observer<rpp::utils::extract_observer_type_t<TObserver>,
                       merge_observer_inner_strategy<TObserver>>{
             merge_observer_inner_strategy<TObserver>{
-                merge_observer_base_strategy<TObserver>::m_disposable}});
-  }
-
- private:
-  static std::shared_ptr<merge_disposable<TObserver>> init_state(
-      TObserver&& observer) {
-    const auto d = disposable_wrapper_impl<merge_disposable<TObserver>>::make(
-        std::move(observer));
-    auto ptr = d.lock();
-    ptr->get_observer_under_lock()->set_upstream(d.as_weak());
-    return ptr;
+                merge_observer_base_strategy<TObserver>::m_state}});
   }
 };
 
@@ -164,7 +157,7 @@ struct merge_with_t {
 
   template <rpp::constraint::observer Observer, typename... Strategies>
   void subscribe(Observer&& observer,
-                 const observable_chain_strategy<Strategies...>&
+                 const rpp::details::observables::chain<Strategies...>&
                      observable_strategy) const {
     merge_observer_strategy<std::decay_t<Observer>> strategy{
         std::forward<Observer>(observer)};
@@ -193,12 +186,12 @@ namespace rpp::operators {
  * @brief Converts observable of observables of items into observable of items
  via merging emissions.
  *
- * @warning According to observable contract
+ * @invariant According to observable contract
  (https://reactivex.io/documentation/contract.html) emissions from any
  observable should be serialized, so, resulting observable uses mutex to satisfy
  this requirement
  *
- * @warning During on subscribe operator takes ownership over
+ * @attention During on subscribe operator takes ownership over
  rpp::schedulers::current_thread to allow mixing of underlying emissions
  *
  * @marble merge
@@ -218,7 +211,7 @@ namespace rpp::operators {
  * - 2 heap allocation (1 for state, 1 to convert observer to dynamic_observer)
  * - Acquiring mutex during all observer's calls
  *
- * @warning #include <rpp/operators/merge.hpp>
+ * @note `#include <rpp/operators/merge.hpp>`
  *
  * @par Example:
  * @snippet merge.cpp merge
@@ -256,7 +249,7 @@ inline auto merge() { return details::merge_t{}; }
  *
  * @param observables are observables whose emissions would be merged with
  current observable
- * @warning #include <rpp/operators/merge.hpp>
+ * @note `#include <rpp/operators/merge.hpp>`
  *
  * @par Example:
  * @snippet merge.cpp merge_with

@@ -24,7 +24,7 @@ class timeout_disposable final
     : public rpp::composite_disposable_impl<Container> {
  public:
   struct observer_with_timeout {
-    TObserver observer;
+    RPP_NO_UNIQUE_ADDRESS TObserver observer;
     rpp::schedulers::time_point timeout;
   };
 
@@ -48,7 +48,7 @@ class timeout_disposable final
   rpp::utils::value_with_mutex<observer_with_timeout> m_observer_with_timeout;
 
   const rpp::schedulers::duration m_period;
-  const TFallbackObservable m_fallback;
+  RPP_NO_UNIQUE_ADDRESS const TFallbackObservable m_fallback;
 };
 
 template <rpp::constraint::observer TObserver,
@@ -61,7 +61,6 @@ struct timeout_disposable_wrapper {
   bool is_disposed() const { return disposable->is_disposed(); }
 
   void on_error(const std::exception_ptr& err) const {
-    disposable->dispose();
     disposable->get_observer_with_timeout_under_lock()->observer.on_error(err);
   }
 };
@@ -95,19 +94,13 @@ struct timeout_observer_strategy {
   void on_error(const std::exception_ptr& err) const noexcept {
     const auto obs_with_timeout =
         disposable->get_observer_with_timeout_under_lock();
-    if (disposable->is_disposed()) return;
-
-    disposable->dispose();
-    obs_with_timeout->observer.on_error(err);
+    if (!disposable->is_disposed()) obs_with_timeout->observer.on_error(err);
   }
 
   void on_completed() const noexcept {
     const auto obs_with_timeout =
         disposable->get_observer_with_timeout_under_lock();
-    if (disposable->is_disposed()) return;
-
-    disposable->dispose();
-    obs_with_timeout->observer.on_completed();
+    if (!disposable->is_disposed()) obs_with_timeout->observer.on_completed();
   }
 };
 
@@ -134,11 +127,9 @@ struct timeout_t {
             rpp::constraint::observer Observer>
   auto lift_with_disposable_strategy(Observer&& observer) const {
     using worker_t = rpp::schedulers::utils::get_worker_t<TScheduler>;
-    using container = typename DisposableStrategy::template add<
-        worker_t::is_none_disposable ? 0 : 1>::disposable_container;
+    using container = typename DisposableStrategy::disposable_container;
 
-    const auto timeout =
-        rpp::schedulers::utils::get_worker_t<TScheduler>::now() + period;
+    const auto timeout = worker_t::now() + period;
 
     const auto disposable = disposable_wrapper_impl<
         timeout_disposable<std::decay_t<Observer>, TFallbackObservable,
@@ -149,12 +140,6 @@ struct timeout_t {
         disposable.as_weak());
 
     const auto worker = scheduler.create_worker();
-    if constexpr (!rpp::schedulers::utils::get_worker_t<
-                      TScheduler>::is_none_disposable) {
-      if (auto d = worker.get_disposable(); !d.is_disposed())
-        disposable.add(std::move(d));
-    }
-
     using wrapper = timeout_disposable_wrapper<std::decay_t<Observer>,
                                                TFallbackObservable, container>;
     worker.schedule(
@@ -226,7 +211,7 @@ namespace rpp::operators {
  occurs
  * @param fallback_observable is observable to subscribe on when timeout reached
  * @param scheduler is scheduler used to run timer for timeout
- * @warning #include <rpp/operators/timeout.hpp>
+ * @note `#include <rpp/operators/timeout.hpp>`
  *
  * @par Example
  * @snippet timeout.cpp fallback_observable
@@ -256,7 +241,7 @@ events during specified period of time (since last emission)
  * @param period is maximum duration between emitted items before a timeout
 occurs
  * @param scheduler is scheduler used to run timer for timeout
- * @warning #include <rpp/operators/timeout.hpp>
+ * @note `#include <rpp/operators/timeout.hpp>`
  *
  * @par Example
  * @snippet timeout.cpp default

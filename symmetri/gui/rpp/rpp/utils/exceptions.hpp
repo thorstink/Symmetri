@@ -24,4 +24,8 @@ struct more_disposables_than_expected : public std::runtime_error {
 struct timeout_reached : public std::runtime_error {
   using std::runtime_error::runtime_error;
 };
+
+struct out_of_range : public std::range_error {
+  using std::range_error::range_error;
+};
 }  // namespace rpp::utils

@@ -160,9 +160,9 @@ struct group_by_t
 
   template <rpp::constraint::decayed_type T>
   struct operator_traits {
-    static_assert(std::invocable<KeySelector, T>,
+    static_assert(!std::same_as<void, std::invoke_result_t<KeySelector, T>>,
                   "KeySelector is not invocacble with T");
-    static_assert(std::invocable<ValueSelector, T>,
+    static_assert(!std::same_as<void, std::invoke_result_t<ValueSelector, T>>,
                   "ValueSelector is not invocable with T");
     static_assert(
         std::strict_weak_order<
@@ -214,7 +214,7 @@ namespace rpp::operators {
  grouped observable
  * @param comparator Function to provide strict_weak_order between key types
  *
- * @warning #include <rpp/operators/group_by.hpp>
+ * @note `#include <rpp/operators/group_by.hpp>`
  *
  * @par Example:
  * @snippet group_by.cpp group_by

@@ -54,6 +54,8 @@ template <typename EqualityFn = rpp::utils::equal_to>
                                      rpp::utils::convertible_to_any>>)
 auto distinct_until_changed(EqualityFn&& equality_fn = {});
 
+auto element_at(size_t index);
+
 auto first();
 
 template <typename Fn>
@@ -62,7 +64,7 @@ template <typename Fn>
                bool, std::invoke_result_t<Fn, rpp::utils::convertible_to_any>>)
 auto filter(Fn&& predicate);
 
-template <std::invocable<> LastFn>
+template <rpp::constraint::is_nothrow_invocable LastFn>
 auto finally(LastFn&& lastFn);
 
 template <typename Fn>
@@ -101,12 +103,6 @@ auto multicast(Subject&& subject);
 template <template <typename> typename Subject = rpp::subjects::publish_subject>
 auto multicast();
 
-template <typename Fn>
-  requires(!utils::is_not_template_callable<Fn> ||
-           rpp::constraint::observable<
-               std::invoke_result_t<Fn, rpp::utils::convertible_to_any>>)
-auto flat_map(Fn&& callable);
-
 template <rpp::constraint::observable TObservable,
           rpp::constraint::observable... TObservables>
   requires constraint::observables_of_same_type<std::decay_t<TObservable>,
@@ -135,6 +131,10 @@ auto ref_count();
 auto repeat(size_t count);
 
 auto repeat();
+
+auto retry(size_t count);
+
+auto retry();
 
 template <typename InitialValue, typename Fn>
   requires(!utils::is_not_template_callable<Fn> ||
@@ -200,6 +200,7 @@ auto take_until(TObservable&& until_observable);
 
 template <std::invocable<const std::exception_ptr&> OnError =
               rpp::utils::empty_function_t<std::exception_ptr>>
+  requires utils::is_not_template_callable<OnError>
 auto tap(OnError&& on_error);
 
 template <std::invocable<> OnCompleted = rpp::utils::empty_function_t<>>
@@ -213,6 +214,7 @@ template <typename OnNext = rpp::utils::empty_function_any_t,
           std::invocable<const std::exception_ptr&> OnError =
               rpp::utils::empty_function_t<std::exception_ptr>,
           std::invocable<> OnCompleted = rpp::utils::empty_function_t<>>
+  requires utils::is_not_template_callable<OnError>
 auto tap(OnNext&& on_next = {}, OnError&& on_error = {},
          OnCompleted&& on_completed = {});
 
@@ -233,6 +235,11 @@ template <typename Selector>
   requires rpp::constraint::observable<
       std::invoke_result_t<Selector, std::exception_ptr>>
 auto on_error_resume_next(Selector&& selector);
+
+template <typename Notifier>
+  requires rpp::constraint::observable<
+      std::invoke_result_t<Notifier, std::exception_ptr>>
+auto retry_when(Notifier&& notifier);
 
 template <typename TSelector, rpp::constraint::observable TObservable,
           rpp::constraint::observable... TObservables>

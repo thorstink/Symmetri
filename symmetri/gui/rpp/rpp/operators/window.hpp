@@ -50,8 +50,7 @@ class window_observer_strategy {
     // subjects if no any new items)
     if (m_items_in_current_window == m_window_size) {
       Subject subject{m_disposable->wrapper_from_this()};
-      m_subject_data.emplace(
-          subject_data{subject.get_observer(), subject.get_disposable()});
+      m_subject_data.emplace(subject.get_observer(), subject.get_disposable());
       m_disposable->add(m_subject_data->disposable);
       m_observer.on_next(subject.get_observable());
       m_items_in_current_window = 0;
@@ -87,7 +86,12 @@ class window_observer_strategy {
   RPP_NO_UNIQUE_ADDRESS TObserver m_observer;
 
   struct subject_data {
-    decltype(std::declval<Subject>().get_observer()) observer;
+    using TObs = decltype(std::declval<Subject>().get_observer());
+
+    subject_data(TObs&& obs, rpp::disposable_wrapper&& d)
+        : observer{std::move(obs)}, disposable{std::move(d)} {}
+
+    TObs observer;
     rpp::disposable_wrapper disposable;
   };
 
@@ -133,9 +137,9 @@ namespace rpp::operators {
  * @details Actually it is similar to `buffer` but it emits observable instead
  of container.
  *
- * @param window_size amount of items which every observable would have
+ * @param count amount of items which every observable would have
  *
- * @warning #include <rpp/operators/window.hpp>
+ * @note `#include <rpp/operators/window.hpp>`
  *
  * @par Example
  * @snippet window.cpp window

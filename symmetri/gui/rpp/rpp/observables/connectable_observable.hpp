@@ -84,7 +84,7 @@ class connectable_observable final
         m_original_observable{original_observable},
         m_subject{subject} {}
 
-  connectable_observable(OriginalObservable&& original_observable,
+  connectable_observable(OriginalObservable && original_observable,
                          const Subject& subject = Subject{})
       : base{subject.get_observable()},
         m_original_observable{std::move(original_observable)},
@@ -97,9 +97,9 @@ class connectable_observable final
    * @snippet connect.cpp connect
    *
    */
-  rpp::disposable_wrapper connect(
-      rpp::composite_disposable_wrapper wrapper =
-          composite_disposable_wrapper::make()) const {
+  rpp::disposable_wrapper connect(rpp::composite_disposable_wrapper wrapper =
+                                      composite_disposable_wrapper::make())
+      const {
     std::unique_lock lock(m_state->mutex);
 
     if (m_subject.get_disposable().is_disposed())
@@ -132,33 +132,42 @@ class connectable_observable final
             connectable_observable<OriginalObservable, Subject>>>{*this};
   }
 
-  template <rpp::constraint::operator_observable_transform<
-      const connectable_observable&>
-                Op>
+  template <typename Op>
   auto operator|(Op&& op) const& {
-    return std::forward<Op>(op)(*this);
-  }
-
-  template <
-      rpp::constraint::operator_observable_transform<connectable_observable&&>
-          Op>
-  auto operator|(Op&& op) && {
-    return std::forward<Op>(op)(std::move(*this));
-  }
-
-  template <typename Op>
-  decltype(std::declval<const base>() | std::declval<Op>()) operator|(
-      Op&& op) const& {
-    return static_cast<const base&>(*this) | std::forward<Op>(op);
+    if constexpr (std::invocable<std::decay_t<Op>,
+                                 const connectable_observable&>) {
+      static_assert(rpp::constraint::observable<std::invoke_result_t<
+                        std::decay_t<Op>, const connectable_observable&>>,
+                    "Result of Op should be observable");
+      return std::forward<Op>(op)(*this);
+    } else
+      return static_cast<const base&>(*this) | std::forward<Op>(op);
   }
 
   template <typename Op>
-  decltype(std::declval<base>() | std::declval<Op>()) operator|(Op&& op) && {
-    return static_cast<base&&>(*this) | std::forward<Op>(op);
+  auto operator|(Op&& op)&& {
+    if constexpr (std::invocable<std::decay_t<Op>, connectable_observable&&>) {
+      static_assert(
+          rpp::constraint::observable<
+              std::invoke_result_t<std::decay_t<Op>, connectable_observable&&>>,
+          "Result of Op should be observable");
+      return std::forward<Op>(op)(std::move(*this));
+    } else
+      return static_cast<base&&>(*this) | std::forward<Op>(op);
+  }
+
+  template <typename Op>
+  auto pipe(Op && op) const& {
+    return *this | std::forward<Op>(op);
+  }
+
+  template <typename Op>
+  auto pipe(Op && op)&& {
+    return std::move(*this) | std::forward<Op>(op);
   }
 
  private:
-  OriginalObservable m_original_observable;
+  RPP_NO_UNIQUE_ADDRESS OriginalObservable m_original_observable;
   Subject m_subject;
 
   struct state_t {

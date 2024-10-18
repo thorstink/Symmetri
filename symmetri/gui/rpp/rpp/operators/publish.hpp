@@ -1,6 +1,7 @@
 #pragma once
 
 #include <rpp/operators/multicast.hpp>
+#include <rpp/subjects/publish_subject.hpp>
 
 namespace rpp::operators {
 /**
@@ -14,7 +15,7 @@ namespace rpp::operators {
  *
  * @tparam Subject is template teamplate typename over Subject to be created to
  * create corresponding connectable_observable for provided observable
- * @warning #include <rpp/operators/publish.hpp>
+ * @note `#include <rpp/operators/publish.hpp>`
  *
  * @par Example
  * @snippet multicast.cpp publish

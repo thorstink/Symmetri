@@ -98,7 +98,7 @@ namespace rpp::operators {
  last `count` values and emit stored values on `on_completed`
  *
  * @param count amount of last items to be emitted
- * @warning #include <rpp/operators/take_last.hpp>
+ * @note `#include <rpp/operators/take_last.hpp>`
  *
  * @par Example
  * @snippet take_last.cpp take_last

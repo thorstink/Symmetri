@@ -88,7 +88,7 @@ struct reduce_no_seed_observer_strategy {
   void on_error(const std::exception_ptr& err) const { observer.on_error(err); }
 
   void on_completed() const {
-    observer.on_next(std::move(seed).value());
+    if (seed.has_value()) observer.on_next(std::move(seed).value());
     observer.on_completed();
   }
 
@@ -131,11 +131,11 @@ namespace rpp::operators {
      operator "reduce: s=10, (s,x)=>s+x" : +------16|
  }
  *
- * @param initial_value initial value for seed
+ * @param seed initial value for seed
  * @param accumulator function which accepts seed value and new value from
  observable and return new value of seed. Can accept seed by move-reference.
  *
- * @warning #include <rpp/operators/reduce.hpp>
+ * @note `#include <rpp/operators/reduce.hpp>`
  *
  * @par Example
  * @snippet reduce.cpp reduce
@@ -166,11 +166,10 @@ auto reduce(Seed&& seed, Accumulator&& accumulator) {
  * @details There is no initial value for seed, so, first value would be used as
  seed value and forwarded as is.
  *
- * @param initial_value initial value for seed
  * @param accumulator function which accepts seed value and new value from
  observable and return new value of seed. Can accept seed by move-reference.
  *
- * @warning #include <rpp/operators/reduce.hpp>
+ * @note `#include <rpp/operators/reduce.hpp>`
  *
  * @par Example
  * @snippet reduce.cpp reduce_no_seed

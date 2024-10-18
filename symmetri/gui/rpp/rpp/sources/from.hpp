@@ -78,10 +78,8 @@ template <constraint::decayed_type PackedContainer,
 struct from_iterable_strategy {
  public:
   using value_type = rpp::utils::iterable_value_t<PackedContainer>;
-  using expected_disposable_strategy = std::conditional_t<
-      rpp::schedulers::utils::get_worker_t<TScheduler>::is_none_disposable,
-      rpp::details::observables::bool_disposable_strategy_selector,
-      rpp::details::observables::fixed_disposable_strategy_selector<1>>;
+  using expected_disposable_strategy =
+      rpp::details::observables::bool_disposable_strategy_selector;
 
   template <typename... Args>
   from_iterable_strategy(const TScheduler& scheduler, Args&&... args)
@@ -109,11 +107,6 @@ struct from_iterable_strategy {
       }
     } else {
       const auto worker = scheduler.create_worker();
-      if constexpr (!rpp::schedulers::utils::get_worker_t<
-                        TScheduler>::is_none_disposable) {
-        if (auto d = worker.get_disposable(); !d.is_disposed())
-          obs.set_upstream(std::move(d));
-      }
       worker.schedule(from_iterable_schedulable{}, std::move(obs), container,
                       size_t{});
     }

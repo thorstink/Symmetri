@@ -11,20 +11,23 @@
 #pragma once
 
 #include <rpp/defs.hpp>
-#include <rpp/disposables/composite_disposable.hpp>
 #include <rpp/operators/fwd.hpp>
 #include <rpp/schedulers/current_thread.hpp>
 #include <rpp/utils/utils.hpp>
 
 namespace rpp::operators::details {
 template <rpp::constraint::observer TObserver>
-class take_until_disposable final : public rpp::composite_disposable {
+class take_until_state final {
  public:
-  take_until_disposable(TObserver&& observer)
+  take_until_state(TObserver&& observer)
       : m_observer_with_mutex(std::move(observer)) {}
 
-  take_until_disposable(const TObserver& observer)
+  take_until_state(const TObserver& observer)
       : m_observer_with_mutex(observer) {}
+
+  void stop() { m_stopped = true; }
+  bool is_stopped() const { return m_stopped; }
+  bool stop_return_was_stopped() { return m_stopped.exchange(true); }
 
   rpp::utils::pointer_under_lock<TObserver> get_observer() {
     return m_observer_with_mutex;
@@ -32,6 +35,7 @@ class take_until_disposable final : public rpp::composite_disposable {
 
  private:
   rpp::utils::value_with_mutex<TObserver> m_observer_with_mutex{};
+  std::atomic_bool m_stopped{};
 };
 
 template <rpp::constraint::observer TObserver>
@@ -39,21 +43,22 @@ struct take_until_observer_strategy_base {
   using preferred_disposable_strategy =
       rpp::details::observers::none_disposable_strategy;
 
-  std::shared_ptr<take_until_disposable<TObserver>> state;
+  std::shared_ptr<take_until_state<TObserver>> state;
 
   void on_error(const std::exception_ptr& err) const {
-    state->dispose();
-    state->get_observer()->on_error(err);
+    if (!state->stop_return_was_stopped()) state->get_observer()->on_error(err);
   }
 
   void on_completed() const {
-    state->dispose();
-    state->get_observer()->on_completed();
+    if (!state->stop_return_was_stopped())
+      state->get_observer()->on_completed();
   }
 
-  void set_upstream(const disposable_wrapper& d) { state->add(d); }
+  void set_upstream(const disposable_wrapper& d) {
+    state->get_observer()->set_upstream(d);
+  }
 
-  bool is_disposed() const { return state->is_disposed(); }
+  bool is_disposed() const { return state->get_observer()->is_disposed(); }
 };
 
 template <rpp::constraint::observer TObserver>
@@ -61,9 +66,10 @@ struct take_until_throttle_observer_strategy
     : public take_until_observer_strategy_base<TObserver> {
   template <typename T>
   void on_next(const T&) const {
-    take_until_observer_strategy_base<TObserver>::state->dispose();
-    take_until_observer_strategy_base<TObserver>::state->get_observer()
-        ->on_completed();
+    if (!take_until_observer_strategy_base<TObserver>::state
+             ->stop_return_was_stopped())
+      take_until_observer_strategy_base<TObserver>::state->get_observer()
+          ->on_completed();
   }
 };
 
@@ -72,8 +78,9 @@ struct take_until_observer_strategy
     : public take_until_observer_strategy_base<TObserver> {
   template <typename T>
   void on_next(T&& v) const {
-    take_until_observer_strategy_base<TObserver>::state->get_observer()
-        ->on_next(std::forward<T>(v));
+    if (!take_until_observer_strategy_base<TObserver>::state->is_stopped())
+      take_until_observer_strategy_base<TObserver>::state->get_observer()
+          ->on_next(std::forward<T>(v));
   }
 };
 
@@ -90,16 +97,13 @@ struct take_until_t {
 
   template <rpp::details::observables::constraint::disposable_strategy Prev>
   using updated_disposable_strategy =
-      rpp::details::observables::fixed_disposable_strategy_selector<1>;
+      rpp::details::observables::default_disposable_strategy_selector;
 
   template <rpp::constraint::decayed_type Type,
             rpp::constraint::observer Observer>
   auto lift(Observer&& observer) const {
-    const auto d =
-        disposable_wrapper_impl<take_until_disposable<std::decay_t<Observer>>>::
-            make(std::forward<Observer>(observer));
-    auto ptr = d.lock();
-    ptr->get_observer()->set_upstream(d.as_weak());
+    auto ptr = std::make_shared<take_until_state<std::decay_t<Observer>>>(
+        std::forward<Observer>(observer));
 
     observable.subscribe(
         take_until_throttle_observer_strategy<std::decay_t<Observer>>{ptr});
@@ -133,7 +137,7 @@ namespace rpp::operators {
  * @param until_observable is the observables that stops the source observable
  from sending values when it emits one value or sends a on_error/on_completed
  event.
- * @warning #include <rpp/operators/take_until.hpp>
+ * @note `#include <rpp/operators/take_until.hpp>`
  *
  * @par Examples
  * @snippet take_until.cpp take_until

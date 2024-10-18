@@ -76,8 +76,6 @@ struct fake_schedulable_handler {
 
   static void on_error(const std::exception_ptr&) {}
 };
-
-struct none_disposable {};
 }  // namespace rpp::schedulers::details
 
 namespace rpp::schedulers::constraint {
@@ -113,9 +111,9 @@ concept schedulable_fn =
 
 template <typename Handler>
 concept schedulable_handler = requires(const Handler& handler) {
-                                { handler.is_disposed() } -> std::same_as<bool>;
-                                handler.on_error(std::exception_ptr{});
-                              };
+  { handler.is_disposed() } -> std::same_as<bool>;
+  handler.on_error(std::exception_ptr{});
+};
 
 template <typename S>
 concept defer_for_strategy =
@@ -125,19 +123,19 @@ concept defer_for_strategy =
                     std::declval<optional_delay_from_now (*)(
                         const details::fake_schedulable_handler&)>(),
                     handler)
-        } -> std::same_as<void>;
+      } -> std::same_as<void>;
       {
         s.defer_for(duration{},
                     std::declval<optional_delay_from_this_timepoint (*)(
                         const details::fake_schedulable_handler&)>(),
                     handler)
-        } -> std::same_as<void>;
+      } -> std::same_as<void>;
       {
         s.defer_for(duration{},
                     std::declval<optional_delay_to (*)(
                         const details::fake_schedulable_handler&)>(),
                     handler)
-        } -> std::same_as<void>;
+      } -> std::same_as<void>;
     };
 
 template <typename S>
@@ -148,31 +146,27 @@ concept defer_to_strategy =
                    std::declval<optional_delay_from_now (*)(
                        const details::fake_schedulable_handler&)>(),
                    handler)
-        } -> std::same_as<void>;
+      } -> std::same_as<void>;
       {
         s.defer_to(time_point{},
                    std::declval<optional_delay_from_this_timepoint (*)(
                        const details::fake_schedulable_handler&)>(),
                    handler)
-        } -> std::same_as<void>;
+      } -> std::same_as<void>;
       {
         s.defer_to(time_point{},
                    std::declval<optional_delay_to (*)(
                        const details::fake_schedulable_handler&)>(),
                    handler)
-        } -> std::same_as<void>;
+      } -> std::same_as<void>;
     };
 
 template <typename S>
-concept strategy = (defer_for_strategy<S> || defer_to_strategy<S>) &&
-                   requires(const S& s,
-                            const details::fake_schedulable_handler& handler) {
-                     {
-                       s.get_disposable()
-                       } -> rpp::constraint::any_of<rpp::disposable_wrapper,
-                                                    details::none_disposable>;
-                     { S::now() } -> std::same_as<rpp::schedulers::time_point>;
-                   };
+concept strategy = (defer_for_strategy<S> || defer_to_strategy<S>)&&
+  requires()
+{
+  { S::now() } -> std::same_as<rpp::schedulers::time_point>;
+};
 }  // namespace rpp::schedulers::constraint
 
 namespace rpp::schedulers {
@@ -205,8 +199,8 @@ concept worker = details::is_worker<W>::value;
 
 template <typename S>
 concept scheduler = requires(const S& s) {
-                      { s.create_worker() } -> worker;
-                    };
+  { s.create_worker() } -> worker;
+};
 }  // namespace rpp::schedulers::constraint
 
 namespace rpp::schedulers::utils {

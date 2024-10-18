@@ -9,98 +9,96 @@
 
 #pragma once
 
+#include <rpp/defs.hpp>
 #include <rpp/observables/fwd.hpp>
 #include <rpp/observers/fwd.hpp>
-
-#include <rpp/defs.hpp>
 #include <rpp/schedulers/current_thread.hpp>
 
-namespace rpp
-{
-    template<typename TStrategy, typename... TStrategies>
-    class observable_chain_strategy
-    {
-        using base = observable_chain_strategy<TStrategies...>;
+namespace rpp::details::observables {
+template <typename TStrategy, typename... TStrategies>
+class chain {
+  using base = chain<TStrategies...>;
 
-        using operator_traits = typename TStrategy::template operator_traits<typename base::value_type>;
+  using operator_traits =
+      typename TStrategy::template operator_traits<typename base::value_type>;
 
-    public:
-        using expected_disposable_strategy = details::observables::deduce_updated_disposable_strategy<TStrategy, typename base::expected_disposable_strategy>;
-        using value_type                   = typename operator_traits::result_type;
+  static_assert(rpp::constraint::operator_chain<
+                TStrategy, typename base::value_type,
+                typename base::expected_disposable_strategy>);
 
-        observable_chain_strategy(const TStrategy& strategy, const TStrategies&... strategies)
-            : m_strategy(strategy)
-            , m_strategies(strategies...)
-        {
-        }
+ public:
+  using expected_disposable_strategy = deduce_updated_disposable_strategy<
+      TStrategy, typename base::expected_disposable_strategy>;
+  using value_type = typename operator_traits::result_type;
 
-        observable_chain_strategy(const TStrategy& strategy, const observable_chain_strategy<TStrategies...>& strategies)
-            : m_strategy(strategy)
-            , m_strategies(strategies)
-        {
-        }
+  chain(const TStrategy& strategy, const TStrategies&... strategies)
+      : m_strategy(strategy), m_strategies(strategies...) {}
 
-        template<rpp::constraint::observer_of_type<value_type> Observer>
-        void subscribe(Observer&& observer) const
-        {
-            [[maybe_unused]] const auto drain_on_exit = own_current_thread_if_needed();
+  chain(const TStrategy& strategy, const chain<TStrategies...>& strategies)
+      : m_strategy(strategy), m_strategies(strategies) {}
 
-            if constexpr (rpp::constraint::operator_lift_with_disposable_strategy<TStrategy, typename base::value_type, typename base::expected_disposable_strategy>)
-                m_strategies.subscribe(m_strategy.template lift_with_disposable_strategy<typename base::value_type, typename base::expected_disposable_strategy>(std::forward<Observer>(observer)));
-            else if constexpr (rpp::constraint::operator_lift<TStrategy, typename base::value_type>)
-                m_strategies.subscribe(m_strategy.template lift<typename base::value_type>(std::forward<Observer>(observer)));
-            else
-                m_strategy.subscribe(std::forward<Observer>(observer), m_strategies);
-        }
+  template <rpp::constraint::observer_of_type<value_type> Observer>
+  void subscribe(Observer&& observer) const {
+    [[maybe_unused]] const auto drain_on_exit = own_current_thread_if_needed();
 
-    private:
-        static auto own_current_thread_if_needed()
-        {
-            if constexpr (requires { requires operator_traits::own_current_queue; })
-                return rpp::schedulers::current_thread::own_queue_and_drain_finally_if_not_owned();
-            else
-                return rpp::utils::none{};
-        }
+    if constexpr (rpp::constraint::operator_lift_with_disposable_strategy<
+                      TStrategy, typename base::value_type,
+                      typename base::expected_disposable_strategy>)
+      m_strategies.subscribe(m_strategy.template lift_with_disposable_strategy<
+                             typename base::value_type,
+                             typename base::expected_disposable_strategy>(
+          std::forward<Observer>(observer)));
+    else if constexpr (rpp::constraint::operator_lift<
+                           TStrategy, typename base::value_type>)
+      m_strategies.subscribe(
+          m_strategy.template lift<typename base::value_type>(
+              std::forward<Observer>(observer)));
+    else
+      m_strategy.subscribe(std::forward<Observer>(observer), m_strategies);
+  }
 
-    private:
-        RPP_NO_UNIQUE_ADDRESS TStrategy                                 m_strategy;
-        RPP_NO_UNIQUE_ADDRESS observable_chain_strategy<TStrategies...> m_strategies;
-    };
+ private:
+  static auto own_current_thread_if_needed() {
+    if constexpr (requires { requires operator_traits::own_current_queue; })
+      return rpp::schedulers::current_thread::
+          own_queue_and_drain_finally_if_not_owned();
+    else
+      return rpp::utils::none{};
+  }
 
-    template<typename TStrategy>
-    class observable_chain_strategy<TStrategy>
-    {
-    public:
-        using expected_disposable_strategy = rpp::details::observables::deduce_disposable_strategy_t<TStrategy>;
-        using value_type                   = typename TStrategy::value_type;
+ private:
+  RPP_NO_UNIQUE_ADDRESS TStrategy m_strategy;
+  RPP_NO_UNIQUE_ADDRESS chain<TStrategies...> m_strategies;
+};
 
-        observable_chain_strategy(const TStrategy& strategy)
-            : m_strategy(strategy)
-        {
-        }
+template <typename TStrategy>
+class chain<TStrategy> {
+ public:
+  using expected_disposable_strategy =
+      rpp::details::observables::deduce_disposable_strategy_t<TStrategy>;
+  using value_type = typename TStrategy::value_type;
 
-        template<rpp::constraint::observer Observer>
-        void subscribe(Observer&& observer) const
-        {
-            m_strategy.subscribe(std::forward<Observer>(observer));
-        }
+  chain(const TStrategy& strategy) : m_strategy(strategy) {}
 
-    private:
-        RPP_NO_UNIQUE_ADDRESS TStrategy m_strategy;
-    };
+  template <rpp::constraint::observer Observer>
+  void subscribe(Observer&& observer) const {
+    m_strategy.subscribe(std::forward<Observer>(observer));
+  }
 
-    template<typename New, typename Old>
-    struct make_chain_observable
-    {
-        using type = observable_chain_strategy<New, Old>;
-    };
+ private:
+  RPP_NO_UNIQUE_ADDRESS TStrategy m_strategy;
+};
 
-    template<typename New, typename... Args>
-    struct make_chain_observable<New, observable_chain_strategy<Args...>>
-    {
-        using type = observable_chain_strategy<New, Args...>;
-    };
+template <typename New, typename Old>
+struct make_chain {
+  using type = chain<New, Old>;
+};
 
-    template<typename New, typename Old>
-    using make_chain_observable_t = typename make_chain_observable<New, Old>::type;
-} // namespace rpp
+template <typename New, typename... Args>
+struct make_chain<New, chain<Args...>> {
+  using type = chain<New, Args...>;
+};
+
+template <typename New, typename Old>
+using make_chain_t = typename make_chain<New, Old>::type;
+}  // namespace rpp::details::observables

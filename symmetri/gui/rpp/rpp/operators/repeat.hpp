@@ -55,7 +55,7 @@ namespace rpp::operators {
  *  - `repeat(10)` - 1 normal subscription and 9 re-subscriptions during
  `on_completed`
  *
- * @warning #include <rpp/operators/repeat.hpp>
+ * @note `#include <rpp/operators/repeat.hpp>`
  *
  * @par Examples:
  * @snippet repeat.cpp repeat
@@ -78,7 +78,7 @@ inline auto repeat(size_t count) { return details::repeat_t{count}; }
  *
  * @details Actually this operator is kind of `concat(obs, obs...)`
  *
- * @warning #include <rpp/operators/repeat.hpp>
+ * @note `#include <rpp/operators/repeat.hpp>`
  *
  * @par Examples:
  * @snippet repeat.cpp repeat_infinitely

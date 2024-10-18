@@ -38,15 +38,14 @@ class serialized_behavior_subject;
 
 namespace rpp::constraint {
 template <typename T>
-concept subject =
-    requires(const T& subj) {
-      { subj.get_observer() } -> rpp::constraint::observer;
-      { subj.get_observable() } -> rpp::constraint::observable;
-      {
-        subj.get_disposable()
-        } -> rpp::constraint::decayed_any_of<rpp::disposable_wrapper,
-                                             rpp::composite_disposable_wrapper>;
-    };
+concept subject = requires(const T& subj) {
+  { subj.get_observer() } -> rpp::constraint::observer;
+  { subj.get_observable() } -> rpp::constraint::observable;
+  {
+    subj.get_disposable()
+  } -> rpp::constraint::decayed_any_of<rpp::disposable_wrapper,
+                                       rpp::composite_disposable_wrapper>;
+};
 }  // namespace rpp::constraint
 
 namespace rpp::subjects::utils {

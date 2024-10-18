@@ -20,9 +20,10 @@ struct start_with_t {
   rpp::utils::tuple<TObservables...> observables{};
 
   template <rpp::constraint::observable TObservable>
-    requires rpp::constraint::observables_of_same_type<TObservable,
-                                                       TObservables...>
   auto operator()(TObservable&& observable) const {
+    static_assert(
+        rpp::constraint::observables_of_same_type<TObservable, TObservables...>,
+        "observables should be of same type");
     return observables.apply(&apply<TObservable>,
                              std::forward<TObservable>(observable));
   }
@@ -46,10 +47,12 @@ struct start_with_values_t {
   start_with_values_t(const TScheduler& scheduler, Args&&... args)
       : container{std::forward<Args>(args)...}, scheduler{scheduler} {}
 
-  template <rpp::constraint::observable_of_type<
-      rpp::utils::iterable_value_t<PackedContainer>>
-                TObservable>
+  template <rpp::constraint::observable TObservable>
   auto operator()(TObservable&& observable) const {
+    static_assert(
+        rpp::constraint::observable_of_type<
+            TObservable, rpp::utils::iterable_value_t<PackedContainer>>,
+        "observables should be of same type");
     return rpp::source::concat(rpp::source::from_iterable(container, scheduler),
                                std::forward<TObservable>(observable));
   }
@@ -77,7 +80,7 @@ namespace rpp::operators {
  * @param observables list of observables which should be used before current
  observable
  *
- * @warning #include <rpp/operators/start_with.hpp>
+ * @note `#include <rpp/operators/start_with.hpp>`
  *
  * @par Example
  * @snippet start_with.cpp start_with_observable
@@ -116,7 +119,7 @@ auto start_with(TObservable&& observable, TObservables&&... observables) {
  * @tparam memory_model memory_model strategy used to store provided values
  * @param vals list of values which should be emitted before current observable
  *
- * @warning #include <rpp/operators/start_with.hpp>
+ * @note `#include <rpp/operators/start_with.hpp>`
  *
  * @par Example
  * @snippet start_with.cpp start_with_values
@@ -151,7 +154,7 @@ auto start_with_values(T&& v, Ts&&... vals) {
  * @tparam memory_model memory_model strategy used to store provided values
  * @param vals list of values which should be emitted before current observable
  *
- * @warning #include <rpp/operators/start_with.hpp>
+ * @note `#include <rpp/operators/start_with.hpp>`
  *
  * @par Example
  * @snippet start_with.cpp start_with_values

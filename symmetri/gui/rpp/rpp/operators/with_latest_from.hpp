@@ -21,51 +21,57 @@
 namespace rpp::operators::details {
 template <rpp::constraint::observer Observer, typename TSelector,
           rpp::constraint::decayed_type... RestArgs>
-class with_latest_from_disposable final : public composite_disposable {
+class with_latest_from_state final {
  public:
-  explicit with_latest_from_disposable(Observer&& observer,
-                                       const TSelector& selector)
-      : observer_with_mutex{std::move(observer)}, selector{selector} {}
+  explicit with_latest_from_state(Observer&& observer,
+                                  const TSelector& selector)
+      : m_observer_with_mutex{std::move(observer)}, m_selector{selector} {
+    get_observer_under_lock()->set_upstream(m_disposable);
+  }
 
   rpp::utils::pointer_under_lock<Observer> get_observer_under_lock() {
-    return observer_with_mutex;
+    return m_observer_with_mutex;
   }
 
   rpp::utils::tuple<rpp::utils::value_with_mutex<std::optional<RestArgs>>...>&
   get_values() {
-    return values;
+    return m_values;
   }
 
-  const TSelector& get_selector() const { return selector; }
+  const TSelector& get_selector() const { return m_selector; }
+  const composite_disposable_wrapper& get_disposable() const {
+    return m_disposable;
+  }
 
  private:
-  rpp::utils::value_with_mutex<Observer> observer_with_mutex{};
+  rpp::utils::value_with_mutex<Observer> m_observer_with_mutex{};
   rpp::utils::tuple<rpp::utils::value_with_mutex<std::optional<RestArgs>>...>
-      values{};
-  RPP_NO_UNIQUE_ADDRESS TSelector selector;
+      m_values{};
+  composite_disposable_wrapper m_disposable =
+      composite_disposable_wrapper::make();
+  RPP_NO_UNIQUE_ADDRESS TSelector m_selector;
 };
 
 template <size_t I, rpp::constraint::observer Observer, typename TSelector,
           rpp::constraint::decayed_type... RestArgs>
 struct with_latest_from_inner_observer_strategy {
-  std::shared_ptr<with_latest_from_disposable<Observer, TSelector, RestArgs...>>
-      disposable{};
+  std::shared_ptr<with_latest_from_state<Observer, TSelector, RestArgs...>>
+      state{};
 
   void set_upstream(const rpp::disposable_wrapper& d) const {
-    disposable->add(d);
+    state->get_disposable().add(d);
   }
 
-  bool is_disposed() const { return disposable->is_disposed(); }
+  bool is_disposed() const { return state->get_disposable().is_disposed(); }
 
   template <typename T>
   void on_next(T&& v) const {
-    auto locked_value = disposable->get_values().template get<I>().lock();
+    auto locked_value = state->get_values().template get<I>().lock();
     locked_value->emplace(std::forward<T>(v));
   }
 
   void on_error(const std::exception_ptr& err) const {
-    disposable->get_observer_under_lock()->on_error(err);
-    disposable->dispose();
+    state->get_observer_under_lock()->on_error(err);
   }
 
   static constexpr rpp::utils::empty_function_t<> on_completed{};
@@ -75,47 +81,44 @@ template <rpp::constraint::observer Observer, typename TSelector,
           typename OriginalValue, rpp::constraint::decayed_type... RestArgs>
   requires std::invocable<TSelector, OriginalValue, RestArgs...>
 struct with_latest_from_observer_strategy {
-  using Disposable =
-      with_latest_from_disposable<Observer, TSelector, RestArgs...>;
+  using Disposable = with_latest_from_state<Observer, TSelector, RestArgs...>;
   using Result = std::invoke_result_t<TSelector, OriginalValue, RestArgs...>;
   using preferred_disposable_strategy =
       rpp::details::observers::none_disposable_strategy;
 
-  std::shared_ptr<Disposable> disposable{};
+  std::shared_ptr<Disposable> state{};
 
   void set_upstream(const rpp::disposable_wrapper& d) const {
-    disposable->add(d);
+    state->get_disposable().add(d);
   }
 
-  bool is_disposed() const { return disposable->is_disposed(); }
+  bool is_disposed() const { return state->get_disposable().is_disposed(); }
 
   template <typename T>
   void on_next(T&& v) const {
-    auto result = disposable->get_values().apply(
-        [this,
+    auto result = state->get_values().apply(
+        [&d = this->state,
          &v](rpp::utils::value_with_mutex<std::optional<RestArgs>>&... vals)
             -> std::optional<Result> {
           auto lock = std::scoped_lock{vals.get_mutex()...};
 
           if ((vals.get_value_unsafe().has_value() && ...))
-            return disposable->get_selector()(
+            return d->get_selector()(
                 rpp::utils::as_const(std::forward<T>(v)),
                 rpp::utils::as_const(vals.get_value_unsafe().value())...);
           return std::nullopt;
         });
 
     if (result.has_value())
-      disposable->get_observer_under_lock()->on_next(std::move(result).value());
+      state->get_observer_under_lock()->on_next(std::move(result).value());
   }
 
   void on_error(const std::exception_ptr& err) const {
-    disposable->get_observer_under_lock()->on_error(err);
-    disposable->dispose();
+    state->get_observer_under_lock()->on_error(err);
   }
 
   void on_completed() const {
-    disposable->get_observer_under_lock()->on_completed();
-    disposable->dispose();
+    state->get_observer_under_lock()->on_completed();
   }
 };
 
@@ -139,7 +142,7 @@ struct with_latest_from_t {
 
   template <rpp::details::observables::constraint::disposable_strategy Prev>
   using updated_disposable_strategy =
-      rpp::details::observables::fixed_disposable_strategy_selector<1>;
+      rpp::details::observables::default_disposable_strategy_selector;
 
   template <rpp::constraint::decayed_type Type,
             rpp::constraint::observer Observer>
@@ -153,14 +156,12 @@ struct with_latest_from_t {
             rpp::constraint::observer Observer>
   static auto subscribe_impl(Observer&& observer, const TSelector& selector,
                              const TObservables&... observables) {
-    using Disposable = with_latest_from_disposable<
+    using State = with_latest_from_state<
         Observer, TSelector,
         rpp::utils::extract_observable_type_t<TObservables>...>;
 
-    const auto disposable = disposable_wrapper_impl<Disposable>::make(
-        std::forward<Observer>(observer), selector);
-    auto ptr = disposable.lock();
-    ptr->get_observer_under_lock()->set_upstream(disposable.as_weak());
+    auto ptr =
+        std::make_shared<State>(std::forward<Observer>(observer), selector);
     subscribe(ptr, std::index_sequence_for<TObservables...>{}, observables...);
 
     return rpp::observer<
@@ -172,9 +173,9 @@ struct with_latest_from_t {
 
   template <rpp::constraint::observer Observer, size_t... I>
   static void subscribe(
-      const std::shared_ptr<with_latest_from_disposable<
+      const std::shared_ptr<with_latest_from_state<
           Observer, TSelector,
-          rpp::utils::extract_observable_type_t<TObservables>...>>& disposable,
+          rpp::utils::extract_observable_type_t<TObservables>...>>& state,
       std::index_sequence<I...>, const TObservables&... observables) {
     (..., observables.subscribe(
               rpp::observer<
@@ -182,7 +183,7 @@ struct with_latest_from_t {
                   with_latest_from_inner_observer_strategy<
                       I, Observer, TSelector,
                       rpp::utils::extract_observable_type_t<TObservables>...>>{
-                  disposable}));
+                  state}));
   }
 };
 }  // namespace rpp::operators::details
@@ -213,7 +214,7 @@ namespace rpp::operators {
  latests emissions from observables
  * @param observables are observables whose emissions would be combined when
  current observable sends new value
- * @warning #include <rpp/operators/with_latest_from.hpp>
+ * @note `#include <rpp/operators/with_latest_from.hpp>`
  *
  * @par Examples
  * @snippet with_latest_from.cpp with_latest_from custom selector
@@ -258,7 +259,7 @@ auto with_latest_from(TSelector&& selector, TObservable&& observable,
  *
  * @param observables are observables whose emissions would be combined when
  current observable sends new value
- * @warning #include <rpp/operators/with_latest_from.hpp>
+ * @note `#include <rpp/operators/with_latest_from.hpp>`
  *
  * @par Examples
  * @snippet with_latest_from.cpp with_latest_from

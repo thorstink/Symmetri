@@ -15,48 +15,64 @@
 #include <rpp/operators/fwd.hpp>
 
 namespace rpp::operators::details {
+template <rpp::constraint::observer TObserver>
+struct on_error_resume_next_inner_observer_strategy {
+  using preferred_disposable_strategy =
+      rpp::details::observers::none_disposable_strategy;
+
+  std::shared_ptr<TObserver> observer;
+
+  template <typename T>
+  void on_next(T&& v) const {
+    observer->on_next(std::forward<T>(v));
+  }
+
+  void on_error(const std::exception_ptr& err) const {
+    observer->on_error(err);
+  }
+
+  void on_completed() const { observer->on_completed(); }
+
+  void set_upstream(const disposable_wrapper& d) { observer->set_upstream(d); }
+
+  bool is_disposed() const { return observer->is_disposed(); }
+};
+
 template <rpp::constraint::observer TObserver,
           rpp::constraint::decayed_type Selector>
 struct on_error_resume_next_observer_strategy {
   using preferred_disposable_strategy =
       rpp::details::observers::none_disposable_strategy;
 
-  RPP_NO_UNIQUE_ADDRESS mutable TObserver observer;
-  RPP_NO_UNIQUE_ADDRESS Selector selector;
-  // Manually control disposable to ensure observer is not used after move in
-  // on_error emission
-  mutable rpp::composite_disposable_wrapper disposable =
-      composite_disposable_wrapper::make();
+  on_error_resume_next_observer_strategy(TObserver&& observer,
+                                         const Selector& selector)
+      : state{std::make_shared<TObserver>(std::move(observer))},
+        selector{selector} {}
 
-  RPP_CALL_DURING_CONSTRUCTION(observer.set_upstream(disposable););
+  std::shared_ptr<TObserver> state;
+  RPP_NO_UNIQUE_ADDRESS Selector selector;
 
   template <typename T>
   void on_next(T&& v) const {
-    observer.on_next(std::forward<T>(v));
+    state->on_next(std::forward<T>(v));
   }
 
   void on_error(const std::exception_ptr& err) const {
-    std::optional<std::invoke_result_t<Selector, std::exception_ptr>>
-        selector_obs;
     try {
-      selector_obs.emplace(selector(err));
+      selector(err).subscribe(
+          on_error_resume_next_inner_observer_strategy<TObserver>{state});
     } catch (...) {
-      observer.on_error(std::current_exception());
+      state->on_error(std::current_exception());
     }
-    if (selector_obs.has_value()) {
-      std::move(selector_obs).value().subscribe(std::move(observer));
-    }
-    disposable.dispose();
   }
 
-  void on_completed() const {
-    observer.on_completed();
-    disposable.dispose();
+  void on_completed() const { state->on_completed(); }
+
+  void set_upstream(const disposable_wrapper& d) const {
+    state->set_upstream(d);
   }
 
-  void set_upstream(const disposable_wrapper& d) { disposable.add(d); }
-
-  bool is_disposed() const { return disposable.is_disposed(); }
+  bool is_disposed() const { return state->is_disposed(); }
 };
 
 template <rpp::constraint::decayed_type Selector>
@@ -84,7 +100,7 @@ struct on_error_resume_next_t
 
   template <rpp::details::observables::constraint::disposable_strategy Prev>
   using updated_disposable_strategy =
-      rpp::details::observables::atomic_dynamic_disposable_strategy_selector<1>;
+      rpp::details::observables::default_disposable_strategy_selector;
 };
 }  // namespace rpp::operators::details
 
@@ -95,14 +111,14 @@ namespace rpp::operators {
  *
  * @marble on_error_resume_next
    {
-       source observable                                  : +-1-x
+       source observable                                  : +-1-#
        operator "on_error_resume_next: () => obs(-2-3-|)" : +-1-2-3-|
    }
  *
  * @param selector callable taking a std::exception_ptr and returning observable
  to continue on
  *
- * @warning #include <rpp/operators/on_error_resume_next.hpp>
+ * @note `#include <rpp/operators/on_error_resume_next.hpp>`
  *
  * @ingroup error_handling_operators
  * @see https://reactivex.io/documentation/operators/catch.html

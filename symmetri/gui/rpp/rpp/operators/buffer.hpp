@@ -35,8 +35,11 @@ class buffer_observer_strategy {
   void on_next(T&& v) const {
     m_bucket.push_back(std::forward<T>(v));
     if (m_bucket.size() == m_bucket.capacity()) {
+      const auto capacity = m_bucket.capacity();
       m_observer.on_next(std::move(m_bucket));
+
       m_bucket.clear();
+      m_bucket.reserve(capacity);
     }
   }
 
@@ -91,7 +94,7 @@ namespace rpp::operators {
  observables.
  *
  * @param count number of items being bundled.
- * @warning #include <rpp/operators/buffer.hpp>
+ * @note `#include <rpp/operators/buffer.hpp>`
  *
  * @par Example:
  * @snippet buffer.cpp buffer

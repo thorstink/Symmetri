@@ -9,7 +9,6 @@
 
 #pragma once
 
-#include <deque>
 #include <rpp/disposables/disposable_wrapper.hpp>
 #include <rpp/observers/observer.hpp>
 #include <rpp/schedulers/fwd.hpp>

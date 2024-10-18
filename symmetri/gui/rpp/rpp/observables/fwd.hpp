@@ -18,11 +18,9 @@ namespace rpp::constraint {
 template <typename S, typename T>
 concept observable_strategy = requires(
     const S& strategy, rpp::details::observers::fake_observer<T>&& observer) {
-                                {
-                                  strategy.subscribe(std::move(observer))
-                                  } -> std::same_as<void>;
-                                typename S::value_type;
-                              };
+  { strategy.subscribe(std::move(observer)) } -> std::same_as<void>;
+  typename S::value_type;
+};
 }  // namespace rpp::constraint
 
 namespace rpp::details::observables {
@@ -41,24 +39,15 @@ struct fake_strategy {
 };
 }  // namespace rpp::details::observables
 
-namespace rpp {
+namespace rpp::details::observables {
 template <typename TStrategy, typename... TStrategies>
-class observable_chain_strategy;
+class chain;
+}  // namespace rpp::details::observables
 
-template <constraint::decayed_type Type,
-          constraint::observable_strategy<Type> Strategy>
+namespace rpp {
+template <rpp::constraint::decayed_type Type,
+          rpp::constraint::observable_strategy<Type> Strategy>
 class observable;
-
-template <constraint::decayed_type Type>
-class dynamic_observable;
-
-template <constraint::decayed_type Type,
-          constraint::observable_strategy<Type> Strategy>
-class blocking_observable;
-
-template <constraint::decayed_type KeyType, constraint::decayed_type Type,
-          constraint::observable_strategy<Type> Strategy>
-class grouped_observable;
 }  // namespace rpp
 
 namespace rpp::constraint {
@@ -84,69 +73,6 @@ concept observable_of_type =
     observable<T> &&
     std::same_as<utils::extract_observable_type_t<T>, std::decay_t<Type>>;
 
-template <typename Op, typename TObs>
-concept operator_observable_transform = requires(const Op& op, TObs obs) {
-                                          {
-                                            op(static_cast<TObs>(obs))
-                                            } -> rpp::constraint::observable;
-                                        };
-
-template <typename Op, typename Type>
-concept operator_base =
-    requires(const Op& op) {
-      typename std::decay_t<Op>::template operator_traits<Type>;
-    } &&
-    details::observables::constraint::disposable_strategy<
-        details::observables::deduce_updated_disposable_strategy<
-            std::decay_t<Op>, typename observable_chain_strategy<
-                                  details::observables::fake_strategy<Type>>::
-                                  expected_disposable_strategy>>;
-
-template <typename Op, typename Type>
-concept operator_subscribe =
-    operator_base<Op, Type> &&
-    requires(const Op& op,
-             rpp::details::observers::fake_observer<typename std::decay_t<
-                 Op>::template operator_traits<Type>::result_type>&& observer,
-             const observable_chain_strategy<
-                 details::observables::fake_strategy<Type>>& chain) {
-      { op.subscribe(std::move(observer), chain) };
-    };
-
-template <typename Op, typename Type>
-concept operator_lift =
-    operator_base<Op, Type> &&
-    requires(const Op& op,
-             rpp::details::observers::fake_observer<typename std::decay_t<
-                 Op>::template operator_traits<Type>::result_type>&& observer) {
-      {
-        op.template lift<Type>(std::move(observer))
-        } -> rpp::constraint::observer_of_type<Type>;
-    };
-
-template <typename Op, typename Type, typename DisposableStrategy>
-concept operator_lift_with_disposable_strategy =
-    operator_base<Op, Type> &&
-    requires(const Op& op,
-             rpp::details::observers::fake_observer<typename std::decay_t<
-                 Op>::template operator_traits<Type>::result_type>&& observer) {
-      {
-        op.template lift_with_disposable_strategy<Type, DisposableStrategy>(
-            std::move(observer))
-        } -> rpp::constraint::observer_of_type<Type>;
-    };
-
-template <typename Op, typename Type, typename DisposableStrategy>
-concept operator_chain =
-    operator_base<std::decay_t<Op>, Type> &&
-    requires {
-      typename std::decay_t<Op>::template operator_traits<Type>::result_type;
-    } &&
-    (operator_subscribe<std::decay_t<Op>, Type> ||
-     operator_lift<std::decay_t<Op>, Type> ||
-     operator_lift_with_disposable_strategy<std::decay_t<Op>, Type,
-                                            DisposableStrategy>);
-
 template <typename TObservable, typename... TObservables>
 concept observables_of_same_type =
     rpp::constraint::observable<TObservable> &&
@@ -154,14 +80,69 @@ concept observables_of_same_type =
     (std::same_as<rpp::utils::extract_observable_type_t<TObservable>,
                   rpp::utils::extract_observable_type_t<TObservables>> &&
      ...);
+
+template <typename Op, typename Type>
+concept operator_subscribe =
+    requires(const Op& op,
+             rpp::details::observers::fake_observer<typename std::decay_t<
+                 Op>::template operator_traits<Type>::result_type>&& observer,
+             const details::observables::chain<
+                 details::observables::fake_strategy<Type>>& chain) {
+      { op.subscribe(std::move(observer), chain) };
+    };
+
+template <typename Op, typename Type>
+concept operator_lift =
+    requires(const Op& op,
+             rpp::details::observers::fake_observer<typename std::decay_t<
+                 Op>::template operator_traits<Type>::result_type>&& observer) {
+      {
+        op.template lift<Type>(std::move(observer))
+      } -> rpp::constraint::observer_of_type<Type>;
+    };
+
+template <typename Op, typename Type, typename DisposableStrategy>
+concept operator_lift_with_disposable_strategy =
+    requires(const Op& op,
+             rpp::details::observers::fake_observer<typename std::decay_t<
+                 Op>::template operator_traits<Type>::result_type>&& observer) {
+      {
+        op.template lift_with_disposable_strategy<Type, DisposableStrategy>(
+            std::move(observer))
+      } -> rpp::constraint::observer_of_type<Type>;
+    };
+
+template <typename Op, typename Type, typename DisposableStrategy>
+concept operator_chain =
+    requires() {
+      typename std::decay_t<Op>::template operator_traits<Type>;
+      typename std::decay_t<Op>::template operator_traits<Type>::result_type;
+    } &&
+    details::observables::constraint::disposable_strategy<
+        details::observables::deduce_updated_disposable_strategy<
+            std::decay_t<Op>, typename details::observables::chain<
+                                  details::observables::fake_strategy<Type>>::
+                                  expected_disposable_strategy>> &&
+    (operator_subscribe<std::decay_t<Op>, Type> ||
+     operator_lift<std::decay_t<Op>, Type> ||
+     operator_lift_with_disposable_strategy<std::decay_t<Op>, Type,
+                                            DisposableStrategy>);
+
 }  // namespace rpp::constraint
 
-#define RPP_CHECK_IF_TRAIT_ASSERTS_SATISFIED(Op, Type)                   \
-  /* operator_traits can be instantiated if all inner static_asserts are \
-   * fine*/                                                              \
-  if constexpr (requires {                                               \
-                  {                                                      \
-                    typename std::decay_t<Op>::template operator_traits< \
-                        Type>{}                                          \
-                  };                                                     \
-                })
+namespace rpp {
+template <constraint::decayed_type Type>
+class dynamic_observable;
+
+template <constraint::decayed_type Type,
+          constraint::observable_strategy<Type> Strategy>
+class blocking_observable;
+
+template <constraint::decayed_type KeyType, constraint::decayed_type Type,
+          constraint::observable_strategy<Type> Strategy>
+class grouped_observable;
+
+template <constraint::decayed_type Type,
+          rpp::constraint::observable_of_type<Type>... Observables>
+class variant_observable;
+}  // namespace rpp
