@@ -184,7 +184,7 @@ void draw_graph(const model::ViewModel& vm) {
   }
   offset = ImGui::GetCursorScreenPos() + ImVec2(vm.scrolling.x, vm.scrolling.y);
 
-  char view_name[256] = "";
+  static char view_name[256] = "";
   strcpy(view_name, vm.active_file.c_str());
 
   ImGui::PushItemWidth(-1);

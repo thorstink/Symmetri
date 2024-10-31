@@ -187,6 +187,7 @@ ImGuiInputTextCallback updatePriority(const size_t id) {
   static size_t idx;
   idx = id;
   return [](ImGuiInputTextCallbackData* data) -> int {
+    data->ClearSelection();
     if ((data->Buf != NULL) && (data->Buf[0] == '\0')) {
     } else if (strcmp(data->Buf, "-") == 0) {
     } else {
@@ -206,6 +207,7 @@ ImGuiInputTextCallback updatePlaceName(const size_t id) {
   idx = id;
 
   return [](ImGuiInputTextCallbackData* data) -> int {
+    data->ClearSelection();
     rxdispatch::push(
         [=, name = std::string(data->Buf)](model::Model&& m) mutable {
           m.data->net.place[idx] = name;
@@ -219,6 +221,7 @@ ImGuiInputTextCallback updateTransitionName(const size_t id) {
   static size_t idx;
   idx = id;
   return [](ImGuiInputTextCallbackData* data) -> int {
+    data->ClearSelection();
     rxdispatch::push(
         [=, name = std::string(data->Buf)](model::Model&& m) mutable {
           m.data->net.transition[idx] = name;
@@ -284,6 +287,7 @@ void renderNodeEntry(bool is_place, const std::string& name, size_t idx,
 }
 
 int updateActiveFile(ImGuiInputTextCallbackData* data) {
+  data->ClearSelection();
   if (data->Buf != nullptr) {
     rxdispatch::push([file_name = std::string(data->Buf)](model::Model&& m) {
       m.data->active_file = std::filesystem::path(file_name);

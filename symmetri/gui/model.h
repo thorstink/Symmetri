@@ -27,7 +27,6 @@ struct Model {
     std::optional<std::tuple<bool, size_t>> selected_node_idx,
         selected_target_node_idx;
 
-    std::filesystem::path working_dir;
     std::optional<std::filesystem::path> active_file;
     std::vector<Coordinate> t_positions, p_positions;
     std::vector<size_t> t_view, p_view;

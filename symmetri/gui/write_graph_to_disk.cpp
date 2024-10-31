@@ -63,7 +63,6 @@ model::Reducer writeToDisk(const std::filesystem::path& path) {
 
     doc.SaveFile(path.c_str());
 
-    m.working_dir = path.parent_path();
     m.active_file = path;
     return m_ptr;
   };
