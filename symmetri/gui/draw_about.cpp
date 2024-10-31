@@ -40,8 +40,13 @@ void draw_about(const model::ViewModel&) {
   ImGui::SameLine();
   ImGui::InvisibleButton("Fixed", ImVec2(100.0f, 1.0f));  // Fixed size
   ImGui::SameLine();
-  if (ImGui::Button("Copy")) {
-    // Copy usefull things to clipboard
+  if (ImGui::Button("Copy to clipboard")) {
+    ImGui::LogToClipboard();
+    ImGui::LogText(
+        "Farbart version %s\nA GUI for creating and simulating "
+        "Symmetri-nets.",
+        STR(VERSION));
+    ImGui::LogFinish();
   }
 
   ImGui::End();
