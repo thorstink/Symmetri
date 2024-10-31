@@ -55,10 +55,9 @@ void draw_menu(const model::ViewModel& vm) {
     static char view_name[128] = "";
     strcpy(view_name, model_name.c_str());
     ImGui::PushItemWidth(-1);
-    ImGui::InputText("##input tex", view_name, 128,
-                     ImGuiInputTextFlags_CallbackEdit,
-                     is_place ? updatePlaceName(selected_idx)
-                              : updateTransitionName(selected_idx));
+    ImGui::InputText(
+        "##input tex", view_name, 128, ImGuiInputTextFlags_CallbackEdit,
+        (is_place ? updatePlaceName : updateTransitionName)(selected_idx));
     ImGui::PopItemWidth();
     label_id = 0;
     if (is_place) {
@@ -108,7 +107,7 @@ void draw_menu(const model::ViewModel& vm) {
   ImGui::Dummy(ImVec2(0.0f, 20.0f));
 
   ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
-  if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
+  if (ImGui::BeginTabBar("SymmetriTabBar", tab_bar_flags)) {
     if (ImGui::BeginTabItem("Places")) {
       static char new_place[128] = "Not yet available...";
       ImGui::PushItemWidth(-37);
