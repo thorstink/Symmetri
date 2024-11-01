@@ -11,14 +11,15 @@ void push(model::Reducer&& r);
 
 inline auto get_events_observable() {
   return rpp::source::create<model::Reducer>([](auto&& observer) {
-    model::Reducer f;
-    auto mainthreadid = std::this_thread::get_id();
-    std::cout << "dispatch " << mainthreadid << std::endl;
-    while (not observer.is_disposed()) {
-      getQueue().wait_dequeue(f);
-      observer.on_next(std::move(f));
-    }
-  });
+           model::Reducer f;
+           auto mainthreadid = std::this_thread::get_id();
+           while (not observer.is_disposed()) {
+             std::cout << "dispatch " << mainthreadid << std::endl;
+             getQueue().wait_dequeue(f);
+             observer.on_next(std::move(f));
+           }
+         }) |
+         rpp::operators::subscribe_on(rpp::schedulers::thread_pool{3});
 }
 
 }  // namespace rxdispatch

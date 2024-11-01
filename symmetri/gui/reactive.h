@@ -17,11 +17,8 @@ inline rpp::schedulers::run_loop rl{};
 auto go() {
   using namespace rximgui;
 
-  auto reducers = rxdispatch::get_events_observable() |
-                  rpp::operators::subscribe_on(rpp::schedulers::new_thread{});
-
   auto view_models =
-      reducers |
+      rxdispatch::get_events_observable() | rpp::operators::observe_on(rl) |
       rpp::operators::scan(
           model::Model{},
           [](auto &&m, const auto &f) {
@@ -37,9 +34,8 @@ auto go() {
               return std::move(m);
             }
           }) |
-      rpp::operators::observe_on(rl) | rpp::operators::map([](auto &&model) {
-        return model::ViewModel(std::move(model));
-      });
+      rpp::operators::map(
+          [](auto &&model) { return model::ViewModel(std::move(model)); });
 
   return frames |
          rpp::operators::with_latest_from(

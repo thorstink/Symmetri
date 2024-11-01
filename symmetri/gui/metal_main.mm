@@ -29,7 +29,9 @@ int main(int, char **) {
   (void)io;
 
   io.Fonts->AddFontFromFileTTF(
-      "/Users/thomashorstink/Projects/Symmetri/symmetri/gui/imgui/misc/fonts/DroidSans.ttf", 15);
+      "/Users/thomashorstink/Projects/Symmetri/symmetri/gui/imgui/misc/fonts/CascadiaCode.ttf", 15);
+
+  // ImGui::GetStyle().ScaleAllSizes(1.0f);
 
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls

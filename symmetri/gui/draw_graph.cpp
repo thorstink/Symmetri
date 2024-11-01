@@ -5,6 +5,7 @@
 #include <math.h>  // fmodf
 
 #include <algorithm>
+#include <filesystem>
 #include <optional>
 #include <ranges>
 #include <string_view>
@@ -186,10 +187,20 @@ void draw_graph(const model::ViewModel& vm) {
 
   static char view_name[256] = "";
   strcpy(view_name, vm.active_file.c_str());
-
   ImGui::PushItemWidth(-1);
+
+  // currently we render the text green if the file does not yet exist.
+  const bool file_exists =
+      std::filesystem::is_regular_file(std::filesystem::path(vm.active_file));
+  if (not file_exists) {
+    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 255, 0, 255));
+  }
   ImGui::InputText("##filepath", view_name, 256,
                    ImGuiInputTextFlags_CallbackEdit, &updateActiveFile);
+  if (not file_exists) {
+    ImGui::PopStyleColor();
+  }
+
   ImGui::PopItemWidth();
 
   const auto io = ImGui::GetIO();
