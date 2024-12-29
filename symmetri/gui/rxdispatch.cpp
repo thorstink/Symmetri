@@ -3,9 +3,9 @@
 #include "blockingconcurrentqueue.h"
 namespace rxdispatch {
 
-static moodycamel::BlockingConcurrentQueue<model::Reducer> reducer_queue{10};
+static moodycamel::BlockingConcurrentQueue<Update> reducer_queue{10};
 
-moodycamel::BlockingConcurrentQueue<model::Reducer>& getQueue() {
+moodycamel::BlockingConcurrentQueue<Update>& getQueue() {
   return reducer_queue;
 }
 
@@ -13,8 +13,6 @@ void unsubscribe() {
   push(model::Reducer([](auto&& m) { return m; }));
 }
 
-void push(model::Reducer&& r) {
-  reducer_queue.enqueue(std::forward<model::Reducer>(r));
-}
+void push(Update&& r) { reducer_queue.enqueue(std::forward<Update>(r)); }
 
 }  // namespace rxdispatch

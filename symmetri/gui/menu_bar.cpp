@@ -5,6 +5,7 @@
 #include "imgui.h"
 #include "imfilebrowser.h"
 // clang-format on
+#include "draw_about.h"
 #include "load_file.h"
 #include "reducers.h"
 #include "rxdispatch.h"
@@ -50,7 +51,7 @@ void draw_menu_bar(const model::ViewModel &vm) {
 
     if (ImGui::BeginMenu("Help")) {
       if (ImGui::MenuItem("About")) {
-        addAboutView();
+        addView(&draw_about);
       }
       ImGui::EndMenu();
     }

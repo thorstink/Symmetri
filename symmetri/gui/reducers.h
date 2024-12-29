@@ -1,5 +1,8 @@
 #pragma once
 
+#include <future>
+#include <memory>
+
 #include "imgui.h"
 #include "rxdispatch.h"
 #include "symmetri/colors.hpp"
@@ -56,6 +59,30 @@ void tryFire(size_t transition_idx);
 
 void updateTransitionOutputColor(size_t transition_idx, symmetri::Token color);
 
-void addAboutView();
+auto& addViewBlocking(auto&& v) {
+  auto accumulate_promise = std::make_shared<std::promise<void>>();
+  static auto fut = accumulate_promise->get_future();
+  rxdispatch::push([=]() {
+    return [=](model::Model&& m) {
+      m.data->drawables.push_back(std::move(v));
+      accumulate_promise->set_value();
+      return m;
+    };
+  });
+  return fut;
+  // return std::move(fut);
+};
 
-void removeAboutView();
+void addView(auto&& v) {
+  rxdispatch::push([=](model::Model&& m) {
+    m.data->drawables.push_back(std::move(v));
+    return m;
+  });
+};
+
+void removeView(auto&& v) {
+  rxdispatch::push([=](model::Model&& m) {
+    std::erase(m.data->drawables, std::move(v));
+    return m;
+  });
+};

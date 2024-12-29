@@ -34,6 +34,7 @@ set(APP_SOURCES
     draw_menu.cpp
     draw_ui.cpp
     draw_about.cpp
+    draw_popups.cpp
     simulation_menu.cpp
     model.cpp
     load_file.cpp

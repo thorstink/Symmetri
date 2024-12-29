@@ -35,7 +35,7 @@ void draw_about(const model::ViewModel&) {
   AlignForWidth(width);
 
   if (ImGui::Button("Ok")) {
-    removeAboutView();
+    removeView(&draw_about);
   }
   ImGui::SameLine();
   ImGui::InvisibleButton("Fixed", ImVec2(100.0f, 1.0f));  // Fixed size
