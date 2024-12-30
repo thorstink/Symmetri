@@ -54,7 +54,7 @@ struct ViewModel {
   std::vector<symmetri::AugmentedToken> tokens;
 
   const symmetri::Petri::PTNet &net;
-  const std::vector<Coordinate> &t_positions, p_positions;
+  const std::vector<Coordinate> &t_positions, &p_positions;
   std::vector<size_t> t_fireable;
 
   ViewModel() = delete;
