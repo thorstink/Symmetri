@@ -62,6 +62,7 @@ struct ViewModel {
 };
 
 using Reducer = std::function<Model(Model &&)>;
+using Computer = std::function<Reducer(void)>;
 
 Model initializeModel();
 

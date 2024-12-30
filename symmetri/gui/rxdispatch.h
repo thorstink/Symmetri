@@ -10,8 +10,7 @@
 
 namespace rxdispatch {
 
-using Update =
-    std::variant<model::Reducer, std::function<model::Reducer(void)>>;
+using Update = std::variant<model::Reducer, model::Computer>;
 
 void unsubscribe();
 moodycamel::BlockingConcurrentQueue<Update>& getQueue();
@@ -43,10 +42,7 @@ inline auto get_events_observable() {
          }) |
          rpp::operators::subscribe_on(rpp::schedulers::new_thread{}) |
          rpp::operators::flat_map(
-             [](auto value) { return std::visit(VisitPackage(), value); }) |
-         rpp::operators::tap([](auto&&) {
-           std::cout << "tap " << std::this_thread::get_id() << std::endl;
-         });
+             [](auto&& value) { return std::visit(VisitPackage(), value); });
 }
 
 }  // namespace rxdispatch

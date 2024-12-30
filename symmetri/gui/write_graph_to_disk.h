@@ -5,5 +5,6 @@
 #include "model.h"
 
 namespace farbart {
-model::Reducer writeToDisk(const std::filesystem::path& path);
+model::Computer writeToDisk(const model::ViewModel &vm);
+
 }  // namespace farbart

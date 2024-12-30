@@ -32,8 +32,7 @@ void draw_menu_bar(const model::ViewModel &vm) {
         file_dialog.Open();
       }
       if (ImGui::MenuItem("Save")) {
-        rxdispatch::push(
-            farbart::writeToDisk(std::filesystem::path(vm.active_file)));
+        rxdispatch::push(farbart::writeToDisk(vm));
       }
       // Exit...
       ImGui::EndMenu();
