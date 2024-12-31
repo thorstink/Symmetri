@@ -59,18 +59,15 @@ void tryFire(size_t transition_idx);
 
 void updateTransitionOutputColor(size_t transition_idx, symmetri::Token color);
 
-auto& addViewBlocking(auto&& v) {
+auto addViewBlocking(auto&& v) {
   auto accumulate_promise = std::make_shared<std::promise<void>>();
-  static auto fut = accumulate_promise->get_future();
-  rxdispatch::push([=]() {
-    return [=](model::Model&& m) {
-      m.data->drawables.push_back(std::move(v));
-      accumulate_promise->set_value();
-      return m;
-    };
+  auto fut = accumulate_promise->get_future();
+  rxdispatch::push([q = std::move(accumulate_promise), v](model::Model&& m) {
+    m.data->drawables.push_back(v);
+    m.data->blockers.emplace(v, std::move(*q));
+    return m;
   });
   return fut;
-  // return std::move(fut);
 };
 
 void addView(auto&& v) {

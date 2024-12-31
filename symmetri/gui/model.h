@@ -1,6 +1,8 @@
 #pragma once
 
 #include <filesystem>
+#include <future>
+#include <map>
 #include <memory>
 #include <optional>
 
@@ -28,6 +30,7 @@ struct Model {
         selected_target_node_idx;
 
     std::optional<std::filesystem::path> active_file;
+    std::map<Drawable, std::promise<void>> blockers;
     std::vector<Coordinate> t_positions, p_positions;
     std::vector<size_t> t_view, p_view;
     std::vector<const char *> colors = symmetri::Token::getColors();
