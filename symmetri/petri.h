@@ -240,11 +240,10 @@ struct Petri {
      */
     std::vector<Callback> store;
 
-    void registerCallback(const std::string &t,
-                          const Callback &callback) noexcept {
+    void registerCallback(const std::string &t, Callback &&callback) noexcept {
       if (std::find(transition.begin(), transition.end(), t) !=
           transition.end()) {
-        store[toIndex(transition, t)] = callback;
+        store[toIndex(transition, t)] = std::move(callback);
       }
     }
   } net;  ///< Is a data-oriented design of a Petri net

@@ -77,7 +77,7 @@ class PetriNet final {
    * @param callback the callback
    */
   void registerCallback(const std::string &transition,
-                        const Callback &callback) const noexcept;
+                        Callback &&callback) const noexcept;
 
   /**
    * @brief Get the Marking object. This function is thread-safe and be called

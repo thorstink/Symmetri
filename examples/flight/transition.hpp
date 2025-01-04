@@ -22,13 +22,22 @@ class Foo {
 
  public:
   Foo(std::string m, unsigned count = 5, int s = 1)
-      : name(m), count(count), interval(s), cancel_(false), is_paused_(false) {}
-  Foo(const Foo &o)
-      : name(o.name),
-        count(o.count),
-        interval(o.interval),
-        cancel_(false),
-        is_paused_(false) {}
+      : name(m), count(count), interval(s), cancel_(false), is_paused_(false) {
+    printf("ctor %s\n", m.c_str());
+  }
+  Foo(Foo&& f)
+      : name(std::move(f.name)),
+        count(std::move(f.count)),
+        interval(std::move(f.interval)),
+        cancel_(f.cancel_.load()),
+        is_paused_(f.is_paused_.load()) {
+    printf("move %s\n", f.name.c_str());
+  }
+  ~Foo() { printf("deconstructor %s\n", name.c_str()); }
+
+  Foo(const Foo& o) = delete;
+  Foo& operator=(Foo&& other) = delete;
+  Foo& operator=(const Foo& other) = delete;
 
   bool fire() const {
     cancel_.store(false);
