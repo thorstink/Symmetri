@@ -76,7 +76,12 @@ void loadPetriNet(const std::filesystem::path& file) {
 
     m.colors = symmetri::Token::getColors();
 
-    append(std::move(new_net.priority), m.net.priority);
+    // For GCC, we copy the priority table because of some weird GCC13/14 bug...
+    // should eventually just become: append(std::move(new_net.priority),
+    // m.net.priority); ...
+    m.net.priority.insert(m.net.priority.end(), new_net.priority.begin(),
+                          new_net.priority.end());
+
     append(std::move(new_net.transition), m.net.transition);
     append(std::move(new_net.place), m.net.place);
     append(std::move(new_net.output_n), m.net.output_n);

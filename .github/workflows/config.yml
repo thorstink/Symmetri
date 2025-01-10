@@ -28,7 +28,7 @@ jobs:
     - name: "build linux"
       run: |
         sudo apt-get update
-        sudo apt-get install -y libglfw3-dev libsdl2-dev gcc-multilib g++-multilib libfreetype6-dev libvulkan-dev
+        sudo apt-get install --no-install-recommends -y libglfw3-dev libsdl2-dev gcc-multilib g++-multilib libfreetype6-dev libvulkan-dev
         git submodule update --init --recursive
         mkdir build
         cd build
@@ -47,7 +47,7 @@ jobs:
     - name: "tests with ASAN"
       run: |
         sudo apt-get update
-        sudo apt-get install -y libglfw3-dev libsdl2-dev gcc-multilib g++-multilib libfreetype6-dev libvulkan-dev
+        sudo apt-get install --no-install-recommends -y libglfw3-dev libsdl2-dev gcc-multilib g++-multilib libfreetype6-dev libvulkan-dev
         git submodule update --init --recursive
         mkdir build
         cd build
