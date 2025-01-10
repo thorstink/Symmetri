@@ -25,16 +25,7 @@ class Foo {
       : name(m), count(count), interval(s), cancel_(false), is_paused_(false) {
     printf("ctor %s\n", m.c_str());
   }
-  Foo(Foo&& f)
-      : name(std::move(f.name)),
-        count(std::move(f.count)),
-        interval(std::move(f.interval)),
-        cancel_(f.cancel_.load()),
-        is_paused_(f.is_paused_.load()) {
-    printf("move %s\n", f.name.c_str());
-  }
-  ~Foo() { printf("deconstructor %s\n", name.c_str()); }
-
+  Foo(Foo&& f) = delete;
   Foo(const Foo& o) = delete;
   Foo& operator=(Foo&& other) = delete;
   Foo& operator=(const Foo& other) = delete;
