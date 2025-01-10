@@ -12,7 +12,7 @@ convert(const Net &_net) {
   store.reserve(transition_count);
   for (const auto &[t, io] : _net) {
     transitions.push_back(t);
-    store.emplace_back(DirectMutation{});
+    store.emplace_back(identity<DirectMutation>{});
     for (const auto &p : io.first) {
       places.push_back(p.first);
     }

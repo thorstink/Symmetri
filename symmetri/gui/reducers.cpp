@@ -58,7 +58,8 @@ void addNode(bool is_place, ImVec2 pos) {
       m.data->net.output_n.push_back({});
       m.data->net.input_n.push_back({});
       m.data->net.priority.push_back(0);
-      m.data->net.store.push_back(symmetri::DirectMutation{});
+      m.data->net.store.emplace_back(
+          symmetri::identity<symmetri::DirectMutation>{});
       m.data->t_positions.push_back(model::Coordinate{pos.x, pos.y});
       m.data->t_view.push_back(m.data->net.transition.size() - 1);
     }
@@ -77,7 +78,8 @@ void removeArc(bool is_input, size_t transition_idx, size_t sub_idx) {
     const size_t new_idx = m.data->net.transition.size();
     // add it again to the view...
     m.data->net.transition.push_back(m.data->net.transition[transition_idx]);
-    m.data->net.store.push_back(m.data->net.store[transition_idx]);
+    m.data->net.store.emplace_back(
+        symmetri::identity<symmetri::DirectMutation>{});
     m.data->net.priority.push_back(m.data->net.priority[transition_idx]);
     m.data->t_positions.push_back(m.data->t_positions[transition_idx]);
     m.data->t_view.push_back(new_idx);
@@ -118,7 +120,9 @@ void addArc(bool is_place, size_t source, size_t target,
     m.data->net.output_n.push_back(m.data->net.output_n[transition_idx]);
     m.data->net.input_n.push_back(m.data->net.input_n[transition_idx]);
     m.data->net.priority.push_back(m.data->net.priority[transition_idx]);
-    m.data->net.store.push_back(m.data->net.store[transition_idx]);
+    m.data->net.store.emplace_back(
+        symmetri::identity<symmetri::DirectMutation>{});
+
     m.data->t_positions.push_back(m.data->t_positions[transition_idx]);
     m.data->t_view.push_back(new_transition_idx);
 

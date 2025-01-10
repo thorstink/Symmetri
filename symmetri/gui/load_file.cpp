@@ -10,6 +10,16 @@
 #include "symmetri/parsers.h"
 #include "symmetri/symmetri.h"
 
+template <typename T>
+inline void append(std::vector<T> source, std::vector<T>& destination) {
+  if (destination.empty())
+    destination = std::move(source);
+  else
+    destination.insert(std::end(destination),
+                       std::make_move_iterator(std::begin(source)),
+                       std::make_move_iterator(std::end(source)));
+}
+
 void loadPetriNet(const std::filesystem::path& file) {
   rxdispatch::push([=](model::Model&& model) {
     auto& m = *model.data;
@@ -66,19 +76,12 @@ void loadPetriNet(const std::filesystem::path& file) {
 
     m.colors = symmetri::Token::getColors();
 
-    // Move elements from src to dest.
-    m.net.transition.insert(m.net.transition.end(), new_net.transition.begin(),
-                            new_net.transition.end());
-    m.net.place.insert(m.net.place.end(), new_net.place.begin(),
-                       new_net.place.end());
-    m.net.input_n.insert(m.net.input_n.end(), new_net.input_n.begin(),
-                         new_net.input_n.end());
-    m.net.output_n.insert(m.net.output_n.end(), new_net.output_n.begin(),
-                          new_net.output_n.end());
-    m.net.priority.insert(m.net.priority.end(), new_net.priority.begin(),
-                          new_net.priority.end());
-    m.net.store.insert(m.net.store.begin(), new_net.store.begin(),
-                       new_net.store.end());
+    append(std::move(new_net.priority), m.net.priority);
+    append(std::move(new_net.transition), m.net.transition);
+    append(std::move(new_net.place), m.net.place);
+    append(std::move(new_net.output_n), m.net.output_n);
+    append(std::move(new_net.input_n), m.net.input_n);
+    append(std::move(new_net.store), m.net.store);
 
     m.net.p_to_ts_n = createReversePlaceToTransitionLookup(
         m.net.place.size(), m.net.transition.size(), m.net.input_n);
