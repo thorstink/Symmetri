@@ -1,6 +1,7 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "reducers.h"
 
+#include <algorithm>
 #include <filesystem>
 #include <ranges>
 #include <tuple>
@@ -329,6 +330,31 @@ void resetSelectedTargetNode() {
   rxdispatch::push([](model::Model&& m) {
     m.data->selected_arc_idxs.reset();
     return m;
+  });
+}
+
+void resetNetView() {
+  rxdispatch::push([=](model::Model&& model) {
+    auto& m = *model.data;
+    const auto getMinX = [&](const auto& in_view, const auto& pos) {
+      return std::ranges::min(in_view | std::views::transform([&](auto idx) {
+                                return pos[idx].x;
+                              }));
+    };
+    const auto getMinY = [&](const auto& in_view, const auto& pos) {
+      return std::ranges::min(in_view | std::views::transform([&](auto idx) {
+                                return pos[idx].y;
+                              }));
+    };
+
+    float min_x = std::min(getMinX(m.t_view, m.t_positions),
+                           getMinX(m.p_view, m.p_positions));
+    float min_y = std::min(getMinY(m.t_view, m.t_positions),
+                           getMinY(m.p_view, m.p_positions));
+
+    m.scrolling = {400 - min_x, 120 - min_y};
+
+    return model;
   });
 }
 

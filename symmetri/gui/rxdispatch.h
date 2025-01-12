@@ -1,7 +1,6 @@
 #pragma once
 
 #include <functional>
-#include <iostream>
 #include <variant>
 
 #include "model.h"
@@ -33,9 +32,7 @@ struct VisitPackage {
 inline auto get_events_observable() {
   return rpp::source::create<Update>([](auto&& observer) {
            Update f;
-           auto mainthreadid = std::this_thread::get_id();
            while (not observer.is_disposed()) {
-             std::cout << "dispatch " << mainthreadid << std::endl;
              getQueue().wait_dequeue(f);
              observer.on_next(std::forward<Update>(f));
            }

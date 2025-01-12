@@ -1,24 +1,17 @@
 #include "load_file.h"
 
+#include <algorithm>
 #include <map>
 #include <numeric>
+#include <ranges>
 #include <vector>
 
 #include "petri.h"
 #include "position_parsers.h"
+#include "reducers.h"
 #include "rxdispatch.h"
 #include "symmetri/parsers.h"
 #include "symmetri/symmetri.h"
-
-template <typename T>
-inline void append(std::vector<T> source, std::vector<T>& destination) {
-  if (destination.empty())
-    destination = std::move(source);
-  else
-    destination.insert(std::end(destination),
-                       std::make_move_iterator(std::begin(source)),
-                       std::make_move_iterator(std::end(source)));
-}
 
 void loadPetriNet(const std::filesystem::path& file) {
   rxdispatch::push([=](model::Model&& model) {
@@ -50,9 +43,12 @@ void loadPetriNet(const std::filesystem::path& file) {
 
     new_net.priority = symmetri::createPriorityLookup(new_net.transition, pt);
 
+    m.t_positions.reserve(m.t_positions.size() + new_net.transition.size());
     for (const auto& transition : new_net.transition) {
       m.t_positions.push_back(positions.at(transition));
     }
+
+    m.p_positions.reserve(m.p_positions.size() + new_net.place.size());
     for (const auto& place : new_net.place) {
       m.p_positions.push_back(positions.at(place));
     }
@@ -79,14 +75,14 @@ void loadPetriNet(const std::filesystem::path& file) {
     // For GCC, we copy the priority table because of some weird GCC13/14 bug...
     // should eventually just become: append(std::move(new_net.priority),
     // m.net.priority); ...
-    m.net.priority.insert(m.net.priority.end(), new_net.priority.begin(),
-                          new_net.priority.end());
-
-    append(std::move(new_net.transition), m.net.transition);
-    append(std::move(new_net.place), m.net.place);
-    append(std::move(new_net.output_n), m.net.output_n);
-    append(std::move(new_net.input_n), m.net.input_n);
-    append(std::move(new_net.store), m.net.store);
+    // m.net.priority.insert(m.net.priority.end(), new_net.priority.begin(),
+    //                       new_net.priority.end());
+    std::ranges::move(new_net.priority, std::back_inserter(m.net.priority));
+    std::ranges::move(new_net.transition, std::back_inserter(m.net.transition));
+    std::ranges::move(new_net.place, std::back_inserter(m.net.place));
+    std::ranges::move(new_net.output_n, std::back_inserter(m.net.output_n));
+    std::ranges::move(new_net.input_n, std::back_inserter(m.net.input_n));
+    std::ranges::move(new_net.store, std::back_inserter(m.net.store));
 
     m.net.p_to_ts_n = createReversePlaceToTransitionLookup(
         m.net.place.size(), m.net.transition.size(), m.net.input_n);
@@ -97,39 +93,15 @@ void loadPetriNet(const std::filesystem::path& file) {
           {symmetri::toIndex(new_net.place, p) + old_place_count, c});
     }
 
-    m.t_view.clear();
-    m.p_view.clear();
     m.t_view.resize(new_transition_count);
     m.p_view.resize(new_place_count);
 
     std::iota(m.t_view.begin(), m.t_view.end(), old_transition_count);
     std::iota(m.p_view.begin(), m.p_view.end(), old_place_count);
 
-    float min_x = std::numeric_limits<float>::max();
-    float min_y = std::numeric_limits<float>::max();
-
-    for (auto&& idx : m.t_view) {
-      if (min_x > m.t_positions[idx].x) {
-        min_x = m.t_positions[idx].x;
-      }
-      if (min_y > m.t_positions[idx].y) {
-        min_y = m.t_positions[idx].y;
-      }
-    }
-
-    for (auto&& idx : m.p_view) {
-      if (min_x > m.p_positions[idx].x) {
-        min_x = m.p_positions[idx].x;
-      }
-      if (min_y > m.p_positions[idx].y) {
-        min_y = m.p_positions[idx].y;
-      }
-    }
-
-    // maybe this can be improved to have a better initialization :-)
-    m.scrolling = {min_x, min_y + 50.f};
-
     m.active_file = file;
+
+    resetNetView();  // convenient to view new graph
 
     return model;
   });

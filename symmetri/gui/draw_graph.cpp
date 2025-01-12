@@ -183,7 +183,8 @@ void draw_graph(const model::ViewModel& vm) {
       (vm.selected_node_idx.has_value() || vm.selected_arc_idxs.has_value())) {
     resetSelection();
   }
-  offset = ImGui::GetCursorScreenPos() + ImVec2(vm.scrolling.x, vm.scrolling.y);
+
+  offset = ImVec2(vm.scrolling.x, vm.scrolling.y);
 
   static char view_name[256] = "";
   strcpy(view_name, vm.active_file.c_str());

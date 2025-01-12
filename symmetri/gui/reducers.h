@@ -42,6 +42,8 @@ void resetSelectedTargetNode();
 
 void resetSelection();
 
+void resetNetView();
+
 void setSelectedArc(bool is_input, size_t idx, size_t sub_idx);
 
 void renderNodeEntry(bool is_place, const std::string& name, size_t idx,

@@ -42,7 +42,13 @@ void draw_menu_bar(const model::ViewModel &vm) {
       //...
       ImGui::EndMenu();
     }
-
+    if (ImGui::BeginMenu("View")) {
+      //...
+      if (ImGui::MenuItem("Reset view")) {
+        resetNetView();
+      }
+      ImGui::EndMenu();
+    }
     if (ImGui::BeginMenu("Window")) {
       //...
       ImGui::EndMenu();
