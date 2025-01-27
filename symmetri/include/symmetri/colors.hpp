@@ -4,6 +4,8 @@
 
 #include <string>
 #include <unordered_map>
+#include <cstdint>
+
 namespace symmetri {
 
 using Token = uint32_t;
