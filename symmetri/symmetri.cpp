@@ -42,15 +42,14 @@ std::function<void()> PetriNet::getInputTransitionHandle(
   // if the transition has input places, you can not register a callback like
   // this, we simply return a non-functioning handle.
   if (!impl->net.input_n[t_index].empty()) {
-    return []() -> void {};
+    return []() -> void {
+      // adding an error message here might be kind to do
+    };
   } else {
     return [t_index, this]() -> void {
       if (impl->thread_id_.load()) {
-        impl->reducer_queue->enqueue([=](Petri &m) {
-          m.scheduled_callbacks.push_back(t_index);
-          m.reducer_queue->enqueue(
-              scheduleCallback(t_index, m.net.store[t_index], m.reducer_queue));
-        });
+        impl->reducer_queue->enqueue(
+            [t_index](Petri &m) { m.fireAsynchronous(t_index); });
       }
     };
   }

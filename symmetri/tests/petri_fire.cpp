@@ -15,9 +15,11 @@ TEST_CASE("can fire") {
   CHECK(!canFire(pre_conditions, can_not_fire_marking));
 
   // no tokens type
-  CHECK(!canFire(pre_conditions, {}));
+  std::vector<AugmentedToken> empty = {};
+  CHECK(!canFire(pre_conditions, empty));
 }
 
 TEST_CASE("transitions with no inputs can not fire") {
-  CHECK(!canFire({}, {}));
+  std::vector<AugmentedToken> empty = {};
+  CHECK(!canFire({}, empty));
 }

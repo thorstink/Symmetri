@@ -83,8 +83,7 @@ gch::small_vector<size_t, 32> possibleTransitions(
  * @return true if the pre-conditions are met
  * @return false otherwise
  */
-bool canFire(const SmallVectorInput &pre,
-             const std::vector<AugmentedToken> &tokens);
+bool canFire(const SmallVectorInput &pre, std::vector<AugmentedToken> &tokens);
 
 /**
  * @brief Forward declaration of the Petri-class
@@ -97,19 +96,6 @@ struct Petri;
  * post-callback marking mutations.
  */
 using Reducer = std::function<void(Petri &)>;
-
-/**
- * @brief Schedules the callback associated with transition t_idx/transition. It
- * returns a reducer which is to be executed _after_ Callback task completed.
- *
- * @param t_idx the index of the transition as used in the Petri-class
- * @param task the Callback to be scheduled
- * @return Reducer
- */
-Reducer scheduleCallback(
-    size_t t_idx, const Callback &task,
-    const std::shared_ptr<moodycamel::BlockingConcurrentQueue<Reducer>>
-        &reducer_queue);
 
 /**
  * @brief deducts the set input from the current token distribution
@@ -176,13 +162,6 @@ struct Petri {
    * @return Eventlog
    */
   Eventlog getLogInternal() const;
-
-  /**
-   * @brief Try to fire a single transition. Does nothing if t is not active.
-   *
-   * @param t string representation of the transition that is tried to fire.
-   */
-  void tryFire(const Transition &t);
 
   /**
    * @brief Fires all active transitions until it there are none left.
@@ -266,6 +245,13 @@ struct Petri {
   std::shared_ptr<TaskSystem>
       pool;  ///< A pointer to the threadpool used to defer Callbacks.
 
+  /**
+   * @brief Schedules the Callback associated with t on the threadpool
+   *
+   * @param t transition as index in transition vector
+   */
+  void fireAsynchronous(const size_t t);
+
  private:
   /**
    * @brief Runs the Callback associated with t immediately.
@@ -273,13 +259,6 @@ struct Petri {
    * @param t transition as index in transition vector
    */
   void fireSynchronous(const size_t t);
-
-  /**
-   * @brief Schedules the Callback associated with t on the threadpool
-   *
-   * @param t transition as index in transition vector
-   */
-  void fireAsynchronous(const size_t t);
 };
 
 std::tuple<std::vector<std::string>, std::vector<std::string>,

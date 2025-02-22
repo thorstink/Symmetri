@@ -148,7 +148,7 @@ TEST_CASE("Run until net dies with DirectMutations") {
   CHECK(MarkingEquality(m.getMarking(), expected));
 }
 
-TEST_CASE("Step through transitions") {
+TEST_CASE("Fire multiple transitions") {
   std::map<std::string, size_t> hitmap;
   {
     Net net = {{"a", {{{"Pa", Success}}, {}}},
@@ -166,20 +166,12 @@ TEST_CASE("Step through transitions") {
       m.net.registerCallback(t, [&, t = t] { hitmap[t] += 1; });
     }
 
-    // auto scheduled_callbacks = m.getActiveTransitions();
-    // CHECK(scheduled_callbacks.size() == 4);  // abcd
-    m.tryFire("e");
-    m.tryFire("b");
-    m.tryFire("b");
-    m.tryFire("c");
-    m.tryFire("b");
+    // fire transitions
+    m.fireTransitions();
     // there are no reducers ran, so this doesn't update.
     CHECK(m.scheduled_callbacks.size() == 4);
     // there should be no markers left.
     CHECK(m.getMarking().size() == 0);
-    // there should be nothing left to fire
-    // scheduled_callbacks = m.getActiveTransitions();
-    // CHECK(scheduled_callbacks.size() == 0);
     int j = 0;
     Reducer r;
     while (j < 2 * 4 &&
@@ -191,12 +183,11 @@ TEST_CASE("Step through transitions") {
     CHECK(m.scheduled_callbacks.size() == 0);
   }
 
-  // validate we only ran transition 3 times b, 1 time c and none of the others.
-  CHECK(hitmap.at("a") == 0);
-  CHECK(hitmap.at("b") == 3);
-  CHECK(hitmap.at("c") == 1);
-  CHECK(hitmap.at("d") == 0);
+  // Assert that transitions 'e' did not run
   CHECK(hitmap.at("e") == 0);
+  // Assert that 4 transitions were ran (some can run multiple times and some
+  // zero)
+  CHECK(hitmap.at("a") + hitmap.at("b") + hitmap.at("c") + hitmap.at("d") == 4);
 }
 
 TEST_CASE("create fireable transitions shortlist") {

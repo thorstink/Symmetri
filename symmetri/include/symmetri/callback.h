@@ -2,6 +2,7 @@
 
 /** @file callback.h */
 
+#include <atomic>
 #include <memory>
 
 #include "symmetri/types.h"
@@ -138,6 +139,9 @@ class Callback {
   friend void resume(const Callback &callback) {
     return callback.self_->resume_();
   }
+  auto getEndTime() const {
+    return self_->end_t_.load(std::memory_order_relaxed);
+  }
 
  private:
   struct concept_t {
@@ -148,6 +152,7 @@ class Callback {
     virtual void pause_() const = 0;
     virtual void resume_() const = 0;
     virtual bool is_synchronous_() const = 0;
+    mutable std::atomic<Clock::time_point> end_t_{Clock::time_point::min()};
   };
 
   /**
@@ -163,7 +168,11 @@ class Callback {
     template <typename... Args>
     model(Args &&...args) : transition_(std::forward<Args>(args)...) {}
 
-    Token fire_() const override { return fire(transition_); }
+    Token fire_() const override {
+      auto res = fire(transition_);
+      end_t_.store(Clock::now(), std::memory_order_relaxed);
+      return res;
+    }
     Eventlog get_log_() const override { return getLog(transition_); }
     void cancel_() const override { return cancel(transition_); }
     bool is_synchronous_() const override { return isSynchronous(transition_); }

@@ -11,7 +11,7 @@ std::mutex cv_m;
 bool is_ready1(false);
 bool is_ready2(false);
 
-// this is a function that you can hang using bools
+// this is a function that you can block using bools
 void t() {
   std::unique_lock<std::mutex> lk(cv_m);
   cv.wait(lk, [] {
