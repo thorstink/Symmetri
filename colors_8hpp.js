@@ -1,6 +1,7 @@
 var colors_8hpp =
 [
     [ "symmetri::Token", "classsymmetri_1_1Token.html", "classsymmetri_1_1Token" ],
+    [ "std::hash< symmetri::Token >", "structstd_1_1hash_3_01symmetri_1_1Token_01_4.html", null ],
     [ "symmetri::Scheduled", "structsymmetri_1_1Scheduled.html", null ],
     [ "symmetri::Started", "structsymmetri_1_1Started.html", null ],
     [ "symmetri::Success", "structsymmetri_1_1Success.html", null ],

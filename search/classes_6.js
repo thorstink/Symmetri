@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['taskqueue_0',['TaskQueue',['../classsymmetri_1_1TaskQueue.html',1,'symmetri']]],
-  ['tasksystem_1',['TaskSystem',['../classsymmetri_1_1TaskSystem.html',1,'symmetri']]],
-  ['token_2',['Token',['../classsymmetri_1_1Token.html',1,'symmetri']]]
+  ['paused_0',['Paused',['../structsymmetri_1_1Paused.html',1,'symmetri']]],
+  ['petri_1',['Petri',['../structsymmetri_1_1Petri.html',1,'symmetri']]],
+  ['petrinet_2',['PetriNet',['../classsymmetri_1_1PetriNet.html',1,'symmetri']]],
+  ['ptnet_3',['PTNet',['../structsymmetri_1_1Petri_1_1PTNet.html',1,'symmetri::Petri']]]
 ];

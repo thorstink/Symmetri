@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['net_0',['Net',['../types_8h.html#a8cd26d754718a0e0eda6a258806a7f68',1,'symmetri']]],
-  ['net_1',['net',['../structsymmetri_1_1Petri.html#ac53b15cfc29df54238168bf9ff62a6b7',1,'symmetri::Petri']]],
-  ['nets_2',['Symmetri nets',['../md_docs_2symmetri__nets.html',1,'']]],
-  ['nets_20in_20c_3',['Symmetri, Petri Nets in C++',['../index.html',1,'']]]
+  ['level_20of_20transitions_0',['Failure at the level of transitions',['../md_docs_2symmetri__nets.html#autotoc_md4',1,'']]],
+  ['library_1',['Symmetri library',['../md_docs_2symmetri__lib.html',1,'']]],
+  ['log_2',['log',['../structsymmetri_1_1Petri.html#a480b5841ccff81ba112a8759cfdbd103',1,'symmetri::Petri::log'],['../md_docs_2symmetri__nets.html#autotoc_md7',1,'The event log']]]
 ];
