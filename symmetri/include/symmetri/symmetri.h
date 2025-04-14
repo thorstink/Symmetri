@@ -94,9 +94,9 @@ class PetriNet final {
     if (impl == nullptr || s.empty()) {
       return;
     }
-    s.emplace(getCallbackItr(transition), identity<T>{},
-              std::forward<Args>(args)...);
-  }
+    s.emplace_back(identity<T>{}, std::forward<Args>(args)...);
+    *getCallbackItr(transition) = std::move(s.back());
+    s.pop_back();  }
 
   /**
    * @brief Get the Marking object. This function is thread-safe and be called
