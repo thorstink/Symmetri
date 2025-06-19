@@ -137,9 +137,9 @@ void Petri::fireAsynchronous(const size_t t_i) {
       // if it is in the active transition set it means it is finished and
       // we should process it.
       const auto t_end = model.net.store[t_i].getEndTime();
-      const auto it = std::find(model.scheduled_callbacks.cbegin(),
-                                model.scheduled_callbacks.cend(), t_i);
-      if (it != model.scheduled_callbacks.cend()) {
+      const auto it = std::find(model.scheduled_callbacks.begin(),
+                                model.scheduled_callbacks.end(), t_i);
+      if (it != model.scheduled_callbacks.end()) {
         const auto &place_list = model.net.output_n[t_i];
         if (model.tokens.size() + place_list.size() > model.tokens.capacity()) {
           model.tokens.reserve(
@@ -149,7 +149,8 @@ void Petri::fireAsynchronous(const size_t t_i) {
         for (const auto &[p, c] : place_list) {
           model.tokens.emplace_back(p, result);
         }
-        model.scheduled_callbacks.erase(it);
+        std::swap(*std::prev(model.scheduled_callbacks.end()), *it);
+        model.scheduled_callbacks.pop_back();
       };
       model.log.push_back({t_i, result, t_end});
     });
