@@ -2,6 +2,7 @@
 
 /** @file callback.h */
 
+#include <atomic>
 #include <memory>
 
 #include "symmetri/types.h"
@@ -65,7 +66,7 @@ Token fire(const T &callback) {
   if constexpr (std::is_same_v<Token, decltype(callback())>) {
     return callback();
   } else if constexpr (std::is_convertible_v<decltype(callback()), Token>) {
-    return callback();
+    return Token(callback());
   } else if constexpr (std::is_same_v<void, decltype(callback())>) {
     callback();
     return Success;
@@ -82,6 +83,11 @@ template <typename T>
 Eventlog getLog(const T &) {
   return {};
 }
+
+template <typename T>
+struct identity {
+  typedef T type;
+};
 
 /**
  * @brief Callback is a wrapper around any type that you to tie to a
@@ -106,6 +112,15 @@ class Callback {
   Callback(Transition callback)
       : self_(std::make_shared<model<Transition>>(std::move(callback))) {}
 
+  template <typename T, typename... Args>
+  Callback(identity<T>, Args &&...args)
+      : self_(std::make_shared<model<T>>(std::forward<Args>(args)...)) {}
+
+  Callback(Callback &&f) = default;
+  Callback &operator=(Callback &&other) = default;
+  Callback(const Callback &o) = delete;
+  Callback &operator=(const Callback &other) = delete;
+
   friend Token fire(const Callback &callback) {
     return callback.self_->fire_();
   }
@@ -124,6 +139,9 @@ class Callback {
   friend void resume(const Callback &callback) {
     return callback.self_->resume_();
   }
+  auto getEndTime() const {
+    return self_->end_t_.load(std::memory_order_relaxed);
+  }
 
  private:
   struct concept_t {
@@ -134,6 +152,7 @@ class Callback {
     virtual void pause_() const = 0;
     virtual void resume_() const = 0;
     virtual bool is_synchronous_() const = 0;
+    mutable std::atomic<Clock::time_point> end_t_{Clock::time_point::min()};
   };
 
   /**
@@ -145,8 +164,15 @@ class Callback {
    */
   template <typename Transition>
   struct model final : concept_t {
-    model(Transition &&x) : transition_(std::move(x)) {}
-    Token fire_() const override { return fire(transition_); }
+    explicit model(Transition &&t) : transition_(std::move(t)) {}
+    template <typename... Args>
+    model(Args &&...args) : transition_(std::forward<Args>(args)...) {}
+
+    Token fire_() const override {
+      auto res = fire(transition_);
+      end_t_.store(Clock::now(), std::memory_order_relaxed);
+      return res;
+    }
     Eventlog get_log_() const override { return getLog(transition_); }
     void cancel_() const override { return cancel(transition_); }
     bool is_synchronous_() const override { return isSynchronous(transition_); }

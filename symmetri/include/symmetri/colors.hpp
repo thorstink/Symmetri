@@ -2,209 +2,197 @@
 
 /** @file colors.hpp */
 
+#include <string.h>
+
 #include <algorithm>
-#include <array>  // std::array
+#include <array> // std::array
 #include <cassert>
 #include <functional>
 #include <string_view>
 #include <type_traits>
-#include <utility>  // std::index_sequence
-#include <vector>
-namespace symmetri {
+#include <utility> // std::index_sequence
+#include <vector>  // hash
+#include <cstdio>
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
+namespace sym_impl
+{
+    // https://rodusek.com/posts/2021/03/09/getting-an-unmangled-type-name-at-compile-time/
 
-// https://rodusek.com/posts/2021/03/09/getting-an-unmangled-type-name-at-compile-time/
+    template <std::size_t... Idxs>
+    constexpr auto substring_as_array(std::string_view str,
+                                      std::index_sequence<Idxs...>)
+    {
+        return std::array{str[Idxs]..., '\0'};
+    }
 
-template <std::size_t... Idxs>
-constexpr auto substring_as_array(std::string_view str,
-                                  std::index_sequence<Idxs...>) {
-  return std::array{str[Idxs]...};
-}
-
-template <typename T>
-constexpr auto type_name_array() {
+    template <typename T>
+    constexpr auto type_name_array()
+    {
 #if defined(__clang__)
-  constexpr auto prefix = std::string_view{"[T = symmetri::"};
-  constexpr auto suffix = std::string_view{"]"};
-  constexpr auto function = std::string_view{__PRETTY_FUNCTION__};
+        constexpr auto prefix = std::string_view{"[T = symmetri::"};
+        constexpr auto suffix = std::string_view{"]"};
+        constexpr auto function = std::string_view{__PRETTY_FUNCTION__};
 #elif defined(__GNUC__)
-  constexpr auto prefix = std::string_view{"with T = symmetri::"};
-  constexpr auto suffix = std::string_view{"]"};
-  constexpr auto function = std::string_view{__PRETTY_FUNCTION__};
+        constexpr auto prefix = std::string_view{"with T = symmetri::"};
+        constexpr auto suffix = std::string_view{"]"};
+        constexpr auto function = std::string_view{__PRETTY_FUNCTION__};
 #elif defined(_MSC_VER)
-  constexpr auto prefix = std::string_view{"type_name_array<symmetri::"};
-  constexpr auto suffix = std::string_view{">(void)"};
-  constexpr auto function = std::string_view{__FUNCSIG__};
+        constexpr auto prefix = std::string_view{"type_name_array<symmetri::"};
+        constexpr auto suffix = std::string_view{">(void)"};
+        constexpr auto function = std::string_view{__FUNCSIG__};
 #else
 #error Unsupported compiler
 #endif
 
-  constexpr auto start = function.find(prefix) + prefix.size();
-  constexpr auto end = function.rfind(suffix);
+        constexpr auto start = function.find(prefix) + prefix.size();
+        constexpr auto end = function.rfind(suffix);
 
-  static_assert(start < end);
+        static_assert(start < end);
 
-  constexpr auto name = function.substr(start, (end - start));
-  return substring_as_array(name, std::make_index_sequence<name.size()>{});
-}
-
-template <typename T>
-struct type_name_holder {
-  static inline constexpr auto value = type_name_array<T>();
-};
-
-template <typename T>
-constexpr auto type_name() -> std::string_view {
-  constexpr auto& value = type_name_holder<T>::value;
-  return std::string_view{value.data(), value.size()};
-}
-
-template <auto Id>
-struct counter {
-  using tag = counter;
-
-  struct generator {
-    template <typename...>
-    friend constexpr auto is_defined(tag) {
-      return true;
+        constexpr auto name = function.substr(start, (end - start));
+        return substring_as_array(name, std::make_index_sequence<name.size()>{});
     }
-  };
 
-  template <typename...>
-  friend constexpr auto is_defined(tag);
+    template <typename T>
+    struct type_name_holder
+    {
+        static inline constexpr auto value = type_name_array<T>();
+    };
 
-  template <typename Tag = tag, auto I = (int)is_defined(Tag{})>
-  static constexpr auto exists(decltype(I)) {
-    return true;
-  }
-
-  static constexpr auto exists(...) { return generator(), false; }
-};
-
-template <typename T, auto Id = int{}>
-constexpr auto unique_id() {
-  if constexpr (counter<Id>::exists(Id)) {
-    return unique_id<T, Id + 1>();
-  } else {
-    return Id;
-  }
-}
+    template <typename T>
+    constexpr auto type_name() -> std::string_view
+    {
+        constexpr auto &value = type_name_holder<T>::value;
+        return std::string_view{value.data(), value.size()};
+    }
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
+}
+namespace symmetri
+{
 
-/**
- * @brief Tokens are elements that can reside in places. Tokens can have a color
- * which makes them distinguishable from other tokens. Tokens that have the same
- * color are not distinguishable. Users can create their own token-colors by
- * either using the CREATE_CUSTOM_TOKEN-macro (compile-time) or by calling
- * Token's public constructor which takes a token-name.
- *
- */
-class Token {
-  const static size_t kMaxTokenColors =
-      100;     ///< Maximum amount of different colors
-  size_t idx;  ///< A numerical id ("color") for this particular token
-  inline static std::array<std::string_view, kMaxTokenColors>
-      v{};  ///< The human read-able string representation of the "color" is
-            ///< stored in this buffer using the numerical id as index.
+    /**
+     * @brief Tokens are elements that can reside in places. Tokens can have a color
+     * which makes them distinguishable from other tokens. Tokens that have the same
+     * color are not distinguishable. Users can create their own token-colors by
+     * either using the CREATE_CUSTOM_TOKEN-macro (compile-time) or by calling
+     * Token's public constructor which takes a token-name.
+     *
+     */
+    class Token
+    {
+    public:
+        /**
+         * @brief Get a list of all the colors
+         *
+         * @return std::vector<const char *>
+         */
+        static std::vector<const char *> getColors()
+        {
+            std::vector<const char *> _colors;
+            _colors.reserve(colors.size());
+            std::copy_if(colors.begin(), colors.end(), std::back_inserter(_colors),
+                         [](const auto &color)
+                         { return color != nullptr; });
+            return _colors;
+        }
 
- protected:
-  /**
-   * @brief Creates a Token with a unique numerical id and a string
-   * representation based on the name of the argument-type at compile-time.
-   *
-   * @tparam T the type representing the token-color
-   */
-  template <class T>
-  constexpr Token(T* const) : idx(unique_id<T>()) {
-    static_assert(unique_id<T>() < v.size(),
-                  "There can only be 100 different token-colors.");
-    v[idx] = type_name<T>();
-  }
+        constexpr const auto &toString() const { return colors[id]; }
 
- public:
-  /**
-   * @brief Construct a new Token object from a string at run-time. A unique id
-   * is generated and if it fails it will exit the application through a failing
-   * assert.
-   *
-   * @param s string-representation of the color
-   */
-  Token(const char* s)
-      : idx([&]() -> size_t {
-          static size_t i = 0;
-          auto it = std::find(v.cbegin(), v.cend(), s);
-          if (it == std::cend(v)) {
-            i++;
-            return v.size() - i;
-          } else {
-            return std::distance(v.cbegin(), it);
-          }
-        }()) {
-    if (std::find(v.cbegin(), v.cend(), s) == std::cend(v)) {
-      assert(v[idx].empty() && "There can only be 100 different token-colors.");
-      v[idx] = s;
+        template <class T>
+        constexpr bool operator==(const T &t) const
+        {
+            return id == t.id;
+        }
+
+        constexpr bool operator<(const Token &rhs) const
+        {
+            return id < rhs.toIndex();
+        }
+
+        constexpr bool operator>(const Token &rhs) const
+        {
+            return id > rhs.toIndex();
+        }
+
+        constexpr size_t toIndex() const { return id; }
+
+        static constexpr bool equals(const char *a, const char *b)
+        {
+            return *a == *b && (*a == '\0' || equals(a + 1, b + 1));
+        }
+
+        template <class X, class V>
+        static constexpr auto find(X &x, V key)
+        {
+            std::size_t i = 0;
+            while (i < x.size())
+            {
+                if (x[i] != nullptr && equals(x[i], key))
+                    return i;
+                ++i;
+            }
+
+            return i;
+        }
+
+        template <class X>
+        static constexpr auto findSlot(X &x)
+        {
+            std::size_t i = 0;
+            while (i < x.size())
+            {
+                if (x[i] == nullptr)
+                    return i;
+                ++i;
+            }
+
+            return i;
+        }
+
+        constexpr Token(const char *_id)
+            : id(find(colors, _id) < kMaxTokenColors ? find(colors, _id) : findSlot(colors))
+        {
+            assert(id < colors.size() &&
+                   "There can only be kMaxTokenColors different token-colors.");
+            colors[id] = _id;
+        }
+
+    protected:
+        const static size_t kMaxTokenColors =
+            100; ///< Maximum amount of different colors
+        inline static std::array<const char *, kMaxTokenColors> colors = {nullptr};
+        size_t id;
+    };
+
+} // namespace symmetri
+
+// Custom specialization of std::hash can be injected in namespace std.
+template <>
+struct std::hash<symmetri::Token>
+{
+    constexpr std::size_t operator()(const symmetri::Token &s) const noexcept
+    {
+        return s.toIndex();
     }
-  }
-
-  Token() = delete;
-
-  /**
-   * @brief Get a list of all the colors
-   *
-   * @return std::vector<std::string_view>
-   */
-  static std::vector<std::string_view> getColors() {
-    std::vector<std::string_view> colors;
-    colors.reserve(v.size());
-    std::copy_if(v.begin(), v.end(), std::back_inserter(colors),
-                 [](const auto& color) { return not color.empty(); });
-    return colors;
-  }
-  constexpr bool operator<(const Token& rhs) const {
-    return idx < rhs.toIndex();
-  }
-  constexpr bool operator>(const Token& rhs) const {
-    return idx > rhs.toIndex();
-  }
-  /**
-   * @brief returns the unique index for this color.
-   *
-   * @return constexpr size_t
-   */
-  constexpr size_t toIndex() const { return idx; }
-
-  /**
-   * @brief returns the string-representation for this color.
-   *
-   * @return constexpr const auto&
-   */
-  constexpr const auto& toString() const { return v[idx]; }
-  constexpr bool operator==(const Token& c) const { return idx == c.idx; }
-  template <class T>
-  constexpr bool operator==(const T&) const {
-    return idx == unique_id<T>();
-  }
 };
-
-}  // namespace symmetri
 
 /**
  * @brief A macro from which we can create token-colors. Colors ceated this way
  * end up in the symmetri namespace.
  *
  */
-#define CREATE_CUSTOM_TOKEN(name)                     \
-  namespace symmetri {                                \
-  struct name : public Token {                        \
-    constexpr name() : Token(this) {}                 \
-    constexpr bool operator==(const Token& c) const { \
-      return toIndex() == c.toIndex();                \
-    }                                                 \
-  };                                                  \
-  static inline name name;                            \
-  }
+#define CREATE_CUSTOM_TOKEN(name)                              \
+    namespace symmetri                                         \
+    {                                                          \
+        struct name : public Token                             \
+        {                                                      \
+            constexpr name()                                   \
+                : Token(sym_impl::type_name<name>().data()) {} \
+        };                                                     \
+        static inline name name;                               \
+    }
 
 CREATE_CUSTOM_TOKEN(Scheduled)
 CREATE_CUSTOM_TOKEN(Started)

@@ -25,14 +25,16 @@ PetriNet::PetriNet(const std::set<std::string> &files,
           return std::make_shared<Petri>(net, specific_priorities, m0,
                                          final_marking, case_id, threadpool);
         }
-      }()) {}
+      }()),
+      s(impl->net.store) {}
 
 PetriNet::PetriNet(const Net &net, const std::string &case_id,
                    std::shared_ptr<TaskSystem> threadpool,
                    const Marking &initial_marking, const Marking &final_marking,
                    const PriorityTable &priorities)
     : impl(std::make_shared<Petri>(net, priorities, initial_marking,
-                                   final_marking, case_id, threadpool)) {}
+                                   final_marking, case_id, threadpool)),
+      s(impl->net.store) {}
 
 std::function<void()> PetriNet::getInputTransitionHandle(
     const Transition &transition) const noexcept {
@@ -40,25 +42,31 @@ std::function<void()> PetriNet::getInputTransitionHandle(
   // if the transition has input places, you can not register a callback like
   // this, we simply return a non-functioning handle.
   if (!impl->net.input_n[t_index].empty()) {
-    return []() -> void {};
+    return []() -> void {
+      // adding an error message here might be kind to do
+    };
   } else {
     return [t_index, this]() -> void {
       if (impl->thread_id_.load()) {
-        impl->reducer_queue->enqueue([=](Petri &m) {
-          m.scheduled_callbacks.push_back(t_index);
-          m.reducer_queue->enqueue(
-              scheduleCallback(t_index, m.net.store[t_index], m.reducer_queue));
-        });
+        impl->reducer_queue->enqueue(
+            [t_index](Petri &m) { m.fireAsynchronous(t_index); });
       }
     };
   }
 }
 
 void PetriNet::registerCallback(const std::string &transition,
-                                const Callback &callback) const noexcept {
+                                Callback &&callback) const noexcept {
   if (!impl->thread_id_.load().has_value()) {
-    impl->net.registerCallback(transition, callback);
+    impl->net.registerCallback(transition, std::forward<Callback>(callback));
   }
+}
+std::vector<Callback>::iterator PetriNet::getCallbackItr(
+    const std::string &transition_name) const {
+  const auto &t = impl->net.transition;
+  return impl->net.store.begin() +
+         std::distance(t.begin(),
+                       std::find(t.begin(), t.end(), transition_name));
 }
 
 Marking PetriNet::getMarking() const noexcept {

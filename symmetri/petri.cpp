@@ -12,7 +12,7 @@ convert(const Net &_net) {
   store.reserve(transition_count);
   for (const auto &[t, io] : _net) {
     transitions.push_back(t);
-    store.push_back(DirectMutation{});
+    store.emplace_back(identity<DirectMutation>{});
     for (const auto &p : io.first) {
       places.push_back(p.first);
     }
@@ -24,7 +24,7 @@ convert(const Net &_net) {
     auto last = std::unique(places.begin(), places.end());
     places.erase(last, places.end());
   }
-  return {transitions, places, store};
+  return {std::move(transitions), std::move(places), std::move(store)};
 }
 
 std::tuple<std::vector<SmallVectorInput>, std::vector<SmallVectorInput>>
@@ -115,88 +115,97 @@ void Petri::fireSynchronous(const size_t t) {
   log.push_back({t, Started, now});
   auto result = fire(task);
   log.push_back({t, result, now});
-  tokens.reserve(tokens.size() + lookup_t.size());
   for (const auto &[p, c] : lookup_t) {
     tokens.push_back({p, result});
   }
 }
 
-void Petri::fireAsynchronous(const size_t t) {
-  const auto &task = net.store[t];
-  scheduled_callbacks.push_back(t);
-  log.push_back({t, Scheduled, Clock::now()});
+void Petri::fireAsynchronous(const size_t t_i) {
+  // register that we schedule a particular transition
+  scheduled_callbacks.push_back(t_i);
+  log.push_back({t_i, Scheduled, Clock::now()});
+  // defer execution of the transition to the threadpool
+  pool->push([t_i, this] {
+    // log the start on the petri loop;
+    reducer_queue->enqueue([t_i, t_start = Clock::now()](Petri &model) {
+      model.log.push_back({t_i, Started, t_start});
+    });
 
-  pool->push([=] {
-    reducer_queue->enqueue(scheduleCallback(t, task, reducer_queue));
+    // fire the transition and defer a reducer to the petri loop to update the
+    // marking and log
+    reducer_queue->enqueue([t_i, result = fire(net.store[t_i])](Petri &model) {
+      // if it is in the active transition set it means it is finished and
+      // we should process it.
+      const auto t_end = model.net.store[t_i].getEndTime();
+      const auto it = std::find(model.scheduled_callbacks.begin(),
+                                model.scheduled_callbacks.end(), t_i);
+      if (it != model.scheduled_callbacks.end()) {
+        const auto &place_list = model.net.output_n[t_i];
+        if (model.tokens.size() + place_list.size() > model.tokens.capacity()) {
+          model.tokens.reserve(
+              std::max(2 * model.tokens.size(),
+                       model.tokens.size() + place_list.size()));
+        }
+        for (const auto &[p, c] : place_list) {
+          model.tokens.emplace_back(p, result);
+        }
+        std::swap(*std::prev(model.scheduled_callbacks.end()), *it);
+        model.scheduled_callbacks.pop_back();
+      };
+      model.log.push_back({t_i, result, t_end});
+    });
   });
 }
 
 void deductMarking(std::vector<AugmentedToken> &tokens,
                    const SmallVectorInput &inputs) {
   for (const auto &place : inputs) {
-    // erase one by one. using std::remove_if would remove all tokens at
-    // a particular place.
     tokens.erase(std::find(tokens.begin(), tokens.end(), place));
   }
 }
 
-void Petri::tryFire(const Transition &t) {
-  auto it = std::find(net.transition.begin(), net.transition.end(), t);
-  const auto t_idx = std::distance(net.transition.begin(), it);
-  if (canFire(net.input_n[t_idx], tokens)) {
-    deductMarking(tokens, net.input_n[t_idx]);
-    isSynchronous(net.store[t_idx]) ? fireSynchronous(t_idx)
-                                    : fireAsynchronous(t_idx);
-  }
-}
-
-gch::small_vector<size_t, 32> &&updatePossibleTransitions(
-    gch::small_vector<size_t, 32> &&possible_transitions,
-    const std::vector<SmallVectorInput> &input_n,
-    const std::vector<int8_t> &priority,
-    const std::vector<AugmentedToken> &tokens) {
-  possible_transitions.erase(
-      std::remove_if(
-          possible_transitions.begin(), possible_transitions.end(),
-          [&](auto t_idx) { return !canFire(input_n[t_idx], tokens); }),
-      possible_transitions.end());
-
-  // sort transition list according to priority
-  std::sort(possible_transitions.begin(), possible_transitions.end(),
-            [&](size_t a, size_t b) { return priority[a] > priority[b]; });
-
-  return std::move(possible_transitions);
-}
-
 void Petri::fireTransitions() {
-  // find possibly active transitions && remove inactive transitions
-  auto possible_transition_list_n = updatePossibleTransitions(
-      possibleTransitions(tokens, net.input_n, net.p_to_ts_n), net.input_n,
-      net.priority, tokens);
+  auto ts = possibleTransitions(tokens, net.input_n, net.p_to_ts_n);
+  std::sort(ts.begin(), ts.end(), [&](size_t a, size_t b) {
+    return net.priority[a] > net.priority[b];
+  });
 
   // loop
-  while (!possible_transition_list_n.empty()) {
-    const auto t_idx = possible_transition_list_n.front();
-    deductMarking(tokens, net.input_n[t_idx]);
-    if (isSynchronous(net.store[t_idx])) {
-      fireSynchronous(t_idx);
-      // add the output places-connected transitions as new possible
-      // transitions if they are not already in the list.
+  while (!ts.empty()) {
+    const auto t_idx = ts.front();
+    const bool is_synchronous = isSynchronous(net.store[t_idx]);
+    const bool can_fire = canFire(net.input_n[t_idx], tokens);
+
+    // fire!
+    if (can_fire) {
+      deductMarking(tokens, net.input_n[t_idx]);
+      std::invoke(
+          is_synchronous ? &Petri::fireSynchronous : &Petri::fireAsynchronous,
+          this, t_idx);
+    }
+
+    // If the transition couldn't be fired or can not be fired again, remove the
+    // transition
+    if (not can_fire || not canFire(net.input_n[t_idx], tokens)) {
+      std::rotate(ts.begin(), ts.begin() + 1, ts.end());
+      ts.pop_back();
+    }
+
+    // if the fired transition was synchronous, we have to check if the new
+    // tokens enable possible transitions
+    if (can_fire && is_synchronous) {
       for (const auto &[p, c] : net.output_n[t_idx]) {
-        for (const auto &t : net.p_to_ts_n[p]) {
-          if (std::find(possible_transition_list_n.begin(),
-                        possible_transition_list_n.end(),
-                        t) == possible_transition_list_n.end()) {
-            possible_transition_list_n.push_back(t);
+        for (const auto &new_transition : net.p_to_ts_n[p]) {
+          if (std::find(ts.begin(), ts.end(), new_transition) == ts.end()) {
+            ts.push_back(new_transition);
           }
         }
       }
-    } else {
-      fireAsynchronous(t_idx);
+      // we have to sort by priority again because we added priorities.
+      std::sort(ts.begin(), ts.end(), [&](size_t a, size_t b) {
+        return net.priority[a] > net.priority[b];
+      });
     }
-    possible_transition_list_n =
-        updatePossibleTransitions(std::move(possible_transition_list_n),
-                                  net.input_n, net.priority, tokens);
   }
 
   return;
