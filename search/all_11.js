@@ -9,7 +9,7 @@ var searchData=
   ['the_20level_20of_20transitions_6',['Failure at the level of transitions',['../md_docs_2symmetri__nets.html#autotoc_md4',1,'']]],
   ['the_20symmetri_20eventloop_7',['The Symmetri eventloop',['../md_docs_2symmetri__lib.html#autotoc_md14',1,'']]],
   ['thread_5fid_5f_8',['thread_id_',['../structsymmetri_1_1Petri.html#a864a4c4579ab08691e5e62ec0c254586',1,'symmetri::Petri']]],
-  ['toindex_9',['toIndex',['../classsymmetri_1_1Token.html#a475c2804c09cff3d141be8fae30c15ee',1,'symmetri::Token::toIndex()'],['../petri_8h.html#acf5def1daa631f8fae536487ba1e09da',1,'symmetri::toIndex(const std::vector&lt; std::string &gt; &amp;m, const std::string &amp;s)']]],
+  ['toindex_9',['toIndex',['../petri_8h.html#acf5def1daa631f8fae536487ba1e09da',1,'symmetri']]],
   ['token_10',['Token',['../classsymmetri_1_1Token.html',1,'symmetri']]],
   ['tokens_11',['tokens',['../structsymmetri_1_1Petri.html#a91b8baf5aee3b8164258402cbe5f62b9',1,'symmetri::Petri']]],
   ['totokens_12',['toTokens',['../structsymmetri_1_1Petri.html#a1e76fcc186384956938477f8cd3ba174',1,'symmetri::Petri']]],
