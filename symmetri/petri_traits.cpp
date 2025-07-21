@@ -30,32 +30,25 @@ Token fire(const PetriNet &app) {
   while (m.reducer_queue->try_dequeue(f)) { /* get rid of old reducers  */
   }
 
+  bool marking_reached = false;
+
   // start!
-  m.reducer_queue->enqueue([=](Petri &) {});
+  m.fireTransitions();
   while ((m.state == Started || m.state == Paused) &&
          m.reducer_queue->wait_dequeue_timed(f, -1)) {
     do {
       f(m);
     } while (m.reducer_queue->try_dequeue(f));
 
-    if (MarkingReached(m.tokens, m.final_marking)) {
+    if ((marking_reached = MarkingReached(m.tokens, m.final_marking))) {
       m.state = Success;
-    }
-
-    if (m.state == Started) {
-      // we're firing
+    } else if (m.state == Started) {
       m.fireTransitions();
-      // if there's nothing to fire; we deadlocked
-      if (MarkingReached(m.tokens, m.final_marking)) {
-        m.state = Success;
-      } else if (m.scheduled_callbacks.size() == 0) {
+      if (m.scheduled_callbacks.empty() &&
+          not(marking_reached = MarkingReached(m.tokens, m.final_marking))) {
         m.state = Deadlocked;
       }
     }
-  }
-
-  if (MarkingReached(m.tokens, m.final_marking)) {
-    m.state = Success;
   }
 
   for (const auto transition_index : m.scheduled_callbacks) {
