@@ -14,6 +14,7 @@ var hierarchy =
     [ "symmetri::SmallEvent", "structsymmetri_1_1SmallEvent.html", null ],
     [ "symmetri::TaskSystem", "classsymmetri_1_1TaskSystem.html", null ],
     [ "symmetri::Token", "classsymmetri_1_1Token.html", [
+      [ "symmetri::Cancel", "structsymmetri_1_1Cancel.html", null ],
       [ "symmetri::Canceled", "structsymmetri_1_1Canceled.html", null ],
       [ "symmetri::Deadlocked", "structsymmetri_1_1Deadlocked.html", null ],
       [ "symmetri::Failed", "structsymmetri_1_1Failed.html", null ],

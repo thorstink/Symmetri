@@ -5,6 +5,7 @@ var annotated_dup =
     ] ],
     [ "symmetri", null, [
       [ "Callback", "classsymmetri_1_1Callback.html", "classsymmetri_1_1Callback" ],
+      [ "Cancel", "structsymmetri_1_1Cancel.html", null ],
       [ "Canceled", "structsymmetri_1_1Canceled.html", null ],
       [ "Deadlocked", "structsymmetri_1_1Deadlocked.html", null ],
       [ "DirectMutation", "structsymmetri_1_1DirectMutation.html", null ],
