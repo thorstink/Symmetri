@@ -58,11 +58,6 @@ Token fire(const PetriNet &app) {
     m.state = Success;
   }
 
-  for (const auto transition_index : m.scheduled_callbacks) {
-    cancel(m.net.store.at(transition_index));
-    m.log.push_back({transition_index, Canceled, Clock::now()});
-  }
-
   while (!m.scheduled_callbacks.empty()) {
     if (m.reducer_queue->wait_dequeue_timed(f, std::chrono::milliseconds(10))) {
       f(m);
@@ -79,7 +74,7 @@ void cancel(const PetriNet &app) {
     model.state = Canceled;
     for (const auto transition_index : model.scheduled_callbacks) {
       cancel(model.net.store.at(transition_index));
-      model.log.push_back({transition_index, Canceled, Clock::now()});
+      model.log.push_back({transition_index, Cancel, Clock::now()});
     }
   });
 }
