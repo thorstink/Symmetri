@@ -6,18 +6,18 @@ using namespace tinyxml2;
 namespace farbart {
 
 std::map<std::string, model::Coordinate> readPnmlPositions(
-    const std::set<std::string> &files) {
+    const std::set<std::string>& files) {
   std::map<std::string, model::Coordinate> positions;
 
   for (auto file : files) {
     XMLDocument net;
     net.LoadFile(file.c_str());
-    XMLElement *levelElement = net.FirstChildElement("pnml")
+    XMLElement* levelElement = net.FirstChildElement("pnml")
                                    ->FirstChildElement("net")
                                    ->FirstChildElement("page");
 
     // loop places.
-    for (XMLElement *child = levelElement->FirstChildElement("place");
+    for (XMLElement* child = levelElement->FirstChildElement("place");
          child != NULL; child = child->NextSiblingElement("place")) {
       auto place_id = child->Attribute("id");
       auto position =
@@ -27,7 +27,7 @@ std::map<std::string, model::Coordinate> readPnmlPositions(
     }
 
     // loop transitions
-    for (XMLElement *child = levelElement->FirstChildElement("transition");
+    for (XMLElement* child = levelElement->FirstChildElement("transition");
          child != NULL; child = child->NextSiblingElement("transition")) {
       auto transition_id = child->Attribute("id");
       auto position =
@@ -37,6 +37,32 @@ std::map<std::string, model::Coordinate> readPnmlPositions(
     }
   }
 
+  return positions;
+}
+
+std::map<std::string, model::Coordinate> readGrmlPositions(
+    const std::set<std::string>& files) {
+  std::map<std::string, model::Coordinate> positions;
+
+  for (auto file : files) {
+    XMLDocument net;
+    net.LoadFile(file.c_str());
+    XMLElement* levelElement = net.FirstChildElement("model");
+    for (XMLElement* child = levelElement->FirstChildElement("node");
+         child != NULL; child = child->NextSiblingElement("node")) {
+      for (XMLElement* attribute = child->FirstChildElement("attribute");
+           attribute != NULL;
+           attribute = attribute->NextSiblingElement("attribute")) {
+        const std::string child_attribute =
+            std::string(attribute->Attribute("name"));
+        if (child_attribute == "name") {
+          auto place_id = std::string(attribute->GetText());
+          positions[place_id] = {std::stof(child->Attribute("x")),
+                                 std::stof(child->Attribute("y"))};
+        }
+      }
+    }
+  }
   return positions;
 }
 }  // namespace farbart

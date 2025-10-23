@@ -28,9 +28,6 @@ int main(int, char **) {
   ImGuiIO &io = ImGui::GetIO();
   (void)io;
 
-  io.Fonts->AddFontFromFileTTF(
-      "/Users/thomashorstink/Projects/Symmetri/symmetri/gui/imgui/misc/fonts/CascadiaCode.ttf", 15);
-
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
 

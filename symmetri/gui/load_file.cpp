@@ -32,6 +32,7 @@ void loadPetriNet(const std::filesystem::path& file) {
       positions = farbart::readPnmlPositions({pn_file});
     } else {
       std::tie(net, marking, pt) = symmetri::readGrml({pn_file});
+      positions = farbart::readGrmlPositions({pn_file});
     }
 
     symmetri::Petri::PTNet new_net;
