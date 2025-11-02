@@ -57,8 +57,8 @@ std::map<std::string, model::Coordinate> readGrmlPositions(
             std::string(attribute->Attribute("name"));
         if (child_attribute == "name") {
           auto place_id = std::string(attribute->GetText());
-          positions[place_id] = {std::stof(child->Attribute("x")),
-                                 std::stof(child->Attribute("y"))};
+          positions[place_id] = {2.0f * std::stof(child->Attribute("x")),
+                                 2.0f * std::stof(child->Attribute("y"))};
         }
       }
     }
