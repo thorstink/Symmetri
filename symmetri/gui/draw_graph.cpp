@@ -25,7 +25,7 @@
 static ImVec2 size;
 static ImVec2 offset;
 
-static const ImVec2 NODE_WINDOW_PADDING(8.0f, 8.0f);
+static const ImVec2 NODE_WINDOW_PADDING(16.0f, 16.0f);
 
 static ImVec2 GetCenterPos(const model::Coordinate& pos, const ImVec2& size) {
   return ImVec2(pos.x + size.x * 0.5f, pos.y + size.y * 0.5f);
@@ -114,13 +114,17 @@ void draw_nodes(bool is_place, size_t idx, const std::string& name,
   ImGui::PushID(is_place ? idx + 10000 : idx);
   ImVec2 node_rect_min = offset + ImVec2(position.x, position.y);
 
+  ImGui::PushFont(NULL, .85f * ImGui::GetFontSize());
   // Display node contents first
   auto textWidth = ImGui::CalcTextSize(name.c_str()).x;
-  ImGui::SetCursorScreenPos(node_rect_min + NODE_WINDOW_PADDING +
-                            ImVec2(8.0f - textWidth * 0.5f, -20.0f));
+  ImGui::SetCursorScreenPos(
+      node_rect_min + NODE_WINDOW_PADDING +
+      ImVec2(8.0f - textWidth * 0.5f, -3.0f * NODE_WINDOW_PADDING.y));
   ImGui::BeginGroup();              // Lock horizontal position
   ImGui::Text("%s", name.c_str());  // this crashed once..
+
   ImGui::EndGroup();
+  ImGui::PopFont();
 
   // Save the size of what we have emitted and whether any of the widgets are
   // being used
