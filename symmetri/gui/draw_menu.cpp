@@ -28,7 +28,7 @@ void drawTokenLine(const symmetri::AugmentedToken& at) {
   ImGui::SameLine();
   ImGui::TextColored(
       ImGui::ColorConvertU32ToFloat4(getColor(std::get<symmetri::Token>(at))),
-      "%s", std::get<symmetri::Token>(at).toString());
+      "%s", std::get<symmetri::Token>(at).toString().c_str());
 }
 
 void draw_menu(const model::ViewModel& vm) {
@@ -79,11 +79,13 @@ void draw_menu(const model::ViewModel& vm) {
                        updatePriority(selected_idx));
       ImGui::Text("Output");
       ImGui::SameLine();
-      if (ImGui::BeginCombo("##output",
-                            fire(vm.net.store[selected_idx]).toString())) {
+      if (ImGui::BeginCombo(
+              "##output",
+              fire(vm.net.store[selected_idx]).toString().c_str())) {
         for (const auto& color : vm.colors) {
-          if (ImGui::Selectable(color)) {
-            updateTransitionOutputColor(selected_idx, symmetri::Token(color));
+          if (ImGui::Selectable(color.data())) {
+            updateTransitionOutputColor(selected_idx,
+                                        symmetri::Token(color.data()));
           }
         }
         ImGui::EndCombo();
@@ -97,11 +99,12 @@ void draw_menu(const model::ViewModel& vm) {
         (is_input ? vm.net.input_n : vm.net.output_n)[selected_idx][sub_idx]);
 
     if (is_input) {
-      drawColorDropdownMenu(color.toString(), vm.colors, [=](const char* c) {
-        updateArcColor(is_input, selected_idx, sub_idx, symmetri::Token(c));
+      drawColorDropdownMenu(color.toString(), vm.colors, [=](auto c) {
+        updateArcColor(is_input, selected_idx, sub_idx,
+                       symmetri::Token(c.data()));
       });
     } else {
-      ImGui::Text("%s", color.toString());
+      ImGui::Text("%s", color.toString().c_str());
     }
   }
   ImGui::Dummy(ImVec2(0.0f, 20.0f));
@@ -146,7 +149,7 @@ void draw_menu(const model::ViewModel& vm) {
         ImGui::Text("%s,", vm.net.place[place].c_str());
         ImGui::SameLine();
         ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(getColor(color)),
-                           "%s", color.toString());
+                           "%s", color.toString().c_str());
       }
       ImGui::EndTabItem();
     }
@@ -162,9 +165,9 @@ void draw_menu(const model::ViewModel& vm) {
       }
       ImGui::Separator();
       for (const auto& color : vm.colors) {
-        ImGui::TextColored(
-            ImGui::ColorConvertU32ToFloat4(getColor(symmetri::Token(color))),
-            "%s", color);
+        ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(
+                               getColor(symmetri::Token(color.data()))),
+                           "%s", color.data());
       }
       ImGui::EndTabItem();
     }

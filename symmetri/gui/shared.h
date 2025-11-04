@@ -7,10 +7,6 @@
 
 ImU32 getColor(symmetri::Token token);
 
-void drawColorDropdownMenu(const char* menu_name,
-                           const std::vector<std::string>& colors,
-                           const std::function<void(const std::string&)>& func);
-
-void drawColorDropdownMenu(const char* menu_name,
-                           const std::vector<const char*>& colors,
-                           const std::function<void(const char*)>& func);
+void drawColorDropdownMenu(const std::string& menu_name,
+                           const std::vector<std::string_view>& colors,
+                           const std::function<void(std::string_view)>& func);

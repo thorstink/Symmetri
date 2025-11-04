@@ -33,7 +33,7 @@ struct Model {
     std::map<Drawable, std::promise<void>> blockers;
     std::vector<Coordinate> t_positions, p_positions;
     std::vector<size_t> t_view, p_view;
-    std::vector<const char *> colors = symmetri::Token::getColors();
+    std::vector<std::string_view> colors = symmetri::Token::getColors();
     std::vector<symmetri::AugmentedToken> tokens;
     std::vector<Drawable> drawables;
     symmetri::Petri::PTNet net;
@@ -53,7 +53,7 @@ struct ViewModel {
   const std::string active_file;
 
   std::vector<size_t> t_view, p_view;
-  std::vector<const char *> colors;
+  std::vector<std::string_view> colors;
   std::vector<symmetri::AugmentedToken> tokens;
 
   const symmetri::Petri::PTNet &net;
