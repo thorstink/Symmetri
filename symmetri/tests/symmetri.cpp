@@ -220,7 +220,7 @@ TEST_CASE("Types") {
   CHECK(not bool(Canceled == ExternalState));
   CHECK(not bool(Failed == ExternalState));
   CHECK(bool(ExternalState == ExternalState));
-  CHECK(bool(ExternalState.toString() != NULL));
+  CHECK(bool(ExternalState.toString().empty() == false));
 }
 
 TEST_CASE("Test color names") {

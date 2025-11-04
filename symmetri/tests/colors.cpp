@@ -41,3 +41,13 @@ TEST_CASE("Test color.") {
     CHECK(MarkingEquality(marking, expected));
   }
 }
+
+TEST_CASE("Test color if original string dies.") {
+  char test[128] = "Testmylonglive";
+  Token a(test);
+  const auto before = a.toString();
+  CHECK("Testmylonglive" == before);
+  strcpy(test, "dead");
+  const auto after = a.toString();
+  CHECK("Testmylonglive" == after);
+}
