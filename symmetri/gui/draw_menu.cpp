@@ -28,7 +28,7 @@ void drawTokenLine(const symmetri::AugmentedToken& at) {
   ImGui::SameLine();
   ImGui::TextColored(
       ImGui::ColorConvertU32ToFloat4(getColor(std::get<symmetri::Token>(at))),
-      "%s", std::get<symmetri::Token>(at).toString().c_str());
+      "%s", std::get<symmetri::Token>(at).toString().data());
 }
 
 void draw_menu(const model::ViewModel& vm) {
@@ -80,8 +80,7 @@ void draw_menu(const model::ViewModel& vm) {
       ImGui::Text("Output");
       ImGui::SameLine();
       if (ImGui::BeginCombo(
-              "##output",
-              fire(vm.net.store[selected_idx]).toString().c_str())) {
+              "##output", fire(vm.net.store[selected_idx]).toString().data())) {
         for (const auto& color : vm.colors) {
           if (ImGui::Selectable(color.data())) {
             updateTransitionOutputColor(selected_idx,
@@ -92,19 +91,19 @@ void draw_menu(const model::ViewModel& vm) {
       }
     }
   } else if (vm.selected_arc_idxs.has_value()) {
-    const auto& [is_input, selected_idx, sub_idx] =
-        vm.selected_arc_idxs.value();
+    const auto [is_input, selected_idx, sub_idx] = vm.selected_arc_idxs.value();
 
     const auto color = std::get<symmetri::Token>(
         (is_input ? vm.net.input_n : vm.net.output_n)[selected_idx][sub_idx]);
 
     if (is_input) {
-      drawColorDropdownMenu(color.toString(), vm.colors, [=](auto c) {
-        updateArcColor(is_input, selected_idx, sub_idx,
-                       symmetri::Token(c.data()));
-      });
+      drawColorDropdownMenu(std::string(color.toString()), vm.colors,
+                            [=](auto c) {
+                              updateArcColor(is_input, selected_idx, sub_idx,
+                                             symmetri::Token(c.data()));
+                            });
     } else {
-      ImGui::Text("%s", color.toString().c_str());
+      ImGui::Text("%s", color.toString().data());
     }
   }
   ImGui::Dummy(ImVec2(0.0f, 20.0f));
@@ -149,7 +148,7 @@ void draw_menu(const model::ViewModel& vm) {
         ImGui::Text("%s,", vm.net.place[place].c_str());
         ImGui::SameLine();
         ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(getColor(color)),
-                           "%s", color.toString().c_str());
+                           "%s", color.toString().data());
       }
       ImGui::EndTabItem();
     }
