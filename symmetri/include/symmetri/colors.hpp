@@ -4,15 +4,12 @@
 
 #include <string.h>
 
-#include <algorithm>
-#include <array>  // std::array
+#include <array>
 #include <cassert>
-#include <cstdio>
-#include <functional>
+#include <cstdint>
+#include <limits>
 #include <string_view>
-#include <type_traits>
-#include <utility>  // std::index_sequence
-#include <vector>   // hash
+#include <vector>
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 namespace sym_impl {
@@ -58,7 +55,7 @@ struct type_name_holder {
 
 template <typename T>
 constexpr auto type_name() -> std::string_view {
-  constexpr auto &value = type_name_holder<T>::value;
+  constexpr auto& value = type_name_holder<T>::value;
   return std::string_view{value.data(), value.size()};
 }
 
@@ -75,74 +72,85 @@ namespace symmetri {
  *
  */
 class Token {
+ private:
+  /**
+   * @brief The type of TokenColorIndexType determines the amount of different
+   * tokens available
+   *
+   */
+  typedef uint8_t TokenColorIndexType;
+
+  constexpr bool strings_equal(char const* a, char const* b) {
+    return *a == *b && (*a == '\0' || strings_equal(a + 1, b + 1));
+  }
+  constexpr TokenColorIndexType find(const char* key) {
+    TokenColorIndexType i = 0;
+    while (i < colors.size()) {
+      if (strings_equal(colors[i].data(), key)) return i;
+      ++i;
+    }
+    return findSlot();
+  }
+
+  constexpr TokenColorIndexType findSlot() {
+    TokenColorIndexType i = 0;
+    while (i < colors.size()) {
+      if (strlen(colors[i].data()) == 0) return i;
+      ++i;
+    }
+    return i;
+  }
+
  public:
   /**
    * @brief Get a list of all the colors
    *
    * @return std::vector<std::string_view>
    */
-  static auto getColors() {
+  static std::vector<std::string_view> getColors() {
     std::vector<std::string_view> _colors;
     _colors.reserve(colors.size());
-    std::copy_if(colors.begin(), colors.end(), std::back_inserter(_colors),
-                 [](const auto &color) { return not color.empty(); });
+    for (const auto& s : colors) {
+      if (strlen(s.data()) > 0) {
+        _colors.emplace_back(s.data());
+      }
+    }
     return _colors;
   }
 
-  constexpr const auto &toString() const { return colors[id]; }
+  constexpr std::string_view toString() const {
+    return std::string_view(colors[id].data());
+  }
 
   template <class T>
-  constexpr bool operator==(const T &t) const {
+  constexpr bool operator==(const T& t) const {
     return id == t.id;
   }
 
-  constexpr bool operator<(const Token &rhs) const {
+  constexpr bool operator<(const Token& rhs) const {
     return id < rhs.toIndex();
   }
 
-  constexpr bool operator>(const Token &rhs) const {
+  constexpr bool operator>(const Token& rhs) const {
     return id > rhs.toIndex();
   }
 
-  constexpr size_t toIndex() const { return id; }
+  constexpr TokenColorIndexType toIndex() const { return id; }
 
-  template <class X, class V>
-  static constexpr auto find(X &x, V key) {
-    std::size_t i = 0;
-    while (i < x.size()) {
-      if (not x[i].empty() && x[i] == std::string_view(key)) return i;
-      ++i;
-    }
-
-    return i;
-  }
-
-  template <class X>
-  static constexpr auto findSlot(X &x) {
-    std::size_t i = 0;
-    while (i < x.size()) {
-      if (x[i].empty()) return i;
-      ++i;
-    }
-
-    return i;
-  }
-
-  constexpr Token(const char *_id)
-      : id(find(colors, _id) < kMaxTokenColors ? find(colors, _id)
-                                               : findSlot(colors)) {
+  constexpr Token(const char* _id) : id(find(_id)) {
     assert(id < colors.size() &&
            "There can only be kMaxTokenColors different token-colors.");
-    if (colors[id].empty()) {
-      colors[id] = std::string(_id);
+    if (strlen(colors[id].data()) == 0) {
+      strcpy(colors[id].data(), _id);
     }
   }
 
  protected:
-  const static size_t kMaxTokenColors =
-      100;  ///< Maximum amount of different colors
-  inline static std::array<std::string, kMaxTokenColors> colors = {};
-  size_t id;
+  inline static std::array<std::array<char, 64>,
+                           std::numeric_limits<TokenColorIndexType>::max()>
+      colors = {};
+
+  TokenColorIndexType id;
 };
 
 }  // namespace symmetri
@@ -150,7 +158,7 @@ class Token {
 // Custom specialization of std::hash can be injected in namespace std.
 template <>
 struct std::hash<symmetri::Token> {
-  constexpr std::size_t operator()(const symmetri::Token &s) const noexcept {
+  constexpr std::size_t operator()(const symmetri::Token& s) const noexcept {
     return s.toIndex();
   }
 };
