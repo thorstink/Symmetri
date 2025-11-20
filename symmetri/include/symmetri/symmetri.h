@@ -107,6 +107,13 @@ class PetriNet final {
   Marking getMarking() const noexcept;
 
   /**
+   * @brief Get the list of active transitions. This function is thread-safe and be called
+   * during PetriNet execution.
+   *
+   */
+  std::vector<Transition> getActiveTransitions() const noexcept;
+
+  /**
    * @brief reuseApplication resets the PetriNet such that the same net can
    * be used again after a cancel call or natural termination of the PetriNet.
    * You do need to supply a new case_id which must be different.

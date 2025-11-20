@@ -3,20 +3,20 @@
 namespace symmetri {
 std::tuple<std::vector<std::string>, std::vector<std::string>,
            std::vector<Callback>>
-convert(const Net &_net) {
+convert(const Net& _net) {
   const auto transition_count = _net.size();
   std::vector<std::string> transitions;
   std::vector<std::string> places;
   std::vector<Callback> store;
   transitions.reserve(transition_count);
   store.reserve(transition_count);
-  for (const auto &[t, io] : _net) {
+  for (const auto& [t, io] : _net) {
     transitions.push_back(t);
     store.emplace_back(identity<DirectMutation>{});
-    for (const auto &p : io.first) {
+    for (const auto& p : io.first) {
       places.push_back(p.first);
     }
-    for (const auto &p : io.second) {
+    for (const auto& p : io.second) {
       places.push_back(p.first);
     }
     // sort and remove duplicates.
@@ -28,16 +28,16 @@ convert(const Net &_net) {
 }
 
 std::tuple<std::vector<SmallVectorInput>, std::vector<SmallVectorInput>>
-populateIoLookups(const Net &_net, const std::vector<Place> &ordered_places) {
+populateIoLookups(const Net& _net, const std::vector<Place>& ordered_places) {
   std::vector<SmallVectorInput> input_n, output_n;
-  for (const auto &[t, io] : _net) {
+  for (const auto& [t, io] : _net) {
     SmallVectorInput q_in, q_out;
-    for (const auto &p : io.first) {
+    for (const auto& p : io.first) {
       q_in.push_back(
           std::make_tuple(toIndex(ordered_places, p.first), p.second));
     }
     input_n.push_back(q_in);
-    for (const auto &p : io.second) {
+    for (const auto& p : io.second) {
       q_out.push_back({toIndex(ordered_places, p.first), p.second});
     }
     output_n.push_back(q_out);
@@ -47,12 +47,12 @@ populateIoLookups(const Net &_net, const std::vector<Place> &ordered_places) {
 
 std::vector<SmallVector> createReversePlaceToTransitionLookup(
     size_t place_count, size_t transition_count,
-    const std::vector<SmallVectorInput> &input_transitions) {
+    const std::vector<SmallVectorInput>& input_transitions) {
   std::vector<SmallVector> p_to_ts_n;
   for (size_t p = 0; p < place_count; p++) {
     SmallVector q;
     for (size_t c = 0; c < transition_count; c++) {
-      for (const auto &[input_place, input_color] : input_transitions[c]) {
+      for (const auto& [input_place, input_color] : input_transitions[c]) {
         if (p == input_place && std::find(q.begin(), q.end(), c) == q.end()) {
           q.push_back(c);
         }
@@ -64,19 +64,19 @@ std::vector<SmallVector> createReversePlaceToTransitionLookup(
 }
 
 std::vector<int8_t> createPriorityLookup(
-    const std::vector<Transition> transition, const PriorityTable &_priority) {
+    const std::vector<Transition> transition, const PriorityTable& _priority) {
   std::vector<int8_t> priority;
-  for (const auto &t : transition) {
+  for (const auto& t : transition) {
     auto ptr = std::find_if(_priority.begin(), _priority.end(),
-                            [t](const auto &a) { return a.first == t; });
+                            [t](const auto& a) { return a.first == t; });
     priority.push_back(ptr != _priority.end() ? ptr->second : 0);
   }
   return priority;
 }
 
-Petri::Petri(const Net &_net, const PriorityTable &_priority,
-             const Marking &_initial_tokens, const Marking &_final_marking,
-             const std::string &_case_id,
+Petri::Petri(const Net& _net, const PriorityTable& _priority,
+             const Marking& _initial_tokens, const Marking& _final_marking,
+             const std::string& _case_id,
              std::shared_ptr<TaskSystem> threadpool)
     : log({}),
       state(Scheduled),
@@ -100,22 +100,22 @@ Petri::Petri(const Net &_net, const PriorityTable &_priority,
 }
 
 std::vector<AugmentedToken> Petri::toTokens(
-    const Marking &marking) const noexcept {
+    const Marking& marking) const noexcept {
   std::vector<AugmentedToken> tokens;
-  for (const auto &[p, c] : marking) {
+  for (const auto& [p, c] : marking) {
     tokens.push_back({toIndex(net.place, p), c});
   }
   return tokens;
 }
 
 void Petri::fireSynchronous(const size_t t) {
-  const auto &task = net.store[t];
-  const auto &lookup_t = net.output_n[t];
+  const auto& task = net.store[t];
+  const auto& lookup_t = net.output_n[t];
   const auto now = Clock::now();
   log.push_back({t, Started, now});
   auto result = fire(task);
   log.push_back({t, result, now});
-  for (const auto &[p, c] : lookup_t) {
+  for (const auto& [p, c] : lookup_t) {
     tokens.push_back({p, result});
   }
 }
@@ -127,26 +127,26 @@ void Petri::fireAsynchronous(const size_t t_i) {
   // defer execution of the transition to the threadpool
   pool->push([t_i, this] {
     // log the start on the petri loop;
-    reducer_queue->enqueue([t_i, t_start = Clock::now()](Petri &model) {
+    reducer_queue->enqueue([t_i, t_start = Clock::now()](Petri& model) {
       model.log.push_back({t_i, Started, t_start});
     });
 
     // fire the transition and defer a reducer to the petri loop to update the
     // marking and log
-    reducer_queue->enqueue([t_i, result = fire(net.store[t_i])](Petri &model) {
+    reducer_queue->enqueue([t_i, result = fire(net.store[t_i])](Petri& model) {
       // if it is in the active transition set it means it is finished and
       // we should process it.
       const auto t_end = model.net.store[t_i].getEndTime();
       const auto it = std::find(model.scheduled_callbacks.begin(),
                                 model.scheduled_callbacks.end(), t_i);
       if (it != model.scheduled_callbacks.end()) {
-        const auto &place_list = model.net.output_n[t_i];
+        const auto& place_list = model.net.output_n[t_i];
         if (model.tokens.size() + place_list.size() > model.tokens.capacity()) {
           model.tokens.reserve(
               std::max(2 * model.tokens.size(),
                        model.tokens.size() + place_list.size()));
         }
-        for (const auto &[p, c] : place_list) {
+        for (const auto& [p, c] : place_list) {
           model.tokens.emplace_back(p, result);
         }
         std::swap(*std::prev(model.scheduled_callbacks.end()), *it);
@@ -157,9 +157,9 @@ void Petri::fireAsynchronous(const size_t t_i) {
   });
 }
 
-void deductMarking(std::vector<AugmentedToken> &tokens,
-                   const SmallVectorInput &inputs) {
-  for (const auto &place : inputs) {
+void deductMarking(std::vector<AugmentedToken>& tokens,
+                   const SmallVectorInput& inputs) {
+  for (const auto& place : inputs) {
     tokens.erase(std::find(tokens.begin(), tokens.end(), place));
   }
 }
@@ -194,8 +194,8 @@ void Petri::fireTransitions() {
     // if the fired transition was synchronous, we have to check if the new
     // tokens enable possible transitions
     if (can_fire && is_synchronous) {
-      for (const auto &[p, c] : net.output_n[t_idx]) {
-        for (const auto &new_transition : net.p_to_ts_n[p]) {
+      for (const auto& [p, c] : net.output_n[t_idx]) {
+        for (const auto& new_transition : net.p_to_ts_n[p]) {
           if (std::find(ts.begin(), ts.end(), new_transition) == ts.end()) {
             ts.push_back(new_transition);
           }
@@ -222,15 +222,26 @@ Marking Petri::getMarking() const {
   return marking;
 }
 
+std::vector<Transition> Petri::getActiveTransitions() const {
+  std::vector<Transition> active_transitions;
+  active_transitions.reserve(scheduled_callbacks.size());
+  std::transform(scheduled_callbacks.cbegin(), scheduled_callbacks.cend(),
+                 std::back_inserter(active_transitions),
+                 [&](auto transition_index) -> std::string {
+                   return net.transition[transition_index];
+                 });
+  return active_transitions;
+}
+
 Eventlog Petri::getLogInternal() const {
   Eventlog eventlog;
   eventlog.reserve(log.size());
-  for (const auto &[t_i, result, time] : log) {
+  for (const auto& [t_i, result, time] : log) {
     eventlog.push_back({case_id, net.transition[t_i], result, time});
   }
 
   // get event log from parent nets:
-  for (const auto &callback : net.store) {
+  for (const auto& callback : net.store) {
     Eventlog sub_el = getLog(callback);
     if (!sub_el.empty()) {
       eventlog.insert(eventlog.end(), sub_el.begin(), sub_el.end());
@@ -238,7 +249,7 @@ Eventlog Petri::getLogInternal() const {
   }
 
   std::sort(eventlog.begin(), eventlog.end(),
-            [](const auto &a, const auto &b) { return a.stamp < b.stamp; });
+            [](const auto& a, const auto& b) { return a.stamp < b.stamp; });
 
   return eventlog;
 }

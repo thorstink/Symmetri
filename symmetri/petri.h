@@ -57,7 +57,7 @@ using SmallVectorInput = gch::small_vector<AugmentedToken, 4>;
  * @param s
  * @return size_t
  */
-size_t toIndex(const std::vector<std::string> &m, const std::string &s);
+size_t toIndex(const std::vector<std::string>& m, const std::string& s);
 
 /**
  * @brief calculates a list of possible transitions given the current
@@ -69,9 +69,9 @@ size_t toIndex(const std::vector<std::string> &m, const std::string &s);
  * @return gch::small_vector<size_t, 32>
  */
 gch::small_vector<size_t, 32> possibleTransitions(
-    const std::vector<AugmentedToken> &tokens,
-    const std::vector<SmallVectorInput> &input_n,
-    const std::vector<SmallVector> &p_to_ts_n);
+    const std::vector<AugmentedToken>& tokens,
+    const std::vector<SmallVectorInput>& input_n,
+    const std::vector<SmallVector>& p_to_ts_n);
 
 /**
  * @brief Takes a vector of input places (pre-conditions) and the current token
@@ -83,7 +83,7 @@ gch::small_vector<size_t, 32> possibleTransitions(
  * @return true if the pre-conditions are met
  * @return false otherwise
  */
-bool canFire(const SmallVectorInput &pre, std::vector<AugmentedToken> &tokens);
+bool canFire(const SmallVectorInput& pre, std::vector<AugmentedToken>& tokens);
 
 /**
  * @brief Forward declaration of the Petri-class
@@ -95,15 +95,15 @@ struct Petri;
  * @brief A Reducer updates the Petri-object. Reducers are used to process the
  * post-callback marking mutations.
  */
-using Reducer = std::function<void(Petri &)>;
+using Reducer = std::function<void(Petri&)>;
 
 /**
  * @brief deducts the set input from the current token distribution
  *
  * @param inputs a vector representing the tokens to be removed
  */
-void deductMarking(std::vector<AugmentedToken> &tokens,
-                   const SmallVectorInput &inputs);
+void deductMarking(std::vector<AugmentedToken>& tokens,
+                   const SmallVectorInput& inputs);
 
 /**
  * @brief Petri is a data structure that encodes the Petri net and holds
@@ -126,15 +126,15 @@ struct Petri {
    * @param _case_id
    * @param threadpool
    */
-  explicit Petri(const Net &_net, const PriorityTable &_priority,
-                 const Marking &_initial_tokens, const Marking &_final_marking,
-                 const std::string &_case_id,
+  explicit Petri(const Net& _net, const PriorityTable& _priority,
+                 const Marking& _initial_tokens, const Marking& _final_marking,
+                 const std::string& _case_id,
                  std::shared_ptr<TaskSystem> threadpool);
   ~Petri() noexcept = default;
-  Petri(Petri const &) = delete;
-  Petri(Petri &&) noexcept = delete;
-  Petri &operator=(Petri const &) = delete;
-  Petri &operator=(Petri &&) noexcept = delete;
+  Petri(Petri const&) = delete;
+  Petri(Petri&&) noexcept = delete;
+  Petri& operator=(Petri const&) = delete;
+  Petri& operator=(Petri&&) noexcept = delete;
 
   /**
    * @brief outputs the marking as a vector of tokens; e.g. [1 1 1 0 5] means 3
@@ -143,7 +143,7 @@ struct Petri {
    * @param marking
    * @return std::vector<size_t>
    */
-  std::vector<AugmentedToken> toTokens(const Marking &marking) const noexcept;
+  std::vector<AugmentedToken> toTokens(const Marking& marking) const noexcept;
 
   /**
    * @brief Get the current marking. It is represented by a vector of places:
@@ -154,6 +154,12 @@ struct Petri {
    * @return std::vector<Place>
    */
   Marking getMarking() const;
+
+  /**
+   * @brief Get the list of active transitions. 
+   * @return std::vector<Transition>
+   */
+  std::vector<Transition> getActiveTransitions() const;
 
   /**
    * @brief get the current eventlog, also copies in all child eventlogs of
@@ -219,7 +225,7 @@ struct Petri {
      */
     std::vector<Callback> store;
 
-    void registerCallback(const std::string &t, Callback &&callback) noexcept {
+    void registerCallback(const std::string& t, Callback&& callback) noexcept {
       if (std::find(transition.begin(), transition.end(), t) !=
           transition.end()) {
         store[toIndex(transition, t)] = std::move(callback);
@@ -263,13 +269,13 @@ struct Petri {
 
 std::tuple<std::vector<std::string>, std::vector<std::string>,
            std::vector<Callback>>
-convert(const Net &_net);
+convert(const Net& _net);
 std::tuple<std::vector<SmallVectorInput>, std::vector<SmallVectorInput>>
-populateIoLookups(const Net &_net, const std::vector<Place> &ordered_places);
+populateIoLookups(const Net& _net, const std::vector<Place>& ordered_places);
 std::vector<SmallVector> createReversePlaceToTransitionLookup(
     size_t place_count, size_t transition_count,
-    const std::vector<SmallVectorInput> &input_transitions);
+    const std::vector<SmallVectorInput>& input_transitions);
 
 std::vector<int8_t> createPriorityLookup(
-    const std::vector<Transition> transition, const PriorityTable &_priority);
+    const std::vector<Transition> transition, const PriorityTable& _priority);
 }  // namespace symmetri
