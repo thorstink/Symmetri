@@ -4,7 +4,7 @@ var petri_8h =
     [ "symmetri::Petri", "structsymmetri_1_1Petri.html", "structsymmetri_1_1Petri" ],
     [ "symmetri::Petri::PTNet", "structsymmetri_1_1Petri_1_1PTNet.html", "structsymmetri_1_1Petri_1_1PTNet" ],
     [ "symmetri::AugmentedToken", "petri_8h.html#a0cb56bc14f2139dbf94d0ed229d34f9c", null ],
-    [ "symmetri::Reducer", "petri_8h.html#acbe7ea854ba6be3596fab040e6e27c87", null ],
+    [ "symmetri::Reducer", "petri_8h.html#a3a8fc04c44290c3a1c35f3d49acd1a0f", null ],
     [ "symmetri::SmallLog", "petri_8h.html#a328f12c35d4af766dbcbfad4f47ac492", null ],
     [ "symmetri::SmallVector", "petri_8h.html#afb64ea9b68f8eaea5b0a4c8df1c7ceb9", null ],
     [ "symmetri::SmallVectorInput", "petri_8h.html#a814de46077038cd1a712ba1b41fc7873", null ],

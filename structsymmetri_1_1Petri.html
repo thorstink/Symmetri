@@ -138,6 +138,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a880bf9aeb3b773009a4d31f1e35d3bba" id="r_a880bf9aeb3b773009a4d31f1e35d3bba"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a2c4038fc3f61d80e28984156f7d5f3b2">Marking</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a880bf9aeb3b773009a4d31f1e35d3bba">getMarking</a> () const</td></tr>
 <tr class="memdesc:a880bf9aeb3b773009a4d31f1e35d3bba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current marking. It is represented by a vector of places: every occurance of a place in this vectors implies a token in that place. This representation does not show the empty places explicitly; if a place is not in this vector you can assume it has no token.  <br /></td></tr>
 <tr class="separator:a880bf9aeb3b773009a4d31f1e35d3bba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad5f7f6f28d1a6c6162c40ed2825e3315" id="r_ad5f7f6f28d1a6c6162c40ed2825e3315"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="types_8h.html#a927677c0ed399fac233e3cb054c17d33">Transition</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad5f7f6f28d1a6c6162c40ed2825e3315">getActiveTransitions</a> () const</td></tr>
+<tr class="memdesc:ad5f7f6f28d1a6c6162c40ed2825e3315"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the list of active transitions.  <br /></td></tr>
+<tr class="separator:ad5f7f6f28d1a6c6162c40ed2825e3315"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac136748694672816d62f96e5d7ed9275" id="r_ac136748694672816d62f96e5d7ed9275"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a104085c382384247b80a170c3e122c83">Eventlog</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac136748694672816d62f96e5d7ed9275">getLogInternal</a> () const</td></tr>
 <tr class="memdesc:ac136748694672816d62f96e5d7ed9275"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the current eventlog, also copies in all child eventlogs of active petri nets.  <br /></td></tr>
 <tr class="separator:ac136748694672816d62f96e5d7ed9275"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -187,7 +190,7 @@ std::string&#160;</td><td class="memItemRight" valign="bottom"><b>case_id</b></t
 std::atomic&lt; std::optional&lt; unsigned int &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>thread_id_</b></td></tr>
 <tr class="memdesc:a864a4c4579ab08691e5e62ec0c254586"><td class="mdescLeft">&#160;</td><td class="mdescRight">The id of the thread from which the <a class="el" href="structsymmetri_1_1Petri.html" title="Petri is a data structure that encodes the Petri net and holds pointers to the thread-pool and the re...">Petri</a> is fired. <br /></td></tr>
 <tr class="separator:a864a4c4579ab08691e5e62ec0c254586"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad12b7a5a2f3341fc17154c3c65f0d00f" id="r_ad12b7a5a2f3341fc17154c3c65f0d00f"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; moodycamel::BlockingConcurrentQueue&lt; <a class="el" href="petri_8h.html#acbe7ea854ba6be3596fab040e6e27c87">Reducer</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad12b7a5a2f3341fc17154c3c65f0d00f">reducer_queue</a></td></tr>
+<tr class="memitem:ad12b7a5a2f3341fc17154c3c65f0d00f" id="r_ad12b7a5a2f3341fc17154c3c65f0d00f"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; moodycamel::BlockingConcurrentQueue&lt; <a class="el" href="petri_8h.html#a3a8fc04c44290c3a1c35f3d49acd1a0f">Reducer</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad12b7a5a2f3341fc17154c3c65f0d00f">reducer_queue</a></td></tr>
 <tr class="separator:ad12b7a5a2f3341fc17154c3c65f0d00f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0bb51fc485b5813c4a66f234952c9e86" id="r_a0bb51fc485b5813c4a66f234952c9e86"><td class="memItemLeft" align="right" valign="top"><a id="a0bb51fc485b5813c4a66f234952c9e86" name="a0bb51fc485b5813c4a66f234952c9e86"></a>
 std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSystem</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pool</b></td></tr>
@@ -285,6 +288,26 @@ std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSy
 
 </div>
 </div>
+<a id="ad5f7f6f28d1a6c6162c40ed2825e3315" name="ad5f7f6f28d1a6c6162c40ed2825e3315"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad5f7f6f28d1a6c6162c40ed2825e3315">&#9670;&#160;</a></span>getActiveTransitions()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; <a class="el" href="types_8h.html#a927677c0ed399fac233e3cb054c17d33">Transition</a> &gt; symmetri::Petri::getActiveTransitions </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get the list of active transitions. </p>
+<dl class="section return"><dt>Returns</dt><dd>std::vector&lt;Transition&gt; </dd></dl>
+
+</div>
+</div>
 <a id="ac136748694672816d62f96e5d7ed9275" name="ac136748694672816d62f96e5d7ed9275"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac136748694672816d62f96e5d7ed9275">&#9670;&#160;</a></span>getLogInternal()</h2>
 
@@ -367,7 +390,7 @@ std::shared_ptr&lt; <a class="el" href="classsymmetri_1_1TaskSystem.html">TaskSy
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::shared_ptr&lt;moodycamel::BlockingConcurrentQueue&lt;<a class="el" href="petri_8h.html#acbe7ea854ba6be3596fab040e6e27c87">Reducer</a>&gt; &gt; symmetri::Petri::reducer_queue</td>
+          <td class="memname">std::shared_ptr&lt;moodycamel::BlockingConcurrentQueue&lt;<a class="el" href="petri_8h.html#a3a8fc04c44290c3a1c35f3d49acd1a0f">Reducer</a>&gt; &gt; symmetri::Petri::reducer_queue</td>
         </tr>
       </table>
 </div><div class="memdoc">

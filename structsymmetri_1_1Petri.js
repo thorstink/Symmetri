@@ -4,6 +4,7 @@ var structsymmetri_1_1Petri =
     [ "Petri", "structsymmetri_1_1Petri.html#add1cba1dbec90538b151ad4db87b52eb", null ],
     [ "fireAsynchronous", "structsymmetri_1_1Petri.html#ad2f1324e61e786cecaafd21803ce1997", null ],
     [ "fireTransitions", "structsymmetri_1_1Petri.html#af463c39b83fe0a7eebd288bf29c3479d", null ],
+    [ "getActiveTransitions", "structsymmetri_1_1Petri.html#ad5f7f6f28d1a6c6162c40ed2825e3315", null ],
     [ "getLogInternal", "structsymmetri_1_1Petri.html#ac136748694672816d62f96e5d7ed9275", null ],
     [ "getMarking", "structsymmetri_1_1Petri.html#a880bf9aeb3b773009a4d31f1e35d3bba", null ],
     [ "toTokens", "structsymmetri_1_1Petri.html#a1e76fcc186384956938477f8cd3ba174", null ],
