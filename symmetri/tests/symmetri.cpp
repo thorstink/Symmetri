@@ -1,6 +1,7 @@
 #include "symmetri/symmetri.h"
 
 #include <filesystem>
+#include <future>
 #include <iostream>
 
 #include "doctest/doctest.h"
@@ -153,6 +154,30 @@ TEST_CASE("Error'd transition shows up in marking") {
         return Failed == pc.second && pc.first == "Pc";
       }) != marking.end();
   CHECK(has_failed_token);
+}
+
+TEST_CASE("Get of active transitions") {
+  auto [net, priority, initial_marking] = SymmetriTestNet();
+  Marking goal_marking = {};
+  const auto initial_id = "get list of transitions";
+  auto threadpool = std::make_shared<TaskSystem>(4);
+  PetriNet app(net, initial_id, threadpool, initial_marking, goal_marking,
+               priority);
+  std::promise<void> barrier0;
+  std::promise<std::vector<Transition>> barrier1;
+  threadpool->push([&] {
+    barrier0.get_future().get();
+    barrier1.set_value(app.getActiveTransitions());
+  });
+  app.registerCallback("t1", [&] {
+    barrier0.set_value();
+    CHECK(barrier1.get_future().get() == std::vector<Transition>{"t1"});
+    return Failed;
+  });
+
+  fire(app);
+  const auto active_transition_list = app.getActiveTransitions();
+  CHECK(active_transition_list.empty());
 }
 
 TEST_CASE("Test pause and resume") {
