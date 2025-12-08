@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <future>
 #include <iostream>
-
+#include <algorithm>
 #include "doctest/doctest.h"
 
 using namespace symmetri;
