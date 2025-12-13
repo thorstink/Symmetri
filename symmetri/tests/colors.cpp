@@ -21,7 +21,7 @@ TEST_CASE("Test color.") {
   m.net.registerCallback("t0", &red);
 
   for (auto [p, c] : m.getMarking()) {
-    std::cout << p << ", " << c.toIndex() << std::endl;
+    std::cout << p << ", " << unsigned(c.toIndex()) << std::endl;
   }
   // t0 is enabled.
   m.fireTransitions();
@@ -36,7 +36,7 @@ TEST_CASE("Test color.") {
   {
     Marking expected = {{"p2", Red}};
     for (auto [p, c] : marking) {
-      std::cout << p << ", " << c.toIndex() << std::endl;
+      std::cout << p << ", " << unsigned(c.toIndex()) << std::endl;
     }
     CHECK(MarkingEquality(marking, expected));
   }
