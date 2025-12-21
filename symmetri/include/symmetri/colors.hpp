@@ -73,29 +73,19 @@ namespace symmetri {
  */
 class Token {
  private:
-  /**
-   * @brief The type of TokenColorIndexType determines the amount of different
-   * tokens available
-   *
-   */
-  typedef uint8_t TokenColorIndexType;
-
-  constexpr bool strings_equal(char const* a, char const* b) {
-    return *a == *b && (*a == '\0' || strings_equal(a + 1, b + 1));
-  }
-  constexpr TokenColorIndexType find(const char* key) {
-    TokenColorIndexType i = 0;
+  constexpr uint8_t find(const char* key) {
+    uint8_t i = 0;
     while (i < colors.size()) {
-      if (strings_equal(colors[i].data(), key)) return i;
+      if (std::string_view(colors[i].data()) == std::string_view(key)) return i;
       ++i;
     }
     return findSlot();
   }
 
-  constexpr TokenColorIndexType findSlot() {
-    TokenColorIndexType i = 0;
+  constexpr uint8_t findSlot() {
+    uint8_t i = 0;
     while (i < colors.size()) {
-      if (strlen(colors[i].data()) == 0) return i;
+      if (std::string_view(colors[i].data()).empty()) return i;
       ++i;
     }
     return i;
@@ -135,7 +125,7 @@ class Token {
     return id > rhs.toIndex();
   }
 
-  constexpr TokenColorIndexType toIndex() const { return id; }
+  constexpr uint8_t toIndex() const { return id; }
 
   constexpr Token(const char* _id) : id(find(_id)) {
     assert(id < colors.size() &&
@@ -146,11 +136,8 @@ class Token {
   }
 
  protected:
-  inline static std::array<std::array<char, 64>,
-                           std::numeric_limits<TokenColorIndexType>::max()>
-      colors = {};
-
-  TokenColorIndexType id;
+  inline static std::array<std::array<char, 64>, 128> colors = {};
+  uint8_t id;
 };
 
 }  // namespace symmetri
