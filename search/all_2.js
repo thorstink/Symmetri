@@ -9,7 +9,7 @@ var searchData=
   ['cancel_6',['Cancel',['../structsymmetri_1_1Cancel.html',1,'symmetri']]],
   ['cancel_7',['cancel',['../callback_8h.html#ac789f942935da112c594e5222ee043a8',1,'symmetri::cancel(const T &amp;)'],['../types_8h.html#a0c87461974e32f3df3ec1e51b28a5bc0',1,'symmetri::cancel(const PetriNet &amp;)']]],
   ['canceled_8',['Canceled',['../structsymmetri_1_1Canceled.html',1,'symmetri']]],
-  ['canfire_9',['canFire',['../petri_8h.html#afe99d95398a8222eb2a267f916dd1c83',1,'symmetri']]],
+  ['canfire_9',['canFire',['../petri_8h.html#aa54f0115dcbfddc296b8026e5b20eba9',1,'symmetri']]],
   ['case_5fid_10',['case_id',['../structsymmetri_1_1Event.html#ab103e727752222c9b86b3baea03b6840',1,'symmetri::Event::case_id'],['../structsymmetri_1_1Petri.html#aa2acc8bf32bcd39c86f5eb029586c34b',1,'symmetri::Petri::case_id']]],
   ['clock_11',['Clock',['../types_8h.html#aff3ccd3ad42abdcb67cc9be634edb814',1,'symmetri']]],
   ['cmake_3a_12',['Vanilla CMake:',['../md_docs_2symmetri__lib.html#autotoc_md10',1,'']]],

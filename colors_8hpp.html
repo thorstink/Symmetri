@@ -104,15 +104,12 @@ $(function(){initNavTree('colors_8hpp.html',''); initResizable(true); });
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &lt;string.h&gt;</code><br />
-<code>#include &lt;algorithm&gt;</code><br />
 <code>#include &lt;array&gt;</code><br />
 <code>#include &lt;cassert&gt;</code><br />
-<code>#include &lt;functional&gt;</code><br />
+<code>#include &lt;cstdint&gt;</code><br />
+<code>#include &lt;limits&gt;</code><br />
 <code>#include &lt;string_view&gt;</code><br />
-<code>#include &lt;type_traits&gt;</code><br />
-<code>#include &lt;utility&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
-<code>#include &lt;cstdio&gt;</code><br />
 </div>
 <p><a href="colors_8hpp_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
@@ -188,15 +185,12 @@ static Cancel&#160;</td><td class="memItemRight" valign="bottom"><b>symmetri::Ca
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">    <span class="keyword">namespace </span>symmetri                                         \</div>
-<div class="line">    {                                                          \</div>
-<div class="line">        <span class="keyword">struct </span>name : <span class="keyword">public</span> Token                             \</div>
-<div class="line">        {                                                      \</div>
-<div class="line">            <span class="keyword">constexpr</span> name()                                   \</div>
-<div class="line">                : Token(sym_impl::type_name&lt;name&gt;().data()) {} \</div>
-<div class="line">        };                                                     \</div>
-<div class="line">        <span class="keyword">static</span> <span class="keyword">inline</span> name name;                               \</div>
-<div class="line">    }</div>
+<b>Value:</b><div class="fragment"><div class="line">  <span class="keyword">namespace </span>symmetri {                                              \</div>
+<div class="line">  <span class="keyword">struct </span>name : <span class="keyword">public</span> Token {                                      \</div>
+<div class="line">    <span class="keyword">constexpr</span> name() : Token(sym_impl::type_name&lt;name&gt;().data()) {} \</div>
+<div class="line">  };                                                                \</div>
+<div class="line">  <span class="keyword">static</span> <span class="keyword">inline</span> name name;                                          \</div>
+<div class="line">  }</div>
 </div><!-- fragment -->
 <p>A macro from which we can create token-colors. Colors ceated this way end up in the symmetri namespace. </p>
 
