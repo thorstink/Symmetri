@@ -22,8 +22,8 @@ struct finally_t {
     using result_type = T;
   };
 
-  template <rpp::details::observables::constraint::disposable_strategy Prev>
-  using updated_disposable_strategy = typename Prev::template add<1>;
+  template <rpp::details::observables::constraint::disposables_strategy Prev>
+  using updated_optimal_disposables_strategy = typename Prev::template add<1>;
 
   RPP_NO_UNIQUE_ADDRESS LastFn last_fn;
 

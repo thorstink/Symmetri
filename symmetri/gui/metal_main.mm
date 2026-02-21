@@ -12,6 +12,7 @@
 #define GLFW_EXPOSE_NATIVE_COCOA
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
+#include "load_file.h"
 
 #import <Metal/Metal.h>
 #import <QuartzCore/QuartzCore.h>
@@ -32,8 +33,8 @@ int main(int, char **) {
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
 
   // Setup style
-  // ImGui::StyleColorsDark();
-  ImGui::StyleColorsLight();
+  ImGui::StyleColorsDark();
+  // ImGui::StyleColorsLight();
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
@@ -62,6 +63,7 @@ int main(int, char **) {
   MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor new];
 
   auto root_subscription = go();
+  loadPetriNet("/Users/thomashorstink/Downloads/Inspection.grml");
 
   // Main loop
   while (!glfwWindowShouldClose(window)) {

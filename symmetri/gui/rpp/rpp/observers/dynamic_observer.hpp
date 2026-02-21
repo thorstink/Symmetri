@@ -95,6 +95,9 @@ class type_erased_observer
 template <rpp::constraint::decayed_type Type>
 class dynamic_strategy final {
  public:
+  static constexpr auto preferred_disposables_mode =
+      rpp::details::observers::disposables_mode::None;
+
   template <rpp::constraint::observer_strategy<Type> Strategy>
     requires(
         !rpp::constraint::decayed_same_as<Strategy, dynamic_strategy<Type>>)

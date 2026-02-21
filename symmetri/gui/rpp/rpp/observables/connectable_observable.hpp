@@ -33,10 +33,9 @@ struct ref_count_on_subscribe_t<
   std::shared_ptr<state_t> m_state = std::make_shared<state_t>();
 
   using value_type = rpp::utils::extract_observable_type_t<OriginalObservable>;
-  using expected_disposable_strategy =
-      typename rpp::details::observables::deduce_disposable_strategy_t<
-          rpp::connectable_observable<OriginalObservable,
-                                      Subject>>::template add<1>;
+  using optimal_disposables_strategy =
+      typename rpp::connectable_observable<OriginalObservable, Subject>::
+          optimal_disposables_strategy::template add<1>;
 
   template <constraint::observer_strategy<value_type> Strategy>
   void subscribe(observer<value_type, Strategy>&& obs) const {
@@ -71,7 +70,7 @@ namespace rpp {
  * @ingroup observables
  */
 template <rpp::constraint::observable OriginalObservable, typename Subject>
-class connectable_observable final
+class connectable_observable
     : public decltype(std::declval<Subject>().get_observable()) {
   using base = decltype(std::declval<Subject>().get_observable());
 
@@ -79,13 +78,13 @@ class connectable_observable final
   static_assert(rpp::constraint::subject<Subject>);
 
   connectable_observable(const OriginalObservable& original_observable,
-                         const Subject& subject = Subject{})
+                         const Subject& subject)
       : base{subject.get_observable()},
         m_original_observable{original_observable},
         m_subject{subject} {}
 
   connectable_observable(OriginalObservable && original_observable,
-                         const Subject& subject = Subject{})
+                         const Subject& subject)
       : base{subject.get_observable()},
         m_original_observable{std::move(original_observable)},
         m_subject{subject} {}
@@ -164,6 +163,15 @@ class connectable_observable final
   template <typename Op>
   auto pipe(Op && op)&& {
     return std::move(*this) | std::forward<Op>(op);
+  }
+
+  auto as_dynamic_connectable() const& {
+    return rpp::dynamic_connectable_observable<Subject>{
+        m_original_observable.as_dynamic(), m_subject};
+  }
+  auto as_dynamic_connectable()&& {
+    return rpp::dynamic_connectable_observable<Subject>{
+        std::move(m_original_observable).as_dynamic(), std::move(m_subject)};
   }
 
  private:

@@ -22,13 +22,14 @@ class chain {
   using operator_traits =
       typename TStrategy::template operator_traits<typename base::value_type>;
 
-  static_assert(rpp::constraint::operator_chain<
-                TStrategy, typename base::value_type,
-                typename base::expected_disposable_strategy>);
+  static_assert(
+      rpp::constraint::operator_<TStrategy, typename base::value_type,
+                                 typename base::optimal_disposables_strategy>);
 
  public:
-  using expected_disposable_strategy = deduce_updated_disposable_strategy<
-      TStrategy, typename base::expected_disposable_strategy>;
+  using optimal_disposables_strategy =
+      typename TStrategy::template updated_optimal_disposables_strategy<
+          typename base::optimal_disposables_strategy>;
   using value_type = typename operator_traits::result_type;
 
   chain(const TStrategy& strategy, const TStrategies&... strategies)
@@ -41,20 +42,24 @@ class chain {
   void subscribe(Observer&& observer) const {
     [[maybe_unused]] const auto drain_on_exit = own_current_thread_if_needed();
 
-    if constexpr (rpp::constraint::operator_lift_with_disposable_strategy<
+    if constexpr (rpp::constraint::operator_lift_with_disposables_strategy<
                       TStrategy, typename base::value_type,
-                      typename base::expected_disposable_strategy>)
-      m_strategies.subscribe(m_strategy.template lift_with_disposable_strategy<
+                      typename base::optimal_disposables_strategy>)
+      m_strategies.subscribe(m_strategy.template lift_with_disposables_strategy<
                              typename base::value_type,
-                             typename base::expected_disposable_strategy>(
+                             typename base::optimal_disposables_strategy>(
           std::forward<Observer>(observer)));
     else if constexpr (rpp::constraint::operator_lift<
                            TStrategy, typename base::value_type>)
       m_strategies.subscribe(
           m_strategy.template lift<typename base::value_type>(
               std::forward<Observer>(observer)));
-    else
+    else {
+      static_assert(
+          rpp::constraint::operator_subscribe<TStrategy,
+                                              typename base::value_type>);
       m_strategy.subscribe(std::forward<Observer>(observer), m_strategies);
+    }
   }
 
  private:
@@ -74,8 +79,8 @@ class chain {
 template <typename TStrategy>
 class chain<TStrategy> {
  public:
-  using expected_disposable_strategy =
-      rpp::details::observables::deduce_disposable_strategy_t<TStrategy>;
+  using optimal_disposables_strategy =
+      typename TStrategy::optimal_disposables_strategy;
   using value_type = typename TStrategy::value_type;
 
   chain(const TStrategy& strategy) : m_strategy(strategy) {}

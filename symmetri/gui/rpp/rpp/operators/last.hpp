@@ -19,8 +19,8 @@ namespace rpp::operators::details {
 template <rpp::constraint::decayed_type Type,
           rpp::constraint::observer TObserver>
 struct last_observer_strategy {
-  using preferred_disposable_strategy =
-      rpp::details::observers::none_disposable_strategy;
+  static constexpr auto preferred_disposables_mode =
+      rpp::details::observers::disposables_mode::None;
 
   RPP_NO_UNIQUE_ADDRESS TObserver observer;
   mutable std::optional<Type> value{};
@@ -58,8 +58,8 @@ struct last_t : lift_operator<last_t> {
     using observer_strategy = last_observer_strategy<T, TObserver>;
   };
 
-  template <rpp::details::observables::constraint::disposable_strategy Prev>
-  using updated_disposable_strategy = Prev;
+  template <rpp::details::observables::constraint::disposables_strategy Prev>
+  using updated_optimal_disposables_strategy = Prev;
 };
 }  // namespace rpp::operators::details
 

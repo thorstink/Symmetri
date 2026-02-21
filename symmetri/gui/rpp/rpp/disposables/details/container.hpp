@@ -10,16 +10,24 @@
 #pragma once
 
 #include <algorithm>
+#include <new>
 #include <rpp/disposables/disposable_wrapper.hpp>
 #include <rpp/utils/exceptions.hpp>
 #include <vector>
 
 namespace rpp::details::disposables {
-class dynamic_disposables_container_base {
+class dynamic_disposables_container {
  public:
-  explicit dynamic_disposables_container_base(size_t count) {
-    m_data.reserve(count);
-  }
+  explicit dynamic_disposables_container() = default;
+
+  dynamic_disposables_container(const dynamic_disposables_container&) = delete;
+  dynamic_disposables_container(
+      dynamic_disposables_container&& other) noexcept = default;
+
+  dynamic_disposables_container& operator=(
+      const dynamic_disposables_container& other) = delete;
+  dynamic_disposables_container& operator=(
+      dynamic_disposables_container&& other) noexcept = default;
 
   void push_back(const rpp::disposable_wrapper& d) { m_data.push_back(d); }
 
@@ -41,13 +49,6 @@ class dynamic_disposables_container_base {
 
  private:
   mutable std::vector<rpp::disposable_wrapper> m_data{};
-};
-
-template <size_t Count>
-class dynamic_disposables_container
-    : public dynamic_disposables_container_base {
- public:
-  dynamic_disposables_container() : dynamic_disposables_container_base{Count} {}
 };
 
 template <size_t Count>
@@ -132,11 +133,13 @@ class static_disposables_container {
   size_t m_size{};
 };
 
-struct none_disposables_container {
+template <>
+class static_disposables_container<0> {
+ public:
   [[noreturn]] static void push_back(const rpp::disposable_wrapper&) {
     throw rpp::utils::more_disposables_than_expected{
-        "none_disposables_container expected none disposables but obtained "
-        "one"};
+        "static_disposables_container<0> expected no disposables but received "
+        "at least one"};
   }
 
   static void remove(const rpp::disposable_wrapper&) {}

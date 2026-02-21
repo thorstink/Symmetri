@@ -17,8 +17,8 @@ template <constraint::decayed_type Type>
 
 struct empty_strategy {
   using value_type = Type;
-  using expected_disposable_strategy =
-      rpp::details::observables::bool_disposable_strategy_selector;
+  using optimal_disposables_strategy =
+      rpp::details::observables::fixed_disposables_strategy<0>;
 
   static void subscribe(const auto& obs) { obs.on_completed(); }
 };

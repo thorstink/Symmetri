@@ -83,7 +83,8 @@ class subscribe_t<rpp::composite_disposable_wrapper,
   rpp::composite_disposable_wrapper operator()(
       const rpp::observable<Type, Strategy>& observable) && {
     observable.subscribe(
-        observer_with_disposable<Type, observer<Type, ObserverStrategy>>{
+        observer_with_external_disposable<Type,
+                                          observer<Type, ObserverStrategy>>{
             m_disposable, std::move(m_observer)});
     return m_disposable;
   }

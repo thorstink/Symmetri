@@ -42,7 +42,7 @@
  * instead if you can't guarantee serial emissions.
  *
  * For example:
- * \code{.cpp}
+ * @code{.cpp}
  * auto s1 = rpp::source::just(1) | rpp::operators::repeat() |
  * rpp::operators::subscribe_on(rpp::schedulers::new_thread{}); auto s2 =
  * rpp::source::just(2) | rpp::operators::repeat() |
@@ -56,18 +56,18 @@
  *    })
  *    | rpp::operators::as_blocking()
  *    | rpp::operators::subscribe([](int){});
- * \endcode
+ * @endcode
  *
  * This will never produce:
- * \code{.log}
+ * @code{.log}
  * enter 1
  * enter 2
  * exit 2
  * exit 1
- * \endcode
+ * @endcode
  *
  * Only serially:
- * \code{.log}
+ * @code{.log}
  * enter 1
  * exit 1
  * enter 1
@@ -76,13 +76,14 @@
  * exit 2
  * enter 2
  * exit 2
- * \endcode
+ * @endcode
  * @see https://reactivex.io/documentation/observable.html
  * @ingroup rpp
  */
 
 #include <rpp/observables/blocking_observable.hpp>
 #include <rpp/observables/connectable_observable.hpp>
+#include <rpp/observables/dynamic_connectable_observable.hpp>
 #include <rpp/observables/dynamic_observable.hpp>
 #include <rpp/observables/fwd.hpp>
 #include <rpp/observables/grouped_observable.hpp>

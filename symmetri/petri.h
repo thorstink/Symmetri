@@ -83,7 +83,8 @@ gch::small_vector<size_t, 32> possibleTransitions(
  * @return true if the pre-conditions are met
  * @return false otherwise
  */
-bool canFire(const SmallVectorInput& pre, std::vector<AugmentedToken>& tokens);
+bool canFire(const SmallVectorInput& pre,
+             const std::vector<AugmentedToken>& tokens);
 
 /**
  * @brief Forward declaration of the Petri-class
@@ -156,7 +157,7 @@ struct Petri {
   Marking getMarking() const;
 
   /**
-   * @brief Get the list of active transitions. 
+   * @brief Get the list of active transitions.
    * @return std::vector<Transition>
    */
   std::vector<Transition> getActiveTransitions() const;

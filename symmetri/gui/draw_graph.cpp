@@ -25,7 +25,7 @@
 static ImVec2 size;
 static ImVec2 offset;
 
-static const ImVec2 NODE_WINDOW_PADDING(8.0f, 8.0f);
+static const ImVec2 NODE_WINDOW_PADDING(16.0f, 16.0f);
 
 static ImVec2 GetCenterPos(const model::Coordinate& pos, const ImVec2& size) {
   return ImVec2(pos.x + size.x * 0.5f, pos.y + size.y * 0.5f);
@@ -46,7 +46,8 @@ void draw_grid(const model::ViewModel& vm) {
 };
 
 void draw_arc(size_t t_idx, const model::ViewModel& vm) {
-  const auto draw = [&](const symmetri::AugmentedToken& t, bool is_input,
+  const auto draw = [&](const symmetri::AugmentedToken& t,
+                        model::Model::NodeType source_node_type,
                         size_t sub_idx) {
     if (std::find(vm.p_view.begin(), vm.p_view.end(), std::get<size_t>(t)) ==
         vm.p_view.end()) {
@@ -54,12 +55,15 @@ void draw_arc(size_t t_idx, const model::ViewModel& vm) {
     }
 
     const ImVec2 i =
-        offset + GetCenterPos(!is_input ? vm.t_positions[t_idx]
-                                        : vm.p_positions[std::get<size_t>(t)],
-                              size);
+        offset +
+        GetCenterPos(source_node_type == model::Model::NodeType::Transition
+                         ? vm.t_positions[t_idx]
+                         : vm.p_positions[std::get<size_t>(t)],
+                     size);
     const ImVec2 o =
-        offset + GetCenterPos(is_input ? vm.t_positions[t_idx]
-                                       : vm.p_positions[std::get<size_t>(t)],
+        offset + GetCenterPos(source_node_type == model::Model::NodeType::Place
+                                  ? vm.t_positions[t_idx]
+                                  : vm.p_positions[std::get<size_t>(t)],
                               size);
 
     const float max_distance = 2.f;
@@ -70,12 +74,12 @@ void draw_arc(size_t t_idx, const model::ViewModel& vm) {
     const bool is_segment_hovered = (ImLengthSqr(mouse_pos_delta_to_segment) <=
                                      max_distance * max_distance);
     if (is_segment_hovered && ImGui::IsMouseClicked(0)) {
-      setSelectedArc(is_input, t_idx, sub_idx);
+      setSelectedArc(source_node_type, t_idx, sub_idx);
     }
 
     const auto is_selected_arc = [&]() {
       return vm.selected_arc_idxs.has_value() &&
-             std::get<0>(*vm.selected_arc_idxs) == is_input &&
+             std::get<0>(*vm.selected_arc_idxs) == source_node_type &&
              std::get<1>(*vm.selected_arc_idxs) == t_idx &&
              std::get<2>(*vm.selected_arc_idxs) == sub_idx;
     };
@@ -101,26 +105,33 @@ void draw_arc(size_t t_idx, const model::ViewModel& vm) {
   };
 
   for (size_t sub_idx = 0; sub_idx < vm.net.input_n[t_idx].size(); sub_idx++) {
-    draw(vm.net.input_n[t_idx][sub_idx], true, sub_idx);
+    draw(vm.net.input_n[t_idx][sub_idx], model::Model::NodeType::Place,
+         sub_idx);
   }
   for (size_t sub_idx = 0; sub_idx < vm.net.output_n[t_idx].size(); sub_idx++) {
-    draw(vm.net.output_n[t_idx][sub_idx], false, sub_idx);
+    draw(vm.net.output_n[t_idx][sub_idx], model::Model::NodeType::Transition,
+         sub_idx);
   }
 };
 
-void draw_nodes(bool is_place, size_t idx, const std::string& name,
-                const model::Coordinate& position, bool highlight,
+void draw_nodes(model::Model::NodeType node_type, size_t idx,
+                const std::string& name, const model::Coordinate& position,
+                bool highlight,
                 const std::vector<symmetri::AugmentedToken>& tokens) {
-  ImGui::PushID(is_place ? idx + 10000 : idx);
+  ImGui::PushID(model::Model::NodeType::Place == node_type ? idx + 10000 : idx);
   ImVec2 node_rect_min = offset + ImVec2(position.x, position.y);
 
+  ImGui::PushFont(NULL, .85f * ImGui::GetFontSize());
   // Display node contents first
   auto textWidth = ImGui::CalcTextSize(name.c_str()).x;
-  ImGui::SetCursorScreenPos(node_rect_min + NODE_WINDOW_PADDING +
-                            ImVec2(8.0f - textWidth * 0.5f, -20.0f));
+  ImGui::SetCursorScreenPos(
+      node_rect_min + NODE_WINDOW_PADDING +
+      ImVec2(8.0f - textWidth * 0.5f, -3.0f * NODE_WINDOW_PADDING.y));
   ImGui::BeginGroup();              // Lock horizontal position
   ImGui::Text("%s", name.c_str());  // this crashed once..
+
   ImGui::EndGroup();
+  ImGui::PopFont();
 
   // Save the size of what we have emitted and whether any of the widgets are
   // being used
@@ -135,10 +146,10 @@ void draw_nodes(bool is_place, size_t idx, const std::string& name,
   const bool node_moving_active = ImGui::IsItemActive();
   const bool is_clicked = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
   if (node_moving_active && is_clicked) {
-    setSelectedNode(is_place, idx);
+    setSelectedNode(node_type, idx);
   } else if (node_moving_active &&
              ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-    moveNode(is_place, idx, ImGui::GetIO().MouseDelta);
+    moveNode(node_type, idx, ImGui::GetIO().MouseDelta);
   }
 
   const int opacity = 255;
@@ -146,7 +157,7 @@ void draw_nodes(bool is_place, size_t idx, const std::string& name,
   auto select_color = highlight ? IM_COL32(255, 255, 0, opacity)
                                 : IM_COL32(100, 100, 100, opacity);
 
-  if (is_place) {
+  if (node_type == model::Model::NodeType::Place) {
     draw_list->AddCircleFilled(offset + GetCenterPos(position, size),
                                0.5f * size.x, IM_COL32(200, 200, 200, opacity),
                                -5);
@@ -180,7 +191,8 @@ void draw_graph(const model::ViewModel& vm) {
   if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
       ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) &&
       !ImGui::IsAnyItemHovered() &&
-      (vm.selected_node_idx.has_value() || vm.selected_arc_idxs.has_value())) {
+      (vm.selected_node_idx.has_value() || vm.selected_arc_idxs.has_value() ||
+       vm.selected_target_node_idx.has_value())) {
     resetSelection();
   }
 
@@ -233,25 +245,30 @@ void draw_graph(const model::ViewModel& vm) {
     draw_arc(idx, vm);
     const bool should_hightlight =
         (is_selected_node &&
-         (!std::get<0>(vm.selected_node_idx.value()) &&
+         (std::get<0>(vm.selected_node_idx.value()) ==
+              model::Model::NodeType::Transition &&
           idx == std::get<1>(vm.selected_node_idx.value()))) ||
         (is_target_node &&
-         (!std::get<0>(vm.selected_target_node_idx.value()) &&
+         (std::get<0>(vm.selected_target_node_idx.value()) ==
+              model::Model::NodeType::Transition &&
           idx == std::get<1>(vm.selected_target_node_idx.value())));
 
-    draw_nodes(false, idx, vm.net.transition[idx], vm.t_positions[idx],
-               should_hightlight, vm.tokens);
+    draw_nodes(model::Model::NodeType::Transition, idx, vm.net.transition[idx],
+               vm.t_positions[idx], should_hightlight, vm.tokens);
   }
   for (auto idx : vm.p_view) {
     const bool should_hightlight =
         (is_selected_node &&
-         (std::get<0>(vm.selected_node_idx.value()) &&
+         (std::get<0>(vm.selected_node_idx.value()) ==
+              model::Model::NodeType::Place &&
           idx == std::get<1>(vm.selected_node_idx.value()))) ||
         (is_target_node &&
-         (std::get<0>(vm.selected_target_node_idx.value()) &&
+         (std::get<0>(vm.selected_target_node_idx.value()) ==
+              model::Model::NodeType::Place &&
           idx == std::get<1>(vm.selected_target_node_idx.value())));
-    draw_nodes(true, idx, vm.net.place[idx], vm.p_positions[idx],
-               should_hightlight, vm.tokens);
+
+    draw_nodes(model::Model::NodeType::Place, idx, vm.net.place[idx],
+               vm.p_positions[idx], should_hightlight, vm.tokens);
   }
 
   // Scrolling

@@ -1,5 +1,6 @@
 #include "symmetri/symmetri.h"
 
+#include <algorithm>
 #include <filesystem>
 #include <future>
 #include <iostream>
@@ -129,8 +130,8 @@ TEST_CASE("Deadlocked transition shows up in marking") {
   fire(app);
   const auto marking = app.getMarking();
   for (auto [p, t] : marking) {
-    std::cout << t.toString() << ", " << p << ", " << t.toIndex() << ", "
-              << (Deadlocked == t) << (t == Deadlocked) << std::endl;
+    std::cout << t.toString() << ", " << p << ", " << unsigned(t.toIndex())
+              << ", " << (Deadlocked == t) << (t == Deadlocked) << std::endl;
   }
   const bool has_deadlock_token =
       std::find_if(marking.cbegin(), marking.cend(), [=](const auto& pc) {
@@ -220,7 +221,7 @@ TEST_CASE("Types") {
   CHECK(not bool(Canceled == ExternalState));
   CHECK(not bool(Failed == ExternalState));
   CHECK(bool(ExternalState == ExternalState));
-  CHECK(bool(ExternalState.toString() != NULL));
+  CHECK(bool(ExternalState.toString().empty() == false));
 }
 
 TEST_CASE("Test color names") {
@@ -232,21 +233,28 @@ TEST_CASE("Test color names") {
 
 TEST_CASE("Print some Types") {
   using namespace symmetri;
-  std::cout << Scheduled.toString() << ", " << Scheduled.toIndex() << std::endl;
-  std::cout << Started.toString() << ", " << Started.toIndex() << std::endl;
-  std::cout << Success.toString() << ", " << Success.toIndex() << std::endl;
-  std::cout << Deadlocked.toString() << ", " << Deadlocked.toIndex()
+  std::cout << Scheduled.toString() << ", " << unsigned(Scheduled.toIndex())
             << std::endl;
-  std::cout << Paused.toString() << ", " << Paused.toIndex() << std::endl;
-  std::cout << Canceled.toString() << ", " << Canceled.toIndex() << std::endl;
-  std::cout << Failed.toString() << ", " << Failed.toIndex() << std::endl;
-  std::cout << ExternalState.toString() << ", " << ExternalState.toIndex()
+  std::cout << Started.toString() << ", " << unsigned(Started.toIndex())
             << std::endl;
-  std::cout << CustomState.toString() << ", " << CustomState.toIndex()
+  std::cout << Success.toString() << ", " << unsigned(Success.toIndex())
+            << std::endl;
+  std::cout << Deadlocked.toString() << ", " << unsigned(Deadlocked.toIndex())
+            << std::endl;
+  std::cout << Paused.toString() << ", " << unsigned(Paused.toIndex())
+            << std::endl;
+  std::cout << Canceled.toString() << ", " << unsigned(Canceled.toIndex())
+            << std::endl;
+  std::cout << Failed.toString() << ", " << unsigned(Failed.toIndex())
+            << std::endl;
+  std::cout << ExternalState.toString() << ", "
+            << unsigned(ExternalState.toIndex()) << std::endl;
+  std::cout << CustomState.toString() << ", " << unsigned(CustomState.toIndex())
             << std::endl;
 }
 
 TEST_CASE("Print all Types") {
+  symmetri::Token new_token("NewToken");
   for (auto color : symmetri::Token::getColors()) {
     std::cout << color << std::endl;
   }

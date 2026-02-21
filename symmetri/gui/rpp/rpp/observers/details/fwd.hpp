@@ -15,52 +15,22 @@
 #include <type_traits>
 
 namespace rpp::details::observers {
-class atomic_bool;
-class non_atomic_bool;
-
-template <typename DisposableContainer,
-          rpp::constraint::any_of<atomic_bool, non_atomic_bool> Bool>
-class local_disposable_strategy;
-
-/**
- * @brief No any disposable logic at all. Used only inside proxy-forwarding
- * operators where extra disposable logic not requires
- */
-struct none_disposable_strategy;
-
-/**
- * @brief Dynamic disposable logic based on pre-allocated vector
- */
-template <size_t Count,
-          rpp::constraint::any_of<atomic_bool, non_atomic_bool> Bool>
-using dynamic_local_disposable_strategy =
-    local_disposable_strategy<disposables::dynamic_disposables_container<Count>,
-                              Bool>;
-
-/**
- * @brief Same as dynamic strategy, but based on array.
- */
-template <size_t Count,
-          rpp::constraint::any_of<atomic_bool, non_atomic_bool> Bool>
-using static_local_disposable_strategy =
-    local_disposable_strategy<disposables::static_disposables_container<Count>,
-                              Bool>;
-
-/**
- * @brief Just an boolean with no any disposables
- */
-template <rpp::constraint::any_of<atomic_bool, non_atomic_bool> Bool>
-using bool_local_disposable_strategy =
-    local_disposable_strategy<disposables::none_disposables_container, Bool>;
-
-/**
- * @brief External disposable used as strategy
- */
-using external_disposable_strategy = composite_disposable_wrapper;
+enum class disposables_mode : uint8_t {
+  // Let observer deduce disposables mode
+  Auto = 0,
+  // No any disposables logic for observer expected
+  None = 1,
+  // Use external (passed to constructor) composite_disposable_wrapper as
+  // disposable
+  External = 2,
+  // Observer just controls is_disposed or not but upstreams handled via
+  // observer_strategy
+  Boolean = 3
+};
 
 namespace constraint {
 template <typename T>
-concept disposable_strategy =
+concept disposables_strategy =
     requires(T& v, const T& const_v, const disposable_wrapper& d) {
       v.add(d);
       { const_v.is_disposed() } -> std::same_as<bool>;
@@ -68,22 +38,66 @@ concept disposable_strategy =
     };
 }  // namespace constraint
 
-template <typename T>
-concept has_disposable_strategy =
-    requires { typename T::preferred_disposable_strategy; };
+template <typename DisposableContainer>
+class local_disposables_strategy;
+
+/**
+ * @brief No any disposable logic at all. Used only inside proxy-forwarding
+ * operators where extra disposable logic not requires
+ */
+struct none_disposables_strategy;
+/**
+ * @brief Just control is_disposed or not via boolean and ignore upstreams at
+ * all
+ */
+class boolean_disposables_strategy;
+
+/**
+ * @brief Keep disposables inside dynamic_disposables_container container (based
+ * on std::vector)
+ */
+using dynamic_disposables_strategy =
+    local_disposables_strategy<disposables::dynamic_disposables_container>;
+
+/**
+ * @brief Keep disposables inside static_disposables_container container (based
+ * on std::array)
+ */
+template <size_t Count>
+using static_disposables_strategy = local_disposables_strategy<
+    disposables::static_disposables_container<Count>>;
+
+using default_disposables_strategy = dynamic_disposables_strategy;
 
 namespace details {
-template <typename T>
-consteval auto* deduce_disposable_strategy() {
-  if constexpr (has_disposable_strategy<T>)
-    return static_cast<typename T::preferred_disposable_strategy*>(nullptr);
+template <disposables_mode mode>
+consteval auto* deduce_optimal_disposables_strategy() {
+  static_assert(
+      mode == disposables_mode::Auto || mode == disposables_mode::None ||
+      mode == disposables_mode::External || mode == disposables_mode::Boolean);
+
+#if defined(RPP_DISABLE_DISPOSABLES_OPTIMIZATION) and \
+    RPP_DISABLE_DISPOSABLES_OPTIMIZATION
+  if constexpr (mode == disposables_mode::External)
+    return static_cast<composite_disposable_wrapper*>(nullptr);
   else
-    return static_cast<dynamic_local_disposable_strategy<0, atomic_bool>*>(
-        nullptr);
+    return static_cast<default_disposables_strategy*>(nullptr);
+#else
+  if constexpr (mode == disposables_mode::Auto)
+    return static_cast<default_disposables_strategy*>(nullptr);
+  else if constexpr (mode == disposables_mode::None)
+    return static_cast<none_disposables_strategy*>(nullptr);
+  else if constexpr (mode == disposables_mode::External)
+    return static_cast<composite_disposable_wrapper*>(nullptr);
+  else if constexpr (mode == disposables_mode::Boolean)
+    return static_cast<boolean_disposables_strategy*>(nullptr);
+  else
+    return static_cast<void*>(nullptr);
+#endif
 }
 }  // namespace details
 
-template <typename T>
-using deduce_disposable_strategy_t =
-    std::remove_pointer_t<decltype(details::deduce_disposable_strategy<T>())>;
+template <rpp::details::observers::disposables_mode Mode>
+using deduce_optimal_disposables_strategy_t = std::remove_pointer_t<
+    decltype(details::deduce_optimal_disposables_strategy<Mode>())>;
 }  // namespace rpp::details::observers

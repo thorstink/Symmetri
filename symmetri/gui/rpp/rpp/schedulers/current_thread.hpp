@@ -28,8 +28,9 @@ namespace rpp::schedulers {
  *
  * @par Why do we need it?
  * This scheduler used to prevent recursion calls and making planar linear
- * execution of schedulables. For example: \code{.cpp} auto worker =
- * rpp::schedulers::current_thread::create_worker();
+ * execution of schedulables. For example:
+ * @code{.cpp}
+ * auto worker = rpp::schedulers::current_thread::create_worker();
  * worker.schedule([&worker](const auto& handler)
  * {
  *     std::cout << "Task 1 starts" << std::endl;
@@ -55,7 +56,7 @@ namespace rpp::schedulers {
  *     std::cout << "Task 1 ends" << std::endl;
  *     return rpp::schedulers::optional_delay_from_now{};
  * }, handler);
- * \endcode
+ * @endcode
  * Would lead to:
  * - "Task 1 starts"
  * - "Task 1 ends"
@@ -71,20 +72,21 @@ namespace rpp::schedulers {
  * during subscription).
  *
  * For example, this one
- * \code{.cpp}
+ * @code{.cpp}
  * rpp::source::just(1, 2, 3)
  *  | rpp::operators::merge_with(rpp::source::just(4, 5, 6))
  *  | rpp::operators::subscribe([](int v) { std::cout << v << " "; });
- * \endcode
+ * @endcode
  * Procedes output `1 4 2 5 3 6` due to `merge_with` takes ownership over this
  * scheduler during subscription, both sources schedule their first emissions
  * into scheduler, then `merge_with` frees scheduler and it starts to proceed
  * scheduled actions. As a result it continues interleaving of values. In case
- * of usingg `rpp::schedulers::immediate` it would be: \code{.cpp}
+ * of usingg `rpp::schedulers::immediate` it would be:
+ * @code{.cpp}
  * rpp::source::just(rpp::schedulers::immediate{}, 1, 2, 3)
  *  | rpp::operators::merge_with(rpp::source::just(rpp::schedulers::immediate{},
  * 4, 5, 6)) | rpp::operators::subscribe([](int v) { std::cout << v << " "; });
- * \endcode
+ * @endcode
  * With output `1 2 3 4 5 6`
  *
  * @ingroup schedulers

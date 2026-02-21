@@ -23,8 +23,8 @@ class buffer_observer_strategy {
   static_assert(std::same_as<container, std::vector<value_type>>);
 
  public:
-  using preferred_disposable_strategy =
-      rpp::details::observers::none_disposable_strategy;
+  static constexpr auto preferred_disposables_mode =
+      rpp::details::observers::disposables_mode::None;
 
   buffer_observer_strategy(TObserver&& observer, size_t count)
       : m_observer{std::move(observer)} {
@@ -72,8 +72,8 @@ struct buffer_t : lift_operator<buffer_t, size_t> {
     using observer_strategy = buffer_observer_strategy<TObserver>;
   };
 
-  template <rpp::details::observables::constraint::disposable_strategy Prev>
-  using updated_disposable_strategy = Prev;
+  template <rpp::details::observables::constraint::disposables_strategy Prev>
+  using updated_optimal_disposables_strategy = Prev;
 };
 }  // namespace rpp::operators::details
 

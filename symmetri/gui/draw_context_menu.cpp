@@ -12,60 +12,74 @@ void draw_context_menu(const model::ViewModel& vm) {
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
   if (ImGui::BeginPopup("context_menu")) {
     if (vm.selected_node_idx.has_value()) {
-      const bool is_place = std::get<0>(vm.selected_node_idx.value());
+      const model::Model::NodeType node_type =
+          std::get<0>(vm.selected_node_idx.value());
       const size_t selected_idx = std::get<1>(vm.selected_node_idx.value());
       ImGui::Text(
-          "%s '%s'", (is_place ? "Place" : "Transition"),
-          (is_place ? vm.net.place : vm.net.transition)[selected_idx].c_str());
+          "%s '%s'",
+          (node_type == model::Model::NodeType::Place ? "Place" : "Transition"),
+          (node_type == model::Model::NodeType::Place
+               ? vm.net.place
+               : vm.net.transition)[selected_idx]
+              .c_str());
       ImGui::Separator();
       if (ImGui::BeginMenu("Add arc to...")) {
-        for (const auto& node_idx : is_place ? vm.t_view : vm.p_view) {
-          if (is_place) {
-            drawColorDropdownMenu(vm.net.transition[node_idx].c_str(),
-                                  vm.colors, [&](const char* c) {
-                                    addArc(is_place, selected_idx, node_idx,
-                                           symmetri::Token(c));
+        for (const auto& node_idx : node_type == model::Model::NodeType::Place
+                                        ? vm.t_view
+                                        : vm.p_view) {
+          if (node_type == model::Model::NodeType::Place) {
+            drawColorDropdownMenu(vm.net.transition[node_idx], vm.colors,
+                                  [&](auto c) -> void {
+                                    addArc(node_type, selected_idx, node_idx,
+                                           symmetri::Token(c.data()));
                                   });
 
           } else if (ImGui::MenuItem((vm.net.place[node_idx].c_str()))) {
-            addArc(is_place, selected_idx, node_idx, symmetri::Success);
+            addArc(node_type, selected_idx, node_idx, symmetri::Success);
           }
           if (ImGui::IsItemHovered()) {
-            bool is_target_place = not is_place;
+            const auto target_node_type =
+                node_type == model::Model::NodeType::Place
+                    ? model::Model::NodeType::Transition
+                    : model::Model::NodeType::Place;
             if (not vm.selected_target_node_idx.has_value() ||
                 vm.selected_target_node_idx.value() !=
-                    std::tuple<bool, size_t>{is_target_place, node_idx}) {
-              setSelectedTargetNode(is_target_place, node_idx);
+                    std::tuple<model::Model::NodeType, size_t>{target_node_type,
+                                                               node_idx}) {
+              setSelectedTargetNode(target_node_type, node_idx);
             }
           }
         }
         ImGui::EndMenu();
       }
-      if (is_place) {
-        drawColorDropdownMenu("Add marking", vm.colors, [=](const char* c) {
-          addTokenToPlace(
-              symmetri::AugmentedToken{selected_idx, symmetri::Token(c)});
+      if (node_type == model::Model::NodeType::Place) {
+        drawColorDropdownMenu("Add marking", vm.colors, [=](auto c) -> void {
+          addTokenToPlace(symmetri::AugmentedToken{selected_idx,
+                                                   symmetri::Token(c.data())});
         });
       }
 
       if (ImGui::MenuItem("Delete")) {
-        is_place ? removePlace(selected_idx) : removeTransition(selected_idx);
+        node_type == model::Model::NodeType::Place
+            ? removePlace(selected_idx)
+            : removeTransition(selected_idx);
       }
     } else if (vm.selected_arc_idxs.has_value()) {
       ImGui::Text("Arc");
       ImGui::Separator();
       if (ImGui::MenuItem("Delete")) {
-        const auto& [is_input, idx, sub_idx] = vm.selected_arc_idxs.value();
-        removeArc(is_input, idx, sub_idx);
+        const auto& [source_node_type, idx, sub_idx] =
+            vm.selected_arc_idxs.value();
+        removeArc(source_node_type, idx, sub_idx);
       }
     } else {
       // @todo make this offset relative to the menubars
       ImVec2 scene_pos = ImGui::GetIO().MousePos + ImVec2(-275, -40);
       if (ImGui::MenuItem("Add place")) {
-        addNode(true, scene_pos);
+        addNode(model::Model::NodeType::Place, scene_pos);
       }
       if (ImGui::MenuItem("Add transition")) {
-        addNode(false, scene_pos);
+        addNode(model::Model::NodeType::Transition, scene_pos);
       }
     }
     ImGui::EndPopup();
