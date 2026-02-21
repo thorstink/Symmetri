@@ -43,7 +43,7 @@ ViewModel::ViewModel(Model m)
       t_fireable(std::accumulate(
           t_view.begin(), t_view.end(), std::vector<size_t>{},
           [this](std::vector<size_t>&& t_fireable, size_t t_idx) {
-            if (canFire(net.input_n[t_idx], tokens)) {
+            if (canFire(net.input_n.at(t_idx), tokens)) {
               t_fireable.push_back(t_idx);
             }
             return std::move(t_fireable);

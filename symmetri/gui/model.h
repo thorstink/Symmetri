@@ -43,9 +43,9 @@ struct Model {
 };
 
 struct ViewModel {
-  std::vector<Drawable> drawables;
-  bool show_grid;
-  Coordinate scrolling;
+  const std::vector<Drawable> drawables;
+  const bool show_grid;
+  const Coordinate scrolling;
   // is place, index, sub-index
   std::optional<std::tuple<bool, size_t, size_t>> selected_arc_idxs;
   // is place | index
@@ -53,13 +53,13 @@ struct ViewModel {
       selected_target_node_idx;
   const std::string active_file;
 
-  std::vector<size_t> t_view, p_view;
-  std::vector<std::string_view> colors;
-  std::vector<symmetri::AugmentedToken> tokens;
+  const std::vector<size_t> t_view, p_view;
+  const std::vector<std::string_view> colors;
+  const std::vector<symmetri::AugmentedToken> tokens;
 
   const symmetri::Petri::PTNet& net;
   const std::vector<Coordinate>&t_positions, &p_positions;
-  std::vector<size_t> t_fireable;
+  const std::vector<size_t> t_fireable;
 
   ViewModel() = delete;
   ViewModel(Model m);

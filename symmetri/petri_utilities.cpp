@@ -7,7 +7,8 @@ size_t toIndex(const std::vector<std::string> &m, const std::string &s) {
   return std::distance(m.begin(), ptr);
 }
 
-bool canFire(const SmallVectorInput &pre, std::vector<AugmentedToken> &tokens) {
+bool canFire(const SmallVectorInput &pre,
+             const std::vector<AugmentedToken> &tokens) {
   for (const auto &m_p : pre) {
     const auto required = std::count(pre.begin(), pre.end(), m_p);
     int actual = 0;
