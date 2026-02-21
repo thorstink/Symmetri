@@ -35,8 +35,8 @@ class window_observer_strategy {
                    decltype(std::declval<Subject>().get_observable())>);
 
  public:
-  using preferred_disposable_strategy =
-      rpp::details::observers::none_disposable_strategy;
+  static constexpr auto preferred_disposables_mode =
+      rpp::details::observers::disposables_mode::None;
 
   window_observer_strategy(TObserver&& observer, size_t count)
       : m_observer{std::move(observer)},
@@ -111,9 +111,9 @@ struct window_t : lift_operator<window_t, size_t> {
     using observer_strategy = window_observer_strategy<TObserver>;
   };
 
-  template <rpp::details::observables::constraint::disposable_strategy Prev>
-  using updated_disposable_strategy =
-      rpp::details::observables::fixed_disposable_strategy_selector<1>;
+  template <rpp::details::observables::constraint::disposables_strategy Prev>
+  using updated_optimal_disposables_strategy =
+      rpp::details::observables::fixed_disposables_strategy<1>;
 };
 }  // namespace rpp::operators::details
 

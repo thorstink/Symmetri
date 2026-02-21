@@ -13,6 +13,7 @@
 #include <rpp/observables/fwd.hpp>
 #include <rpp/observables/observable.hpp>
 #include <rpp/observers/dynamic_observer.hpp>
+#include <rpp/subjects/fwd.hpp>
 #include <utility>
 
 namespace rpp::details::observables {
@@ -25,6 +26,8 @@ template <rpp::constraint::decayed_type Type>
 class dynamic_strategy final {
  public:
   using value_type = Type;
+  using optimal_disposables_strategy =
+      rpp::details::observables::default_disposables_strategy;
 
   template <rpp::constraint::observable_strategy<Type> Strategy>
     requires(!rpp::constraint::decayed_same_as<Strategy,

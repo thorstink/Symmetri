@@ -69,8 +69,8 @@ struct window_toggle_state {
 
 template <rpp::constraint::decayed_type TState>
 struct window_toggle_closing_observer_strategy {
-  using preferred_disposable_strategy =
-      rpp::details::observers::none_disposable_strategy;
+  static constexpr auto preferred_disposables_mode =
+      rpp::details::observers::disposables_mode::None;
 
   std::shared_ptr<rpp::refcount_disposable> disposable;
   std::shared_ptr<TState> state;
@@ -104,6 +104,9 @@ struct window_toggle_closing_observer_strategy {
 
 template <rpp::constraint::decayed_type TState>
 struct window_toggle_opening_observer_strategy {
+  static constexpr auto preferred_disposables_mode =
+      rpp::details::observers::disposables_mode::Auto;
+
   std::shared_ptr<rpp::refcount_disposable> disposable;
   std::shared_ptr<TState> state;
 
@@ -139,8 +142,8 @@ class window_toggle_observer_strategy {
   using TState = window_toggle_state<TObserver, TClosingsSelectorFn>;
 
  public:
-  using preferred_disposable_strategy =
-      rpp::details::observers::none_disposable_strategy;
+  static constexpr auto preferred_disposables_mode =
+      rpp::details::observers::disposables_mode::None;
 
   window_toggle_observer_strategy(TObserver&& observer,
                                   const TOpeningsObservable& openings,
@@ -202,9 +205,9 @@ struct window_toggle_t
         std::decay_t<TObserver>, TOpeningsObservable, TClosingsSelectorFn>;
   };
 
-  template <rpp::details::observables::constraint::disposable_strategy Prev>
-  using updated_disposable_strategy =
-      rpp::details::observables::fixed_disposable_strategy_selector<1>;
+  template <rpp::details::observables::constraint::disposables_strategy Prev>
+  using updated_optimal_disposables_strategy =
+      rpp::details::observables::fixed_disposables_strategy<1>;
 };
 }  // namespace rpp::operators::details
 

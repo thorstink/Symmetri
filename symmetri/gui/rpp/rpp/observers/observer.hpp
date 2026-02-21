@@ -14,7 +14,7 @@
 #include <rpp/defs.hpp>
 #include <rpp/disposables/composite_disposable.hpp>
 #include <rpp/disposables/disposable_wrapper.hpp>
-#include <rpp/observers/details/disposable_strategy.hpp>
+#include <rpp/observers/details/disposables_strategy.hpp>
 #include <rpp/observers/fwd.hpp>
 #include <rpp/utils/exceptions.hpp>
 #include <rpp/utils/functors.hpp>
@@ -23,7 +23,7 @@
 namespace rpp::details {
 template <constraint::decayed_type Type,
           constraint::observer_strategy<Type> Strategy,
-          observers::constraint::disposable_strategy DisposablesStrategy>
+          observers::constraint::disposables_strategy DisposablesStrategy>
 class observer_impl {
  protected:
   template <typename... Args>
@@ -33,7 +33,8 @@ class observer_impl {
         m_disposable{std::move(strategy)} {}
 
  public:
-  using preferred_disposable_strategy = observers::none_disposable_strategy;
+  static constexpr auto preferred_disposables_mode =
+      rpp::details::observers::disposables_mode::None;
 
   using on_next_lvalue = void (observer_impl::*)(const Type&) const noexcept;
   using on_next_rvalue = void (observer_impl::*)(Type&&) const noexcept;
@@ -141,9 +142,9 @@ namespace rpp {
  * @warning If you are passing disposable to ctor, then state of this disposable
  * would be used used (if empty disposable or disposed -> observer is disposed
  * by default)
- * @warning It is expected, that member of this observer would be called in
- * SERIAL way. It means, no any parallel calls allowed, only serial ones from
- * one observable.
+ * @warning It is expected that members of this observer are called in a SERIAL
+ * manner. This means no parallel or concurrent calls are allowed—only serial
+ * calls or those guarded under a lock.
  *
  * @tparam Type of value this observer can handle
  * @tparam Strategy used to provide logic over observer's callbacks
@@ -159,13 +160,13 @@ template <constraint::decayed_type Type,
 class observer final
     : public details::observer_impl<
           Type, Strategy,
-          details::observers::deduce_disposable_strategy_t<Strategy>> {
+          details::observers::deduce_optimal_disposables_strategy_t<
+              Strategy::preferred_disposables_mode>> {
  public:
   using DisposableStrategy =
-      details::observers::deduce_disposable_strategy_t<Strategy>;
-  using Base = details::observer_impl<
-      Type, Strategy,
-      details::observers::deduce_disposable_strategy_t<Strategy>>;
+      details::observers::deduce_optimal_disposables_strategy_t<
+          Strategy::preferred_disposables_mode>;
+  using Base = details::observer_impl<Type, Strategy, DisposableStrategy>;
 
   template <typename... Args>
     requires constraint::is_constructible_from<Strategy, Args&&...>
@@ -190,11 +191,12 @@ class observer final
   }
 };
 
-template <
-    constraint::decayed_type Type, constraint::observer_strategy<Type> Strategy,
-    rpp::details::observers::constraint::disposable_strategy DisposableStrategy>
-class observer<Type,
-               details::with_disposable_strategy<Strategy, DisposableStrategy>>
+template <constraint::decayed_type Type,
+          constraint::observer_strategy<Type> Strategy,
+          rpp::details::observers::constraint::disposables_strategy
+              DisposableStrategy>
+class observer<Type, details::observers::override_disposables_strategy<
+                         Strategy, DisposableStrategy>>
     final : public details::observer_impl<Type, Strategy, DisposableStrategy> {
  public:
   using Base = details::observer_impl<Type, Strategy, DisposableStrategy>;
@@ -226,7 +228,7 @@ template <constraint::decayed_type Type>
 class observer<Type, rpp::details::observers::dynamic_strategy<Type>>
     : public details::observer_impl<
           Type, rpp::details::observers::dynamic_strategy<Type>,
-          details::observers::none_disposable_strategy> {
+          details::observers::none_disposables_strategy> {
  public:
   template <constraint::observer_strategy<Type> TStrategy>
     requires(!std::same_as<TStrategy,
@@ -234,8 +236,9 @@ class observer<Type, rpp::details::observers::dynamic_strategy<Type>>
   observer(observer<Type, TStrategy>&& other)
       : details::observer_impl<Type,
                                rpp::details::observers::dynamic_strategy<Type>,
-                               details::observers::none_disposable_strategy>{
-            details::observers::none_disposable_strategy{}, std::move(other)} {}
+                               details::observers::none_disposables_strategy>{
+            details::observers::none_disposables_strategy{},
+            std::move(other)} {}
 
   dynamic_observer<Type> as_dynamic() && {
     return dynamic_observer<Type>{std::move(*this)};

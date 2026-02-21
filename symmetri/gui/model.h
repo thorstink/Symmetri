@@ -12,18 +12,18 @@ namespace model {
 
 struct ViewModel;
 
-using Drawable = void (*)(const ViewModel &);
+using Drawable = void (*)(const ViewModel&);
 
 struct Coordinate {
   float x, y;
 };
 
-Coordinate operator+(Coordinate &lhs, Coordinate &rhs);
-Coordinate &operator+=(Coordinate &lhs, const Coordinate &rhs);
+Coordinate operator+(Coordinate& lhs, Coordinate& rhs);
+Coordinate& operator+=(Coordinate& lhs, const Coordinate& rhs);
 
 struct Model {
   struct shared {
-    bool show_grid;
+    bool show_grid = true;
     Coordinate scrolling;
     std::optional<std::tuple<bool, size_t, size_t>> selected_arc_idxs;
     std::optional<std::tuple<bool, size_t>> selected_node_idx,
@@ -38,7 +38,8 @@ struct Model {
     std::vector<Drawable> drawables;
     symmetri::Petri::PTNet net;
   };
-  std::shared_ptr<shared> data = std::make_shared<shared>();
+  Model() : data(std::make_shared<shared>()) {}
+  std::shared_ptr<shared> data;
 };
 
 struct ViewModel {
@@ -56,15 +57,15 @@ struct ViewModel {
   std::vector<std::string_view> colors;
   std::vector<symmetri::AugmentedToken> tokens;
 
-  const symmetri::Petri::PTNet &net;
-  const std::vector<Coordinate> &t_positions, &p_positions;
+  const symmetri::Petri::PTNet& net;
+  const std::vector<Coordinate>&t_positions, &p_positions;
   std::vector<size_t> t_fireable;
 
   ViewModel() = delete;
   ViewModel(Model m);
 };
 
-using Reducer = std::function<Model(Model &&)>;
+using Reducer = std::function<Model(Model&&)>;
 using Computer = std::function<Reducer(void)>;
 
 Model initializeModel();

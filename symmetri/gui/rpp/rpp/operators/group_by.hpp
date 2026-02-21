@@ -33,8 +33,8 @@ using grouped_observable_group_by = grouped_observable<
 namespace rpp::operators::details {
 template <rpp::constraint::observer TObserver>
 struct group_by_inner_observer_strategy {
-  using preferred_disposable_strategy =
-      rpp::details::observers::none_disposable_strategy;
+  static constexpr auto preferred_disposables_mode =
+      rpp::details::observers::disposables_mode::None;
 
   RPP_NO_UNIQUE_ADDRESS TObserver observer;
   rpp::composite_disposable_wrapper disposable;
@@ -58,8 +58,8 @@ template <rpp::constraint::decayed_type T, rpp::constraint::observer TObserver,
           rpp::constraint::decayed_type ValueSelector,
           rpp::constraint::decayed_type KeyComparator>
 struct group_by_observer_strategy {
-  using preferred_disposable_strategy =
-      rpp::details::observers::none_disposable_strategy;
+  static constexpr auto preferred_disposables_mode =
+      rpp::details::observers::disposables_mode::None;
 
   using TKey = rpp::utils::decayed_invoke_result_t<KeySelector, T>;
   using Type = rpp::utils::decayed_invoke_result_t<ValueSelector, T>;
@@ -131,6 +131,8 @@ struct group_by_observer_strategy {
 template <rpp::constraint::decayed_type T>
 struct group_by_observable_strategy {
   using value_type = T;
+  using optimal_disposables_strategy =
+      typename rpp::subjects::publish_subject<T>::optimal_disposables_strategy;
 
   rpp::subjects::publish_subject<T> subj;
   std::weak_ptr<refcount_disposable> disposable;
@@ -182,9 +184,9 @@ struct group_by_t
                                    KeyComparator>;
   };
 
-  template <rpp::details::observables::constraint::disposable_strategy Prev>
-  using updated_disposable_strategy =
-      rpp::details::observables::fixed_disposable_strategy_selector<1>;
+  template <rpp::details::observables::constraint::disposables_strategy Prev>
+  using updated_optimal_disposables_strategy =
+      rpp::details::observables::fixed_disposables_strategy<1>;
 };
 }  // namespace rpp::operators::details
 

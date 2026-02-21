@@ -20,8 +20,8 @@ template <rpp::constraint::observer TObserver,
           rpp::constraint::decayed_type OnError,
           rpp::constraint::decayed_type OnCompleted>
 struct tap_observer_strategy {
-  using preferred_disposable_strategy =
-      rpp::details::observers::none_disposable_strategy;
+  static constexpr auto preferred_disposables_mode =
+      rpp::details::observers::disposables_mode::None;
 
   RPP_NO_UNIQUE_ADDRESS TObserver observer;
   RPP_NO_UNIQUE_ADDRESS OnNext onNext;
@@ -71,8 +71,8 @@ struct tap_t
         tap_observer_strategy<TObserver, OnNext, OnError, OnCompleted>;
   };
 
-  template <rpp::details::observables::constraint::disposable_strategy Prev>
-  using updated_disposable_strategy = Prev;
+  template <rpp::details::observables::constraint::disposables_strategy Prev>
+  using updated_optimal_disposables_strategy = Prev;
 };
 }  // namespace rpp::operators::details
 

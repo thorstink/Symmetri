@@ -17,25 +17,20 @@
 namespace rpp::operators::details {
 template <rpp::constraint::observer TObserver,
           constraint::decayed_type Observable>
-struct retry_state_t final {
+struct retry_state_t final : public rpp::composite_disposable {
   retry_state_t(TObserver&& in_observer, const Observable& observable,
                 std::optional<size_t> count)
       : count{count},
         observer(std::move(in_observer)),
         observable(observable)
 
-  {
-    observer.set_upstream(disposable);
-  }
+  {}
 
   std::optional<size_t> count;
   std::atomic<bool> is_inside_drain{};
 
   RPP_NO_UNIQUE_ADDRESS TObserver observer;
   RPP_NO_UNIQUE_ADDRESS Observable observable;
-
-  rpp::composite_disposable_wrapper disposable =
-      composite_disposable_wrapper::make();
 };
 
 template <rpp::constraint::observer TObserver, typename TObservable>
@@ -43,11 +38,10 @@ void drain(const std::shared_ptr<retry_state_t<TObserver, TObservable>>& state);
 
 template <rpp::constraint::observer TObserver, typename TObservable>
 struct retry_observer_strategy {
-  using preferred_disposable_strategy =
-      rpp::details::observers::none_disposable_strategy;
+  static constexpr auto preferred_disposables_mode =
+      rpp::details::observers::disposables_mode::Boolean;
 
   std::shared_ptr<retry_state_t<TObserver, TObservable>> state;
-  mutable bool locally_disposed{};
 
   template <typename T>
   void on_next(T&& v) const {
@@ -55,13 +49,12 @@ struct retry_observer_strategy {
   }
 
   void on_error(const std::exception_ptr& err) const {
-    locally_disposed = true;
     if (state->count == 0) {
       state->observer.on_error(err);
       return;
     }
 
-    state->disposable.clear();
+    state->clear();
 
     if (state->is_inside_drain.exchange(false, std::memory_order::seq_cst))
       return;
@@ -69,24 +62,17 @@ struct retry_observer_strategy {
     drain(state);
   }
 
-  void on_completed() const {
-    locally_disposed = true;
-    state->observer.on_completed();
-  }
+  void on_completed() const { state->observer.on_completed(); }
 
-  void set_upstream(const disposable_wrapper& d) const {
-    state->disposable.add(d);
-  }
+  void set_upstream(const disposable_wrapper& d) const { state->add(d); }
 
-  bool is_disposed() const {
-    return locally_disposed || state->disposable.is_disposed();
-  }
+  bool is_disposed() const { return state->is_disposed(); }
 };
 
 template <rpp::constraint::observer TObserver, typename TObservable>
 void drain(
     const std::shared_ptr<retry_state_t<TObserver, TObservable>>& state) {
-  while (!state->disposable.is_disposed()) {
+  while (!state->is_disposed()) {
     if (state->count) --state->count.value();
     state->is_inside_drain.store(true, std::memory_order::seq_cst);
     try {
@@ -112,16 +98,20 @@ struct retry_t {
     using result_type = T;
   };
 
-  template <rpp::details::observables::constraint::disposable_strategy Prev>
-  using updated_disposable_strategy =
-      rpp::details::observables::fixed_disposable_strategy_selector<1>;
+  template <rpp::details::observables::constraint::disposables_strategy Prev>
+  using updated_optimal_disposables_strategy =
+      rpp::details::observables::fixed_disposables_strategy<1>;
 
   template <rpp::constraint::observer TObserver, typename TObservable>
   void subscribe(TObserver&& observer, TObservable&& observble) const {
-    const auto ptr = std::make_shared<
-        retry_state_t<std::decay_t<TObserver>, std::decay_t<TObservable>>>(
-        std::forward<TObserver>(observer), std::forward<TObservable>(observble),
-        count ? count.value() + 1 : count);
+    const auto d = disposable_wrapper_impl<
+        retry_state_t<std::decay_t<TObserver>, std::decay_t<TObservable>>>::
+        make(std::forward<TObserver>(observer),
+             std::forward<TObservable>(observble),
+             count ? count.value() + 1 : count);
+    auto ptr = d.lock();
+
+    ptr->observer.set_upstream(d.as_weak());
     drain(ptr);
   }
 };

@@ -19,8 +19,8 @@ namespace rpp::subjects::details {
 template <rpp::constraint::decayed_type Type, bool Serialized>
 class publish_subject_base {
   struct observer_strategy {
-    using preferred_disposable_strategy =
-        rpp::details::observers::none_disposable_strategy;
+    static constexpr auto preferred_disposables_mode =
+        rpp::details::observers::disposables_mode::None;
 
     std::shared_ptr<details::subject_state<Type, Serialized>> state{};
 
@@ -38,9 +38,9 @@ class publish_subject_base {
   };
 
  public:
-  using expected_disposable_strategy =
-      rpp::details::observables::deduce_disposable_strategy_t<
-          details::subject_state<Type, Serialized>>;
+  using optimal_disposables_strategy =
+      typename details::subject_state<Type,
+                                      Serialized>::optimal_disposables_strategy;
 
   publish_subject_base() = default;
 
@@ -50,7 +50,7 @@ class publish_subject_base {
 
   auto get_observable() const {
     return create_subject_on_subscribe_observable<Type,
-                                                  expected_disposable_strategy>(
+                                                  optimal_disposables_strategy>(
         [state = m_state]<rpp::constraint::observer_of_type<Type> TObs>(
             TObs&& observer) {
           state.lock()->on_subscribe(std::forward<TObs>(observer));
