@@ -68,8 +68,9 @@ void draw_context_menu(const model::ViewModel& vm) {
       ImGui::Text("Arc");
       ImGui::Separator();
       if (ImGui::MenuItem("Delete")) {
-        const auto& [is_input, idx, sub_idx] = vm.selected_arc_idxs.value();
-        removeArc(is_input, idx, sub_idx);
+        const auto& [source_node_type, idx, sub_idx] =
+            vm.selected_arc_idxs.value();
+        removeArc(source_node_type, idx, sub_idx);
       }
     } else {
       // @todo make this offset relative to the menubars

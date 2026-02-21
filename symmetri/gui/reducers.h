@@ -13,7 +13,8 @@ void moveNode(model::Model::NodeType node_type, size_t idx, const ImVec2& d);
 
 void addNode(model::Model::NodeType node_type, ImVec2 pos);
 
-void removeArc(bool is_input, size_t transition_idx, size_t sub_idx);
+void removeArc(model::Model::NodeType source_node_type, size_t transition_idx,
+               size_t sub_idx);
 
 void addArc(model::Model::NodeType node_type, size_t source, size_t target,
             symmetri::Token color);
@@ -24,8 +25,8 @@ void removeTransition(size_t idx);
 
 void showGrid(bool show_grid);
 
-void updateArcColor(bool is_input, size_t idx, size_t sub_idx,
-                    const symmetri::Token color);
+void updateArcColor(model::Model::NodeType source_node_type, size_t idx,
+                    size_t sub_idx, const symmetri::Token color);
 
 ImGuiInputTextCallback updatePlaceName(const size_t id);
 ImGuiInputTextCallback updateTransitionName(const size_t id);
@@ -45,7 +46,8 @@ void resetSelection();
 
 void resetNetView();
 
-void setSelectedArc(bool is_input, size_t idx, size_t sub_idx);
+void setSelectedArc(model::Model::NodeType source_node_type, size_t source_idx,
+                    size_t target_idx);
 
 void renderNodeEntry(model::Model::NodeType node_type, const std::string& name,
                      size_t idx, bool selected);

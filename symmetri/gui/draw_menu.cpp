@@ -44,7 +44,7 @@ void draw_menu(const model::ViewModel& vm) {
 
   ImGui::Text("Selected");
   ImGui::Separator();
-  if (vm.selected_node_idx.has_value()) {
+  if (is_a_node_selected) {
     ImGui::Text("Name");
     ImGui::SameLine();
     static int i = 0;
@@ -71,7 +71,7 @@ void draw_menu(const model::ViewModel& vm) {
                               return std::get<size_t>(at) == selected_idx;
                             }),
                             &drawTokenLine);
-    } else if (model::Model::NodeType::Place != node_type) {
+    } else if (model::Model::NodeType::Transition == node_type) {
       ImGui::Text("Priority");
       ImGui::SameLine();
       static char view_priority[4] = "";
@@ -96,15 +96,18 @@ void draw_menu(const model::ViewModel& vm) {
       }
     }
   } else if (vm.selected_arc_idxs.has_value()) {
-    const auto [is_input, selected_idx, sub_idx] = vm.selected_arc_idxs.value();
+    const auto [node_type, selected_idx, sub_idx] =
+        vm.selected_arc_idxs.value();
 
     const auto color = std::get<symmetri::Token>(
-        (is_input ? vm.net.input_n : vm.net.output_n)[selected_idx][sub_idx]);
+        (node_type == model::Model::NodeType::Place
+             ? vm.net.input_n
+             : vm.net.output_n)[selected_idx][sub_idx]);
 
-    if (is_input) {
+    if (node_type == model::Model::NodeType::Place) {
       drawColorDropdownMenu(std::string(color.toString()), vm.colors,
                             [=](auto c) {
-                              updateArcColor(is_input, selected_idx, sub_idx,
+                              updateArcColor(node_type, selected_idx, sub_idx,
                                              symmetri::Token(c.data()));
                             });
     } else {

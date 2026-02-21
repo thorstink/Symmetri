@@ -18,6 +18,7 @@ void loadPetriNet(const std::filesystem::path& file) {
     auto& m = *model.data;
     m.selected_arc_idxs.reset();
     m.selected_node_idx.reset();
+    m.selected_target_node_idx.reset();
     m.active_file = file;
     if (not m.active_file.has_value()) {
       return model;

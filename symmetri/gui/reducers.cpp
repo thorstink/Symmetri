@@ -70,7 +70,8 @@ void addNode(model::Model::NodeType node_type, ImVec2 pos) {
   });
 }
 
-void removeArc(bool is_input, size_t transition_idx, size_t sub_idx) {
+void removeArc(model::Model::NodeType source_node_type, size_t transition_idx,
+               size_t sub_idx) {
   rxdispatch::push([=](model::Model&& m) mutable {
     // remove transition from view
     m.data->t_view.erase(std::remove(m.data->t_view.begin(),
@@ -87,7 +88,7 @@ void removeArc(bool is_input, size_t transition_idx, size_t sub_idx) {
     m.data->t_view.push_back(new_idx);
 
     // now copy the arcs, except for the one we want to delete
-    if (is_input) {
+    if (source_node_type == model::Model::NodeType::Place) {
       m.data->net.output_n.push_back(m.data->net.output_n[transition_idx]);
       m.data->net.input_n.push_back({});
       std::copy_if(m.data->net.input_n[transition_idx].begin(),
@@ -112,7 +113,7 @@ void addArc(model::Model::NodeType node_type, size_t source, size_t target,
             symmetri::Token color) {
   rxdispatch::push([=](model::Model&& m) mutable {
     const size_t transition_idx =
-        model::Model::NodeType::Place == node_type ? target : source;
+        model::Model::NodeType::Transition == node_type ? source : target;
     // remove transition from view
     m.data->t_view.erase(std::remove(m.data->t_view.begin(),
                                      m.data->t_view.end(), transition_idx),
@@ -142,7 +143,6 @@ void addArc(model::Model::NodeType node_type, size_t source, size_t target,
     }
 
     std::erase(m.data->drawables, &draw_context_menu);
-
     return m;
   });
 }
@@ -173,17 +173,19 @@ void removeTransition(size_t idx) {
         std::remove(m.data->t_view.begin(), m.data->t_view.end(), idx),
         m.data->t_view.end());
     m.data->selected_node_idx.reset();
+    m.data->selected_target_node_idx.reset();
     std::erase(m.data->drawables, &draw_context_menu);
 
     return m;
   });
 }
 
-void updateArcColor(bool is_input, size_t idx, size_t sub_idx,
-                    const symmetri::Token color) {
+void updateArcColor(model::Model::NodeType source_node_type, size_t idx,
+                    size_t sub_idx, const symmetri::Token color) {
   rxdispatch::push([=](model::Model&& m) mutable {
-    std::get<symmetri::Token>(
-        (is_input ? m.data->net.input_n : m.data->net.output_n)[idx][sub_idx]) =
+    std::get<symmetri::Token>((source_node_type == model::Model::NodeType::Place
+                                   ? m.data->net.input_n
+                                   : m.data->net.output_n)[idx][sub_idx]) =
         color;
     return m;
   });
@@ -271,14 +273,17 @@ void resetSelection() {
   rxdispatch::push([](model::Model&& m) {
     m.data->selected_node_idx.reset();
     m.data->selected_arc_idxs.reset();
+    m.data->selected_target_node_idx.reset();
     return m;
   });
 };
 
-void setSelectedArc(bool is_input, size_t idx, size_t sub_idx) {
+void setSelectedArc(model::Model::NodeType source_node_type, size_t t_idx,
+                    size_t p_idx) {
   rxdispatch::push([=](model::Model&& m) {
     m.data->selected_node_idx.reset();
-    m.data->selected_arc_idxs = {is_input, idx, sub_idx};
+    m.data->selected_target_node_idx.reset();
+    m.data->selected_arc_idxs = {source_node_type, t_idx, p_idx};
     return m;
   });
 };

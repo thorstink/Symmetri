@@ -28,7 +28,7 @@ struct Model {
   struct shared {
     bool show_grid = true;
     Coordinate scrolling;
-    std::optional<std::tuple<bool, size_t, size_t>> selected_arc_idxs;
+    std::optional<std::tuple<NodeType, size_t, size_t>> selected_arc_idxs;
     std::optional<std::tuple<NodeType, size_t>> selected_node_idx,
         selected_target_node_idx;
 
@@ -49,9 +49,10 @@ struct ViewModel {
   const std::vector<Drawable> drawables;
   const bool show_grid;
   const Coordinate scrolling;
-  // is place, index, sub-index
-  std::optional<std::tuple<bool, size_t, size_t>> selected_arc_idxs;
-  // is place | index
+  // source NodeType, source index, target sub-index
+  std::optional<std::tuple<model::Model::NodeType, size_t, size_t>>
+      selected_arc_idxs;
+  // NodeType | index
   std::optional<std::tuple<model::Model::NodeType, size_t>> selected_node_idx,
       selected_target_node_idx;
   const std::string active_file;
