@@ -22,11 +22,14 @@ Coordinate operator+(Coordinate& lhs, Coordinate& rhs);
 Coordinate& operator+=(Coordinate& lhs, const Coordinate& rhs);
 
 struct Model {
+  enum class NodeType { Place, Transition };
+  // using SelectedNode = std::pair<NodeType, size_t>;
+
   struct shared {
     bool show_grid = true;
     Coordinate scrolling;
     std::optional<std::tuple<bool, size_t, size_t>> selected_arc_idxs;
-    std::optional<std::tuple<bool, size_t>> selected_node_idx,
+    std::optional<std::tuple<NodeType, size_t>> selected_node_idx,
         selected_target_node_idx;
 
     std::optional<std::filesystem::path> active_file;
@@ -49,7 +52,7 @@ struct ViewModel {
   // is place, index, sub-index
   std::optional<std::tuple<bool, size_t, size_t>> selected_arc_idxs;
   // is place | index
-  std::optional<std::tuple<bool, size_t>> selected_node_idx,
+  std::optional<std::tuple<model::Model::NodeType, size_t>> selected_node_idx,
       selected_target_node_idx;
   const std::string active_file;
 

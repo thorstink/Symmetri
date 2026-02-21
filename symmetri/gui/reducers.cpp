@@ -18,9 +18,10 @@ void moveView(const ImVec2& d) {
   });
 }
 
-void moveNode(bool is_place, size_t idx, const ImVec2& d) {
+void moveNode(model::Model::NodeType node_type, size_t idx, const ImVec2& d) {
   rxdispatch::push([=](model::Model&& m) mutable {
-    (is_place ? m.data->p_positions[idx] : m.data->t_positions[idx]) +=
+    (model::Model::NodeType::Place == node_type ? m.data->p_positions[idx]
+                                                : m.data->t_positions[idx]) +=
         model::Coordinate{d.x, d.y};
     return m;
   });
@@ -45,9 +46,9 @@ std::string viewContainsNameAlready(const std::vector<size_t>& view,
   return std::move(name);
 }
 
-void addNode(bool is_place, ImVec2 pos) {
+void addNode(model::Model::NodeType node_type, ImVec2 pos) {
   rxdispatch::push([=](model::Model&& m) mutable {
-    if (is_place) {
+    if (model::Model::NodeType::Place == node_type) {
       m.data->net.place.push_back(
           viewContainsNameAlready(m.data->p_view, m.data->net.place, "place"));
       m.data->net.p_to_ts_n.push_back({});
@@ -107,10 +108,11 @@ void removeArc(bool is_input, size_t transition_idx, size_t sub_idx) {
   });
 }
 
-void addArc(bool is_place, size_t source, size_t target,
+void addArc(model::Model::NodeType node_type, size_t source, size_t target,
             symmetri::Token color) {
   rxdispatch::push([=](model::Model&& m) mutable {
-    const size_t transition_idx = is_place ? target : source;
+    const size_t transition_idx =
+        model::Model::NodeType::Place == node_type ? target : source;
     // remove transition from view
     m.data->t_view.erase(std::remove(m.data->t_view.begin(),
                                      m.data->t_view.end(), transition_idx),
@@ -128,7 +130,7 @@ void addArc(bool is_place, size_t source, size_t target,
     m.data->t_view.push_back(new_transition_idx);
 
     // add the arc
-    if (is_place) {
+    if (model::Model::NodeType::Place == node_type) {
       auto& p_to_ts = m.data->net.p_to_ts_n[source];
       m.data->net.input_n[new_transition_idx].push_back({source, color});
       if (std::find(p_to_ts.begin(), p_to_ts.end(), transition_idx) ==
@@ -250,17 +252,17 @@ void setContextMenuInactive() {
   });
 }
 
-void setSelectedNode(bool is_place, size_t idx) {
+void setSelectedNode(model::Model::NodeType node_type, size_t idx) {
   rxdispatch::push([=](model::Model&& m) {
-    m.data->selected_node_idx = {is_place, idx};
+    m.data->selected_node_idx = {node_type, idx};
     m.data->selected_arc_idxs.reset();
     return m;
   });
 };
 
-void setSelectedTargetNode(bool is_place, size_t idx) {
+void setSelectedTargetNode(model::Model::NodeType node_type, size_t idx) {
   rxdispatch::push([=](model::Model&& m) {
-    m.data->selected_target_node_idx = {is_place, idx};
+    m.data->selected_target_node_idx = {node_type, idx};
     return m;
   });
 };
@@ -281,11 +283,11 @@ void setSelectedArc(bool is_input, size_t idx, size_t sub_idx) {
   });
 };
 
-void renderNodeEntry(bool is_place, const std::string& name, size_t idx,
-                     bool selected) {
+void renderNodeEntry(model::Model::NodeType node_type, const std::string& name,
+                     size_t idx, bool selected) {
   ImGui::PushID(idx);
   if (ImGui::Selectable(name.c_str(), selected)) {
-    setSelectedNode(is_place, idx);
+    setSelectedNode(node_type, idx);
   }
   ImGui::PopID();
 }

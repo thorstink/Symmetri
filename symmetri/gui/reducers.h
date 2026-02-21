@@ -9,13 +9,14 @@
 
 void moveView(const ImVec2& d);
 
-void moveNode(bool is_place, size_t idx, const ImVec2& d);
+void moveNode(model::Model::NodeType node_type, size_t idx, const ImVec2& d);
 
-void addNode(bool is_place, ImVec2 pos);
+void addNode(model::Model::NodeType node_type, ImVec2 pos);
 
 void removeArc(bool is_input, size_t transition_idx, size_t sub_idx);
 
-void addArc(bool is_place, size_t source, size_t target, symmetri::Token color);
+void addArc(model::Model::NodeType node_type, size_t source, size_t target,
+            symmetri::Token color);
 
 void removePlace(size_t idx);
 
@@ -34,9 +35,9 @@ void setContextMenuActive();
 
 void setContextMenuInactive();
 
-void setSelectedNode(bool is_place, size_t idx);
+void setSelectedNode(model::Model::NodeType node_type, size_t idx);
 
-void setSelectedTargetNode(bool is_place, size_t idx);
+void setSelectedTargetNode(model::Model::NodeType node_type, size_t idx);
 
 void resetSelectedTargetNode();
 
@@ -46,8 +47,8 @@ void resetNetView();
 
 void setSelectedArc(bool is_input, size_t idx, size_t sub_idx);
 
-void renderNodeEntry(bool is_place, const std::string& name, size_t idx,
-                     bool selected);
+void renderNodeEntry(model::Model::NodeType node_type, const std::string& name,
+                     size_t idx, bool selected);
 
 int updateActiveFile(ImGuiInputTextCallbackData* data);
 

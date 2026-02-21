@@ -34,8 +34,10 @@ void drawTokenLine(const symmetri::AugmentedToken& at) {
 void draw_menu(const model::ViewModel& vm) {
   // is now also true if there's nothing selected.
   const bool is_a_node_selected = vm.selected_node_idx.has_value();
-  const bool is_place = vm.selected_node_idx.has_value() &&
-                        std::get<0>(vm.selected_node_idx.value());
+  const model::Model::NodeType node_type =
+      std::get<0>(vm.selected_node_idx.value_or(
+          std::make_tuple(model::Model::NodeType::Place, size_t(0))));
+
   const size_t selected_idx =
       is_a_node_selected ? std::get<1>(vm.selected_node_idx.value()) : 9999;
   draw_simulation_menu(vm);
@@ -48,25 +50,28 @@ void draw_menu(const model::ViewModel& vm) {
     static int i = 0;
     const auto id = std::string("##") + std::to_string(i++);
     ImGui::PushItemWidth(-1);
-    const auto& model_name =
-        (is_place ? vm.net.place : vm.net.transition)[selected_idx];
+    const auto& model_name = (model::Model::NodeType::Place == node_type
+                                  ? vm.net.place
+                                  : vm.net.transition)[selected_idx];
     ImGui::Text("%s", model_name.c_str());
 
     static char view_name[128] = "";
     strcpy(view_name, model_name.c_str());
     ImGui::PushItemWidth(-1);
-    ImGui::InputText(
-        "##input tex", view_name, 128, ImGuiInputTextFlags_CallbackEdit,
-        (is_place ? updatePlaceName : updateTransitionName)(selected_idx));
+    ImGui::InputText("##input tex", view_name, 128,
+                     ImGuiInputTextFlags_CallbackEdit,
+                     (model::Model::NodeType::Place == node_type
+                          ? updatePlaceName
+                          : updateTransitionName)(selected_idx));
     ImGui::PopItemWidth();
     label_id = 0;
-    if (is_place) {
+    if (model::Model::NodeType::Place == node_type) {
       ImGui::Text("Marking");
       std::ranges::for_each(vm.tokens | std::views::filter([=](const auto& at) {
                               return std::get<size_t>(at) == selected_idx;
                             }),
                             &drawTokenLine);
-    } else if (not is_place) {
+    } else if (model::Model::NodeType::Place != node_type) {
       ImGui::Text("Priority");
       ImGui::SameLine();
       static char view_priority[4] = "";
@@ -121,8 +126,10 @@ void draw_menu(const model::ViewModel& vm) {
       ImGui::Separator();
 
       for (const auto& idx : vm.p_view) {
-        renderNodeEntry(true, vm.net.place[idx], idx,
-                        is_a_node_selected && is_place && idx == selected_idx);
+        renderNodeEntry(model::Model::NodeType::Place, vm.net.place[idx], idx,
+                        is_a_node_selected &&
+                            model::Model::NodeType::Place == node_type &&
+                            idx == selected_idx);
       }
       ImGui::EndTabItem();
     }
@@ -137,8 +144,10 @@ void draw_menu(const model::ViewModel& vm) {
       }
       ImGui::Separator();
       for (const auto& idx : vm.t_view) {
-        renderNodeEntry(false, vm.net.transition[idx], idx,
-                        is_a_node_selected && !is_place && idx == selected_idx);
+        renderNodeEntry(
+            model::Model::NodeType::Transition, vm.net.transition[idx], idx,
+            is_a_node_selected && model::Model::NodeType::Place != node_type &&
+                idx == selected_idx);
       }
 
       ImGui::EndTabItem();
