@@ -109,11 +109,12 @@ void removeArc(model::Model::NodeType source_node_type, size_t transition_idx,
   });
 }
 
-void addArc(model::Model::NodeType node_type, size_t source, size_t target,
-            symmetri::Token color) {
+void addArc(model::Model::NodeType source_node_type, size_t source,
+            size_t target, symmetri::Token color) {
   rxdispatch::push([=](model::Model&& m) mutable {
     const size_t transition_idx =
-        model::Model::NodeType::Transition == node_type ? source : target;
+        model::Model::NodeType::Transition == source_node_type ? source
+                                                               : target;
     // remove transition from view
     m.data->t_view.erase(std::remove(m.data->t_view.begin(),
                                      m.data->t_view.end(), transition_idx),
@@ -131,16 +132,19 @@ void addArc(model::Model::NodeType node_type, size_t source, size_t target,
     m.data->t_view.push_back(new_transition_idx);
 
     // add the arc
-    if (model::Model::NodeType::Place == node_type) {
-      auto& p_to_ts = m.data->net.p_to_ts_n[source];
-      m.data->net.input_n[new_transition_idx].push_back({source, color});
-      if (std::find(p_to_ts.begin(), p_to_ts.end(), transition_idx) ==
-          p_to_ts.end()) {
-        p_to_ts.push_back(new_transition_idx);
-      }
-    } else {
-      m.data->net.output_n[new_transition_idx].push_back({target, color});
-    }
+    auto& p_to_ts = m.data->net.p_to_ts_n[source];
+    switch (source_node_type) {
+      case model::Model::NodeType::Place:
+        m.data->net.input_n[new_transition_idx].push_back({source, color});
+        if (std::find(p_to_ts.begin(), p_to_ts.end(), transition_idx) ==
+            p_to_ts.end()) {
+          p_to_ts.push_back(new_transition_idx);
+        }
+        break;
+      case model::Model::NodeType::Transition:
+        m.data->net.output_n[new_transition_idx].push_back({target, color});
+        break;
+    };
 
     std::erase(m.data->drawables, &draw_context_menu);
     return m;

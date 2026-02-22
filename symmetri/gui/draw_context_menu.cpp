@@ -27,16 +27,21 @@ void draw_context_menu(const model::ViewModel& vm) {
         for (const auto& node_idx : node_type == model::Model::NodeType::Place
                                         ? vm.t_view
                                         : vm.p_view) {
-          if (node_type == model::Model::NodeType::Place) {
-            drawColorDropdownMenu(vm.net.transition[node_idx], vm.colors,
-                                  [&](auto c) -> void {
-                                    addArc(node_type, selected_idx, node_idx,
-                                           symmetri::Token(c.data()));
-                                  });
+          switch (node_type) {
+            case model::Model::NodeType::Place:
+              drawColorDropdownMenu(vm.net.transition[node_idx], vm.colors,
+                                    [&](auto c) -> void {
+                                      addArc(node_type, selected_idx, node_idx,
+                                             symmetri::Token(c.data()));
+                                    });
+              break;
+            case model::Model::NodeType::Transition:
+              if (ImGui::MenuItem((vm.net.place[node_idx].c_str()))) {
+                addArc(node_type, selected_idx, node_idx, symmetri::Success);
+              }
+              break;
+          };
 
-          } else if (ImGui::MenuItem((vm.net.place[node_idx].c_str()))) {
-            addArc(node_type, selected_idx, node_idx, symmetri::Success);
-          }
           if (ImGui::IsItemHovered()) {
             const auto target_node_type =
                 node_type == model::Model::NodeType::Place
