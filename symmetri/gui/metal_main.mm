@@ -63,7 +63,7 @@ int main(int, char **) {
   MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor new];
 
   auto root_subscription = go();
-  loadPetriNet("/Users/thomashorstink/Downloads/Inspection.grml");
+  loadPetriNet("/Users/thomashorstink/Downloads/Inspection.pnml");
 
   // Main loop
   while (!glfwWindowShouldClose(window)) {

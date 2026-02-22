@@ -9,7 +9,7 @@ using namespace tinyxml2;
 
 namespace symmetri {
 
-std::tuple<Net, Marking> readPnml(const std::set<std::string> &files) {
+std::tuple<Net, Marking> readPnml(const std::set<std::string>& files) {
   std::set<std::string> places, transitions;
   Marking place_initialMarking;
   Net state_net;
@@ -18,12 +18,12 @@ std::tuple<Net, Marking> readPnml(const std::set<std::string> &files) {
     XMLDocument net;
     net.LoadFile(file.c_str());
 
-    XMLElement *levelElement = net.FirstChildElement("pnml")
+    XMLElement* levelElement = net.FirstChildElement("pnml")
                                    ->FirstChildElement("net")
                                    ->FirstChildElement("page");
 
     // loop places.
-    for (XMLElement *child = levelElement->FirstChildElement("place");
+    for (XMLElement* child = levelElement->FirstChildElement("place");
          child != NULL; child = child->NextSiblingElement("place")) {
       auto place_id = child->Attribute("id");
       auto initial_marking =
@@ -39,14 +39,14 @@ std::tuple<Net, Marking> readPnml(const std::set<std::string> &files) {
     }
 
     // loop transitions
-    for (XMLElement *child = levelElement->FirstChildElement("transition");
+    for (XMLElement* child = levelElement->FirstChildElement("transition");
          child != NULL; child = child->NextSiblingElement("transition")) {
       auto transition_id = child->Attribute("id");
       transitions.insert(transition_id);
     }
 
     // loop arcs
-    for (XMLElement *child = levelElement->FirstChildElement("arc");
+    for (XMLElement* child = levelElement->FirstChildElement("arc");
          child != NULL; child = child->NextSiblingElement("arc")) {
       // do something with each child element
 
@@ -79,10 +79,12 @@ std::tuple<Net, Marking> readPnml(const std::set<std::string> &files) {
             state_net.insert({source_id, {{}, {{target_id, arc_color}}}});
           }
         } else {
-          const auto arc_id = child->Attribute("id");
+          const auto source_id = child->Attribute("source");
+          const auto target_id = child->Attribute("target");
           throw std::runtime_error(
-              std::string("error: arc ") + arc_id +
-              std::string("is not connecting a place to a transition."));
+              std::string(
+                  "error: one of the following nodes does not exist: ") +
+              source_id + std::string(" or ") + target_id + std::string("."));
         }
       }
     }

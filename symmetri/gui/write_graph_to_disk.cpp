@@ -44,22 +44,30 @@ auto toXml(const symmetri::Petri::PTNet& net,
     root->InsertEndChild(child);
 
     for (const auto& token : net.input_n[idx]) {
-      XMLElement* child = doc->NewElement("arc");
-      child->SetAttribute("source", net.place[std::get<size_t>(token)].c_str());
-      child->SetAttribute("target", net.transition[idx].c_str());
-      child->SetAttribute(
-          "color",
-          std::string(std::get<symmetri::Token>(token).toString()).c_str());
-      root->InsertEndChild(child);
+      if (std::find(p_view.cbegin(), p_view.cend(), std::get<size_t>(token)) !=
+          p_view.cend()) {
+        XMLElement* child = doc->NewElement("arc");
+        child->SetAttribute("source",
+                            net.place[std::get<size_t>(token)].c_str());
+        child->SetAttribute("target", net.transition[idx].c_str());
+        child->SetAttribute(
+            "color",
+            std::string(std::get<symmetri::Token>(token).toString()).c_str());
+        root->InsertEndChild(child);
+      }
     }
     for (const auto& token : net.output_n[idx]) {
-      XMLElement* child = doc->NewElement("arc");
-      child->SetAttribute("source", net.transition[idx].c_str());
-      child->SetAttribute("target", net.place[std::get<size_t>(token)].c_str());
-      child->SetAttribute(
-          "color",
-          std::string(std::get<symmetri::Token>(token).toString()).c_str());
-      root->InsertEndChild(child);
+      if (std::find(p_view.cbegin(), p_view.cend(), std::get<size_t>(token)) !=
+          p_view.cend()) {
+        XMLElement* child = doc->NewElement("arc");
+        child->SetAttribute("source", net.transition[idx].c_str());
+        child->SetAttribute("target",
+                            net.place[std::get<size_t>(token)].c_str());
+        child->SetAttribute(
+            "color",
+            std::string(std::get<symmetri::Token>(token).toString()).c_str());
+        root->InsertEndChild(child);
+      }
     }
   }
   return doc;
