@@ -11,10 +11,10 @@ void draw_context_menu(const model::ViewModel& vm) {
   // Draw context menu
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
   if (ImGui::BeginPopup("context_menu")) {
-    if (vm.selected_node_idx.has_value()) {
+    if (const auto& selected_node_idx = vm.selected_node_idx) {
       const model::Model::NodeType node_type =
-          std::get<0>(vm.selected_node_idx.value());
-      const size_t selected_idx = std::get<1>(vm.selected_node_idx.value());
+          std::get<0>(selected_node_idx.value());
+      const size_t selected_idx = std::get<1>(selected_node_idx.value());
       ImGui::Text(
           "%s '%s'",
           (node_type == model::Model::NodeType::Place ? "Place" : "Transition"),
@@ -47,10 +47,9 @@ void draw_context_menu(const model::ViewModel& vm) {
                 node_type == model::Model::NodeType::Place
                     ? model::Model::NodeType::Transition
                     : model::Model::NodeType::Place;
-            if (not vm.selected_target_node_idx.has_value() ||
-                vm.selected_target_node_idx.value() !=
-                    std::tuple<model::Model::NodeType, size_t>{target_node_type,
-                                                               node_idx}) {
+            if (std::tie(target_node_type, node_idx) !=
+                vm.selected_target_node_idx.value_or(std::make_tuple(
+                    model::Model::NodeType::Transition, 9999))) {
               setSelectedTargetNode(target_node_type, node_idx);
             }
           }
