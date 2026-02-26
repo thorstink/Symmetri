@@ -191,8 +191,7 @@ void draw_graph(const model::ViewModel& vm) {
   if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
       ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) &&
       !ImGui::IsAnyItemHovered() &&
-      (vm.selected_node_idx.has_value() || vm.selected_arc_idxs.has_value() ||
-       vm.selected_target_node_idx.has_value())) {
+      (vm.selected_node_idx.has_value() || vm.selected_arc_idxs.has_value())) {
     resetSelection();
   }
 
@@ -239,33 +238,20 @@ void draw_graph(const model::ViewModel& vm) {
 
   // is now also true if there's nothing selected.
   const bool is_selected_node = vm.selected_node_idx.has_value();
-  const bool is_target_node = vm.selected_target_node_idx.has_value();
   // draw places & transitions
   for (auto&& idx : vm.t_view) {
     draw_arc(idx, vm);
     const bool should_hightlight =
-        (is_selected_node &&
-         (std::get<0>(vm.selected_node_idx.value()) ==
-              model::Model::NodeType::Transition &&
-          idx == std::get<1>(vm.selected_node_idx.value()))) ||
-        (is_target_node &&
-         (std::get<0>(vm.selected_target_node_idx.value()) ==
-              model::Model::NodeType::Transition &&
-          idx == std::get<1>(vm.selected_target_node_idx.value())));
+        std::find(vm.t_highlight.cbegin(), vm.t_highlight.cend(), idx) !=
+        vm.t_highlight.cend();
 
     draw_nodes(model::Model::NodeType::Transition, idx, vm.net.transition[idx],
                vm.t_positions[idx], should_hightlight, vm.tokens);
   }
   for (auto idx : vm.p_view) {
     const bool should_hightlight =
-        (is_selected_node &&
-         (std::get<0>(vm.selected_node_idx.value()) ==
-              model::Model::NodeType::Place &&
-          idx == std::get<1>(vm.selected_node_idx.value()))) ||
-        (is_target_node &&
-         (std::get<0>(vm.selected_target_node_idx.value()) ==
-              model::Model::NodeType::Place &&
-          idx == std::get<1>(vm.selected_target_node_idx.value())));
+        std::find(vm.p_highlight.cbegin(), vm.p_highlight.cend(), idx) !=
+        vm.p_highlight.cend();
 
     draw_nodes(model::Model::NodeType::Place, idx, vm.net.place[idx],
                vm.p_positions[idx], should_hightlight, vm.tokens);

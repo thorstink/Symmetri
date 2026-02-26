@@ -29,13 +29,12 @@ struct Model {
     bool show_grid = true;
     Coordinate scrolling;
     std::optional<std::tuple<NodeType, size_t, size_t>> selected_arc_idxs;
-    std::optional<std::tuple<NodeType, size_t>> selected_node_idx,
-        selected_target_node_idx;
-
+    std::optional<std::tuple<NodeType, size_t>> selected_node_idx;
     std::optional<std::filesystem::path> active_file;
     std::map<Drawable, std::promise<void>> blockers;
     std::vector<Coordinate> t_positions, p_positions;
     std::vector<size_t> t_view, p_view;
+    std::vector<size_t> t_highlight, p_highlight;
     std::vector<std::string_view> colors = symmetri::Token::getColors();
     std::vector<symmetri::AugmentedToken> tokens;
     std::vector<Drawable> drawables;
@@ -53,11 +52,11 @@ struct ViewModel {
   std::optional<std::tuple<model::Model::NodeType, size_t, size_t>>
       selected_arc_idxs;
   // NodeType | index
-  std::optional<std::tuple<model::Model::NodeType, size_t>> selected_node_idx,
-      selected_target_node_idx;
+  std::optional<std::tuple<model::Model::NodeType, size_t>> selected_node_idx;
   const std::string active_file;
 
   const std::vector<size_t> t_view, p_view;
+  const std::vector<size_t> t_highlight, p_highlight;
   const std::vector<std::string_view> colors;
   const std::vector<symmetri::AugmentedToken> tokens;
 

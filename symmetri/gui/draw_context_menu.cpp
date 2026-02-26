@@ -43,14 +43,15 @@ void draw_context_menu(const model::ViewModel& vm) {
           };
 
           if (ImGui::IsItemHovered()) {
-            const auto target_node_type =
-                node_type == model::Model::NodeType::Place
-                    ? model::Model::NodeType::Transition
-                    : model::Model::NodeType::Place;
-            if (std::tie(target_node_type, node_idx) !=
-                vm.selected_target_node_idx.value_or(std::make_tuple(
-                    model::Model::NodeType::Transition, 9999))) {
-              setSelectedTargetNode(target_node_type, node_idx);
+            const auto& highlighted = node_type == model::Model::NodeType::Place
+                                          ? vm.t_highlight
+                                          : vm.p_highlight;
+            if (std::find(highlighted.cbegin(), highlighted.cend(), node_idx) ==
+                highlighted.cend()) {
+              setSelectedTargetNode(node_type == model::Model::NodeType::Place
+                                        ? model::Model::NodeType::Transition
+                                        : model::Model::NodeType::Place,
+                                    node_idx);
             }
           }
         }

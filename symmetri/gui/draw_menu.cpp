@@ -34,12 +34,16 @@ void drawTokenLine(const symmetri::AugmentedToken& at) {
 void draw_menu(const model::ViewModel& vm) {
   // is now also true if there's nothing selected.
   const bool is_a_node_selected = vm.selected_node_idx.has_value();
+  const auto invalid_index =
+      std::max(vm.net.transition.size(), vm.net.place.size());
   const model::Model::NodeType node_type =
       std::get<0>(vm.selected_node_idx.value_or(
-          std::make_tuple(model::Model::NodeType::Place, size_t(0))));
+          std::make_tuple(model::Model::NodeType::Place, invalid_index)));
 
-  const size_t selected_idx =
-      is_a_node_selected ? std::get<1>(vm.selected_node_idx.value()) : 9999;
+  const size_t selected_idx = is_a_node_selected
+                                  ? std::get<1>(vm.selected_node_idx.value())
+                                  : invalid_index;
+
   draw_simulation_menu(vm);
 
   ImGui::Text("Selected");
@@ -127,7 +131,7 @@ void draw_menu(const model::ViewModel& vm) {
         memset(new_place, 0, sizeof(new_place));
       }
       ImGui::Separator();
-
+      //  if (is a node)
       for (const auto& idx : vm.p_view) {
         renderNodeEntry(model::Model::NodeType::Place, vm.net.place[idx], idx,
                         is_a_node_selected &&

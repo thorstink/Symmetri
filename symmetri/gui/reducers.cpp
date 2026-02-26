@@ -158,7 +158,7 @@ void removePlace(size_t idx) {
         std::remove(m.data->p_view.begin(), m.data->p_view.end(), idx),
         m.data->p_view.end());
     // remove selection of this node
-    m.data->selected_node_idx.reset();
+    std::erase(m.data->p_highlight, idx);
     // remove marking for this node
     auto [b, e] = std::ranges::remove_if(
         m.data->tokens, [idx](const symmetri::AugmentedToken at) {
@@ -166,7 +166,6 @@ void removePlace(size_t idx) {
         });
     m.data->tokens.erase(b, e);
     std::erase(m.data->drawables, &draw_context_menu);
-
     return m;
   });
 }
@@ -176,10 +175,8 @@ void removeTransition(size_t idx) {
     m.data->t_view.erase(
         std::remove(m.data->t_view.begin(), m.data->t_view.end(), idx),
         m.data->t_view.end());
-    m.data->selected_node_idx.reset();
-    m.data->selected_target_node_idx.reset();
+    std::erase(m.data->t_highlight, idx);
     std::erase(m.data->drawables, &draw_context_menu);
-
     return m;
   });
 }
@@ -253,7 +250,7 @@ void setContextMenuActive() {
 void setContextMenuInactive() {
   rxdispatch::push([](model::Model&& m) {
     std::erase(m.data->drawables, &draw_context_menu);
-    m.data->selected_target_node_idx.reset();
+    // m.data->selected_target_node_idx.reset();
     return m;
   });
 }
@@ -261,6 +258,11 @@ void setContextMenuInactive() {
 void setSelectedNode(model::Model::NodeType node_type, size_t idx) {
   rxdispatch::push([=](model::Model&& m) {
     m.data->selected_node_idx = {node_type, idx};
+    m.data->p_highlight.clear();
+    m.data->t_highlight.clear();
+    (node_type == model::Model::NodeType::Place ? m.data->p_highlight
+                                                : m.data->t_highlight)
+        .push_back(idx);
     m.data->selected_arc_idxs.reset();
     return m;
   });
@@ -268,7 +270,11 @@ void setSelectedNode(model::Model::NodeType node_type, size_t idx) {
 
 void setSelectedTargetNode(model::Model::NodeType node_type, size_t idx) {
   rxdispatch::push([=](model::Model&& m) {
-    m.data->selected_target_node_idx = {node_type, idx};
+    auto& c =
+        (node_type == model::Model::NodeType::Place ? m.data->p_highlight
+                                                    : m.data->t_highlight);
+    c.clear();
+    c.push_back(idx);
     return m;
   });
 };
@@ -277,7 +283,8 @@ void resetSelection() {
   rxdispatch::push([](model::Model&& m) {
     m.data->selected_node_idx.reset();
     m.data->selected_arc_idxs.reset();
-    m.data->selected_target_node_idx.reset();
+    m.data->p_highlight.clear();
+    m.data->t_highlight.clear();
     return m;
   });
 };
@@ -286,7 +293,8 @@ void setSelectedArc(model::Model::NodeType source_node_type, size_t t_idx,
                     size_t p_idx) {
   rxdispatch::push([=](model::Model&& m) {
     m.data->selected_node_idx.reset();
-    m.data->selected_target_node_idx.reset();
+    m.data->p_highlight.clear();
+    m.data->t_highlight.clear();
     m.data->selected_arc_idxs = {source_node_type, t_idx, p_idx};
     return m;
   });
