@@ -28,15 +28,28 @@ void draw_interface(const model::ViewModel& vm) {
   ImGui::SetNextWindowPos(ImVec2(menu_width, 20));
   ImGui::Begin("graph", NULL,
                no_move_draw_resize | ImGuiWindowFlags_NoBringToFrontOnFocus);
-  if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) &&
-      ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
+  if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) &&
+      ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.0f)) {
+    // Scrolling
+    moveView(ImGui::GetIO().MouseDelta);
+  } else if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) &&
+             ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
     setContextMenuActive();
-  } else if (std::find(vm.drawables.begin(), vm.drawables.end(),
-                       &draw_context_menu) != vm.drawables.end() &&
-             ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
-             !ImGui::IsAnyItemHovered()) {
-    setContextMenuInactive();
+  } else if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
+             not ImGui::IsAnyItemHovered()) {
+    if (std::find(vm.drawables.begin(), vm.drawables.end(),
+                  &draw_context_menu) != vm.drawables.end()) {
+      setContextMenuInactive();
+    }
+    if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
+      resetSelection();
+    }
   }
+
+  if (vm.show_grid) {
+    draw_grid(vm);
+  }
+
   draw_graph(vm);
   ImGui::End();
 }

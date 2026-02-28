@@ -38,6 +38,8 @@ void setContextMenuInactive();
 
 void setSelectedNode(model::Model::NodeType node_type, size_t idx);
 
+void addHighlightNode(model::Model::NodeType node_type, size_t idx);
+
 void setSelectedTargetNode(model::Model::NodeType node_type, size_t idx);
 
 void resetSelectedTargetNode();

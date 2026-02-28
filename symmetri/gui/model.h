@@ -23,7 +23,6 @@ Coordinate& operator+=(Coordinate& lhs, const Coordinate& rhs);
 
 struct Model {
   enum class NodeType { Place, Transition };
-  // using SelectedNode = std::pair<NodeType, size_t>;
 
   struct shared {
     bool show_grid = true;
@@ -34,7 +33,8 @@ struct Model {
     std::map<Drawable, std::promise<void>> blockers;
     std::vector<Coordinate> t_positions, p_positions;
     std::vector<size_t> t_view, p_view;
-    std::vector<size_t> t_highlight, p_highlight;
+    std::vector<size_t> t_highlight, p_highlight, arc_input_highlight,
+        arc_output_highlight;
     std::vector<std::string_view> colors = symmetri::Token::getColors();
     std::vector<symmetri::AugmentedToken> tokens;
     std::vector<Drawable> drawables;
@@ -56,7 +56,8 @@ struct ViewModel {
   const std::string active_file;
 
   const std::vector<size_t> t_view, p_view;
-  const std::vector<size_t> t_highlight, p_highlight;
+  const std::vector<size_t> t_highlight, p_highlight, arc_input_highlight,
+      arc_output_highlight;
   const std::vector<std::string_view> colors;
   const std::vector<symmetri::AugmentedToken> tokens;
 

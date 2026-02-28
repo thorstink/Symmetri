@@ -32,8 +32,12 @@ static ImVec2 GetCenterPos(const model::Coordinate& pos, const ImVec2& size) {
 }
 
 void draw_grid(const model::ViewModel& vm) {
+  // const auto menu_width = 350;
+  // ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x - menu_width,
+  //                                 ImGui::GetIO().DisplaySize.y));
+  // ImGui::SetNextWindowPos(ImVec2(menu_width, 20));
   auto draw_list = ImGui::GetWindowDrawList();
-  ImU32 GRID_COLOR = IM_COL32(200, 200, 200, 40);
+  ImU32 GRID_COLOR = IM_COL32(200, 200, 200, 80);
   float GRID_SZ = 64.0f;
   ImVec2 win_pos = ImGui::GetCursorScreenPos();
   ImVec2 canvas_sz = ImGui::GetWindowSize();
@@ -143,11 +147,10 @@ void draw_nodes(model::Model::NodeType node_type, size_t idx,
   ImGui::SetCursorScreenPos(node_rect_min);
   ImGui::InvisibleButton("node", size);
 
-  const bool node_moving_active = ImGui::IsItemActive();
-  const bool is_clicked = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
-  if (node_moving_active && is_clicked) {
-    setSelectedNode(node_type, idx);
-  } else if (node_moving_active &&
+  if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+    (ImGui::IsKeyDown(ImGuiKey_LeftShift) ? addHighlightNode : setSelectedNode)(
+        node_type, idx);
+  } else if (ImGui::IsItemActive() &&
              ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
     moveNode(node_type, idx, ImGui::GetIO().MouseDelta);
   }
@@ -188,13 +191,6 @@ void draw_nodes(model::Model::NodeType node_type, size_t idx,
 };
 
 void draw_graph(const model::ViewModel& vm) {
-  if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
-      ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) &&
-      !ImGui::IsAnyItemHovered() &&
-      (vm.selected_node_idx.has_value() || vm.selected_arc_idxs.has_value())) {
-    resetSelection();
-  }
-
   offset = ImVec2(vm.scrolling.x, vm.scrolling.y);
 
   static char view_name[256] = "";
@@ -227,14 +223,9 @@ void draw_graph(const model::ViewModel& vm) {
 
   ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-  ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(60, 60, 70, 200));
+  ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(60, 60, 70, 100));
   ImGui::BeginChild("scrolling_region", ImVec2(0, 0), true,
                     ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
-
-  // Display grid
-  if (vm.show_grid) {
-    draw_grid(vm);
-  }
 
   // is now also true if there's nothing selected.
   const bool is_selected_node = vm.selected_node_idx.has_value();
@@ -255,16 +246,6 @@ void draw_graph(const model::ViewModel& vm) {
 
     draw_nodes(model::Model::NodeType::Place, idx, vm.net.place[idx],
                vm.p_positions[idx], should_hightlight, vm.tokens);
-  }
-
-  // Scrolling
-  if (ImGui::IsWindowHovered() &&
-      ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.0f)) {
-    moveView(ImGui::GetIO().MouseDelta);
-    if (std::find(vm.drawables.begin(), vm.drawables.end(),
-                  &draw_context_menu) != vm.drawables.end()) {
-      setContextMenuInactive();
-    }
   }
 
   ImGui::EndChild();

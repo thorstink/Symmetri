@@ -2,6 +2,8 @@
 
 #include <numeric>
 
+#include "draw_graph.h"
+#include "draw_menu.h"
 #include "draw_ui.h"
 #include "menu_bar.h"
 #include "petri.h"
@@ -20,7 +22,13 @@ ViewModel::ViewModel(Model m)
     : drawables([&] {
         std::vector<Drawable> drawables;
         drawables.push_back(&draw_menu_bar);
+
         drawables.push_back(&draw_interface);
+        // if (m.data->show_grid) {
+        //   drawables.push_back(&draw_grid);
+        // }
+        // drawables.push_back(&draw_menu);
+        // drawables.push_back(&draw_graph);
         for (auto&& drawable : m.data->drawables) {
           drawables.push_back(drawable);
         }
@@ -36,6 +44,8 @@ ViewModel::ViewModel(Model m)
       p_view(m.data->p_view),
       t_highlight(m.data->t_highlight),
       p_highlight(m.data->p_highlight),
+      arc_input_highlight(m.data->arc_input_highlight),
+      arc_output_highlight(m.data->arc_output_highlight),
       colors(m.data->colors),
       tokens(m.data->tokens),
       net(m.data->net),

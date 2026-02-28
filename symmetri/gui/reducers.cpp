@@ -268,6 +268,16 @@ void setSelectedNode(model::Model::NodeType node_type, size_t idx) {
   });
 };
 
+void addHighlightNode(model::Model::NodeType node_type, size_t idx) {
+  rxdispatch::push([=](model::Model&& m) {
+    printf("highlight");
+    (node_type == model::Model::NodeType::Place ? m.data->p_highlight
+                                                : m.data->t_highlight)
+        .push_back(idx);
+    return m;
+  });
+};
+
 void setSelectedTargetNode(model::Model::NodeType node_type, size_t idx) {
   rxdispatch::push([=](model::Model&& m) {
     auto& c =
@@ -285,6 +295,7 @@ void resetSelection() {
     m.data->selected_arc_idxs.reset();
     m.data->p_highlight.clear();
     m.data->t_highlight.clear();
+    m.data->arc_input_highlight.clear();
     return m;
   });
 };
@@ -293,9 +304,9 @@ void setSelectedArc(model::Model::NodeType source_node_type, size_t t_idx,
                     size_t p_idx) {
   rxdispatch::push([=](model::Model&& m) {
     m.data->selected_node_idx.reset();
-    m.data->p_highlight.clear();
-    m.data->t_highlight.clear();
     m.data->selected_arc_idxs = {source_node_type, t_idx, p_idx};
+    m.data->arc_input_highlight.clear();
+    // m.data->arc_input_highlight.push_back();
     return m;
   });
 };
