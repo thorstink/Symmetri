@@ -32,6 +32,13 @@ ImVec2 operator+(const ImVec2& y, const model::Coordinate& pos) {
   return ImVec2(pos.x, pos.y) + y;
 }
 
+ImVec2 operator-(const model::Coordinate& pos, const ImVec2& y) {
+  return ImVec2(pos.x, pos.y) - y;
+}
+ImVec2 operator-(const ImVec2& y, const model::Coordinate& pos) {
+  return ImVec2(pos.x, pos.y) - y;
+}
+
 bool draw_line(const model::Coordinate& source_pos,
                const model::Coordinate& target_pos,
                const model::Coordinate& offset,
@@ -183,21 +190,32 @@ void draw_nodes(model::Model::NodeType node_type, size_t idx,
     const auto is_token_in_place = [idx](const auto token) {
       return std::get<size_t>(token) == idx;
     };
-    const auto coordinates =
-        getTokenCoordinates(std::ranges::count_if(tokens, is_token_in_place));
-    int i = 0;
-    for (auto color : tokens | std::views::filter(is_token_in_place) |
-                          std::views::transform([](const auto& t) {
-                            return std::get<symmetri::Token>(t);
-                          })) {
-      draw_list->AddCircle(
-          coordinates[i] + offset + GetCenterPos(position, node_window_padding),
-          0.08f * node_window_padding.x, IM_COL32(250, 250, 250, 255), -5,
-          3.0f);
-      draw_list->AddCircleFilled(
-          coordinates[i++] + offset +
-              GetCenterPos(position, node_window_padding),
-          0.07f * node_window_padding.x, getColor(color), -5.0f);
+    const size_t tokens_in_place =
+        std::ranges::count_if(tokens, is_token_in_place);
+    const auto coordinates = getTokenCoordinates(tokens_in_place);
+    if (not coordinates.empty()) {
+      int i = 0;
+      for (auto color : tokens | std::views::filter(is_token_in_place) |
+                            std::views::transform([](const auto& t) {
+                              return std::get<symmetri::Token>(t);
+                            })) {
+        draw_list->AddCircle(coordinates[i] + offset +
+                                 GetCenterPos(position, node_window_padding),
+                             0.08f * node_window_padding.x,
+                             IM_COL32(250, 250, 250, 255), -5, 3.0f);
+        draw_list->AddCircleFilled(
+            coordinates[i++] + offset +
+                GetCenterPos(position, node_window_padding),
+            0.07f * node_window_padding.x, getColor(color), -5.0f);
+      }
+    } else if (tokens_in_place > 0) {
+      const auto t = std::format("{}", tokens_in_place);
+      ImVec2 textWidth = ImGui::CalcTextSize(t.c_str());
+      ImGui::SetCursorScreenPos(
+          offset + GetCenterPos(position, node_window_padding) -
+          ImVec2(0.5f * (textWidth.x), 0.5f * (textWidth.y)));
+      ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(select_color), "%s",
+                         t.c_str());
     }
   } else {
     ImVec2 node_rect_max = node_rect_min + node_window_padding;

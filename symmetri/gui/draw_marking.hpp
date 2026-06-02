@@ -59,6 +59,6 @@ std::vector<ImVec2> getTokenCoordinates(size_t count) {
                ImVec2(-c2, c2)}};
     }
     default:
-      return {{}};
+      return {};
   }
 }
