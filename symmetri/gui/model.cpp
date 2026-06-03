@@ -33,6 +33,7 @@ ViewModel::ViewModel(Model m)
     : drawables(m.data->drawables),
       show_grid(m.data->show_grid),
       scrolling(m.data->scrolling),
+      context_menu_pos(m.data->context_menu_pos),
       selected_arc_idxs(m.data->selected_arc_idxs),
       selected_node_idx(m.data->selected_node_idx),
       active_file(

@@ -85,7 +85,7 @@ void addNode(model::Model::NodeType node_type, ImVec2 pos) {
       m.data->t_positions.push_back(model::Coordinate{pos.x, pos.y});
       m.data->t_view.push_back(m.data->net.transition.size() - 1);
     }
-    std::erase(m.data->drawables, &draw_context_menu);
+    setContextMenuInactive();
     return m;
   });
 }
@@ -251,9 +251,10 @@ int updateTransitionName(ImGuiInputTextCallbackData* data) {
   return 0;
 }
 
-void setContextMenuActive() {
-  rxdispatch::push([](model::Model&& m) {
+void setContextMenuActive(ImVec2 world_pos) {
+  rxdispatch::push([=](model::Model&& m) {
     m.data->drawables.push_back(&draw_context_menu);
+    m.data->context_menu_pos = {world_pos.x, world_pos.y};
     return m;
   });
 }
@@ -261,6 +262,7 @@ void setContextMenuActive() {
 void setContextMenuInactive() {
   rxdispatch::push([](model::Model&& m) {
     std::erase(m.data->drawables, &draw_context_menu);
+    m.data->context_menu_pos.reset();
     return m;
   });
 }

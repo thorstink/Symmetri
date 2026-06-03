@@ -278,7 +278,10 @@ void draw_graph(const model::ViewModel& vm) {
 
   if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) &&
       ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
-    setContextMenuActive();
+    const ImVec2 world_pos =
+        ImGui::GetIO().MousePos / vm.zoom_factor -
+        ImVec2(vm.scrolling.x, vm.scrolling.y);
+    setContextMenuActive(world_pos);
   } else if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
              not ImGui::IsAnyItemHovered()) {
     if (std::find(vm.drawables.begin(), vm.drawables.end(),
