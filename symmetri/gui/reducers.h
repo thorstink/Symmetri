@@ -41,7 +41,7 @@ int updateTransitionName(ImGuiInputTextCallbackData* id);
 
 int updatePriority(ImGuiInputTextCallbackData* data);
 
-void setContextMenuActive();
+void setContextMenuActive(ImVec2 world_pos);
 
 void setContextMenuInactive();
 

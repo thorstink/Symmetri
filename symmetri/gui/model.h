@@ -41,6 +41,7 @@ struct Model {
     shared();
     bool show_grid = true;
     Coordinate scrolling;
+    std::optional<Coordinate> context_menu_pos;
     std::optional<Arc> selected_arc_idxs;
     std::optional<Node> selected_node_idx;
     std::optional<std::filesystem::path> active_file;
@@ -66,6 +67,7 @@ struct ViewModel {
   const float kMenuWidth = 350;
   const bool show_grid;
   const Coordinate scrolling;
+  const std::optional<Coordinate> context_menu_pos;
   // source NodeType, source index, target sub-index
   std::optional<std::tuple<model::Model::NodeType, size_t, size_t>>
       selected_arc_idxs;

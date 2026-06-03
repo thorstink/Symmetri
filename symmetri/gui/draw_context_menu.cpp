@@ -89,13 +89,14 @@ void draw_context_menu(const model::ViewModel& vm) {
         removeArc(source_node_type, idx, sub_idx);
       }
     } else {
-      // @todo make this offset relative to the menubars
-      ImVec2 scene_pos = ImGui::GetIO().MousePos + ImVec2(-275, -40);
-      if (ImGui::MenuItem("Add place")) {
-        addNode(model::Model::NodeType::Place, scene_pos);
-      }
-      if (ImGui::MenuItem("Add transition")) {
-        addNode(model::Model::NodeType::Transition, scene_pos);
+      if (vm.context_menu_pos) {
+        const ImVec2 world_pos(vm.context_menu_pos->x, vm.context_menu_pos->y);
+        if (ImGui::MenuItem("Add place")) {
+          addNode(model::Model::NodeType::Place, world_pos);
+        }
+        if (ImGui::MenuItem("Add transition")) {
+          addNode(model::Model::NodeType::Transition, world_pos);
+        }
       }
     }
     ImGui::EndPopup();
