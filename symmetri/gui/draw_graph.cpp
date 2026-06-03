@@ -39,47 +39,56 @@ ImVec2 operator-(const ImVec2& y, const model::Coordinate& pos) {
   return ImVec2(pos.x, pos.y) - y;
 }
 
-bool draw_line(const model::Coordinate& source_pos,
-               const model::Coordinate& target_pos,
-               const model::Coordinate& offset,
-               const ImVec2& node_window_padding, ImU32 color, float opacity) {
-  const ImVec2 o = offset + GetCenterPos(source_pos, node_window_padding);
-  const ImVec2 i = offset + GetCenterPos(target_pos, node_window_padding);
+static ImU32 applyOpacity(ImU32 color, float opacity) {
+  unsigned int alpha = static_cast<unsigned int>(opacity * 255);
+  unsigned int r = (color >> 0) & 0xFF;
+  unsigned int g = (color >> 8) & 0xFF;
+  unsigned int b = (color >> 16) & 0xFF;
+  return (alpha << 24) | (b << 16) | (g << 8) | (r << 0);
+}
 
-  const float max_distance = 2.f;
+bool draw_bezier_arc(const ImVec2& src, const ImVec2& dst, float perp_offset,
+                     ImU32 color, float opacity) {
+  const ImVec2 d = dst - src;
+  const float len = ImSqrt(ImLengthSqr(d));
+  if (len < 1.0f) return false;
+
+  const ImVec2 dir = d / len;
+  const ImVec2 perp = ImVec2(-dir.y, dir.x);
+
+  const float ctrl_dist = len * 0.4f;
+  const ImVec2 cp1 = src + dir * ctrl_dist + perp * perp_offset;
+  const ImVec2 cp2 = dst - dir * ctrl_dist + perp * perp_offset;
+
   const auto mouse_pos = ImGui::GetIO().MousePos;
-  ImVec2 mouse_pos_projected_on_segment = ImLineClosestPoint(i, o, mouse_pos);
-  ImVec2 mouse_pos_delta_to_segment =
-      mouse_pos_projected_on_segment - mouse_pos;
-  const bool is_segment_hovered =
+  const float tess_tol = ImGui::GetStyle().CurveTessellationTol;
+  const ImVec2 closest =
+      ImBezierCubicClosestPointCasteljau(src, cp1, cp2, dst, mouse_pos, tess_tol);
+  const float max_distance = 4.0f;
+  const bool is_hovered =
       not ImGui::IsAnyItemHovered() &&
-      (ImLengthSqr(mouse_pos_delta_to_segment) <= max_distance * max_distance);
+      ImLengthSqr(closest - mouse_pos) <= max_distance * max_distance;
+
+  color = applyOpacity(color, opacity);
 
   auto draw_list = ImGui::GetWindowDrawList();
+  draw_list->AddBezierCubic(src, cp1, cp2, dst, color,
+                             is_hovered ? 5.0f : 2.5f);
 
-  const auto d = o - i;
-  const auto theta = std::atan2(d.y, d.x) - M_PI_2;
-  const float h = draw_list->_Data->FontSize * 1.00f;
-  const float r = h * 0.40f * 1;
-  const ImVec2 center = i + d * 0.6f;
-  const auto a_sin = std::sin(theta);
-  const auto a_cos = std::cos(theta);
-  const auto a = ImRotate(ImVec2(+0.000f, +1.f) * r, a_cos, a_sin);
-  const auto b = ImRotate(ImVec2(-1.f, -1.f) * r, a_cos, a_sin);
-  const auto c = ImRotate(ImVec2(+1.f, -1.f) * r, a_cos, a_sin);
-  {
-    // Extract existing color components (assuming A-B-G-R format)
-    unsigned int alpha = static_cast<unsigned int>(opacity * 255);
-    unsigned int r = (color >> 0) & 0xFF;
-    unsigned int g = (color >> 8) & 0xFF;
-    unsigned int b = (color >> 16) & 0xFF;
-    color = (alpha << 24) | (b << 16) | (g << 8) | (r << 0);
+  const ImVec2 tangent = dst - cp2;
+  const float tang_len = ImSqrt(ImLengthSqr(tangent));
+  if (tang_len > 0.1f) {
+    const float h = draw_list->_Data->FontSize * 1.00f;
+    const float r = h * 0.40f;
+    const ImVec2 tang_dir = tangent / tang_len;
+    const ImVec2 tang_perp = ImVec2(-tang_dir.y, tang_dir.x);
+    const ImVec2 arrow_tip = dst;
+    const ImVec2 arrow_base = dst - tang_dir * (2.0f * r);
+    draw_list->AddTriangleFilled(arrow_tip, arrow_base + tang_perp * r,
+                                 arrow_base - tang_perp * r, color);
   }
 
-  // Combine with the new alpha value
-  draw_list->AddTriangleFilled(center + a, center + b, center + c, color);
-  draw_list->AddLine(i, o, color, is_segment_hovered ? 5.0f : 2.5f);
-  return is_segment_hovered;
+  return is_hovered;
 };
 
 void draw_grid(const model::ViewModel& vm) {
@@ -105,16 +114,43 @@ bool draw_arcs(size_t t_idx, const model::ViewModel& vm) {
   };
   bool an_arc_is_hovered = false;
 
+  const ImVec2 node_pad(vm.node_size.x, vm.node_size.y);
+  const model::Coordinate scaled_scroll = vm.zoom_factor * vm.scrolling;
+  const model::Coordinate scaled_t_pos = vm.zoom_factor * vm.t_positions[t_idx];
+  const ImVec2 t_center = scaled_scroll + GetCenterPos(scaled_t_pos, node_pad);
+
+  // Compute perpendicular offset for an arc without any heap allocation.
+  // Scans input_n then output_n to find this arc's rank among all arcs
+  // sharing the same (t_idx, p_idx) pair.
+  const auto perp_offset_for = [&](size_t p_idx, bool is_input,
+                                   size_t sub_idx) {
+    const float spread = 30.0f * vm.zoom_factor;
+    size_t n = 0, k = 0;
+    for (size_t i = 0; i < vm.net.input_n[t_idx].size(); i++) {
+      if (std::get<0>(vm.net.input_n[t_idx][i]) == p_idx) {
+        if (is_input && i == sub_idx) k = n;
+        n++;
+      }
+    }
+    for (size_t i = 0; i < vm.net.output_n[t_idx].size(); i++) {
+      if (std::get<0>(vm.net.output_n[t_idx][i]) == p_idx) {
+        if (!is_input && i == sub_idx) k = n;
+        n++;
+      }
+    }
+    return (static_cast<float>(k) - (n - 1) * 0.5f) * spread;
+  };
+
   for (size_t sub_idx = 0; sub_idx < vm.net.input_n[t_idx].size(); sub_idx++) {
     const auto& [p_idx, color] = vm.net.input_n[t_idx][sub_idx];
-    float opacity =
+    const float opacity =
         should_highlight(model::Model::NodeType::Place, t_idx, sub_idx) ? 1.0f
                                                                         : 0.5f;
-    if (draw_line(vm.zoom_factor * vm.t_positions[t_idx],
-                  vm.zoom_factor * vm.p_positions[p_idx],
-                  vm.zoom_factor * vm.scrolling,
-                  ImVec2(vm.node_size.x, vm.node_size.y), getColor(color),
-                  opacity)) {
+    const model::Coordinate scaled_p_pos = vm.zoom_factor * vm.p_positions[p_idx];
+    const ImVec2 p_center = scaled_scroll + GetCenterPos(scaled_p_pos, node_pad);
+    const float offset = perp_offset_for(p_idx, true, sub_idx);
+
+    if (draw_bezier_arc(p_center, t_center, offset, getColor(color), opacity)) {
       an_arc_is_hovered = true;
       if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
         (ImGui::IsKeyDown(ImGuiKey_LeftShift)
@@ -125,17 +161,20 @@ bool draw_arcs(size_t t_idx, const model::ViewModel& vm) {
   }
 
   for (size_t sub_idx = 0; sub_idx < vm.net.output_n[t_idx].size(); sub_idx++) {
-    const auto& [p_idx, color] = vm.net.output_n[t_idx][sub_idx];
-    float opacity =
+    const size_t p_idx = std::get<0>(vm.net.output_n[t_idx][sub_idx]);
+    const float opacity =
         should_highlight(model::Model::NodeType::Transition, t_idx, sub_idx)
             ? 1.0f
             : 0.5f;
+    const model::Coordinate scaled_p_pos = vm.zoom_factor * vm.p_positions[p_idx];
+    const ImVec2 p_center = scaled_scroll + GetCenterPos(scaled_p_pos, node_pad);
+    const float offset = perp_offset_for(p_idx, false, sub_idx);
 
-    if (draw_line(vm.zoom_factor * vm.p_positions[p_idx],
-                  vm.zoom_factor * vm.t_positions[t_idx],
-                  vm.zoom_factor * vm.scrolling,
-                  ImVec2(vm.node_size.x, vm.node_size.y), getColor(color),
-                  opacity)) {
+    // Negate offset: output arcs travel in the opposite direction to input arcs,
+    // which flips the perpendicular vector, so we compensate to keep arcs on
+    // consistent sides relative to the canonical p→t axis.
+    if (draw_bezier_arc(t_center, p_center, -offset, getColor(symmetri::Success),
+                        opacity)) {
       an_arc_is_hovered = true;
       if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
         (ImGui::IsKeyDown(ImGuiKey_LeftShift) ? addHighlightArc
