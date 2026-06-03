@@ -48,7 +48,8 @@ static ImU32 applyOpacity(ImU32 color, float opacity) {
 }
 
 bool draw_bezier_arc(const ImVec2& src, const ImVec2& dst, float perp_offset,
-                     ImU32 color, float opacity) {
+                     ImU32 color, float opacity, float target_radius,
+                     bool filled_arrow = true) {
   const ImVec2 d = dst - src;
   const float len = ImSqrt(ImLengthSqr(d));
   if (len < 1.0f) return false;
@@ -82,10 +83,14 @@ bool draw_bezier_arc(const ImVec2& src, const ImVec2& dst, float perp_offset,
     const float r = h * 0.40f;
     const ImVec2 tang_dir = tangent / tang_len;
     const ImVec2 tang_perp = ImVec2(-tang_dir.y, tang_dir.x);
-    const ImVec2 arrow_tip = dst;
-    const ImVec2 arrow_base = dst - tang_dir * (2.0f * r);
-    draw_list->AddTriangleFilled(arrow_tip, arrow_base + tang_perp * r,
-                                 arrow_base - tang_perp * r, color);
+    const ImVec2 arrow_tip = dst - tang_dir * target_radius;
+    const ImVec2 arrow_base = arrow_tip - tang_dir * (2.0f * r);
+    if (filled_arrow)
+      draw_list->AddTriangleFilled(arrow_tip, arrow_base + tang_perp * r,
+                                   arrow_base - tang_perp * r, color);
+    else
+      draw_list->AddTriangle(arrow_tip, arrow_base + tang_perp * r,
+                             arrow_base - tang_perp * r, color, 2.0f);
   }
 
   return is_hovered;
@@ -150,7 +155,8 @@ bool draw_arcs(size_t t_idx, const model::ViewModel& vm) {
     const ImVec2 p_center = scaled_scroll + GetCenterPos(scaled_p_pos, node_pad);
     const float offset = perp_offset_for(p_idx, true, sub_idx);
 
-    if (draw_bezier_arc(p_center, t_center, offset, getColor(color), opacity)) {
+    if (draw_bezier_arc(p_center, t_center, offset, getColor(color), opacity,
+                        node_pad.x * 0.5f)) {
       an_arc_is_hovered = true;
       if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
         (ImGui::IsKeyDown(ImGuiKey_LeftShift)
@@ -174,7 +180,7 @@ bool draw_arcs(size_t t_idx, const model::ViewModel& vm) {
     // which flips the perpendicular vector, so we compensate to keep arcs on
     // consistent sides relative to the canonical p→t axis.
     if (draw_bezier_arc(t_center, p_center, -offset, getColor(symmetri::Success),
-                        opacity)) {
+                        opacity, node_pad.x * 0.5f, false)) {
       an_arc_is_hovered = true;
       if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
         (ImGui::IsKeyDown(ImGuiKey_LeftShift) ? addHighlightArc
