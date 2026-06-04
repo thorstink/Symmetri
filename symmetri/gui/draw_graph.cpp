@@ -19,6 +19,7 @@
 #include "petri.h"
 #include "reducers.h"
 #include "shared.h"
+#include "symmetri/callback.h"
 #include "symmetri/colors.hpp"
 
 static ImVec2 GetCenterPos(const model::Coordinate& pos, const ImVec2& size) {
@@ -166,6 +167,7 @@ bool draw_arcs(size_t t_idx, const model::ViewModel& vm) {
     }
   }
 
+  const ImU32 output_color = getColor(fire(vm.net.store[t_idx]));
   for (size_t sub_idx = 0; sub_idx < vm.net.output_n[t_idx].size(); sub_idx++) {
     const size_t p_idx = std::get<0>(vm.net.output_n[t_idx][sub_idx]);
     const float opacity =
@@ -179,7 +181,7 @@ bool draw_arcs(size_t t_idx, const model::ViewModel& vm) {
     // Negate offset: output arcs travel in the opposite direction to input arcs,
     // which flips the perpendicular vector, so we compensate to keep arcs on
     // consistent sides relative to the canonical p→t axis.
-    if (draw_bezier_arc(t_center, p_center, -offset, getColor(symmetri::Success),
+    if (draw_bezier_arc(t_center, p_center, -offset, output_color,
                         opacity, node_pad.x * 0.5f, false)) {
       an_arc_is_hovered = true;
       if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
