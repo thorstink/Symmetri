@@ -64,8 +64,8 @@ bool draw_bezier_arc(const ImVec2& src, const ImVec2& dst, float perp_offset,
 
   const auto mouse_pos = ImGui::GetIO().MousePos;
   const float tess_tol = ImGui::GetStyle().CurveTessellationTol;
-  const ImVec2 closest =
-      ImBezierCubicClosestPointCasteljau(src, cp1, cp2, dst, mouse_pos, tess_tol);
+  const ImVec2 closest = ImBezierCubicClosestPointCasteljau(
+      src, cp1, cp2, dst, mouse_pos, tess_tol);
   const float max_distance = 4.0f;
   const bool is_hovered =
       not ImGui::IsAnyItemHovered() &&
@@ -75,7 +75,7 @@ bool draw_bezier_arc(const ImVec2& src, const ImVec2& dst, float perp_offset,
 
   auto draw_list = ImGui::GetWindowDrawList();
   draw_list->AddBezierCubic(src, cp1, cp2, dst, color,
-                             is_hovered ? 5.0f : 2.5f);
+                            is_hovered ? 5.0f : 2.5f);
 
   const ImVec2 tangent = dst - cp2;
   const float tang_len = ImSqrt(ImLengthSqr(tangent));
@@ -152,8 +152,10 @@ bool draw_arcs(size_t t_idx, const model::ViewModel& vm) {
     const float opacity =
         should_highlight(model::Model::NodeType::Place, t_idx, sub_idx) ? 1.0f
                                                                         : 0.5f;
-    const model::Coordinate scaled_p_pos = vm.zoom_factor * vm.p_positions[p_idx];
-    const ImVec2 p_center = scaled_scroll + GetCenterPos(scaled_p_pos, node_pad);
+    const model::Coordinate scaled_p_pos =
+        vm.zoom_factor * vm.p_positions[p_idx];
+    const ImVec2 p_center =
+        scaled_scroll + GetCenterPos(scaled_p_pos, node_pad);
     const float offset = perp_offset_for(p_idx, true, sub_idx);
 
     if (draw_bezier_arc(p_center, t_center, offset, getColor(color), opacity,
@@ -174,15 +176,17 @@ bool draw_arcs(size_t t_idx, const model::ViewModel& vm) {
         should_highlight(model::Model::NodeType::Transition, t_idx, sub_idx)
             ? 1.0f
             : 0.5f;
-    const model::Coordinate scaled_p_pos = vm.zoom_factor * vm.p_positions[p_idx];
-    const ImVec2 p_center = scaled_scroll + GetCenterPos(scaled_p_pos, node_pad);
+    const model::Coordinate scaled_p_pos =
+        vm.zoom_factor * vm.p_positions[p_idx];
+    const ImVec2 p_center =
+        scaled_scroll + GetCenterPos(scaled_p_pos, node_pad);
     const float offset = perp_offset_for(p_idx, false, sub_idx);
 
-    // Negate offset: output arcs travel in the opposite direction to input arcs,
-    // which flips the perpendicular vector, so we compensate to keep arcs on
-    // consistent sides relative to the canonical p→t axis.
-    if (draw_bezier_arc(t_center, p_center, -offset, output_color,
-                        opacity, node_pad.x * 0.5f, false)) {
+    // Negate offset: output arcs travel in the opposite direction to input
+    // arcs, which flips the perpendicular vector, so we compensate to keep arcs
+    // on consistent sides relative to the canonical p→t axis.
+    if (draw_bezier_arc(t_center, p_center, -offset, output_color, opacity,
+                        node_pad.x * 0.5f, false)) {
       an_arc_is_hovered = true;
       if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
         (ImGui::IsKeyDown(ImGuiKey_LeftShift) ? addHighlightArc
@@ -199,15 +203,17 @@ void draw_nodes(model::Model::NodeType node_type, size_t idx,
                 const std::string& name, const model::Coordinate& position,
                 const model::Coordinate& offset,
                 const ImVec2& node_window_padding, bool highlight,
-                const std::vector<symmetri::AugmentedToken>& tokens) {
+                const std::vector<symmetri::AugmentedToken>& tokens,
+                float zoom_factor) {
   ImGui::PushID(model::Model::NodeType::Place == node_type ? idx + 10000 : idx);
   ImVec2 node_rect_min = offset + ImVec2(position.x, position.y);
 
-  ImGui::PushFont(NULL, 0.75f * ImGui::GetFontSize());
-  ImVec2 textWidth = ImGui::CalcTextSize(name.c_str());
-  ImGui::SetCursorScreenPos(node_rect_min -
-                            ImVec2(0.5f * (textWidth.x - node_window_padding.x),
-                                   node_window_padding.y));
+  ImGui::PushFont(NULL, zoom_factor * ImGui::GetFontSize());
+  const ImVec2 text_size = ImGui::CalcTextSize(name.c_str());
+  const float gap = node_window_padding.y * 0.5f;
+  ImGui::SetCursorScreenPos(
+      ImVec2(node_rect_min.x + 0.5f * (node_window_padding.x - text_size.x),
+             node_rect_min.y - gap - text_size.y));
   ImGui::Text("%s", name.c_str());
   ImGui::PopFont();
 
@@ -286,9 +292,8 @@ void draw_graph(const model::ViewModel& vm) {
 
   if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) &&
       ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
-    const ImVec2 world_pos =
-        ImGui::GetIO().MousePos / vm.zoom_factor -
-        ImVec2(vm.scrolling.x, vm.scrolling.y);
+    const ImVec2 world_pos = ImGui::GetIO().MousePos / vm.zoom_factor -
+                             ImVec2(vm.scrolling.x, vm.scrolling.y);
     setContextMenuActive(world_pos);
   } else if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
              not ImGui::IsAnyItemHovered()) {
@@ -362,10 +367,11 @@ void draw_graph(const model::ViewModel& vm) {
         std::find(vm.t_highlight.cbegin(), vm.t_highlight.cend(), idx) !=
         vm.t_highlight.cend();
 
-    draw_nodes(
-        model::Model::NodeType::Transition, idx, vm.net.transition[idx],
-        vm.zoom_factor * vm.t_positions[idx], vm.zoom_factor * vm.scrolling,
-        ImVec2(vm.node_size.x, vm.node_size.y), should_hightlight, vm.tokens);
+    draw_nodes(model::Model::NodeType::Transition, idx, vm.net.transition[idx],
+               vm.zoom_factor * vm.t_positions[idx],
+               vm.zoom_factor * vm.scrolling,
+               ImVec2(vm.node_size.x, vm.node_size.y), should_hightlight,
+               vm.tokens, vm.zoom_factor);
   }
   if (vm.arc_hovered != an_arc_is_hovered) {
     setArcHoverState(an_arc_is_hovered);
@@ -376,10 +382,11 @@ void draw_graph(const model::ViewModel& vm) {
         std::find(vm.p_highlight.cbegin(), vm.p_highlight.cend(), idx) !=
         vm.p_highlight.cend();
 
-    draw_nodes(
-        model::Model::NodeType::Place, idx, vm.net.place[idx],
-        vm.zoom_factor * vm.p_positions[idx], vm.zoom_factor * vm.scrolling,
-        ImVec2(vm.node_size.x, vm.node_size.y), should_hightlight, vm.tokens);
+    draw_nodes(model::Model::NodeType::Place, idx, vm.net.place[idx],
+               vm.zoom_factor * vm.p_positions[idx],
+               vm.zoom_factor * vm.scrolling,
+               ImVec2(vm.node_size.x, vm.node_size.y), should_hightlight,
+               vm.tokens, vm.zoom_factor);
   }
 
   ImGui::EndChild();
