@@ -32,7 +32,7 @@ struct VisitPackage {
   auto operator()(model::Reducer r) {
     return rpp::source::just(rximgui::rl, std::move(r)).as_dynamic();
   }
-  auto operator()(std::function<model::Reducer(void)> f) {
+  auto operator()(model::Computer f) {
     return (rpp::source::just(scheduler, std::move(f)) |
             rpp::operators::map([](auto f) { return f(); }))
         .as_dynamic();
