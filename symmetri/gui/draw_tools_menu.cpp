@@ -23,9 +23,8 @@
 #include "symmetri/callback.h"
 #include "symmetri/colors.hpp"
 
-static size_t label_id = 5;
-void drawTokenLine(const symmetri::AugmentedToken& at) {
-  ImGui::PushID(++label_id);
+void drawTokenLine(const symmetri::AugmentedToken& at, int id) {
+  ImGui::PushID(id);
   ImGui::PushStyleColor(ImGuiCol_Button,
                         (ImVec4)ImColor::HSV(0 / 7.0f, 0.6f, 0.6f));
   ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
@@ -62,10 +61,12 @@ void draw_selection_menu(const model::ViewModel& vm) {
                      &updatePlaceName, (void*)&l->first);
     ImGui::PopItemWidth();
     ImGui::Text("Marking");
-    std::ranges::for_each(vm.tokens | std::views::filter([=](const auto& at) {
+    int token_id = 0;
+    for (const auto& at : vm.tokens | std::views::filter([=](const auto& at) {
                             return std::get<size_t>(at) == idx;
-                          }),
-                          &drawTokenLine);
+                          })) {
+      drawTokenLine(at, token_id++);
+    }
     ImGui::PopID();
   }
   static std::map<size_t, std::string>

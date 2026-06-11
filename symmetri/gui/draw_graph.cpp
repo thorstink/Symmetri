@@ -315,15 +315,17 @@ void draw_graph(const model::ViewModel& vm) {
   strcpy(view_name, vm.active_file.c_str());
   ImGui::PushItemWidth(-1);
 
-  // currently we render the text green if the file does not yet exist.
-  const bool file_exists =
-      std::filesystem::is_regular_file(std::filesystem::path(vm.active_file));
-  if (not file_exists) {
+  const std::filesystem::path fs_path(vm.active_file);
+  const bool is_pnml = fs_path.extension() == ".pnml";
+  const bool file_exists = std::filesystem::is_regular_file(fs_path);
+  if (not is_pnml) {
+    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255));
+  } else if (not file_exists) {
     ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 255, 0, 255));
   }
   ImGui::InputText("##filepath", view_name, 256,
                    ImGuiInputTextFlags_CallbackEdit, &updateActiveFile);
-  if (not file_exists) {
+  if (not is_pnml or not file_exists) {
     ImGui::PopStyleColor();
   }
 
