@@ -20,7 +20,7 @@ static void glfw_error_callback(int error, const char *description) {
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-int main(int, char **) {
+int main(int argc, char **argv) {
   std::cout << "main " << std::this_thread::get_id() << std::endl;
 
   // Setup Dear ImGui context
@@ -66,9 +66,7 @@ int main(int, char **) {
   MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor new];
 
   auto root_subscription = go();
-  loadPetriNet("/Users/thomashorstink/catkin_ws/src/isaac/ros_onboard/inspection_logic/nets/"
-               "Inspection.grml");
-  // /Users/thomashorstink/Projects/Symmetri/nets/test.pnml
+  if (argc > 1) loadPetriNet(argv[1]);
   // Main loop
   while (!glfwWindowShouldClose(window)) {
     @autoreleasepool {
