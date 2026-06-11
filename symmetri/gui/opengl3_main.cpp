@@ -25,6 +25,7 @@
 #endif
 #include <GLFW/glfw3.h>  // Will drag system OpenGL headers
 
+#include "load_file.h"
 #include "reactive.h"
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to
@@ -49,7 +50,7 @@ static void glfw_error_callback(int error, const char* description) {
 }
 
 // Main code
-int main(int, char**) {
+int main(int argc, char** argv) {
   glfwSetErrorCallback(glfw_error_callback);
   if (!glfwInit()) return 1;
 
@@ -106,8 +107,9 @@ int main(int, char**) {
   ImGui_ImplOpenGL3_Init(glsl_version);
 
   auto root_subscription = go();
+  if (argc > 1) loadPetriNet(argv[1]);
 
-  // Main loop
+    // Main loop
 #ifdef __EMSCRIPTEN__
   // For an Emscripten build we are disabling file-system access, so let's not
   // attempt to do a fopen() of the imgui.ini file. You may manually call
