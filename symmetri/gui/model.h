@@ -54,6 +54,7 @@ struct Model {
     bool arc_hovered = false;
     std::vector<std::string_view> colors = symmetri::Token::getColors();
     std::vector<symmetri::AugmentedToken> tokens;
+    symmetri::SmallLog log;
     std::vector<Drawable> drawables;
     symmetri::Petri::PTNet net;
   };
@@ -81,6 +82,7 @@ struct ViewModel {
   const Coordinate node_size;
   const std::vector<std::string_view> colors;
   const std::vector<symmetri::AugmentedToken> tokens;
+  const symmetri::SmallLog& log;
 
   const symmetri::Petri::PTNet& net;
   const std::vector<Coordinate>&t_positions, &p_positions;

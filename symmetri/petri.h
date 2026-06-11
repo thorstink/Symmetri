@@ -236,6 +236,7 @@ struct Petri {
      *
      */
     std::vector<Callback> store;
+    std::vector<AugmentedToken> initial_tokens;  ///< The initial marking
 
     void registerCallback(const std::string& t, Callback&& callback) noexcept {
       if (std::find(transition.begin(), transition.end(), t) !=
@@ -245,11 +246,10 @@ struct Petri {
     }
   } net;  ///< Is a data-oriented design of a Petri net
 
-  std::vector<AugmentedToken> initial_tokens;  ///< The initial marking
-  std::vector<AugmentedToken> tokens;          ///< The current marking
-  std::vector<AugmentedToken> final_marking;   ///< The final marking
-  std::vector<size_t> scheduled_callbacks;     ///< List of active transitions
-  SmallLog log;         ///< The most up to date event_log
+  std::vector<AugmentedToken> tokens;         ///< The current marking
+  std::vector<AugmentedToken> final_marking;  ///< The final marking
+  std::vector<size_t> scheduled_callbacks;    ///< List of active transitions
+  SmallLog log;                               ///< The most up to date event_log
   Token state;          ///< The current state of the Petri
   std::string case_id;  ///< The unique identifier for this Petri-run
   std::atomic<std::optional<unsigned int>>

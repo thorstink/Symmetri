@@ -432,9 +432,11 @@ void tryFire(size_t transition_idx) {
       deductMarking(m.data->tokens, m.data->net.input_n[transition_idx]);
       // add
       const auto& lookup_t = m.data->net.output_n[transition_idx];
+      const auto result = fire(m.data->net.store[transition_idx]);
       for (const auto& [p, c] : lookup_t) {
-        m.data->tokens.emplace_back(p, fire(m.data->net.store[transition_idx]));
+        m.data->tokens.emplace_back(p, result);
       }
+      m.data->log.push_back({transition_idx, result, symmetri::Clock::now()});
     }
     return m;
   });

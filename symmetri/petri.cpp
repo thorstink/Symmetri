@@ -98,8 +98,8 @@ Petri::Petri(const Net& _net, const PriorityTable& _priority,
   net.p_to_ts_n = createReversePlaceToTransitionLookup(
       net.place.size(), net.transition.size(), net.input_n);
   net.priority = createPriorityLookup(net.transition, _priority);
-  initial_tokens = toTokens(_initial_tokens);
-  tokens = initial_tokens;
+  net.initial_tokens = toTokens(_initial_tokens);
+  tokens = net.initial_tokens;
   final_marking = toTokens(_final_marking);
 }
 
