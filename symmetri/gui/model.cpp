@@ -47,6 +47,7 @@ ViewModel::ViewModel(Model m)
       node_size(32.f * zoom_factor, 32.f * zoom_factor),
       colors(m.data->colors),
       tokens(m.data->tokens),
+      log(m.data->log),
       net(m.data->net),
       t_positions(m.data->t_positions),
       p_positions(m.data->p_positions),

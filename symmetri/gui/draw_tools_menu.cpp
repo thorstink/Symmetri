@@ -193,6 +193,15 @@ void draw_tools_menu(const model::ViewModel& vm) {
       }
       ImGui::EndTabItem();
     }
+    if (ImGui::BeginTabItem("Eventlog")) {
+      for (auto it = vm.log.rbegin(); it != vm.log.rend(); ++it) {
+        ImGui::TextUnformatted(vm.net.transition[it->transition].c_str());
+        ImGui::SameLine();
+        ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(getColor(it->state)),
+                           "%s", it->state.toString().data());
+      }
+      ImGui::EndTabItem();
+    }
     if (ImGui::BeginTabItem("Colors")) {
       static char new_color[128] = "";
       ImGui::PushItemWidth(-79);

@@ -36,7 +36,7 @@ Token fire(const PetriNet &app) {
   auto &m = *app.impl;
   m.thread_id_.store(getThreadId());
   m.scheduled_callbacks.clear();
-  m.tokens = m.initial_tokens;
+  m.tokens = m.net.initial_tokens;
   m.state = Started;
   Reducer f;
   while (m.reducer_queue->try_dequeue(f)) { /* get rid of old reducers  */
