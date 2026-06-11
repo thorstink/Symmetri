@@ -1,4 +1,4 @@
-#include "write_graph_to_disk.h"
+#include "save_file.h"
 
 #include <stddef.h>
 
@@ -27,8 +27,8 @@ namespace farbart {
 auto toXml(const symmetri::Petri::PTNet& net,
            const std::vector<model::Coordinate>& p_positions,
            const std::vector<model::Coordinate>& t_positions,
-           const std::vector<size_t>& p_view,
-           const std::vector<size_t>& t_view) {
+           const std::vector<size_t>& p_view, const std::vector<size_t>& t_view,
+           const std::vector<symmetri::AugmentedToken>& tokens) {
   using namespace tinyxml2;
   auto doc = std::make_unique<XMLDocument>();
   XMLElement* pnml = doc->NewElement("pnml");
@@ -46,6 +46,15 @@ auto toXml(const symmetri::Petri::PTNet& net,
     s_s_child->SetAttribute("y", p_positions[idx].y);
     s_child->InsertEndChild(s_s_child);
     child->InsertEndChild(s_child);
+    for (const auto& token : tokens) {
+      if (std::get<size_t>(token) == idx) {
+        XMLElement* marking = doc->NewElement("initialMarking");
+        marking->SetAttribute(
+            "color",
+            std::string(std::get<symmetri::Token>(token).toString()).c_str());
+        child->InsertEndChild(marking);
+      }
+    }
     root->InsertEndChild(child);
   }
 
@@ -93,8 +102,8 @@ auto toXml(const symmetri::Petri::PTNet& net,
 model::Computer writeGraphToDisk(const model::ViewModel& vm) {
   return [&net = vm.net, &p_positions = vm.p_positions,
           &t_positions = vm.t_positions, p_view = vm.p_view, t_view = vm.t_view,
-          path = vm.active_file]() {
-    auto doc = toXml(net, p_positions, t_positions, p_view, t_view);
+          tokens = vm.tokens, path = vm.active_file]() {
+    auto doc = toXml(net, p_positions, t_positions, p_view, t_view, tokens);
     auto fut = addViewBlocking(&draw_confirmation_popup);
     fut.get();
     doc->SaveFile(path.c_str());

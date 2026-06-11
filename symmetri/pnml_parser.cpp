@@ -34,14 +34,12 @@ std::tuple<Net, Marking> readPnml(const std::set<std::string>& files) {
     for (XMLElement* child = levelElement->FirstChildElement("place");
          child != NULL; child = child->NextSiblingElement("place")) {
       auto place_id = child->Attribute("id");
-      auto initial_marking =
-          (child->FirstChildElement("initialMarking") == nullptr)
-              ? 0
-              : std::stoi(child->FirstChildElement("initialMarking")
-                              ->FirstChildElement("text")
-                              ->GetText());
-      for (int i = 0; i < initial_marking; i++) {
-        place_initialMarking.push_back({place_id, Success});
+      for (XMLElement* marking = child->FirstChildElement("initialMarking");
+           marking != nullptr;
+           marking = marking->NextSiblingElement("initialMarking")) {
+        const auto color = marking->Attribute("color");
+        place_initialMarking.push_back(
+            {place_id, color == nullptr ? Success : Token(color)});
       }
       places.insert(std::string(place_id));
     }

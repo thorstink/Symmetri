@@ -12,7 +12,7 @@
 #include "load_file.h"
 #include "reducers.h"
 #include "rxdispatch.h"
-#include "write_graph_to_disk.h"
+#include "save_file.h"
 
 namespace model {
 struct ViewModel;
