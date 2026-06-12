@@ -107,6 +107,15 @@ int main(int argc, char** argv) {
   ImGui_ImplOpenGL3_Init(glsl_version);
 
   auto root_subscription = go();
+#ifndef __EMSCRIPTEN__
+  // Wake the (otherwise blocked) event loop whenever a reactive update is
+  // queued, so we can idle at zero CPU instead of polling. Thread-safe in GLFW.
+  // Skipped under Emscripten where the browser drives the loop (never blocks).
+  rxdispatch::on_push = glfwPostEmptyEvent;
+  constexpr double kIdleTimeout =
+      0.25;  // seconds; safety net for async updates
+  int frames_to_render = 2;
+#endif
   if (argc > 1) loadPetriNet(argv[1]);
 
     // Main loop
@@ -129,11 +138,27 @@ int main(int argc, char** argv) {
     // data to your main application, or clear/overwrite your copy of the
     // keyboard data. Generally you may always pass all inputs to dear imgui,
     // and hide them from your application based on those two flags.
+#ifdef __EMSCRIPTEN__
     glfwPollEvents();
     if (glfwGetWindowAttrib(window, GLFW_ICONIFIED) != 0) {
       ImGui_ImplGlfw_Sleep(10);
       continue;
     }
+#else
+    // Power-saving: while minimized, block fully until restored; otherwise
+    // render a few frames after activity, then block in glfwWaitEventsTimeout
+    // until input or a posted wake (rxdispatch::on_push) arrives. The timeout
+    // is only a safety net for off-queue async updates (e.g. the reducer
+    // produced after an async file save completes).
+    if (glfwGetWindowAttrib(window, GLFW_ICONIFIED) != 0) {
+      glfwWaitEvents();
+      continue;
+    }
+    if (frames_to_render > 0)
+      glfwPollEvents();
+    else
+      glfwWaitEventsTimeout(kIdleTimeout);
+#endif
 
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
@@ -152,7 +177,25 @@ int main(int argc, char** argv) {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     glfwSwapBuffers(window);
+
+#ifndef __EMSCRIPTEN__
+    // Keep rendering while the user is interacting, text is being edited, the
+    // mouse is moving/scrolling, or reactive work is still pending; otherwise
+    // wind down and block on the next iteration.
+    const bool activity = !rximgui::rl.is_empty() || ImGui::IsAnyItemActive() ||
+                          io.WantTextInput ||
+                          ImGui::IsMouseDown(ImGuiMouseButton_Left) ||
+                          ImGui::IsMouseDown(ImGuiMouseButton_Right) ||
+                          ImGui::IsMouseDown(ImGuiMouseButton_Middle) ||
+                          io.MouseWheel != 0.0f || io.MouseWheelH != 0.0f ||
+                          io.MouseDelta.x != 0.0f || io.MouseDelta.y != 0.0f;
+    frames_to_render =
+        activity ? 3 : (frames_to_render > 0 ? frames_to_render - 1 : 0);
+#endif
   }
+#ifndef __EMSCRIPTEN__
+  rxdispatch::on_push = nullptr;  // window is going away; stop posting wakes
+#endif
   rxdispatch::unsubscribe();
   root_subscription.dispose();
 #ifdef __EMSCRIPTEN__
