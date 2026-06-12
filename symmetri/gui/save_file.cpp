@@ -111,7 +111,7 @@ model::Computer writeGraphToDisk(const model::ViewModel& vm) {
     fut.get();
     doc->SaveFile(path.c_str());
     return [path](model::Model&& m_ptr) {
-      m_ptr.data->active_file = path.c_str();
+      m_ptr.active_file = path.c_str();
       return m_ptr;
     };
   };
@@ -132,10 +132,10 @@ void draw_confirmation_popup(const model::ViewModel&) {
   if (ImGui::Button("Ok")) {
     removeView(&draw_confirmation_popup);
     rxdispatch::push([=](model::Model&& m) {
-      if (auto search = m.data->blockers.find(&draw_confirmation_popup);
-          search != m.data->blockers.end()) {
+      if (auto search = m.blockers.find(&draw_confirmation_popup);
+          search != m.blockers.end()) {
         search->second.set_value();
-        m.data->blockers.erase(search);
+        m.blockers.erase(search);
       }
       return m;
     });

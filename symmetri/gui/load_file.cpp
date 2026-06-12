@@ -26,7 +26,7 @@
 
 void loadPetriNet(const std::filesystem::path& file) {
   rxdispatch::push([=](model::Model&& model) {
-    auto& m = *model.data;
+    auto& m = model;
     m.selected_arc_idxs.reset();
     m.selected_node_idx.reset();
     m.p_highlight.clear();

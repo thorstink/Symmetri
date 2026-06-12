@@ -15,6 +15,6 @@ void unsubscribe() {
   push(model::Reducer([](auto&& m) { return m; }));
 }
 
-void push(Update&& r) { reducer_queue.enqueue(std::forward<Update>(r)); }
+void push(Update&& r) { reducer_queue.enqueue(std::move(r)); }
 
 }  // namespace rxdispatch

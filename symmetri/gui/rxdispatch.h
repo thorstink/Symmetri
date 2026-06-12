@@ -1,7 +1,5 @@
 #pragma once
 
-#include <array>
-#include <functional>
 #include <utility>
 #include <variant>
 
@@ -47,12 +45,16 @@ inline auto get_events_observable() {
            Update f;
            while (not observer.is_disposed()) {
              getQueue().wait_dequeue(f);
-             observer.on_next(std::forward<Update>(f));
+             observer.on_next(std::move(f));
            }
          }) |
          rpp::operators::subscribe_on(rpp::schedulers::new_thread{}) |
-         rpp::operators::flat_map(
-             [](auto&& value) { return std::visit(VisitPackage(), value); });
+         rpp::operators::flat_map([](auto&& value) {
+           // Move the variant into the visitor so its by-value Reducer/Computer
+           // parameter is move-constructed (the std::function is sunk, not
+           // copied). `value` is not used afterwards.
+           return std::visit(VisitPackage(), std::move(value));
+         });
 }
 
 }  // namespace rxdispatch
