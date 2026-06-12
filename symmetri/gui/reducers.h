@@ -87,8 +87,8 @@ auto addViewBlocking(auto&& v) {
   auto accumulate_promise = std::make_shared<std::promise<void>>();
   auto fut = accumulate_promise->get_future();
   rxdispatch::push([q = std::move(accumulate_promise), v](model::Model&& m) {
-    m.data->drawables.push_back(v);
-    m.data->blockers.emplace(v, std::move(*q));
+    m.drawables.push_back(v);
+    m.blockers.emplace(v, std::move(*q));
     return m;
   });
   return fut;
@@ -96,14 +96,14 @@ auto addViewBlocking(auto&& v) {
 
 void addView(auto&& v) {
   rxdispatch::push([=](model::Model&& m) {
-    m.data->drawables.push_back(std::move(v));
+    m.drawables.push_back(std::move(v));
     return m;
   });
 };
 
 void removeView(auto&& v) {
   rxdispatch::push([=](model::Model&& m) {
-    std::erase(m.data->drawables, std::move(v));
+    std::erase(m.drawables, std::move(v));
     return m;
   });
 };

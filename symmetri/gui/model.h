@@ -6,7 +6,6 @@
 #include <functional>
 #include <future>
 #include <map>
-#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -37,29 +36,32 @@ struct Model {
   // (node-type, node idx)
   using Node = std::tuple<NodeType, size_t>;
 
-  struct shared {
-    shared();
-    bool show_grid = true;
-    Coordinate scrolling;
-    std::optional<Coordinate> context_menu_pos;
-    std::optional<Arc> selected_arc_idxs;
-    std::optional<Node> selected_node_idx;
-    std::optional<std::filesystem::path> active_file;
-    float zoom_factor = 1.0f;
-    std::map<Drawable, std::promise<void>> blockers;
-    std::vector<Coordinate> t_positions, p_positions;
-    std::vector<size_t> t_view, p_view;
-    std::vector<size_t> t_highlight, p_highlight;
-    std::vector<Arc> arc_highlight;
-    bool arc_hovered = false;
-    std::vector<std::string_view> colors = symmetri::Token::getColors();
-    std::vector<symmetri::AugmentedToken> tokens;
-    symmetri::SmallLog log;
-    std::vector<Drawable> drawables;
-    symmetri::Petri::PTNet net;
-  };
-  Model() : data(std::make_shared<shared>()) {}
-  std::shared_ptr<shared> data;
+  Model();
+  // move-only: the model is threaded through the reducer pipeline by move and
+  // should never be silently copied.
+  Model(const Model&) = delete;
+  Model& operator=(const Model&) = delete;
+  Model(Model&&) = default;
+  Model& operator=(Model&&) = default;
+
+  bool show_grid = true;
+  Coordinate scrolling;
+  std::optional<Coordinate> context_menu_pos;
+  std::optional<Arc> selected_arc_idxs;
+  std::optional<Node> selected_node_idx;
+  std::optional<std::filesystem::path> active_file;
+  float zoom_factor = 1.0f;
+  std::map<Drawable, std::promise<void>> blockers;
+  std::vector<Coordinate> t_positions, p_positions;
+  std::vector<size_t> t_view, p_view;
+  std::vector<size_t> t_highlight, p_highlight;
+  std::vector<Arc> arc_highlight;
+  bool arc_hovered = false;
+  std::vector<std::string_view> colors = symmetri::Token::getColors();
+  std::vector<symmetri::AugmentedToken> tokens;
+  symmetri::SmallLog log;
+  std::vector<Drawable> drawables;
+  symmetri::Petri::PTNet net;
 };
 
 struct ViewModel {
@@ -90,7 +92,10 @@ struct ViewModel {
   const bool arc_hovered;
 
   ViewModel() = delete;
-  ViewModel(Model m);
+  ViewModel(const Model& m);
+  ViewModel(const ViewModel&) = delete;
+  ViewModel& operator=(const ViewModel&) = delete;
+  ViewModel(ViewModel&&) = default;
 };
 
 using Reducer = std::function<Model(Model&&)>;

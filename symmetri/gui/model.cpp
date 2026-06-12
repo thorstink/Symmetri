@@ -26,31 +26,29 @@ Coordinate operator*(float lhs, Coordinate rhs) {
   return rhs;
 }
 
-Model::shared::shared()
-    : drawables({&draw_menu_bar, &draw_graph, &draw_tools_menu}) {}
+Model::Model() : drawables({&draw_menu_bar, &draw_graph, &draw_tools_menu}) {}
 
-ViewModel::ViewModel(Model m)
-    : drawables(m.data->drawables),
-      show_grid(m.data->show_grid),
-      scrolling(m.data->scrolling),
-      context_menu_pos(m.data->context_menu_pos),
-      selected_arc_idxs(m.data->selected_arc_idxs),
-      selected_node_idx(m.data->selected_node_idx),
-      active_file(
-          m.data->active_file.value_or(std::filesystem::current_path())),
-      zoom_factor(m.data->zoom_factor),
-      t_view(m.data->t_view),
-      p_view(m.data->p_view),
-      t_highlight(m.data->t_highlight),
-      p_highlight(m.data->p_highlight),
-      arc_highlight(m.data->arc_highlight),
+ViewModel::ViewModel(const Model& m)
+    : drawables(m.drawables),
+      show_grid(m.show_grid),
+      scrolling(m.scrolling),
+      context_menu_pos(m.context_menu_pos),
+      selected_arc_idxs(m.selected_arc_idxs),
+      selected_node_idx(m.selected_node_idx),
+      active_file(m.active_file.value_or(std::filesystem::current_path())),
+      zoom_factor(m.zoom_factor),
+      t_view(m.t_view),
+      p_view(m.p_view),
+      t_highlight(m.t_highlight),
+      p_highlight(m.p_highlight),
+      arc_highlight(m.arc_highlight),
       node_size(32.f * zoom_factor, 32.f * zoom_factor),
-      colors(m.data->colors),
-      tokens(m.data->tokens),
-      log(m.data->log),
-      net(m.data->net),
-      t_positions(m.data->t_positions),
-      p_positions(m.data->p_positions),
+      colors(m.colors),
+      tokens(m.tokens),
+      log(m.log),
+      net(m.net),
+      t_positions(m.t_positions),
+      p_positions(m.p_positions),
       t_fireable(std::accumulate(
           t_view.begin(), t_view.end(), std::vector<size_t>{},
           [this](std::vector<size_t>&& t_fireable, size_t t_idx) {
@@ -67,6 +65,6 @@ ViewModel::ViewModel(Model m)
 
             return std::move(t_fireable);
           })),
-      arc_hovered(m.data->arc_hovered) {}
+      arc_hovered(m.arc_hovered) {}
 
 }  // namespace model
