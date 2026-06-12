@@ -22,6 +22,11 @@ namespace rxdispatch {
 
 using Update = std::variant<model::Reducer, model::Computer>;
 
+// Optional hook fired after every push(), used to wake a blocked UI event loop
+// so it can stay fully idle (no polling) until there is actually work to do.
+// Set to e.g. glfwPostEmptyEvent; left null it is a no-op.
+inline void (*on_push)() = nullptr;
+
 void unsubscribe();
 moodycamel::BlockingConcurrentQueue<Update>& getQueue();
 void push(Update&& r);

@@ -66,12 +66,42 @@ int main(int argc, char **argv) {
   MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor new];
 
   auto root_subscription = go();
+  // Wake the (otherwise blocked) event loop whenever a reactive update is
+  // queued, so we can idle at zero CPU instead of polling. Thread-safe in GLFW.
+  rxdispatch::on_push = glfwPostEmptyEvent;
   if (argc > 1) loadPetriNet(argv[1]);
-  // Main loop
-  while (!glfwWindowShouldClose(window)) {
-    @autoreleasepool {
-      glfwPollEvents();
 
+  // Power-saving event loop:
+  //  - after any activity, render a few frames so interaction/animation stays
+  //    smooth and any just-queued reactive work lands on the run loop;
+  //  - once quiet, block in glfwWaitEventsTimeout until input or a posted wake
+  //    arrives (the timeout is only a safety net for off-queue async updates,
+  //    e.g. the reducer produced after an async file save completes);
+  //  - while minimized, block fully; while occluded, keep the model current but
+  //    skip the (expensive) GPU frame.
+  constexpr double kIdleTimeout = 0.25;  // seconds
+  int frames_to_render = 2;
+  while (!glfwWindowShouldClose(window)) {
+    if (glfwGetWindowAttrib(window, GLFW_ICONIFIED)) {
+      glfwWaitEvents();  // minimized: fully idle until restored
+      continue;
+    }
+
+    if (frames_to_render > 0) {
+      glfwPollEvents();
+    } else {
+      glfwWaitEventsTimeout(kIdleTimeout);
+    }
+
+    // Covered by other windows: drain pending updates to keep the model current,
+    // but don't spend GPU/CPU drawing what nobody can see.
+    if (!(nswin.occlusionState & NSWindowOcclusionStateVisible)) {
+      while (!rximgui::rl.is_empty()) rximgui::rl.dispatch();
+      frames_to_render = 0;
+      continue;
+    }
+
+    @autoreleasepool {
       int width, height;
       glfwGetFramebufferSize(window, &width, &height);
       layer.drawableSize = CGSizeMake(width, height);
@@ -104,7 +134,19 @@ int main(int argc, char **argv) {
       [commandBuffer presentDrawable:drawable];
       [commandBuffer commit];
     }
+
+    // Keep rendering while the user is interacting, text is being edited, the
+    // mouse is moving/scrolling, or reactive work is still pending; otherwise
+    // wind down and block on the next iteration.
+    ImGuiIO &io = ImGui::GetIO();
+    const bool activity =
+        !rximgui::rl.is_empty() || ImGui::IsAnyItemActive() || io.WantTextInput ||
+        ImGui::IsMouseDown(ImGuiMouseButton_Left) || ImGui::IsMouseDown(ImGuiMouseButton_Right) ||
+        ImGui::IsMouseDown(ImGuiMouseButton_Middle) || io.MouseWheel != 0.0f ||
+        io.MouseWheelH != 0.0f || io.MouseDelta.x != 0.0f || io.MouseDelta.y != 0.0f;
+    frames_to_render = activity ? 3 : (frames_to_render > 0 ? frames_to_render - 1 : 0);
   }
+  rxdispatch::on_push = nullptr;  // window is going away; stop posting wakes
   rxdispatch::unsubscribe();
   root_subscription.dispose();
 
