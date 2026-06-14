@@ -20,7 +20,10 @@
 
 namespace rxdispatch {
 
-using Update = std::variant<model::Reducer, model::Computer>;
+// The queue carries an edit reducer, a view reducer, an async Computer that
+// resolves (off-thread) to an edit reducer, or an undo/redo request.
+using Update = std::variant<model::EditReducer, model::ViewReducer,
+                            model::Computer, model::Undo, model::Redo>;
 
 // Optional hook fired after every push(), used to wake a blocked UI event loop
 // so it can stay fully idle (no polling) until there is actually work to do.
@@ -30,15 +33,31 @@ inline void (*on_push)() = nullptr;
 void unsubscribe();
 moodycamel::BlockingConcurrentQueue<Update>& getQueue();
 void push(Update&& r);
+void pushEdit(model::EditReducer r);
+void pushView(model::ViewReducer r);
+inline void pushUndo() { push(Update{model::Undo{}}); }
+inline void pushRedo() { push(Update{model::Redo{}}); }
 
 struct VisitPackage {
-  auto operator()(model::Reducer r) {
-    return rpp::source::just(rximgui::rl, std::move(r)).as_dynamic();
+  auto operator()(model::EditReducer r) {
+    return rpp::source::just(rximgui::rl, model::Action{std::move(r)})
+        .as_dynamic();
+  }
+  auto operator()(model::ViewReducer r) {
+    return rpp::source::just(rximgui::rl, model::Action{std::move(r)})
+        .as_dynamic();
   }
   auto operator()(model::Computer f) {
     return (rpp::source::just(scheduler, std::move(f)) |
-            rpp::operators::map([](auto f) { return f(); }))
+            rpp::operators::map(
+                [](model::Computer f) { return model::Action{f()}; }))
         .as_dynamic();
+  }
+  auto operator()(model::Undo u) {
+    return rpp::source::just(rximgui::rl, model::Action{u}).as_dynamic();
+  }
+  auto operator()(model::Redo r) {
+    return rpp::source::just(rximgui::rl, model::Action{r}).as_dynamic();
   }
 
  private:
