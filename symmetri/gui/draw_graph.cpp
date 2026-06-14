@@ -226,7 +226,9 @@ void draw_nodes(model::Model::NodeType node_type, size_t idx,
         node_type, idx);
   } else if (ImGui::IsItemActive() &&
              ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-    moveNode(node_type, idx, ImGui::GetIO().MouseDelta);
+    // Pass a world-space delta: the edit reducer that moves the node must not
+    // read view state (zoom) so it stays replayable for undo.
+    moveNode(node_type, idx, ImGui::GetIO().MouseDelta / zoom_factor);
   }
 
   const int opacity = 255;

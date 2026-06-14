@@ -10,6 +10,7 @@
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <variant>
 #include <vector>
 
 #include "petri.h"
@@ -28,15 +29,50 @@ Coordinate operator*(float lhs, Coordinate rhs);
 Coordinate operator+(Coordinate& lhs, Coordinate& rhs);
 Coordinate& operator+=(Coordinate& lhs, const Coordinate& rhs);
 
-struct Model {
-  // node-type
-  enum class NodeType { Place, Transition };
-  // (source-node-type, transition idx, place idx)
-  using Arc = std::tuple<NodeType, size_t, size_t>;
-  // (node-type, node idx)
-  using Node = std::tuple<NodeType, size_t>;
+// node-type
+enum class NodeType { Place, Transition };
+// (source-node-type, transition idx, place idx)
+using Arc = std::tuple<NodeType, size_t, size_t>;
+// (node-type, node idx)
+using Node = std::tuple<NodeType, size_t>;
 
-  Model();
+// The undoable document: the net, its marking, layout and the event log. Edit
+// reducers are pure EditState -> EditState transitions, so they can be
+// snapshotted and replayed for undo/redo.
+struct EditState {
+  std::optional<std::filesystem::path> active_file;
+  std::vector<Coordinate> t_positions, p_positions;
+  std::vector<size_t> t_view, p_view;
+  std::vector<symmetri::AugmentedToken> tokens;
+  symmetri::SmallLog log;
+  symmetri::Petri::PTNet net;
+};
+
+// Transient UI state: selection, highlighting, camera, popups. Mutated by view
+// reducers and never recorded in the undo history (it survives undo/redo).
+struct ViewState {
+  ViewState();
+  bool show_grid = true;
+  Coordinate scrolling;
+  std::optional<Coordinate> context_menu_pos;
+  std::optional<Arc> selected_arc_idxs;
+  std::optional<Node> selected_node_idx;
+  float zoom_factor = 1.0f;
+  std::map<Drawable, std::promise<void>> blockers;
+  std::vector<size_t> t_highlight, p_highlight;
+  std::vector<Arc> arc_highlight;
+  bool arc_hovered = false;
+  std::vector<std::string_view> colors = symmetri::Token::getColors();
+  std::vector<Drawable> drawables;
+};
+
+struct Model {
+  // Keep Model::NodeType/Arc/Node spellings working alongside model::NodeType.
+  using NodeType = model::NodeType;
+  using Arc = model::Arc;
+  using Node = model::Node;
+
+  Model() = default;
   // move-only: the model is threaded through the reducer pipeline by move and
   // should never be silently copied.
   Model(const Model&) = delete;
@@ -44,24 +80,8 @@ struct Model {
   Model(Model&&) = default;
   Model& operator=(Model&&) = default;
 
-  bool show_grid = true;
-  Coordinate scrolling;
-  std::optional<Coordinate> context_menu_pos;
-  std::optional<Arc> selected_arc_idxs;
-  std::optional<Node> selected_node_idx;
-  std::optional<std::filesystem::path> active_file;
-  float zoom_factor = 1.0f;
-  std::map<Drawable, std::promise<void>> blockers;
-  std::vector<Coordinate> t_positions, p_positions;
-  std::vector<size_t> t_view, p_view;
-  std::vector<size_t> t_highlight, p_highlight;
-  std::vector<Arc> arc_highlight;
-  bool arc_hovered = false;
-  std::vector<std::string_view> colors = symmetri::Token::getColors();
-  std::vector<symmetri::AugmentedToken> tokens;
-  symmetri::SmallLog log;
-  std::vector<Drawable> drawables;
-  symmetri::Petri::PTNet net;
+  EditState edit;
+  ViewState view;
 };
 
 struct ViewModel {
@@ -98,9 +118,71 @@ struct ViewModel {
   ViewModel(ViewModel&&) = default;
 };
 
-using Reducer = std::function<Model(Model&&)>;
-using Computer = std::function<Reducer(void)>;
+// Reducers come in two flavours:
+//  - Edit reducers are pure EditState -> EditState transitions. They are the
+//    only thing recorded in the undo history and must NOT read ViewState (that
+//    would make replay diverge).
+//  - View reducers mutate transient ViewState in place; they are never logged
+//    and may read (but not write) the current EditState.
+using EditReducer = std::function<EditState(EditState&&)>;
+using ViewReducer = std::function<void(ViewState&, const EditState&)>;
+// Async producer of an edit reducer (runs off the UI thread, e.g. file I/O).
+using Computer = std::function<EditReducer(void)>;
 
-Model initializeModel();
+// Reset every ViewState field that indexes into EditState (selection and
+// highlights). Must be called whenever EditState changes structurally beneath
+// the view (e.g. after undo/redo), otherwise those indices dangle into the net.
+void clearSelection(ViewState& v);
+
+// Undo/redo are plain messages through the same dispatch channel.
+struct Undo {};
+struct Redo {};
+
+// The resolved unit of work applied at the reduce step.
+using Action = std::variant<EditReducer, ViewReducer, Undo, Redo>;
+
+// Undo history. Every edit reducer is appended to `log`; the cursor is the
+// number of reducers currently applied. Undo/redo move the cursor and rebuild
+// EditState by replaying the log; a new edit truncates any redo branch.
+//
+// NOTE: this is the replay-log half of the intended checkpoint+replay scheme,
+// WITHOUT periodic snapshots: EditState cannot be copied while the net holds
+// move-only symmetri::Callback values (net.store), so we always replay from the
+// empty initial state. That makes undo O(number of edits). Re-introducing
+// kSnapshot-every-N (and bounded undo cost) requires first making the editor's
+// net representation copyable.
+struct History {
+  std::vector<EditReducer> log;
+  size_t cursor = 0;
+
+  bool canUndo() const { return cursor > 0; }
+  bool canRedo() const { return cursor < log.size(); }
+
+  // Apply a brand-new edit reducer, discarding any redo branch beyond cursor.
+  EditState apply(EditReducer r, EditState&& current) {
+    if (cursor < log.size()) log.resize(cursor);  // new edit after undo
+    EditState next = r(std::move(current));
+    log.push_back(std::move(r));
+    ++cursor;
+    return next;
+  }
+
+  EditState undo() {  // precondition: canUndo()
+    --cursor;
+    return materialize();
+  }
+  EditState redo() {  // precondition: canRedo()
+    ++cursor;
+    return materialize();
+  }
+
+ private:
+  // Rebuild the EditState at `cursor` by replaying the log from empty.
+  EditState materialize() {
+    EditState s{};
+    for (size_t i = 0; i < cursor; ++i) s = log[i](std::move(s));
+    return s;
+  }
+};
 
 }  // namespace model

@@ -25,21 +25,28 @@
 #include "symmetri/types.h"
 
 void loadPetriNet(const std::filesystem::path& file) {
-  rxdispatch::push([=](model::Model&& model) {
-    auto& m = model;
-    m.selected_arc_idxs.reset();
-    m.selected_node_idx.reset();
-    m.p_highlight.clear();
-    m.t_highlight.clear();
-    m.active_file = file;
-    if (not m.active_file.has_value()) {
-      return model;
+  // Loading clears the transient selection/highlight and refreshes the colour
+  // table (view), then installs the parsed net (edit).
+  rxdispatch::pushView([](model::ViewState& v, const model::EditState&) {
+    v.selected_arc_idxs.reset();
+    v.selected_node_idx.reset();
+    v.p_highlight.clear();
+    v.t_highlight.clear();
+    v.colors = symmetri::Token::getColors();
+  });
+  // NOTE: this edit reducer reads the filesystem, so it is not strictly
+  // replay-pure (a redo re-reads the file). Acceptable for now; revisit when
+  // wiring undo/redo by parsing at push-time and capturing the result.
+  rxdispatch::pushEdit([=](model::EditState&& e) {
+    e.active_file = file;
+    if (not e.active_file.has_value()) {
+      return e;
     }
     symmetri::Net net;
     symmetri::Marking marking;
     symmetri::PriorityTable pt;
     std::map<std::string, model::Coordinate> positions;
-    const std::filesystem::path pn_file = m.active_file.value();
+    const std::filesystem::path pn_file = e.active_file.value();
     if (not std::filesystem::exists(pn_file)) {
       throw std::runtime_error(
           std::format("File {} does not exist\n", pn_file.c_str()));
@@ -61,18 +68,18 @@ void loadPetriNet(const std::filesystem::path& file) {
 
     new_net.priority = symmetri::createPriorityLookup(new_net.transition, pt);
 
-    m.t_positions.reserve(m.t_positions.size() + new_net.transition.size());
+    e.t_positions.reserve(e.t_positions.size() + new_net.transition.size());
     for (const auto& transition : new_net.transition) {
-      m.t_positions.push_back(positions.at(transition));
+      e.t_positions.push_back(positions.at(transition));
     }
 
-    m.p_positions.reserve(m.p_positions.size() + new_net.place.size());
+    e.p_positions.reserve(e.p_positions.size() + new_net.place.size());
     for (const auto& place : new_net.place) {
-      m.p_positions.push_back(positions.at(place));
+      e.p_positions.push_back(positions.at(place));
     }
 
-    const auto old_place_count = m.net.place.size();
-    const auto old_transition_count = m.net.transition.size();
+    const auto old_place_count = e.net.place.size();
+    const auto old_transition_count = e.net.transition.size();
     const auto new_place_count = new_net.place.size();
     const auto new_transition_count = new_net.transition.size();
 
@@ -88,34 +95,32 @@ void loadPetriNet(const std::filesystem::path& file) {
       }
     }
 
-    m.colors = symmetri::Token::getColors();
-
-    m.tokens.clear();
+    e.tokens.clear();
     for (const auto& [p, c] : marking) {
-      m.tokens.push_back(
+      e.tokens.push_back(
           {symmetri::toIndex(new_net.place, p) + old_place_count, c});
     }
 
-    std::ranges::move(new_net.priority, std::back_inserter(m.net.priority));
-    std::ranges::move(new_net.transition, std::back_inserter(m.net.transition));
-    std::ranges::move(new_net.place, std::back_inserter(m.net.place));
-    std::ranges::move(new_net.output_n, std::back_inserter(m.net.output_n));
-    std::ranges::move(new_net.input_n, std::back_inserter(m.net.input_n));
-    std::ranges::move(new_net.store, std::back_inserter(m.net.store));
+    std::ranges::move(new_net.priority, std::back_inserter(e.net.priority));
+    std::ranges::move(new_net.transition, std::back_inserter(e.net.transition));
+    std::ranges::move(new_net.place, std::back_inserter(e.net.place));
+    std::ranges::move(new_net.output_n, std::back_inserter(e.net.output_n));
+    std::ranges::move(new_net.input_n, std::back_inserter(e.net.input_n));
+    std::ranges::move(new_net.store, std::back_inserter(e.net.store));
 
-    m.net.p_to_ts_n = createReversePlaceToTransitionLookup(
-        m.net.place.size(), m.net.transition.size(), m.net.input_n);
+    e.net.p_to_ts_n = createReversePlaceToTransitionLookup(
+        e.net.place.size(), e.net.transition.size(), e.net.input_n);
 
-    m.t_view.resize(new_transition_count);
-    m.p_view.resize(new_place_count);
+    e.t_view.resize(new_transition_count);
+    e.p_view.resize(new_place_count);
 
-    std::iota(m.t_view.begin(), m.t_view.end(), old_transition_count);
-    std::iota(m.p_view.begin(), m.p_view.end(), old_place_count);
+    std::iota(e.t_view.begin(), e.t_view.end(), old_transition_count);
+    std::iota(e.p_view.begin(), e.p_view.end(), old_place_count);
 
-    m.active_file = file;
+    e.active_file = file;
 
-    resetNetView();  // convenient to view new graph
-
-    return model;
+    return e;
   });
+
+  resetNetView();  // convenient to view new graph
 }

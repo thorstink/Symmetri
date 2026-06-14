@@ -26,29 +26,38 @@ Coordinate operator*(float lhs, Coordinate rhs) {
   return rhs;
 }
 
-Model::Model() : drawables({&draw_menu_bar, &draw_graph, &draw_tools_menu}) {}
+ViewState::ViewState()
+    : drawables({&draw_menu_bar, &draw_graph, &draw_tools_menu}) {}
+
+void clearSelection(ViewState& v) {
+  v.selected_node_idx.reset();
+  v.selected_arc_idxs.reset();
+  v.t_highlight.clear();
+  v.p_highlight.clear();
+  v.arc_highlight.clear();
+}
 
 ViewModel::ViewModel(const Model& m)
-    : drawables(m.drawables),
-      show_grid(m.show_grid),
-      scrolling(m.scrolling),
-      context_menu_pos(m.context_menu_pos),
-      selected_arc_idxs(m.selected_arc_idxs),
-      selected_node_idx(m.selected_node_idx),
-      active_file(m.active_file.value_or(std::filesystem::current_path())),
-      zoom_factor(m.zoom_factor),
-      t_view(m.t_view),
-      p_view(m.p_view),
-      t_highlight(m.t_highlight),
-      p_highlight(m.p_highlight),
-      arc_highlight(m.arc_highlight),
+    : drawables(m.view.drawables),
+      show_grid(m.view.show_grid),
+      scrolling(m.view.scrolling),
+      context_menu_pos(m.view.context_menu_pos),
+      selected_arc_idxs(m.view.selected_arc_idxs),
+      selected_node_idx(m.view.selected_node_idx),
+      active_file(m.edit.active_file.value_or(std::filesystem::current_path())),
+      zoom_factor(m.view.zoom_factor),
+      t_view(m.edit.t_view),
+      p_view(m.edit.p_view),
+      t_highlight(m.view.t_highlight),
+      p_highlight(m.view.p_highlight),
+      arc_highlight(m.view.arc_highlight),
       node_size(32.f * zoom_factor, 32.f * zoom_factor),
-      colors(m.colors),
-      tokens(m.tokens),
-      log(m.log),
-      net(m.net),
-      t_positions(m.t_positions),
-      p_positions(m.p_positions),
+      colors(m.view.colors),
+      tokens(m.edit.tokens),
+      log(m.edit.log),
+      net(m.edit.net),
+      t_positions(m.edit.t_positions),
+      p_positions(m.edit.p_positions),
       t_fireable(std::accumulate(
           t_view.begin(), t_view.end(), std::vector<size_t>{},
           [this](std::vector<size_t>&& t_fireable, size_t t_idx) {
@@ -65,6 +74,6 @@ ViewModel::ViewModel(const Model& m)
 
             return std::move(t_fireable);
           })),
-      arc_hovered(m.arc_hovered) {}
+      arc_hovered(m.view.arc_hovered) {}
 
 }  // namespace model

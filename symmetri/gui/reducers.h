@@ -86,24 +86,22 @@ void zoomAbsolute(float);
 auto addViewBlocking(auto&& v) {
   auto accumulate_promise = std::make_shared<std::promise<void>>();
   auto fut = accumulate_promise->get_future();
-  rxdispatch::push([q = std::move(accumulate_promise), v](model::Model&& m) {
-    m.drawables.push_back(v);
-    m.blockers.emplace(v, std::move(*q));
-    return m;
+  rxdispatch::pushView([q = std::move(accumulate_promise), v](
+                           model::ViewState& vs, const model::EditState&) {
+    vs.drawables.push_back(v);
+    vs.blockers.emplace(v, std::move(*q));
   });
   return fut;
 };
 
 void addView(auto&& v) {
-  rxdispatch::push([=](model::Model&& m) {
-    m.drawables.push_back(std::move(v));
-    return m;
+  rxdispatch::pushView([=](model::ViewState& vs, const model::EditState&) {
+    vs.drawables.push_back(std::move(v));
   });
 };
 
 void removeView(auto&& v) {
-  rxdispatch::push([=](model::Model&& m) {
-    std::erase(m.drawables, std::move(v));
-    return m;
+  rxdispatch::pushView([=](model::ViewState& vs, const model::EditState&) {
+    std::erase(vs.drawables, std::move(v));
   });
 };

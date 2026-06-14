@@ -102,17 +102,17 @@ auto toXml(const symmetri::Petri::PTNet& net,
 model::Computer writeGraphToDisk(const model::ViewModel& vm) {
   return [&net = vm.net, &p_positions = vm.p_positions,
           &t_positions = vm.t_positions, p_view = vm.p_view, t_view = vm.t_view,
-          tokens = vm.tokens, path = vm.active_file]() -> model::Reducer {
+          tokens = vm.tokens, path = vm.active_file]() -> model::EditReducer {
     if (std::filesystem::path(path).extension() != ".pnml") {
-      return [](model::Model&& m) { return m; };
+      return [](model::EditState&& e) { return e; };
     }
     auto doc = toXml(net, p_positions, t_positions, p_view, t_view, tokens);
     auto fut = addViewBlocking(&draw_confirmation_popup);
     fut.get();
     doc->SaveFile(path.c_str());
-    return [path](model::Model&& m_ptr) {
-      m_ptr.active_file = path.c_str();
-      return m_ptr;
+    return [path](model::EditState&& e) {
+      e.active_file = path.c_str();
+      return e;
     };
   };
 }
@@ -131,13 +131,12 @@ void draw_confirmation_popup(const model::ViewModel&) {
   ImGui::SetNextItemShortcut(ImGuiKey_Enter);
   if (ImGui::Button("Ok")) {
     removeView(&draw_confirmation_popup);
-    rxdispatch::push([=](model::Model&& m) {
-      if (auto search = m.blockers.find(&draw_confirmation_popup);
-          search != m.blockers.end()) {
+    rxdispatch::pushView([](model::ViewState& v, const model::EditState&) {
+      if (auto search = v.blockers.find(&draw_confirmation_popup);
+          search != v.blockers.end()) {
         search->second.set_value();
-        m.blockers.erase(search);
+        v.blockers.erase(search);
       }
-      return m;
     });
   }
   ImGui::End();

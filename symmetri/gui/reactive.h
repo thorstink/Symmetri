@@ -1,6 +1,5 @@
 #pragma once
 
-#include <iostream>
 #include <memory>
 
 #include "draw.h"
@@ -9,34 +8,53 @@
 #include "rxdispatch.h"
 #include "rximgui.h"
 
+// The reduce-step state: the current Model plus the undo history. Held behind a
+// copyable shared_ptr because rpp::scan copies its cached seed (and Model is
+// move-only); the state itself is mutated in place through the handle.
+struct ReduceState {
+  model::Model model;
+  model::History history;
+};
+
 auto go() {
   using namespace rximgui;
 
   auto view_models =
       rxdispatch::get_events_observable() | rpp::operators::observe_on(rl) |
       rpp::operators::scan(
-          // Model is move-only, but rpp::scan requires a copy-constructible
-          // seed (it copies the cached seed into its observer strategy). Hold
-          // the model behind a copyable shared_ptr handle; the model itself is
-          // still threaded through the reducers strictly by move.
-          std::make_shared<model::Model>(),
-          [](std::shared_ptr<model::Model> &&m, const auto &f) {
-            std::cout << "reduce " << std::this_thread::get_id() << std::endl;
-
-            static size_t i = 0;
-            std::cout << "update " << i++ << ", ref: " << m.use_count()
-                      << std::endl;
+          std::make_shared<ReduceState>(),
+          [](std::shared_ptr<ReduceState> &&s, const model::Action &a) {
             try {
-              *m = f(std::move(*m));
+              // Edit reducers transform EditState and are recorded in the undo
+              // history; view reducers mutate ViewState in place (may read
+              // EditState); Undo/Redo replay the history. View state is never
+              // touched by undo, so selection/zoom survive.
+              if (auto *e = std::get_if<model::EditReducer>(&a)) {
+                s->model.edit = s->history.apply(*e, std::move(s->model.edit));
+              } else if (auto *v = std::get_if<model::ViewReducer>(&a)) {
+                (*v)(s->model.view, s->model.edit);
+              } else if (std::get_if<model::Undo>(&a)) {
+                if (s->history.canUndo()) {
+                  s->model.edit = s->history.undo();
+                  // Selection/highlights index into the net, which just
+                  // changed underneath them; drop them to avoid stale indices.
+                  model::clearSelection(s->model.view);
+                }
+              } else if (std::get_if<model::Redo>(&a)) {
+                if (s->history.canRedo()) {
+                  s->model.edit = s->history.redo();
+                  model::clearSelection(s->model.view);
+                }
+              }
             } catch (const std::exception &e) {
               printf("%s", e.what());
             }
-            // `m` is an rvalue-ref parameter: C++20 moves it on return,
-            // so an explicit std::move would be redundant.
-            return m;
+            // `s` is an rvalue-ref parameter: C++20 moves it on return.
+            return s;
           }) |
-      rpp::operators::map(
-          [](const auto &m) { return std::make_shared<model::ViewModel>(*m); });
+      rpp::operators::map([](const auto &s) {
+        return std::make_shared<model::ViewModel>(s->model);
+      });
 
   return frames |
          // The latest view-model is cached and re-combined with every frame
