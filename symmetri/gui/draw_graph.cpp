@@ -169,7 +169,7 @@ bool draw_arcs(size_t t_idx, const model::ViewModel& vm) {
     }
   }
 
-  const ImU32 output_color = getColor(fire(vm.net.store[t_idx]));
+  const ImU32 output_color = getColor(vm.net.output[t_idx]);
   for (size_t sub_idx = 0; sub_idx < vm.net.output_n[t_idx].size(); sub_idx++) {
     const size_t p_idx = std::get<0>(vm.net.output_n[t_idx][sub_idx]);
     const float opacity =

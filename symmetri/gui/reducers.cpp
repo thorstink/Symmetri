@@ -75,7 +75,8 @@ void addNode(model::Model::NodeType node_type, ImVec2 pos) {
       e.net.output_n.push_back({});
       e.net.input_n.push_back({});
       e.net.priority.push_back(0);
-      e.net.store.emplace_back(symmetri::identity<symmetri::DirectMutation>{});
+      // A fresh transition is a no-op (DirectMutation), which fires to Success.
+      e.net.output.push_back(symmetri::Success);
       e.t_positions.push_back(model::Coordinate{pos.x, pos.y});
     }
     return e;
@@ -171,7 +172,7 @@ void removeTransition(size_t t_idx) {
     net.transition.erase(net.transition.begin() + t_idx);
     e.t_positions.erase(e.t_positions.begin() + t_idx);
     net.priority.erase(net.priority.begin() + t_idx);
-    net.store.erase(net.store.begin() + t_idx);
+    net.output.erase(net.output.begin() + t_idx);
     net.input_n.erase(net.input_n.begin() + t_idx);
     net.output_n.erase(net.output_n.begin() + t_idx);
     // p_to_ts_n stores transition ids: drop refs to the removed transition and
@@ -401,7 +402,7 @@ void tryFire(size_t transition_idx) {
       deductMarking(e.tokens, e.net.input_n[transition_idx]);
       // add
       const auto& lookup_t = e.net.output_n[transition_idx];
-      const auto result = fire(e.net.store[transition_idx]);
+      const auto result = e.net.output[transition_idx];
       for (const auto& [p, c] : lookup_t) {
         e.tokens.emplace_back(p, result);
       }
@@ -412,7 +413,7 @@ void tryFire(size_t transition_idx) {
 }
 void updateTransitionOutputColor(size_t transition_idx, symmetri::Token color) {
   rxdispatch::pushEdit([=](model::EditState&& e) {
-    e.net.store[transition_idx] = [=] { return color; };
+    e.net.output[transition_idx] = color;
     return e;
   });
 }
