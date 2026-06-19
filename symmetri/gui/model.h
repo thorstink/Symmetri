@@ -45,15 +45,30 @@ using Arc = std::tuple<NodeType, size_t, size_t>;
 // (node-type, node idx)
 using Node = std::tuple<NodeType, size_t>;
 
+// A copyable, editor-local net. It mirrors symmetri::Petri::PTNet's fields, but
+// replaces the move-only `store` (std::vector<symmetri::Callback>) with the
+// only thing the editor needs from it: the token each transition outputs when
+// fired
+// (`fire(store[i])`). Being copyable is what lets EditState — and therefore the
+// undo history — keep real snapshots.
+struct Net {
+  std::vector<std::string> place, transition;
+  std::vector<symmetri::SmallVectorInput> input_n,
+      output_n;  // (place id, colour)
+  std::vector<symmetri::SmallVector> p_to_ts_n;
+  std::vector<int8_t> priority;
+  std::vector<symmetri::Token> output;  // per-transition fire() result
+};
+
 // The undoable document: the net, its marking, layout and the event log. Edit
-// reducers are pure EditState -> EditState transitions, so they can be
-// snapshotted and replayed for undo/redo.
+// reducers are pure EditState -> EditState transitions, and EditState is now
+// copyable, so the undo history can snapshot it (checkpoint + replay).
 struct EditState {
   std::optional<std::filesystem::path> active_file;
   std::vector<Coordinate> t_positions, p_positions;
   std::vector<symmetri::AugmentedToken> tokens;
   symmetri::SmallLog log;
-  symmetri::Petri::PTNet net;
+  Net net;
 };
 
 // Transient UI state: selection, highlighting, camera, popups. Mutated by view
@@ -114,7 +129,7 @@ struct ViewModel {
   const std::vector<symmetri::AugmentedToken> tokens;
   const symmetri::SmallLog& log;
 
-  const symmetri::Petri::PTNet& net;
+  const Net& net;
   const std::vector<Coordinate>&t_positions, &p_positions;
   const std::vector<size_t> t_fireable;
   const bool arc_hovered;
@@ -153,18 +168,17 @@ using Action = std::variant<EditReducer, ViewReducer, Undo, Redo>;
 // view reducer without blocking the view while it runs.
 using Computer = std::function<Action(void)>;
 
-// Undo history. Every edit reducer is appended to `log`; the cursor is the
-// number of reducers currently applied. Undo/redo move the cursor and rebuild
-// EditState by replaying the log; a new edit truncates any redo branch.
-//
-// NOTE: this is the replay-log half of the intended checkpoint+replay scheme,
-// WITHOUT periodic snapshots: EditState cannot be copied while the net holds
-// move-only symmetri::Callback values (net.store), so we always replay from the
-// empty initial state. That makes undo O(number of edits). Re-introducing
-// kSnapshot-every-N (and bounded undo cost) requires first making the editor's
-// net representation copyable.
+// Undo history using checkpoint + replay: every edit reducer is appended to
+// `log`, and a full EditState snapshot is kept every kSnapshotEvery steps. To
+// reach step n we restore the nearest snapshot <= n and replay the logged
+// reducers up to n -> undo/redo cost is bounded by kSnapshotEvery instead of
+// the whole history. `cursor` is the number of reducers currently applied; a
+// new edit truncates any redo branch beyond it.
 struct History {
+  static constexpr size_t kSnapshotEvery = 25;
+
   std::vector<EditReducer> log;
+  std::vector<EditState> snapshots = std::vector<EditState>(1);  // [0] == empty
   size_t cursor = 0;
 
   bool canUndo() const { return cursor > 0; }
@@ -172,27 +186,27 @@ struct History {
 
   // Apply a brand-new edit reducer, discarding any redo branch beyond cursor.
   EditState apply(EditReducer r, EditState&& current) {
-    if (cursor < log.size()) log.resize(cursor);  // new edit after undo
+    if (cursor < log.size()) {  // new edit after undo: drop the redo branch
+      log.resize(cursor);
+      snapshots.resize(cursor / kSnapshotEvery + 1);
+    }
     EditState next = r(std::move(current));
     log.push_back(std::move(r));
     ++cursor;
+    if (cursor % kSnapshotEvery == 0) snapshots.push_back(next);  // checkpoint
     return next;
   }
 
-  EditState undo() {  // precondition: canUndo()
-    --cursor;
-    return materialize();
-  }
-  EditState redo() {  // precondition: canRedo()
-    ++cursor;
-    return materialize();
-  }
+  EditState undo() { return materialize(--cursor); }  // precondition: canUndo()
+  EditState redo() { return materialize(++cursor); }  // precondition: canRedo()
 
  private:
-  // Rebuild the EditState at `cursor` by replaying the log from empty.
-  EditState materialize() {
-    EditState s{};
-    for (size_t i = 0; i < cursor; ++i) s = log[i](std::move(s));
+  // Rebuild EditState at `target` from the nearest earlier snapshot.
+  EditState materialize(size_t target) {
+    const size_t j = target / kSnapshotEvery;
+    EditState s = snapshots[j];  // copy the checkpoint
+    for (size_t i = j * kSnapshotEvery; i < target; ++i)
+      s = log[i](std::move(s));
     return s;
   }
 };

@@ -24,7 +24,7 @@
 
 namespace farbart {
 
-auto toXml(const symmetri::Petri::PTNet& net,
+auto toXml(const model::Net& net,
            const std::vector<model::Coordinate>& p_positions,
            const std::vector<model::Coordinate>& t_positions,
            const std::vector<symmetri::AugmentedToken>& tokens) {

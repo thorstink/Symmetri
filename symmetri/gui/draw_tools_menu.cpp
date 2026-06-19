@@ -94,8 +94,7 @@ void draw_selection_menu(const model::ViewModel& vm) {
                      &updatePriority, (void*)&l_priority->first);
     ImGui::Text("Output");
     ImGui::SameLine();
-    if (ImGui::BeginCombo("##output",
-                          fire(vm.net.store[idx]).toString().data())) {
+    if (ImGui::BeginCombo("##output", vm.net.output[idx].toString().data())) {
       for (const auto& color : vm.colors) {
         if (ImGui::Selectable(color.data())) {
           updateTransitionOutputColor(idx, symmetri::Token(color.data()));
