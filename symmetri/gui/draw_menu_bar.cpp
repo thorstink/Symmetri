@@ -1,7 +1,9 @@
 #include "draw_menu_bar.h"
 
+#include <chrono>
 #include <mutex>
 #include <string>
+#include <thread>
 #include <vector>
 
 // clang-format off
@@ -26,6 +28,15 @@ void shortcutString(std::string_view text) {
   ImGui::Text("%s", text.data());
   ImGui::PopStyleColor();
 }
+// Example popup body shown when the background task finishes. The window frame
+// is provided by drawUi; this fills the body and closes itself by id.
+void draw_sleep_popup(const model::ViewModel&) {
+  ImGui::TextUnformatted("Background task finished (slept 2s off-thread).");
+  if (ImGui::Button("OK")) {
+    removePopup("Background task");
+  }
+}
+
 void draw_menu_bar(const model::ViewModel& vm) {
   if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Minus,
                       ImGuiInputFlags_RouteAlways)) {
@@ -43,7 +54,7 @@ void draw_menu_bar(const model::ViewModel& vm) {
 
   if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S,
                       ImGuiInputFlags_RouteAlways)) {
-    rxdispatch::push(farbart::writeGraphToDisk(vm));
+    farbart::requestSaveGraph(vm);
   }
 
   static std::once_flag flag;
@@ -52,7 +63,6 @@ void draw_menu_bar(const model::ViewModel& vm) {
     file_dialog.SetTypeFilters({".pnml", ".grml"});
   });
   file_dialog.Display();
-  static std::filesystem::path pending_load;
   if (file_dialog.HasSelected()) {
     const std::filesystem::path selected = file_dialog.GetSelected();
     file_dialog.ClearSelected();
@@ -60,31 +70,29 @@ void draw_menu_bar(const model::ViewModel& vm) {
       // Nothing to merge with: just load.
       clearAndloadPetriNet(selected);
     } else {
-      // Let the user choose how to combine with the existing net.
-      pending_load = selected;
-      ImGui::OpenPopup("Load net");
+      // Let the user choose how to combine with the existing net. The selected
+      // path rides along in the popup's draw thunk (no static needed).
+      const std::string id = "Load net";
+      addPopup(id, [selected, id](const model::ViewModel&) {
+        ImGui::TextUnformatted(
+            "The current net is not empty.\n"
+            "Append the loaded net, or clear the current net and load?");
+        ImGui::Separator();
+        if (ImGui::Button("Append")) {
+          loadPetriNet(selected);
+          removePopup(id);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Clear and load")) {
+          clearAndloadPetriNet(selected);
+          removePopup(id);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel")) {
+          removePopup(id);
+        }
+      });
     }
-  }
-  if (ImGui::BeginPopupModal("Load net", nullptr,
-                             ImGuiWindowFlags_AlwaysAutoResize)) {
-    ImGui::TextUnformatted(
-        "The current net is not empty.\n"
-        "Append the loaded net, or clear the current net and load?");
-    ImGui::Separator();
-    if (ImGui::Button("Append")) {
-      loadPetriNet(pending_load);
-      ImGui::CloseCurrentPopup();
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Clear and load")) {
-      clearAndloadPetriNet(pending_load);
-      ImGui::CloseCurrentPopup();
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Cancel")) {
-      ImGui::CloseCurrentPopup();
-    }
-    ImGui::EndPopup();
   }
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
@@ -94,7 +102,7 @@ void draw_menu_bar(const model::ViewModel& vm) {
         file_dialog.Open();
       }
       if (ImGui::MenuItem("Save")) {
-        rxdispatch::push(farbart::writeGraphToDisk(vm));
+        farbart::requestSaveGraph(vm);
       }
       ImGui::EndMenu();
     }
@@ -118,6 +126,25 @@ void draw_menu_bar(const model::ViewModel& vm) {
 
       ImGui::EndMenu();
     }
+    if (ImGui::BeginMenu("Run")) {
+      if (ImGui::MenuItem("Background task (sleep 2s)")) {
+        using namespace std::chrono_literals;
+        // A Computer runs off the UI thread (on the dispatch thread pool): it
+        // sleeps without blocking the view, then yields a view reducer that
+        // pops up a dialog. The result Action travels back through the reducer
+        // pipeline like any other update.
+        rxdispatch::push(model::Computer{[]() -> model::Action {
+          std::this_thread::sleep_for(2s);
+          // The result is a view reducer that registers the popup as view
+          // state (rendered by drawUi from ViewState::popups).
+          return model::ViewReducer{
+              [](model::ViewState& v, const model::EditState&) {
+                v.popups.push_back({"Background task", &draw_sleep_popup});
+              }};
+        }});
+      }
+      ImGui::EndMenu();
+    }
     if (ImGui::BeginMenu("Window")) {
       //...
       ImGui::EndMenu();
@@ -125,7 +152,7 @@ void draw_menu_bar(const model::ViewModel& vm) {
 
     if (ImGui::BeginMenu("Help")) {
       if (ImGui::MenuItem("About")) {
-        addView(&draw_about);
+        addPopup("About", &draw_about);
       }
       ImGui::EndMenu();
     }

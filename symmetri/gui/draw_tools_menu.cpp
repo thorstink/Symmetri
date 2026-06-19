@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <map>
 #include <optional>
 #include <ranges>
 #include <string>

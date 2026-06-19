@@ -90,47 +90,40 @@ auto toXml(const symmetri::Petri::PTNet& net,
   return doc;
 }
 
-model::Computer writeGraphToDisk(const model::ViewModel& vm) {
-  return [&net = vm.net, &p_positions = vm.p_positions,
-          &t_positions = vm.t_positions, tokens = vm.tokens,
-          path = vm.active_file]() -> model::EditReducer {
-    if (std::filesystem::path(path).extension() != ".pnml") {
-      return [](model::EditState&& e) { return e; };
-    }
-    auto doc = toXml(net, p_positions, t_positions, tokens);
-    auto fut = addViewBlocking(&draw_confirmation_popup);
-    fut.get();
-    doc->SaveFile(path.c_str());
-    return [path](model::EditState&& e) {
-      e.active_file = path.c_str();
-      return e;
-    };
-  };
-}
-
-const auto no_move_draw_resize =
-    ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar |
-    ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize;
-
-void draw_confirmation_popup(const model::ViewModel&) {
-  ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-  ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
-  ImGui::Begin("About", NULL, no_move_draw_resize);
-  ImGui::Text("Are you sure you want to save?");
-
-  ImGui::SetNextItemShortcut(ImGuiKey_Enter);
-  if (ImGui::Button("Ok")) {
-    removeView(&draw_confirmation_popup);
-    rxdispatch::pushView([](model::ViewState& v, const model::EditState&) {
-      if (auto search = v.blockers.find(&draw_confirmation_popup);
-          search != v.blockers.end()) {
-        search->second.set_value();
-        v.blockers.erase(search);
-      }
-    });
+void requestSaveGraph(const model::ViewModel& vm) {
+  const std::string path = vm.active_file;
+  if (std::filesystem::path(path).extension() != ".pnml") {
+    return;
   }
-  ImGui::End();
+  // Serialize on the calling (UI) thread, where the net is not being mutated
+  // concurrently (capturing the live net into the background task would race
+  // with edit reducers). The finished, owned document is then all the popup /
+  // background write needs. toXml yields a unique_ptr that can't live in a
+  // std::function, so share it.
+  std::shared_ptr<tinyxml2::XMLDocument> doc =
+      toXml(vm.net, vm.p_positions, vm.t_positions, vm.tokens);
+
+  const std::string id = "Save graph";
+  addPopup(id, [doc, path, id](const model::ViewModel&) {
+    ImGui::TextUnformatted("Save the net to:");
+    ImGui::TextWrapped("%s", path.c_str());
+    ImGui::SetNextItemShortcut(ImGuiKey_Enter);
+    if (ImGui::Button("Save")) {
+      // The actual write happens off the UI thread; nothing blocks here.
+      rxdispatch::push(model::Computer{[doc, path]() -> model::Action {
+        doc->SaveFile(path.c_str());
+        return model::EditReducer{[path](model::EditState&& e) {
+          e.active_file = path.c_str();
+          return e;
+        }};
+      }});
+      removePopup(id);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel")) {
+      removePopup(id);
+    }
+  });
 }
 
 }  // namespace farbart

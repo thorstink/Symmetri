@@ -39,6 +39,7 @@ void clearSelection(ViewState& v) {
 
 ViewModel::ViewModel(const Model& m)
     : drawables(m.view.drawables),
+      popups(m.view.popups),
       show_grid(m.view.show_grid),
       scrolling(m.view.scrolling),
       context_menu_pos(m.view.context_menu_pos),
