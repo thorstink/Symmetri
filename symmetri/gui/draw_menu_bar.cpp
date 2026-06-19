@@ -52,9 +52,39 @@ void draw_menu_bar(const model::ViewModel& vm) {
     file_dialog.SetTypeFilters({".pnml", ".grml"});
   });
   file_dialog.Display();
+  static std::filesystem::path pending_load;
   if (file_dialog.HasSelected()) {
-    loadPetriNet(file_dialog.GetSelected());
+    const std::filesystem::path selected = file_dialog.GetSelected();
     file_dialog.ClearSelected();
+    if (vm.net.place.empty() && vm.net.transition.empty()) {
+      // Nothing to merge with: just load.
+      clearAndloadPetriNet(selected);
+    } else {
+      // Let the user choose how to combine with the existing net.
+      pending_load = selected;
+      ImGui::OpenPopup("Load net");
+    }
+  }
+  if (ImGui::BeginPopupModal("Load net", nullptr,
+                             ImGuiWindowFlags_AlwaysAutoResize)) {
+    ImGui::TextUnformatted(
+        "The current net is not empty.\n"
+        "Append the loaded net, or clear the current net and load?");
+    ImGui::Separator();
+    if (ImGui::Button("Append")) {
+      loadPetriNet(pending_load);
+      ImGui::CloseCurrentPopup();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Clear and load")) {
+      clearAndloadPetriNet(pending_load);
+      ImGui::CloseCurrentPopup();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel")) {
+      ImGui::CloseCurrentPopup();
+    }
+    ImGui::EndPopup();
   }
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {

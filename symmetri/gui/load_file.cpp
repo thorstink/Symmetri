@@ -115,3 +115,72 @@ void loadPetriNet(const std::filesystem::path& file) {
 
   resetNetView();  // convenient to view new graph
 }
+
+void clearAndloadPetriNet(const std::filesystem::path& file) {
+  // Loading clears the transient selection/highlight and refreshes the colour
+  // table (view), then installs the parsed net (edit).
+  rxdispatch::pushView([](model::ViewState& v, const model::EditState&) {
+    v.selected_arc_idxs.reset();
+    v.selected_node_idx.reset();
+    v.p_highlight.clear();
+    v.t_highlight.clear();
+    v.colors = symmetri::Token::getColors();
+  });
+  // NOTE: this edit reducer reads the filesystem, so it is not strictly
+  // replay-pure (a redo re-reads the file). Acceptable for now; revisit when
+  // wiring undo/redo by parsing at push-time and capturing the result.
+  rxdispatch::pushEdit([=](model::EditState&& e) {
+    e.active_file = file;
+    if (not e.active_file.has_value()) {
+      return e;
+    }
+    symmetri::Net net;
+    symmetri::Marking marking;
+    symmetri::PriorityTable pt;
+    std::map<std::string, model::Coordinate> positions;
+    const std::filesystem::path pn_file = e.active_file.value();
+    if (not std::filesystem::exists(pn_file)) {
+      throw std::runtime_error(
+          std::format("File {} does not exist\n", pn_file.c_str()));
+    }
+    if (pn_file.extension() == std::string(".pnml")) {
+      std::tie(net, marking) = symmetri::readPnml({pn_file});
+      positions = farbart::readPnmlPositions({pn_file});
+    } else {
+      std::tie(net, marking, pt) = symmetri::readGrml({pn_file});
+      positions = farbart::readGrmlPositions({pn_file});
+    }
+
+    std::tie(e.net.transition, e.net.place, e.net.store) =
+        symmetri::convert(net);
+
+    std::tie(e.net.input_n, e.net.output_n) =
+        symmetri::populateIoLookups(net, e.net.place);
+
+    e.net.priority = symmetri::createPriorityLookup(e.net.transition, pt);
+
+    e.net.p_to_ts_n = createReversePlaceToTransitionLookup(
+        e.net.place.size(), e.net.transition.size(), e.net.input_n);
+
+    e.t_positions.clear();
+    e.t_positions.reserve(e.net.transition.size());
+    for (const auto& transition : e.net.transition) {
+      e.t_positions.push_back(positions.at(transition));
+    }
+
+    e.p_positions.clear();
+    e.p_positions.reserve(e.net.place.size());
+    for (const auto& place : e.net.place) {
+      e.p_positions.push_back(positions.at(place));
+    }
+
+    e.net.p_to_ts_n = createReversePlaceToTransitionLookup(
+        e.net.place.size(), e.net.transition.size(), e.net.input_n);
+
+    e.active_file = file;
+
+    return e;
+  });
+
+  resetNetView();  // convenient to view new graph
+}
