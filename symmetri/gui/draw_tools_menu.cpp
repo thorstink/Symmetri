@@ -156,7 +156,7 @@ void draw_tools_menu(const model::ViewModel& vm) {
       }
       ImGui::Separator();
       //  if (is a node)
-      for (const auto& idx : vm.p_view) {
+      for (size_t idx = 0; idx < vm.net.place.size(); ++idx) {
         renderNodeEntry(model::Model::NodeType::Place, vm.net.place[idx], idx,
                         is_a_node_selected &&
                             model::Model::NodeType::Place == node_type &&
@@ -175,7 +175,7 @@ void draw_tools_menu(const model::ViewModel& vm) {
         memset(new_transition, 0, sizeof(new_transition));
       }
       ImGui::Separator();
-      for (const auto& idx : vm.t_view) {
+      for (size_t idx = 0; idx < vm.net.transition.size(); ++idx) {
         renderNodeEntry(
             model::Model::NodeType::Transition, vm.net.transition[idx], idx,
             is_a_node_selected && model::Model::NodeType::Place != node_type &&

@@ -79,9 +79,6 @@ void loadPetriNet(const std::filesystem::path& file) {
     }
 
     const auto old_place_count = e.net.place.size();
-    const auto old_transition_count = e.net.transition.size();
-    const auto new_place_count = new_net.place.size();
-    const auto new_transition_count = new_net.transition.size();
 
     // update lookups:
     for (auto& inputs : new_net.input_n) {
@@ -110,12 +107,6 @@ void loadPetriNet(const std::filesystem::path& file) {
 
     e.net.p_to_ts_n = createReversePlaceToTransitionLookup(
         e.net.place.size(), e.net.transition.size(), e.net.input_n);
-
-    e.t_view.resize(new_transition_count);
-    e.p_view.resize(new_place_count);
-
-    std::iota(e.t_view.begin(), e.t_view.end(), old_transition_count);
-    std::iota(e.p_view.begin(), e.p_view.end(), old_place_count);
 
     e.active_file = file;
 

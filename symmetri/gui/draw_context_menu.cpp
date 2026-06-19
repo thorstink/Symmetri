@@ -35,9 +35,10 @@ void draw_context_menu(const model::ViewModel& vm) {
               .c_str());
       ImGui::Separator();
       if (ImGui::BeginMenu("Add arc to...")) {
-        for (const auto& node_idx : node_type == model::Model::NodeType::Place
-                                        ? vm.t_view
-                                        : vm.p_view) {
+        const size_t node_count = node_type == model::Model::NodeType::Place
+                                      ? vm.net.transition.size()
+                                      : vm.net.place.size();
+        for (size_t node_idx = 0; node_idx < node_count; ++node_idx) {
           switch (node_type) {
             case model::Model::NodeType::Place:
               drawColorDropdownMenu(vm.net.transition[node_idx], vm.colors,

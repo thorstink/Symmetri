@@ -42,7 +42,6 @@ using Node = std::tuple<NodeType, size_t>;
 struct EditState {
   std::optional<std::filesystem::path> active_file;
   std::vector<Coordinate> t_positions, p_positions;
-  std::vector<size_t> t_view, p_view;
   std::vector<symmetri::AugmentedToken> tokens;
   symmetri::SmallLog log;
   symmetri::Petri::PTNet net;
@@ -98,7 +97,6 @@ struct ViewModel {
   std::optional<std::tuple<model::Model::NodeType, size_t>> selected_node_idx;
   const std::string active_file;
   const float zoom_factor;
-  const std::vector<size_t> t_view, p_view;
   const std::vector<size_t> t_highlight, p_highlight;
   const std::vector<Model::Arc> arc_highlight;
   const Coordinate node_size;

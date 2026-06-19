@@ -46,8 +46,6 @@ ViewModel::ViewModel(const Model& m)
       selected_node_idx(m.view.selected_node_idx),
       active_file(m.edit.active_file.value_or(std::filesystem::current_path())),
       zoom_factor(m.view.zoom_factor),
-      t_view(m.edit.t_view),
-      p_view(m.edit.p_view),
       t_highlight(m.view.t_highlight),
       p_highlight(m.view.p_highlight),
       arc_highlight(m.view.arc_highlight),
@@ -58,22 +56,21 @@ ViewModel::ViewModel(const Model& m)
       net(m.edit.net),
       t_positions(m.edit.t_positions),
       p_positions(m.edit.p_positions),
-      t_fireable(std::accumulate(
-          t_view.begin(), t_view.end(), std::vector<size_t>{},
-          [this](std::vector<size_t>&& t_fireable, size_t t_idx) {
-            if (canFire(net.input_n.at(t_idx), tokens) ||
-                net.input_n.at(t_idx).empty()) {
-              t_fireable.push_back(t_idx);
-            }
-            std::sort(t_fireable.begin(), t_fireable.end(),
-                      [&](const auto& a, const auto& b) {
-                        return net.priority[a] > net.priority[b] ||
-                               net.input_n.at(a).size() >
-                                   net.input_n.at(b).size();
-                      });
-
-            return std::move(t_fireable);
-          })),
+      t_fireable([this] {
+        std::vector<size_t> fireable;
+        for (size_t t_idx = 0; t_idx < net.transition.size(); ++t_idx) {
+          if (canFire(net.input_n.at(t_idx), tokens) ||
+              net.input_n.at(t_idx).empty()) {
+            fireable.push_back(t_idx);
+          }
+        }
+        std::sort(fireable.begin(), fireable.end(),
+                  [&](const auto& a, const auto& b) {
+                    return net.priority[a] > net.priority[b] ||
+                           net.input_n.at(a).size() > net.input_n.at(b).size();
+                  });
+        return fireable;
+      }()),
       arc_hovered(m.view.arc_hovered) {}
 
 }  // namespace model

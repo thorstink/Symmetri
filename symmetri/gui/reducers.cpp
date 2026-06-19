@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <iterator>
+#include <limits>
 #include <optional>
 #include <ranges>
 #include <tuple>
@@ -46,13 +47,12 @@ void showGrid(bool show_grid) {
   });
 }
 
-std::string viewContainsNameAlready(const std::vector<size_t>& view,
-                                    const std::vector<std::string>& names,
-                                    std::string&& name, size_t j = 0) {
-  for (size_t i : view) {
-    if (names[i] == name) {
-      return viewContainsNameAlready(
-          view, names, std::move(name) + "_" + std::to_string(j), j + 1);
+std::string uniqueName(const std::vector<std::string>& names,
+                       std::string&& name, size_t j = 0) {
+  for (const auto& existing : names) {
+    if (existing == name) {
+      return uniqueName(names, std::move(name) + "_" + std::to_string(j),
+                        j + 1);
     }
   }
   return name;
@@ -67,20 +67,16 @@ void setArcHoverState(bool is_an_arc_hovered) {
 void addNode(model::Model::NodeType node_type, ImVec2 pos) {
   rxdispatch::pushEdit([=](model::EditState&& e) {
     if (model::Model::NodeType::Place == node_type) {
-      e.net.place.push_back(
-          viewContainsNameAlready(e.p_view, e.net.place, "place"));
+      e.net.place.push_back(uniqueName(e.net.place, "place"));
       e.net.p_to_ts_n.push_back({});
       e.p_positions.push_back(model::Coordinate{pos.x, pos.y});
-      e.p_view.push_back(e.net.place.size() - 1);
     } else {
-      e.net.transition.push_back(
-          viewContainsNameAlready(e.t_view, e.net.transition, "transition"));
+      e.net.transition.push_back(uniqueName(e.net.transition, "transition"));
       e.net.output_n.push_back({});
       e.net.input_n.push_back({});
       e.net.priority.push_back(0);
       e.net.store.emplace_back(symmetri::identity<symmetri::DirectMutation>{});
       e.t_positions.push_back(model::Coordinate{pos.x, pos.y});
-      e.t_view.push_back(e.net.transition.size() - 1);
     }
     return e;
   });
@@ -90,34 +86,13 @@ void addNode(model::Model::NodeType node_type, ImVec2 pos) {
 void removeArc(model::Model::NodeType source_node_type, size_t transition_idx,
                size_t sub_idx) {
   rxdispatch::pushEdit([=](model::EditState&& e) {
-    // remove transition from view
-    e.t_view.erase(
-        std::remove(e.t_view.begin(), e.t_view.end(), transition_idx),
-        e.t_view.end());
-
-    const size_t new_idx = e.net.transition.size();
-    // add it again to the view...
-    e.net.transition.push_back(e.net.transition[transition_idx]);
-    e.net.store.emplace_back(symmetri::identity<symmetri::DirectMutation>{});
-    e.net.priority.push_back(e.net.priority[transition_idx]);
-    e.t_positions.push_back(e.t_positions[transition_idx]);
-    e.t_view.push_back(new_idx);
-
-    // now copy the arcs, except for the one we want to delete
-    if (source_node_type == model::Model::NodeType::Place) {
-      e.net.output_n.push_back(e.net.output_n[transition_idx]);
-      e.net.input_n.push_back({});
-      std::copy_if(e.net.input_n[transition_idx].begin(),
-                   e.net.input_n[transition_idx].end(),
-                   std::back_inserter(e.net.input_n.back()),
-                   [=, i = size_t(0)](auto) mutable { return i++ != sub_idx; });
-    } else {
-      e.net.input_n.push_back(e.net.input_n[transition_idx]);
-      e.net.output_n.push_back({});
-      std::copy_if(e.net.output_n[transition_idx].begin(),
-                   e.net.output_n[transition_idx].end(),
-                   std::back_inserter(e.net.output_n.back()),
-                   [=, i = size_t(0)](auto) mutable { return i++ != sub_idx; });
+    // Edit the transition's arc list directly: an input arc when the source is
+    // a place, otherwise an output arc.
+    auto& arcs = source_node_type == model::Model::NodeType::Place
+                     ? e.net.input_n[transition_idx]
+                     : e.net.output_n[transition_idx];
+    if (sub_idx < arcs.size()) {
+      arcs.erase(arcs.begin() + sub_idx);
     }
     return e;
   });
@@ -132,33 +107,20 @@ void addArc(model::Model::NodeType source_node_type, size_t source,
     const size_t transition_idx =
         model::Model::NodeType::Transition == source_node_type ? source
                                                                : target;
-    // remove transition from view
-    e.t_view.erase(
-        std::remove(e.t_view.begin(), e.t_view.end(), transition_idx),
-        e.t_view.end());
-    // add it again to the view...
-    const size_t new_transition_idx = e.net.transition.size();
-    e.net.transition.push_back(e.net.transition[transition_idx]);
-    e.net.output_n.push_back(e.net.output_n[transition_idx]);
-    e.net.input_n.push_back(e.net.input_n[transition_idx]);
-    e.net.priority.push_back(e.net.priority[transition_idx]);
-    e.net.store.emplace_back(symmetri::identity<symmetri::DirectMutation>{});
-
-    e.t_positions.push_back(e.t_positions[transition_idx]);
-    e.t_view.push_back(new_transition_idx);
-
-    // add the arc
-    auto& p_to_ts = e.net.p_to_ts_n[source];
     switch (source_node_type) {
-      case model::Model::NodeType::Place:
-        e.net.input_n[new_transition_idx].push_back({source, color});
+      case model::Model::NodeType::Place: {
+        // place -> transition: input arc, and record the place's fan-out.
+        e.net.input_n[transition_idx].push_back({source, color});
+        auto& p_to_ts = e.net.p_to_ts_n[source];
         if (std::find(p_to_ts.begin(), p_to_ts.end(), transition_idx) ==
             p_to_ts.end()) {
-          p_to_ts.push_back(new_transition_idx);
+          p_to_ts.push_back(transition_idx);
         }
         break;
+      }
       case model::Model::NodeType::Transition:
-        e.net.output_n[new_transition_idx].push_back({target, color});
+        // transition -> place: output arc.
+        e.net.output_n[transition_idx].push_back({target, color});
         break;
     };
     return e;
@@ -168,33 +130,62 @@ void addArc(model::Model::NodeType source_node_type, size_t source,
   });
 }
 
-void removePlace(size_t idx) {
+void removePlace(size_t place_idx) {
   rxdispatch::pushEdit([=](model::EditState&& e) {
-    // remove node from view
-    e.p_view.erase(std::remove(e.p_view.begin(), e.p_view.end(), idx),
-                   e.p_view.end());
-    // remove marking for this node
-    auto [b, en] = std::ranges::remove_if(
-        e.tokens, [idx](const symmetri::AugmentedToken at) {
-          return std::get<size_t>(at) == idx;
-        });
-    e.tokens.erase(b, en);
+    auto& net = e.net;
+    if (place_idx >= net.place.size()) return e;
+    // Erase the place and everything indexed by place.
+    net.place.erase(net.place.begin() + place_idx);
+    e.p_positions.erase(e.p_positions.begin() + place_idx);
+    net.p_to_ts_n.erase(net.p_to_ts_n.begin() + place_idx);
+    // Reindex everything that *references* a place id (marking + arcs): drop
+    // references to the removed place, shift higher ids down by one.
+    const auto reindex = [place_idx](auto& tokens) {
+      tokens.erase(std::remove_if(tokens.begin(), tokens.end(),
+                                  [place_idx](const auto& at) {
+                                    return std::get<size_t>(at) == place_idx;
+                                  }),
+                   tokens.end());
+      for (auto& at : tokens) {
+        auto& p = std::get<size_t>(at);
+        if (p > place_idx) --p;
+      }
+    };
+    reindex(e.tokens);                              // marking
+    for (auto& arcs : net.input_n) reindex(arcs);   // place -> transition
+    for (auto& arcs : net.output_n) reindex(arcs);  // transition -> place
     return e;
   });
-  rxdispatch::pushView([=](model::ViewState& v, const model::EditState&) {
-    std::erase(v.p_highlight, idx);
+  // Indices shifted underneath the view; clear selection (as on undo).
+  rxdispatch::pushView([](model::ViewState& v, const model::EditState&) {
+    model::clearSelection(v);
     std::erase(v.drawables, &draw_context_menu);
   });
 }
 
-void removeTransition(size_t idx) {
+void removeTransition(size_t t_idx) {
   rxdispatch::pushEdit([=](model::EditState&& e) {
-    e.t_view.erase(std::remove(e.t_view.begin(), e.t_view.end(), idx),
-                   e.t_view.end());
+    auto& net = e.net;
+    if (t_idx >= net.transition.size()) return e;
+    // Erase the transition and everything indexed by transition.
+    net.transition.erase(net.transition.begin() + t_idx);
+    e.t_positions.erase(e.t_positions.begin() + t_idx);
+    net.priority.erase(net.priority.begin() + t_idx);
+    net.store.erase(net.store.begin() + t_idx);
+    net.input_n.erase(net.input_n.begin() + t_idx);
+    net.output_n.erase(net.output_n.begin() + t_idx);
+    // p_to_ts_n stores transition ids: drop refs to the removed transition and
+    // shift higher ids down by one.
+    for (auto& ts : net.p_to_ts_n) {
+      ts.erase(std::remove(ts.begin(), ts.end(), t_idx), ts.end());
+      for (auto& t : ts) {
+        if (t > t_idx) --t;
+      }
+    }
     return e;
   });
-  rxdispatch::pushView([=](model::ViewState& v, const model::EditState&) {
-    std::erase(v.t_highlight, idx);
+  rxdispatch::pushView([](model::ViewState& v, const model::EditState&) {
+    model::clearSelection(v);
     std::erase(v.drawables, &draw_context_menu);
   });
 }
@@ -384,22 +375,17 @@ void zoomAbsolute(float f) {
 
 void resetNetView() {
   rxdispatch::pushView([](model::ViewState& v, const model::EditState& e) {
-    if (e.t_view.empty() || e.p_view.empty()) return;
-    const auto getMinX = [&](const auto& in_view, const auto& pos) {
-      return std::ranges::min(in_view | std::views::transform([&](auto idx) {
-                                return pos[idx].x;
-                              }));
+    if (e.t_positions.empty() && e.p_positions.empty()) return;
+    const auto minOf = [](const std::vector<model::Coordinate>& ps, auto proj) {
+      return ps.empty() ? std::numeric_limits<float>::max()
+                        : std::ranges::min(ps | std::views::transform(proj));
     };
-    const auto getMinY = [&](const auto& in_view, const auto& pos) {
-      return std::ranges::min(in_view | std::views::transform([&](auto idx) {
-                                return pos[idx].y;
-                              }));
-    };
-
-    float min_x = std::min(getMinX(e.t_view, e.t_positions),
-                           getMinX(e.p_view, e.p_positions));
-    float min_y = std::min(getMinY(e.t_view, e.t_positions),
-                           getMinY(e.p_view, e.p_positions));
+    const float min_x =
+        std::min(minOf(e.t_positions, [](auto c) { return c.x; }),
+                 minOf(e.p_positions, [](auto c) { return c.x; }));
+    const float min_y =
+        std::min(minOf(e.t_positions, [](auto c) { return c.y; }),
+                 minOf(e.p_positions, [](auto c) { return c.y; }));
 
     v.scrolling = {400 - min_x, 120 - min_y};
   });

@@ -27,7 +27,6 @@ namespace farbart {
 auto toXml(const symmetri::Petri::PTNet& net,
            const std::vector<model::Coordinate>& p_positions,
            const std::vector<model::Coordinate>& t_positions,
-           const std::vector<size_t>& p_view, const std::vector<size_t>& t_view,
            const std::vector<symmetri::AugmentedToken>& tokens) {
   using namespace tinyxml2;
   auto doc = std::make_unique<XMLDocument>();
@@ -37,7 +36,7 @@ auto toXml(const symmetri::Petri::PTNet& net,
   auto xmlnet = pnml->InsertFirstChild(doc->NewElement("net"));
   auto root = xmlnet->InsertFirstChild(doc->NewElement("page"));
 
-  for (auto idx : p_view) {
+  for (size_t idx = 0; idx < net.place.size(); ++idx) {
     XMLElement* child = doc->NewElement("place");
     XMLElement* s_child = doc->NewElement("graphics");
     XMLElement* s_s_child = doc->NewElement("position");
@@ -58,7 +57,7 @@ auto toXml(const symmetri::Petri::PTNet& net,
     root->InsertEndChild(child);
   }
 
-  for (auto idx : t_view) {
+  for (size_t idx = 0; idx < net.transition.size(); ++idx) {
     XMLElement* child = doc->NewElement("transition");
     XMLElement* s_child = doc->NewElement("graphics");
     XMLElement* s_s_child = doc->NewElement("position");
@@ -70,30 +69,22 @@ auto toXml(const symmetri::Petri::PTNet& net,
     root->InsertEndChild(child);
 
     for (const auto& token : net.input_n[idx]) {
-      if (std::find(p_view.cbegin(), p_view.cend(), std::get<size_t>(token)) !=
-          p_view.cend()) {
-        XMLElement* child = doc->NewElement("arc");
-        child->SetAttribute("source",
-                            net.place[std::get<size_t>(token)].c_str());
-        child->SetAttribute("target", net.transition[idx].c_str());
-        child->SetAttribute(
-            "color",
-            std::string(std::get<symmetri::Token>(token).toString()).c_str());
-        root->InsertEndChild(child);
-      }
+      XMLElement* child = doc->NewElement("arc");
+      child->SetAttribute("source", net.place[std::get<size_t>(token)].c_str());
+      child->SetAttribute("target", net.transition[idx].c_str());
+      child->SetAttribute(
+          "color",
+          std::string(std::get<symmetri::Token>(token).toString()).c_str());
+      root->InsertEndChild(child);
     }
     for (const auto& token : net.output_n[idx]) {
-      if (std::find(p_view.cbegin(), p_view.cend(), std::get<size_t>(token)) !=
-          p_view.cend()) {
-        XMLElement* child = doc->NewElement("arc");
-        child->SetAttribute("source", net.transition[idx].c_str());
-        child->SetAttribute("target",
-                            net.place[std::get<size_t>(token)].c_str());
-        child->SetAttribute(
-            "color",
-            std::string(std::get<symmetri::Token>(token).toString()).c_str());
-        root->InsertEndChild(child);
-      }
+      XMLElement* child = doc->NewElement("arc");
+      child->SetAttribute("source", net.transition[idx].c_str());
+      child->SetAttribute("target", net.place[std::get<size_t>(token)].c_str());
+      child->SetAttribute(
+          "color",
+          std::string(std::get<symmetri::Token>(token).toString()).c_str());
+      root->InsertEndChild(child);
     }
   }
   return doc;
@@ -101,12 +92,12 @@ auto toXml(const symmetri::Petri::PTNet& net,
 
 model::Computer writeGraphToDisk(const model::ViewModel& vm) {
   return [&net = vm.net, &p_positions = vm.p_positions,
-          &t_positions = vm.t_positions, p_view = vm.p_view, t_view = vm.t_view,
-          tokens = vm.tokens, path = vm.active_file]() -> model::EditReducer {
+          &t_positions = vm.t_positions, tokens = vm.tokens,
+          path = vm.active_file]() -> model::EditReducer {
     if (std::filesystem::path(path).extension() != ".pnml") {
       return [](model::EditState&& e) { return e; };
     }
-    auto doc = toXml(net, p_positions, t_positions, p_view, t_view, tokens);
+    auto doc = toXml(net, p_positions, t_positions, tokens);
     auto fut = addViewBlocking(&draw_confirmation_popup);
     fut.get();
     doc->SaveFile(path.c_str());

@@ -362,7 +362,7 @@ void draw_graph(const model::ViewModel& vm) {
   }
   // draw places & transitions
   bool an_arc_is_hovered = false;
-  for (auto&& idx : vm.t_view) {
+  for (size_t idx = 0; idx < vm.net.transition.size(); ++idx) {
     if (auto arc_is_hovered = draw_arcs(idx, vm)) {
       an_arc_is_hovered = arc_is_hovered;
     }
@@ -381,7 +381,7 @@ void draw_graph(const model::ViewModel& vm) {
     setArcHoverState(an_arc_is_hovered);
   }
 
-  for (auto idx : vm.p_view) {
+  for (size_t idx = 0; idx < vm.net.place.size(); ++idx) {
     const bool should_hightlight =
         std::find(vm.p_highlight.cbegin(), vm.p_highlight.cend(), idx) !=
         vm.p_highlight.cend();
