@@ -12,10 +12,6 @@ struct ViewModel;
 #define QUOTE(x) #x
 #define STR(x) QUOTE(x)
 
-const auto no_move_draw_resize =
-    ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar |
-    ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize;
-
 void AlignForWidth(float width, float alignment = 0.5f) {
   ImGuiStyle& style = ImGui::GetStyle();
   float avail = ImGui::GetContentRegionAvail().x;
@@ -23,11 +19,8 @@ void AlignForWidth(float width, float alignment = 0.5f) {
   if (off > 0.0f) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
 }
 
+// Body of the About popup; the window frame is provided by drawUi.
 void draw_about(const model::ViewModel&) {
-  ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-  ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
-  ImGui::Begin("About", NULL, no_move_draw_resize);
   ImGui::Text(
       "Farbart version %s\nA GUI for creating and simulating "
       "Symmetri-nets.",
@@ -43,7 +36,7 @@ void draw_about(const model::ViewModel&) {
   AlignForWidth(width);
 
   if (ImGui::Button("Ok")) {
-    removeView(&draw_about);
+    removePopup("About");
   }
   ImGui::SameLine();
   ImGui::InvisibleButton("Fixed", ImVec2(100.0f, 1.0f));  // Fixed size
@@ -56,6 +49,4 @@ void draw_about(const model::ViewModel&) {
         STR(VERSION));
     ImGui::LogFinish();
   }
-
-  ImGui::End();
 }

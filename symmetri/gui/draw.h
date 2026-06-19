@@ -24,4 +24,25 @@ inline void drawUi(const std::shared_ptr<model::ViewModel>& vm) {
     drawable(*vm);
   }
   ImGui::End();
+
+  // Active popups are first-class view state (ViewState::popups). Each renders
+  // as a centered, auto-resizing window framed here; its `draw` thunk fills the
+  // body (and may dispatch). Closing via the window 'x' removes it by id.
+  for (const auto& popup : vm->popups) {
+    bool open = true;
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(),
+                            ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (ImGui::Begin(popup.id.c_str(), &open,
+                     ImGuiWindowFlags_AlwaysAutoResize)) {
+      popup.draw(*vm);
+    }
+    ImGui::End();
+    if (!open) {
+      rxdispatch::pushView(
+          [id = popup.id](model::ViewState& v, const model::EditState&) {
+            std::erase_if(v.popups,
+                          [&](const model::Popup& q) { return q.id == id; });
+          });
+    }
+  }
 }

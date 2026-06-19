@@ -2,16 +2,11 @@
 
 #include <stddef.h>
 
-#include <future>
-#include <memory>
 #include <string>
-#include <type_traits>
-#include <utility>
 
 #include "gui/model.h"
 #include "imgui.h"
 #include "petri.h"
-#include "rxdispatch.h"
 #include "symmetri/colors.hpp"
 
 void moveView(const ImVec2& d);
@@ -83,25 +78,8 @@ void updateTransitionOutputColor(size_t transition_idx, symmetri::Token color);
 void zoomRelative(float);
 void zoomAbsolute(float);
 
-auto addViewBlocking(auto&& v) {
-  auto accumulate_promise = std::make_shared<std::promise<void>>();
-  auto fut = accumulate_promise->get_future();
-  rxdispatch::pushView([q = std::move(accumulate_promise), v](
-                           model::ViewState& vs, const model::EditState&) {
-    vs.drawables.push_back(v);
-    vs.blockers.emplace(v, std::move(*q));
-  });
-  return fut;
-};
-
-void addView(auto&& v) {
-  rxdispatch::pushView([=](model::ViewState& vs, const model::EditState&) {
-    vs.drawables.push_back(std::move(v));
-  });
-};
-
-void removeView(auto&& v) {
-  rxdispatch::pushView([=](model::ViewState& vs, const model::EditState&) {
-    std::erase(vs.drawables, std::move(v));
-  });
-};
+// Open a named popup with a render thunk (deduped by id); close it by id. The
+// thunk renders the popup body (a window framed by drawUi) and may dispatch.
+void addPopup(std::string id,
+              std::function<void(const model::ViewModel&)> draw);
+void removePopup(std::string id);

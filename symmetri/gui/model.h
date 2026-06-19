@@ -4,8 +4,6 @@
 
 #include <filesystem>
 #include <functional>
-#include <future>
-#include <map>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -21,6 +19,17 @@ namespace model {
 struct ViewModel;
 
 using Drawable = void (*)(const ViewModel&);
+
+// A named, data-carrying popup/dialog. `id` gives it identity (used as the
+// window title and to open/close/dedup it by name) while `draw` renders the
+// popup body and may dispatch reducers. A bare function pointer can't carry
+// data and a std::function can't be compared by identity; pairing an id string
+// with a thunk gives both. Popups live in ViewState (transient, never
+// snapshotted), so capturing data in `draw` is fine.
+struct Popup {
+  std::string id;
+  std::function<void(const ViewModel&)> draw;
+};
 
 struct Coordinate {
   float x, y;
@@ -57,7 +66,7 @@ struct ViewState {
   std::optional<Arc> selected_arc_idxs;
   std::optional<Node> selected_node_idx;
   float zoom_factor = 1.0f;
-  std::map<Drawable, std::promise<void>> blockers;
+  std::vector<Popup> popups;
   std::vector<size_t> t_highlight, p_highlight;
   std::vector<Arc> arc_highlight;
   bool arc_hovered = false;
@@ -85,6 +94,7 @@ struct Model {
 
 struct ViewModel {
   const std::vector<Drawable> drawables;
+  const std::vector<Popup>& popups;
   const float kMenuBarHeight = 20;
   const float kMenuWidth = 350;
   const bool show_grid;
@@ -124,8 +134,6 @@ struct ViewModel {
 //    and may read (but not write) the current EditState.
 using EditReducer = std::function<EditState(EditState&&)>;
 using ViewReducer = std::function<void(ViewState&, const EditState&)>;
-// Async producer of an edit reducer (runs off the UI thread, e.g. file I/O).
-using Computer = std::function<EditReducer(void)>;
 
 // Reset every ViewState field that indexes into EditState (selection and
 // highlights). Must be called whenever EditState changes structurally beneath
@@ -138,6 +146,12 @@ struct Redo {};
 
 // The resolved unit of work applied at the reduce step.
 using Action = std::variant<EditReducer, ViewReducer, Undo, Redo>;
+
+// A deferred computation run off the UI thread (e.g. file I/O, or any slow
+// background task). Its result Action is dispatched back through the reducer
+// pipeline when it finishes, so a background task can yield either an edit or a
+// view reducer without blocking the view while it runs.
+using Computer = std::function<Action(void)>;
 
 // Undo history. Every edit reducer is appended to `log`; the cursor is the
 // number of reducers currently applied. Undo/redo move the cursor and rebuild

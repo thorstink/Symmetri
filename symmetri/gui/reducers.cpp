@@ -416,3 +416,23 @@ void updateTransitionOutputColor(size_t transition_idx, symmetri::Token color) {
     return e;
   });
 }
+
+void addPopup(std::string id,
+              std::function<void(const model::ViewModel&)> draw) {
+  rxdispatch::pushView(
+      [p = model::Popup{std::move(id), std::move(draw)}](
+          model::ViewState& v, const model::EditState&) mutable {
+        // De-dup by id, then (re)add so opening an already-open popup is a
+        // no-op.
+        std::erase_if(v.popups,
+                      [&](const model::Popup& q) { return q.id == p.id; });
+        v.popups.push_back(std::move(p));
+      });
+}
+
+void removePopup(std::string id) {
+  rxdispatch::pushView([id = std::move(id)](model::ViewState& v,
+                                            const model::EditState&) {
+    std::erase_if(v.popups, [&](const model::Popup& q) { return q.id == id; });
+  });
+}

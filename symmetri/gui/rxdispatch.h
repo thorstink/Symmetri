@@ -48,9 +48,10 @@ struct VisitPackage {
         .as_dynamic();
   }
   auto operator()(model::Computer f) {
+    // Run the computation on the thread pool; its resulting Action flows back
+    // through the pipeline (so the UI is never blocked while it runs).
     return (rpp::source::just(scheduler, std::move(f)) |
-            rpp::operators::map(
-                [](model::Computer f) { return model::Action{f()}; }))
+            rpp::operators::map([](model::Computer f) { return f(); }))
         .as_dynamic();
   }
   auto operator()(model::Undo u) {
