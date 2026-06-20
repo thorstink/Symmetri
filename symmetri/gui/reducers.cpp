@@ -372,6 +372,19 @@ void resetSelectedTargetNode() {
   });
 }
 
+void deleteSelected(const std::vector<size_t>& t_highlight,
+                    const std::vector<size_t>& p_highlight) {
+  // Copy and sort descending so each reducer sees a valid index into the
+  // progressively-shrinking net. Transitions first — their removal does not
+  // shift place indices, so place highlights stay valid for the second pass.
+  auto ts = t_highlight;
+  auto ps = p_highlight;
+  std::sort(ts.rbegin(), ts.rend());
+  std::sort(ps.rbegin(), ps.rend());
+  for (size_t idx : ts) removeTransition(idx);
+  for (size_t idx : ps) removePlace(idx);
+}
+
 void zoomRelative(float f) {
   rxdispatch::pushView([=](model::ViewState& v, const model::EditState&) {
     v.zoom_factor += f;

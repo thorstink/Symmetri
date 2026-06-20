@@ -4,18 +4,23 @@
 
 #include "imgui.h"
 #include "model.h"
+#include "reducers.h"
 #include "rxdispatch.h"
 
 inline void drawUi(const std::shared_ptr<model::ViewModel>& vm) {
-  // Global undo/redo: Cmd-Z / Cmd-Shift-Z on macOS, Ctrl-Z / Ctrl-Shift-Z
-  // elsewhere (ImGuiMod_Shortcut). Skipped while a text field wants the keys so
-  // it keeps its own in-field undo.
+  // Global shortcuts — skipped while a text field owns the keyboard.
   if (!ImGui::GetIO().WantTextInput) {
+    // Undo/redo: Cmd-Z / Cmd-Shift-Z (macOS) or Ctrl-Z / Ctrl-Shift-Z.
     if (ImGui::IsKeyChordPressed(ImGuiMod_Shortcut | ImGuiMod_Shift |
                                  ImGuiKey_Z)) {
       rxdispatch::pushRedo();
     } else if (ImGui::IsKeyChordPressed(ImGuiMod_Shortcut | ImGuiKey_Z)) {
       rxdispatch::pushUndo();
+    }
+
+    // Backspace: delete all highlighted nodes.
+    if (ImGui::IsKeyPressed(ImGuiKey_Backspace)) {
+      deleteSelected(vm->t_highlight, vm->p_highlight);
     }
   }
 

@@ -76,6 +76,9 @@ void tryFire(size_t transition_idx);
 
 void updateTransitionOutputColor(size_t transition_idx, symmetri::Token color);
 
+void deleteSelected(const std::vector<size_t>& t_highlight,
+                    const std::vector<size_t>& p_highlight);
+
 void zoomRelative(float);
 void zoomAbsolute(float);
 
