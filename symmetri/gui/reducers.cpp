@@ -30,13 +30,17 @@ void moveView(const ImVec2& d) {
   });
 }
 
-void moveNode(model::Model::NodeType node_type, size_t idx, const ImVec2& d) {
+void moveNode(const std::vector<size_t>& t_idxs,
+              const std::vector<size_t>& p_idxs, const ImVec2& d) {
   // `d` is a world-space delta (the caller divides the screen delta by the
   // zoom factor); edit reducers must not read view state such as the zoom.
   rxdispatch::pushEdit([=](model::EditState&& e) {
-    (model::Model::NodeType::Place == node_type ? e.p_positions[idx]
-                                                : e.t_positions[idx]) +=
-        model::Coordinate{d.x, d.y};
+    for (auto idx : t_idxs) {
+      e.t_positions[idx] += model::Coordinate{d.x, d.y};
+    }
+    for (auto idx : p_idxs) {
+      e.p_positions[idx] += model::Coordinate{d.x, d.y};
+    }
     return e;
   });
 }
@@ -268,8 +272,13 @@ void setSelectedNode(model::Model::NodeType node_type, size_t idx) {
 
 void addHighlightNode(model::Model::NodeType node_type, size_t idx) {
   rxdispatch::pushView([=](model::ViewState& v, const model::EditState&) {
-    (node_type == model::Model::NodeType::Place ? v.p_highlight : v.t_highlight)
-        .push_back(idx);
+    auto& selection =
+        (node_type == model::Model::NodeType::Place ? v.p_highlight
+                                                    : v.t_highlight);
+    if (std::find(selection.cbegin(), selection.cend(), idx) ==
+        selection.cend()) {
+      selection.push_back(idx);
+    }
   });
 };
 
