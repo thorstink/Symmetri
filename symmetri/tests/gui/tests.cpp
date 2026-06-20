@@ -861,3 +861,68 @@ TEST_CASE("clearSelection - resets all view selection state") {
   CHECK(v.p_highlight.empty());
   CHECK(v.arc_highlight.empty());
 }
+
+// ===========================================================================
+// deleteSelected
+// ===========================================================================
+
+TEST_CASE("deleteSelected - removes transitions in descending index order") {
+  // Highlights {0, 2} are NOT already sorted descending.  deleteSelected must
+  // sort them so t2 is removed first (net shrinks from the right), keeping t0's
+  // index valid when it is removed next.  t1 (index 1, not highlighted) must
+  // survive and end up as the only transition.
+  clearQueue();
+  States s = makeNet(0, 3);  // t0, t1, t2
+
+  deleteSelected({0, 2}, {});
+  s = drain(std::move(s));
+
+  REQUIRE(s.edit.net.transition.size() == 1);
+  CHECK(s.edit.net.transition[0] == "t1");
+  CHECK(s.edit.t_positions.size() == 1);
+}
+
+TEST_CASE("deleteSelected - removes places in descending index order") {
+  // Same invariant on the place side: {0, 2} sorted descending → p2 removed
+  // first so p0's index is still valid on the second pass.  p1 must survive.
+  clearQueue();
+  States s = makeNet(3, 0);  // p0, p1, p2
+
+  deleteSelected({}, {0, 2});
+  s = drain(std::move(s));
+
+  REQUIRE(s.edit.net.place.size() == 1);
+  CHECK(s.edit.net.place[0] == "p1");
+  CHECK(s.edit.p_positions.size() == 1);
+}
+
+TEST_CASE("deleteSelected - removes transitions before places") {
+  // Transition removal erases rows from input_n/output_n but never touches
+  // net.place or p_positions, so place indices in p_highlight remain valid
+  // throughout the transition-removal pass.  This test documents that
+  // invariant: with t1 and p1 both highlighted, the final net contains exactly
+  // t0 and p0.
+  clearQueue();
+  States s = makeNet(2, 2);  // p0, p1; t0, t1
+
+  deleteSelected({1}, {1});
+  s = drain(std::move(s));
+
+  REQUIRE(s.edit.net.transition.size() == 1);
+  CHECK(s.edit.net.transition[0] == "t0");
+  REQUIRE(s.edit.net.place.size() == 1);
+  CHECK(s.edit.net.place[0] == "p0");
+}
+
+TEST_CASE("deleteSelected - no-op on empty selection") {
+  clearQueue();
+  States s = makeNet(2, 2);
+
+  deleteSelected({}, {});
+  // Nothing should be enqueued.
+  rxdispatch::Update u;
+  CHECK(!rxdispatch::getQueue().try_dequeue(u));
+  // Net is unchanged.
+  CHECK(s.edit.net.transition.size() == 2);
+  CHECK(s.edit.net.place.size() == 2);
+}
