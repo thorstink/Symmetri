@@ -77,6 +77,10 @@ add_executable(Farbart ${ALL_SOURCES})
 target_link_libraries(Farbart static_symmetri ${EXTRA_LIBS})
 target_compile_definitions(Farbart PRIVATE VERSION=${FOO})
 
+if(BUILD_TESTING)
+  add_subdirectory(../tests/gui farbart_tests)
+endif()
+
 if (APPLE)
   add_executable(generate_icon generate_icon.cpp  ../submodules/tinyxml2/tinyxml2.cpp)
   add_dependencies(generate_icon Farbart)
