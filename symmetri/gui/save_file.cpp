@@ -1,16 +1,8 @@
 #include "save_file.h"
 
-#include <stddef.h>
-
-#include <algorithm>
 #include <filesystem>
-#include <future>
-#include <map>
 #include <memory>
-#include <optional>
 #include <string>
-#include <string_view>
-#include <tuple>
 #include <vector>
 
 #include "gui/model.h"
@@ -18,7 +10,6 @@
 #include "imgui.h"
 #include "petri.h"
 #include "reducers.h"
-#include "small_vector.hpp"
 #include "symmetri/colors.hpp"
 #include "tinyxml2/tinyxml2.h"
 
@@ -91,10 +82,28 @@ auto toXml(const model::Net& net,
 }
 
 void requestSaveGraph(const model::ViewModel& vm) {
-  const std::string path = vm.active_file;
-  if (std::filesystem::path(path).extension() != ".pnml") {
+  namespace fs = std::filesystem;
+  const fs::path original(vm.active_file);
+  const std::string ext = original.extension().string();
+
+  // Determine the target path: .pnml saves in place; .grml is re-saved as .pnml
+  // (the editor's canonical format). Any other extension is a no-op.
+  fs::path save_path;
+  if (ext == ".pnml") {
+    save_path = original;
+  } else if (ext == ".grml") {
+    save_path = original.parent_path() / (original.stem().string() + ".pnml");
+  } else {
     return;
   }
+
+  // A new (not yet existing) file is fine as long as its parent directory
+  // exists.
+  if (!fs::is_regular_file(save_path)) {
+    const fs::path parent = save_path.parent_path();
+    if (!parent.empty() && !fs::is_directory(parent)) return;
+  }
+
   // Serialize on the calling (UI) thread, where the net is not being mutated
   // concurrently (capturing the live net into the background task would race
   // with edit reducers). The finished, owned document is then all the popup /
@@ -103,17 +112,18 @@ void requestSaveGraph(const model::ViewModel& vm) {
   std::shared_ptr<tinyxml2::XMLDocument> doc =
       toXml(vm.net, vm.p_positions, vm.t_positions, vm.tokens);
 
+  const std::string path_str = save_path.string();
   const std::string id = "Save graph";
-  addPopup(id, [doc, path, id](const model::ViewModel&) {
+  addPopup(id, [doc, path_str, id](const model::ViewModel&) {
     ImGui::TextUnformatted("Save the net to:");
-    ImGui::TextWrapped("%s", path.c_str());
+    ImGui::TextWrapped("%s", path_str.c_str());
     ImGui::SetNextItemShortcut(ImGuiKey_Enter);
     if (ImGui::Button("Save")) {
       // The actual write happens off the UI thread; nothing blocks here.
-      rxdispatch::push(model::Computer{[doc, path]() -> model::Action {
-        doc->SaveFile(path.c_str());
-        return model::EditReducer{[path](model::EditState&& e) {
-          e.active_file = path.c_str();
+      rxdispatch::push(model::Computer{[doc, path_str]() -> model::Action {
+        doc->SaveFile(path_str.c_str());
+        return model::EditReducer{[path_str](model::EditState&& e) {
+          e.active_file = std::filesystem::path(path_str);
           return e;
         }};
       }});
