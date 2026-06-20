@@ -16,6 +16,7 @@
 #include "gui/model.h"
 #include "imgui.h"
 #include "imgui_internal.h"
+#include "path_autocomplete.h"
 #include "petri.h"
 #include "reducers.h"
 #include "shared.h"
@@ -313,25 +314,7 @@ void draw_graph(const model::ViewModel& vm) {
     moveView(ImGui::GetIO().MouseDelta);
   }
 
-  static char view_name[256] = "";
-  strcpy(view_name, vm.active_file.c_str());
-  ImGui::PushItemWidth(-1);
-
-  const std::filesystem::path fs_path(vm.active_file);
-  const bool is_pnml = fs_path.extension() == ".pnml";
-  const bool file_exists = std::filesystem::is_regular_file(fs_path);
-  if (not is_pnml) {
-    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255));
-  } else if (not file_exists) {
-    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 255, 0, 255));
-  }
-  ImGui::InputText("##filepath", view_name, 256,
-                   ImGuiInputTextFlags_CallbackEdit, &updateActiveFile);
-  if (not is_pnml or not file_exists) {
-    ImGui::PopStyleColor();
-  }
-
-  ImGui::PopItemWidth();
+  farbart::drawPathInput(vm);
 
   const auto io = ImGui::GetIO();
   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
