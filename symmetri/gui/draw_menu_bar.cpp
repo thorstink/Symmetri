@@ -12,6 +12,7 @@
 // clang-format on
 #include "draw_about.h"
 #include "load_file.h"
+#include "path_autocomplete.h"
 #include "reducers.h"
 #include "rxdispatch.h"
 #include "save_file.h"
@@ -64,35 +65,8 @@ void draw_menu_bar(const model::ViewModel& vm) {
   });
   file_dialog.Display();
   if (file_dialog.HasSelected()) {
-    const std::filesystem::path selected = file_dialog.GetSelected();
+    farbart::requestLoad(vm, file_dialog.GetSelected());
     file_dialog.ClearSelected();
-    if (vm.net.place.empty() && vm.net.transition.empty()) {
-      // Nothing to merge with: just load.
-      clearAndloadPetriNet(selected);
-    } else {
-      // Let the user choose how to combine with the existing net. The selected
-      // path rides along in the popup's draw thunk (no static needed).
-      const std::string id = "Load net";
-      addPopup(id, [selected, id](const model::ViewModel&) {
-        ImGui::TextUnformatted(
-            "The current net is not empty.\n"
-            "Append the loaded net, or clear the current net and load?");
-        ImGui::Separator();
-        if (ImGui::Button("Append")) {
-          loadPetriNet(selected);
-          removePopup(id);
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Clear and load")) {
-          clearAndloadPetriNet(selected);
-          removePopup(id);
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel")) {
-          removePopup(id);
-        }
-      });
-    }
   }
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {

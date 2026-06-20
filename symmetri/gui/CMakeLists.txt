@@ -42,6 +42,7 @@ set(APP_SOURCES
     position_parsers.cpp
     save_file.cpp
     shared.cpp
+    path_autocomplete.cpp
 )
 
 set(IMGUI_SOURCES
