@@ -225,11 +225,6 @@ void draw_nodes(model::Model::NodeType node_type, size_t idx,
   if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
     (ImGui::IsKeyDown(ImGuiKey_LeftShift) ? addHighlightNode : setSelectedNode)(
         node_type, idx);
-  } else if (ImGui::IsItemActive() &&
-             ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-    // Pass a world-space delta: the edit reducer that moves the node must not
-    // read view state (zoom) so it stays replayable for undo.
-    moveNode(node_type, idx, ImGui::GetIO().MouseDelta / zoom_factor);
   }
 
   const int opacity = 255;
@@ -376,6 +371,12 @@ void draw_graph(const model::ViewModel& vm) {
                vm.tokens, vm.zoom_factor);
   }
 
+  if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+    // Pass a world-space delta: the edit reducer that moves the node must not
+    // read view state (zoom) so it stays replayable for undo.
+    moveNode(vm.t_highlight, vm.p_highlight,
+             ImGui::GetIO().MouseDelta / vm.zoom_factor);
+  }
   ImGui::EndChild();
   ImGui::PopStyleVar();
   ImGui::PopStyleVar();

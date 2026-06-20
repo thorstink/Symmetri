@@ -11,7 +11,8 @@
 
 void moveView(const ImVec2& d);
 
-void moveNode(model::Model::NodeType node_type, size_t idx, const ImVec2& d);
+void moveNode(const std::vector<size_t>& t_idxs,
+              const std::vector<size_t>& p_idxs, const ImVec2& d);
 
 void addNode(model::Model::NodeType node_type, ImVec2 pos);
 
