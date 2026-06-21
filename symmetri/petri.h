@@ -2,13 +2,24 @@
 
 /** @file petri.h */
 
+#include <stddef.h>
+#include <stdint.h>
+
+#include <algorithm>
+#include <atomic>
+#include <chrono>
 #include <functional>
+#include <memory>
 #include <optional>
+#include <string>
 #include <tuple>
+#include <utility>
+#include <vector>
 
 #include "externals/blockingconcurrentqueue.h"
 #include "externals/small_vector.hpp"
 #include "symmetri/callback.h"
+#include "symmetri/colors.hpp"
 #include "symmetri/tasks.h"
 #include "symmetri/types.h"
 

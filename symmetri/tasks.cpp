@@ -1,5 +1,9 @@
 #include "symmetri/tasks.h"
 
+#include <algorithm>
+#include <iterator>
+#include <utility>
+
 #include "externals/blockingconcurrentqueue.h"
 
 namespace symmetri {

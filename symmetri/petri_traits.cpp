@@ -1,8 +1,20 @@
+#include <atomic>
+#include <chrono>
+#include <functional>
 #include <future>
+#include <memory>
+#include <optional>
+#include <thread>
+#include <vector>
 
+#include "externals/blockingconcurrentqueue.h"
 #include "petri.h"
+#include "symmetri/callback.h"
+#include "symmetri/colors.hpp"
 #include "symmetri/symmetri.h"
+#include "symmetri/types.h"
 #include "symmetri/utilities.hpp"
+
 namespace symmetri {
 
 /**

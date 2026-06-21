@@ -1,24 +1,36 @@
 #include "load_file.h"
 
 #include <algorithm>
+#include <filesystem>
+#include <iterator>
 #include <map>
+#include <memory>
 #include <numeric>
-#include <ranges>
+#include <optional>
+#include <set>
+#include <string>
+#include <string_view>
+#include <tuple>
+#include <utility>
 #include <vector>
 
+#include "gui/model.h"
 #include "petri.h"
 #include "position_parsers.h"
 #include "reducers.h"
 #include "rxdispatch.h"
+#include "small_vector.hpp"
+#include "symmetri/colors.hpp"
 #include "symmetri/parsers.h"
-#include "symmetri/symmetri.h"
+#include "symmetri/types.h"
 
 void loadPetriNet(const std::filesystem::path& file) {
   rxdispatch::push([=](model::Model&& model) {
     auto& m = *model.data;
     m.selected_arc_idxs.reset();
     m.selected_node_idx.reset();
-    m.selected_target_node_idx.reset();
+    m.p_highlight.clear();
+    m.t_highlight.clear();
     m.active_file = file;
     if (not m.active_file.has_value()) {
       return model;
@@ -28,6 +40,10 @@ void loadPetriNet(const std::filesystem::path& file) {
     symmetri::PriorityTable pt;
     std::map<std::string, model::Coordinate> positions;
     const std::filesystem::path pn_file = m.active_file.value();
+    if (not std::filesystem::exists(pn_file)) {
+      throw std::runtime_error(
+          std::format("File {} does not exist\n", pn_file.c_str()));
+    }
     if (pn_file.extension() == std::string(".pnml")) {
       std::tie(net, marking) = symmetri::readPnml({pn_file});
       positions = farbart::readPnmlPositions({pn_file});
@@ -74,6 +90,12 @@ void loadPetriNet(const std::filesystem::path& file) {
 
     m.colors = symmetri::Token::getColors();
 
+    m.tokens.clear();
+    for (const auto& [p, c] : marking) {
+      m.tokens.push_back(
+          {symmetri::toIndex(new_net.place, p) + old_place_count, c});
+    }
+
     std::ranges::move(new_net.priority, std::back_inserter(m.net.priority));
     std::ranges::move(new_net.transition, std::back_inserter(m.net.transition));
     std::ranges::move(new_net.place, std::back_inserter(m.net.place));
@@ -83,12 +105,6 @@ void loadPetriNet(const std::filesystem::path& file) {
 
     m.net.p_to_ts_n = createReversePlaceToTransitionLookup(
         m.net.place.size(), m.net.transition.size(), m.net.input_n);
-
-    m.tokens.clear();
-    for (const auto& [p, c] : marking) {
-      m.tokens.push_back(
-          {symmetri::toIndex(new_net.place, p) + old_place_count, c});
-    }
 
     m.t_view.resize(new_transition_count);
     m.p_view.resize(new_place_count);

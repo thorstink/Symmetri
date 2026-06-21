@@ -2,7 +2,12 @@
 
 /** @file symmetri.h */
 
+#include <functional>
+#include <memory>
 #include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "symmetri/callback.h"
 #include "symmetri/tasks.h"
@@ -17,6 +22,7 @@ namespace symmetri {
  *
  */
 struct Petri;
+class Token;
 
 /**
  * @brief PetriNet exposes the possible constructors to create PetriNets. It
@@ -96,7 +102,8 @@ class PetriNet final {
     }
     s.emplace_back(identity<T>{}, std::forward<Args>(args)...);
     *getCallbackItr(transition) = std::move(s.back());
-    s.pop_back();  }
+    s.pop_back();
+  }
 
   /**
    * @brief Get the Marking object. This function is thread-safe and be called
@@ -107,8 +114,8 @@ class PetriNet final {
   Marking getMarking() const noexcept;
 
   /**
-   * @brief Get the list of active transitions. This function is thread-safe and be called
-   * during PetriNet execution.
+   * @brief Get the list of active transitions. This function is thread-safe and
+   * be called during PetriNet execution.
    *
    */
   std::vector<Transition> getActiveTransitions() const noexcept;

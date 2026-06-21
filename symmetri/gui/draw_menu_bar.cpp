@@ -1,6 +1,9 @@
-#include "menu_bar.h"
+#include "draw_menu_bar.h"
 
 #include <mutex>
+#include <string>
+#include <vector>
+
 // clang-format off
 #include "imgui.h"
 #include "imfilebrowser.h"
@@ -9,11 +12,40 @@
 #include "load_file.h"
 #include "reducers.h"
 #include "rxdispatch.h"
-#include "symmetri/parsers.h"
 #include "write_graph_to_disk.h"
+
+namespace model {
+struct ViewModel;
+}  // namespace model
+
 ImGui::FileBrowser file_dialog = ImGui::FileBrowser();
 
-void draw_menu_bar(const model::ViewModel &vm) {
+void shortcutString(std::string_view text) {
+  ImGui::SameLine();
+  ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 255, 0, 255));
+  ImGui::Text("%s", text.data());
+  ImGui::PopStyleColor();
+}
+void draw_menu_bar(const model::ViewModel& vm) {
+  if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Minus,
+                      ImGuiInputFlags_RouteAlways)) {
+    zoomRelative(-0.1f);
+  }
+  if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Equal,
+                      ImGuiInputFlags_RouteAlways)) {
+    zoomRelative(0.1f);
+  }
+
+  if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_O,
+                      ImGuiInputFlags_RouteAlways)) {
+    file_dialog.Open();
+  }
+
+  if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S,
+                      ImGuiInputFlags_RouteAlways)) {
+    rxdispatch::push(farbart::writeGraphToDisk(vm));
+  }
+
   static std::once_flag flag;
   std::call_once(flag, [&] {
     file_dialog.SetTitle("Open a Symmetri-net");
@@ -34,19 +66,26 @@ void draw_menu_bar(const model::ViewModel &vm) {
       if (ImGui::MenuItem("Save")) {
         rxdispatch::push(farbart::writeGraphToDisk(vm));
       }
-      // Exit...
       ImGui::EndMenu();
     }
 
     if (ImGui::BeginMenu("Edit")) {
-      //...
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("View")) {
-      //...
       if (ImGui::MenuItem("Reset view")) {
         resetNetView();
       }
+
+      if (ImGui::MenuItem("Zoom In")) {
+        zoomRelative(0.1f);
+      }
+      shortcutString("cmd +");
+      if (ImGui::MenuItem("Zoom Out")) {
+        zoomRelative(-0.1f);
+      }
+      shortcutString("cmd -");
+
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Window")) {
@@ -63,7 +102,4 @@ void draw_menu_bar(const model::ViewModel &vm) {
 
     ImGui::EndMainMenuBar();
   }
-  ImGui::SetNextWindowSize(
-      ImVec2(ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y));
-  ImGui::SetNextWindowPos(ImVec2(0, 20));  // fix this
 }

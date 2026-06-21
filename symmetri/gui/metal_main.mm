@@ -31,6 +31,9 @@ int main(int, char **) {
 
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
+  // io.Fonts->AddFontFromFileTTF(
+  //     "/Users/thomashorstink/Projects/Symmetri/symmetri/gui/Manrope-VariableFont_wght.ttf",
+  //     18.0f);  // Optionally load another font
 
   // Setup style
   ImGui::StyleColorsDark();
@@ -63,8 +66,9 @@ int main(int, char **) {
   MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor new];
 
   auto root_subscription = go();
-  loadPetriNet("/Users/thomashorstink/Downloads/Inspection.grml");
-
+  loadPetriNet("/Users/thomashorstink/catkin_ws/src/isaac/ros_onboard/inspection_logic/nets/"
+               "Inspection.grml");
+  // /Users/thomashorstink/Projects/Symmetri/nets/test.pnml
   // Main loop
   while (!glfwWindowShouldClose(window)) {
     @autoreleasepool {

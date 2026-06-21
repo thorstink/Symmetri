@@ -1,13 +1,27 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 
-#include "draw_menu.h"
+#include "draw_tools_menu.h"
 
+#include <stddef.h>
+
+#include <algorithm>
+#include <functional>
+#include <optional>
 #include <ranges>
+#include <string>
+#include <string_view>
+#include <tuple>
+#include <vector>
 
-#include "imgui_internal.h"
+#include "gui/model.h"
+#include "imgui.h"
+#include "misc/cpp/imgui_stdlib.h"
+#include "petri.h"
 #include "reducers.h"
 #include "shared.h"
 #include "simulation_menu.h"
+#include "symmetri/callback.h"
+#include "symmetri/colors.hpp"
 
 static size_t label_id = 5;
 void drawTokenLine(const symmetri::AugmentedToken& at) {
@@ -31,74 +45,67 @@ void drawTokenLine(const symmetri::AugmentedToken& at) {
       "%s", std::get<symmetri::Token>(at).toString().data());
 }
 
-void draw_menu(const model::ViewModel& vm) {
-  // is now also true if there's nothing selected.
-  const bool is_a_node_selected = vm.selected_node_idx.has_value();
-  const model::Model::NodeType node_type =
-      std::get<0>(vm.selected_node_idx.value_or(
-          std::make_tuple(model::Model::NodeType::Place, size_t(0))));
-
-  const size_t selected_idx =
-      is_a_node_selected ? std::get<1>(vm.selected_node_idx.value()) : 9999;
-  draw_simulation_menu(vm);
-
+void draw_selection_menu(const model::ViewModel& vm) {
   ImGui::Text("Selected");
-  ImGui::Separator();
-  if (is_a_node_selected) {
-    ImGui::Text("Name");
+  if (not vm.p_highlight.empty() ||
+      (vm.p_highlight.empty() && vm.t_highlight.empty() &&
+       vm.arc_highlight.empty()))
+    ImGui::Separator();
+  static std::map<size_t, std::string> names;  // in-place buffer for changes.
+  for (auto idx : vm.p_highlight) {
+    ImGui::PushID(idx);
+    ImGui::Text("Place");
     ImGui::SameLine();
-    static int i = 0;
-    const auto id = std::string("##") + std::to_string(i++);
-    ImGui::PushItemWidth(-1);
-    const auto& model_name = (model::Model::NodeType::Place == node_type
-                                  ? vm.net.place
-                                  : vm.net.transition)[selected_idx];
-    ImGui::Text("%s", model_name.c_str());
-
-    static char view_name[128] = "";
-    strcpy(view_name, model_name.c_str());
-    ImGui::PushItemWidth(-1);
-    ImGui::InputText("##input tex", view_name, 128,
-                     ImGuiInputTextFlags_CallbackEdit,
-                     (model::Model::NodeType::Place == node_type
-                          ? updatePlaceName
-                          : updateTransitionName)(selected_idx));
+    ImGui::PushItemWidth(-5);
+    const auto [l, inserted] = names.try_emplace(idx, vm.net.place[idx]);
+    ImGui::InputText("##input", &l->second, ImGuiInputTextFlags_CallbackEdit,
+                     &updatePlaceName, (void*)&l->first);
     ImGui::PopItemWidth();
-    label_id = 0;
-    if (model::Model::NodeType::Place == node_type) {
-      ImGui::Text("Marking");
-      std::ranges::for_each(vm.tokens | std::views::filter([=](const auto& at) {
-                              return std::get<size_t>(at) == selected_idx;
-                            }),
-                            &drawTokenLine);
-    } else if (model::Model::NodeType::Transition == node_type) {
-      ImGui::Text("Priority");
-      ImGui::SameLine();
-      static char view_priority[4] = "";
-      strcpy(view_priority,
-             std::to_string(vm.net.priority[selected_idx]).c_str());
-      ImGui::InputText("##priority", view_priority, 4,
-                       ImGuiInputTextFlags_CharsDecimal |
-                           ImGuiInputTextFlags_CharsNoBlank |
-                           ImGuiInputTextFlags_CallbackEdit,
-                       updatePriority(selected_idx));
-      ImGui::Text("Output");
-      ImGui::SameLine();
-      if (ImGui::BeginCombo(
-              "##output", fire(vm.net.store[selected_idx]).toString().data())) {
-        for (const auto& color : vm.colors) {
-          if (ImGui::Selectable(color.data())) {
-            updateTransitionOutputColor(selected_idx,
-                                        symmetri::Token(color.data()));
-          }
+    ImGui::Text("Marking");
+    std::ranges::for_each(vm.tokens | std::views::filter([=](const auto& at) {
+                            return std::get<size_t>(at) == idx;
+                          }),
+                          &drawTokenLine);
+    ImGui::PopID();
+  }
+  static std::map<size_t, std::string>
+      priorities;  // in-place buffer for changes.
+  if (not vm.t_highlight.empty()) ImGui::Separator();
+  for (auto idx : vm.t_highlight) {
+    ImGui::PushID(idx);
+    ImGui::Text("Transition");
+    ImGui::SameLine();
+    ImGui::PushItemWidth(-5);
+    const auto [l, inserted] =
+        names.try_emplace(idx + 1000, vm.net.transition[idx]);
+    ImGui::InputText("##input", &l->second, ImGuiInputTextFlags_CallbackEdit,
+                     &updateTransitionName, (void*)&l->first);
+    ImGui::PopItemWidth();
+    ImGui::Text("Priority");
+    ImGui::SameLine();
+    const auto [l_priority, inserted_priority] =
+        priorities.try_emplace(idx, std::to_string(vm.net.priority[idx]));
+    ImGui::InputText("##priority", &l_priority->second,
+                     ImGuiInputTextFlags_CharsDecimal |
+                         ImGuiInputTextFlags_CharsNoBlank |
+                         ImGuiInputTextFlags_CallbackEdit,
+                     &updatePriority, (void*)&l_priority->first);
+    ImGui::Text("Output");
+    ImGui::SameLine();
+    if (ImGui::BeginCombo("##output",
+                          fire(vm.net.store[idx]).toString().data())) {
+      for (const auto& color : vm.colors) {
+        if (ImGui::Selectable(color.data())) {
+          updateTransitionOutputColor(idx, symmetri::Token(color.data()));
         }
-        ImGui::EndCombo();
       }
+      ImGui::EndCombo();
     }
-  } else if (vm.selected_arc_idxs.has_value()) {
-    const auto [node_type, selected_idx, sub_idx] =
-        vm.selected_arc_idxs.value();
+    ImGui::PopID();
+  }
+  if (not vm.arc_highlight.empty()) ImGui::Separator();
 
+  for (const auto& [node_type, selected_idx, sub_idx] : vm.arc_highlight) {
     const auto color = std::get<symmetri::Token>(
         (node_type == model::Model::NodeType::Place
              ? vm.net.input_n
@@ -114,8 +121,28 @@ void draw_menu(const model::ViewModel& vm) {
       ImGui::Text("%s", color.toString().data());
     }
   }
-  ImGui::Dummy(ImVec2(0.0f, 20.0f));
+}
 
+void draw_tools_menu(const model::ViewModel& vm) {
+  ImGui::SetNextWindowSize(
+      ImVec2(vm.kMenuWidth, ImGui::GetIO().DisplaySize.y - vm.kMenuBarHeight));
+  ImGui::SetNextWindowPos(ImVec2(0, vm.kMenuBarHeight));
+
+  ImGui::Begin("tools", NULL, no_move_draw_resize);
+  // is now also true if there's nothing selected.
+  const bool is_a_node_selected = vm.selected_node_idx.has_value();
+  const auto invalid_index =
+      std::max(vm.net.transition.size(), vm.net.place.size());
+  const model::Model::NodeType node_type =
+      std::get<0>(vm.selected_node_idx.value_or(
+          std::make_tuple(model::Model::NodeType::Place, invalid_index)));
+
+  const size_t selected_idx = is_a_node_selected
+                                  ? std::get<1>(vm.selected_node_idx.value())
+                                  : invalid_index;
+  draw_simulation_menu(vm);
+  draw_selection_menu(vm);
+  ImGui::Dummy(ImVec2(0.0f, 20.0f));
   ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
   if (ImGui::BeginTabBar("SymmetriTabBar", tab_bar_flags)) {
     if (ImGui::BeginTabItem("Places")) {
@@ -127,7 +154,7 @@ void draw_menu(const model::ViewModel& vm) {
         memset(new_place, 0, sizeof(new_place));
       }
       ImGui::Separator();
-
+      //  if (is a node)
       for (const auto& idx : vm.p_view) {
         renderNodeEntry(model::Model::NodeType::Place, vm.net.place[idx], idx,
                         is_a_node_selected &&
@@ -136,6 +163,7 @@ void draw_menu(const model::ViewModel& vm) {
       }
       ImGui::EndTabItem();
     }
+
     if (ImGui::BeginTabItem("Transitions")) {
       static char new_transition[128] = "Not yet available...";
       ImGui::PushItemWidth(-37);
@@ -184,4 +212,5 @@ void draw_menu(const model::ViewModel& vm) {
     }
     ImGui::EndTabBar();
   }
+  ImGui::End();
 }

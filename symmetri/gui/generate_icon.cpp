@@ -1,8 +1,12 @@
-#include <cstdlib>
+
+#include <array>
 #include <sstream>
+#include <string>
+#include <vector>
 
 #include "color.hpp"
 #include "draw_marking.hpp"
+#include "imgui.h"
 #include "tinyxml2/tinyxml2.h"
 
 auto tohex(const auto rgb) {
@@ -49,7 +53,7 @@ int main(int argc, char** argv) {
     outers->SetAttribute("cx", token.x);
     outers->SetAttribute("cy", token.y);
     outers->SetAttribute("r", 2.2);
-    outers->SetAttribute("fill", tohex(hsv_to_rgb(ratio(), 1., 1.)).c_str());
+    outers->SetAttribute("fill", tohex(hsv_to_rgb(ratio(), .3, .99)).c_str());
     svg->InsertAfterChild(previous, outers);
     previous = outers;
   }

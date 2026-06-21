@@ -1,6 +1,8 @@
 #include "rxdispatch.h"
 
 #include "blockingconcurrentqueue.h"
+#include "gui/model.h"
+
 namespace rxdispatch {
 
 static moodycamel::BlockingConcurrentQueue<Update> reducer_queue{10};

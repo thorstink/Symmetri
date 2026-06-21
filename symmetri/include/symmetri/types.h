@@ -2,12 +2,16 @@
 
 /** @file types.h */
 
+#include <stdint.h>
+
 #include <chrono>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "symmetri/colors.hpp"
+
 namespace symmetri {
 using Place = std::string;       ///< The string representation of the place the
                                  ///< Petri net definition

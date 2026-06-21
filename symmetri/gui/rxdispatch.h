@@ -1,10 +1,23 @@
 #pragma once
 
+#include <array>
 #include <functional>
+#include <utility>
 #include <variant>
 
+#include "blockingconcurrentqueue.h"
 #include "model.h"
+#include "rpp/observables/observable.hpp"
+#include "rpp/operators/flat_map.hpp"
+#include "rpp/operators/fwd.hpp"
+#include "rpp/operators/map.hpp"
+#include "rpp/operators/subscribe_on.hpp"
 #include "rpp/rpp.hpp"
+#include "rpp/schedulers/new_thread.hpp"
+#include "rpp/schedulers/run_loop.hpp"
+#include "rpp/schedulers/thread_pool.hpp"
+#include "rpp/sources/create.hpp"
+#include "rpp/sources/from.hpp"
 #include "rximgui.h"
 
 namespace rxdispatch {
