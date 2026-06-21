@@ -374,6 +374,7 @@ void resetSelectedTargetNode() {
 
 void deleteSelected(const std::vector<size_t>& t_highlight,
                     const std::vector<size_t>& p_highlight) {
+  rxdispatch::Batch batch;
   // Copy and sort descending so each reducer sees a valid index into the
   // progressively-shrinking net. Transitions first — their removal does not
   // shift place indices, so place highlights stay valid for the second pass.

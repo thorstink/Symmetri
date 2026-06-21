@@ -926,3 +926,37 @@ TEST_CASE("deleteSelected - no-op on empty selection") {
   CHECK(s.edit.net.transition.size() == 2);
   CHECK(s.edit.net.place.size() == 2);
 }
+
+TEST_CASE("deleteSelected - batches into exactly one edit + one view reducer") {
+  // Without Batch, removing N nodes dispatches 2*N items (one EditReducer +
+  // one ViewReducer per removeTransition/removePlace call).  With Batch the
+  // whole delete is composed into a single EditReducer and a single ViewReducer
+  // — two items regardless of N — and still produces the correct net.
+  clearQueue();
+  States s = makeNet(2, 2);  // p0, p1; t0, t1 — all four nodes selected
+
+  deleteSelected({0, 1}, {0, 1});
+
+  rxdispatch::Update u;
+  int n_edit = 0, n_view = 0;
+  while (rxdispatch::getQueue().try_dequeue(u)) {
+    std::visit(
+        [&](auto&& r) {
+          using T = std::decay_t<decltype(r)>;
+          if constexpr (std::is_same_v<T, model::EditReducer>) ++n_edit;
+          if constexpr (std::is_same_v<T, model::ViewReducer>) ++n_view;
+        },
+        std::move(u));
+  }
+  CHECK(n_edit == 1);
+  CHECK(n_view == 1);
+
+  // Re-run and drain to confirm the composed reducer still produces the right
+  // net.
+  clearQueue();
+  s = makeNet(2, 2);
+  deleteSelected({0, 1}, {0, 1});
+  s = drain(std::move(s));
+  CHECK(s.edit.net.transition.empty());
+  CHECK(s.edit.net.place.empty());
+}

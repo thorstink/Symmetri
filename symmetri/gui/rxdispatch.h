@@ -38,6 +38,18 @@ void pushView(model::ViewReducer r);
 inline void pushUndo() { push(Update{model::Undo{}}); }
 inline void pushRedo() { push(Update{model::Redo{}}); }
 
+// RAII scope that composes all pushEdit/pushView calls made within it into a
+// single EditReducer + single ViewReducer, flushed atomically on scope exit.
+// The entire batch appears as one undo-history entry. Nesting is supported —
+// inner scopes merge into the outermost one.
+class Batch {
+ public:
+  Batch();
+  ~Batch();
+  Batch(const Batch&) = delete;
+  Batch& operator=(const Batch&) = delete;
+};
+
 struct VisitPackage {
   auto operator()(model::EditReducer r) {
     return rpp::source::just(rximgui::rl, model::Action{std::move(r)})
