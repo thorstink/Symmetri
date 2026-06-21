@@ -1,6 +1,14 @@
 #include "draw_about.h"
 
+#include <stddef.h>
+
+#include "imgui.h"
 #include "reducers.h"
+
+namespace model {
+struct ViewModel;
+}  // namespace model
+
 #define QUOTE(x) #x
 #define STR(x) QUOTE(x)
 

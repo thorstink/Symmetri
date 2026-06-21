@@ -1,8 +1,25 @@
 #include "write_graph_to_disk.h"
 
-#include <thread>
+#include <stddef.h>
 
+#include <algorithm>
+#include <filesystem>
+#include <future>
+#include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <tuple>
+#include <vector>
+
+#include "gui/model.h"
+#include "gui/rxdispatch.h"
+#include "imgui.h"
+#include "petri.h"
 #include "reducers.h"
+#include "small_vector.hpp"
+#include "symmetri/colors.hpp"
 #include "tinyxml2/tinyxml2.h"
 
 namespace farbart {
@@ -44,22 +61,30 @@ auto toXml(const symmetri::Petri::PTNet& net,
     root->InsertEndChild(child);
 
     for (const auto& token : net.input_n[idx]) {
-      XMLElement* child = doc->NewElement("arc");
-      child->SetAttribute("source", net.place[std::get<size_t>(token)].c_str());
-      child->SetAttribute("target", net.transition[idx].c_str());
-      child->SetAttribute(
-          "color",
-          std::string(std::get<symmetri::Token>(token).toString()).c_str());
-      root->InsertEndChild(child);
+      if (std::find(p_view.cbegin(), p_view.cend(), std::get<size_t>(token)) !=
+          p_view.cend()) {
+        XMLElement* child = doc->NewElement("arc");
+        child->SetAttribute("source",
+                            net.place[std::get<size_t>(token)].c_str());
+        child->SetAttribute("target", net.transition[idx].c_str());
+        child->SetAttribute(
+            "color",
+            std::string(std::get<symmetri::Token>(token).toString()).c_str());
+        root->InsertEndChild(child);
+      }
     }
     for (const auto& token : net.output_n[idx]) {
-      XMLElement* child = doc->NewElement("arc");
-      child->SetAttribute("source", net.transition[idx].c_str());
-      child->SetAttribute("target", net.place[std::get<size_t>(token)].c_str());
-      child->SetAttribute(
-          "color",
-          std::string(std::get<symmetri::Token>(token).toString()).c_str());
-      root->InsertEndChild(child);
+      if (std::find(p_view.cbegin(), p_view.cend(), std::get<size_t>(token)) !=
+          p_view.cend()) {
+        XMLElement* child = doc->NewElement("arc");
+        child->SetAttribute("source", net.transition[idx].c_str());
+        child->SetAttribute("target",
+                            net.place[std::get<size_t>(token)].c_str());
+        child->SetAttribute(
+            "color",
+            std::string(std::get<symmetri::Token>(token).toString()).c_str());
+        root->InsertEndChild(child);
+      }
     }
   }
   return doc;
@@ -91,6 +116,7 @@ void draw_confirmation_popup(const model::ViewModel&) {
   ImGui::Begin("About", NULL, no_move_draw_resize);
   ImGui::Text("Are you sure you want to save?");
 
+  ImGui::SetNextItemShortcut(ImGuiKey_Enter);
   if (ImGui::Button("Ok")) {
     removeView(&draw_confirmation_popup);
     rxdispatch::push([=](model::Model&& m) {

@@ -1,5 +1,15 @@
 
+#include <stddef.h>
+
+#include <algorithm>
+#include <iterator>
+#include <string>
+#include <tuple>
+#include <vector>
+
+#include "externals/small_vector.hpp"
 #include "petri.h"
+
 namespace symmetri {
 
 size_t toIndex(const std::vector<std::string> &m, const std::string &s) {

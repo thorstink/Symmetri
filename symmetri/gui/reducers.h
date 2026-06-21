@@ -1,9 +1,16 @@
 #pragma once
 
+#include <stddef.h>
+
 #include <future>
 #include <memory>
+#include <string>
+#include <type_traits>
+#include <utility>
 
+#include "gui/model.h"
 #include "imgui.h"
+#include "petri.h"
 #include "rxdispatch.h"
 #include "symmetri/colors.hpp"
 
@@ -28,15 +35,19 @@ void showGrid(bool show_grid);
 void updateArcColor(model::Model::NodeType source_node_type, size_t idx,
                     size_t sub_idx, const symmetri::Token color);
 
-ImGuiInputTextCallback updatePlaceName(const size_t id);
-ImGuiInputTextCallback updateTransitionName(const size_t id);
-ImGuiInputTextCallback updatePriority(const size_t id);
+int updatePlaceName(ImGuiInputTextCallbackData* id);
+
+int updateTransitionName(ImGuiInputTextCallbackData* id);
+
+int updatePriority(ImGuiInputTextCallbackData* data);
 
 void setContextMenuActive();
 
 void setContextMenuInactive();
 
 void setSelectedNode(model::Model::NodeType node_type, size_t idx);
+
+void addHighlightNode(model::Model::NodeType node_type, size_t idx);
 
 void setSelectedTargetNode(model::Model::NodeType node_type, size_t idx);
 
@@ -45,6 +56,9 @@ void resetSelectedTargetNode();
 void resetSelection();
 
 void resetNetView();
+
+void addHighlightArc(model::Model::NodeType source_node_type, size_t t_idx,
+                     size_t sub_idx);
 
 void setSelectedArc(model::Model::NodeType source_node_type, size_t source_idx,
                     size_t target_idx);
@@ -56,6 +70,8 @@ int updateActiveFile(ImGuiInputTextCallbackData* data);
 
 void updateColorTable();
 
+void setArcHoverState(bool);
+
 void addTokenToPlace(symmetri::AugmentedToken);
 
 void removeTokenFromPlace(symmetri::AugmentedToken);
@@ -63,6 +79,9 @@ void removeTokenFromPlace(symmetri::AugmentedToken);
 void tryFire(size_t transition_idx);
 
 void updateTransitionOutputColor(size_t transition_idx, symmetri::Token color);
+
+void zoomRelative(float);
+void zoomAbsolute(float);
 
 auto addViewBlocking(auto&& v) {
   auto accumulate_promise = std::make_shared<std::promise<void>>();

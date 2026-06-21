@@ -1,19 +1,32 @@
+#include "gui/model.h"
 #define IMGUI_DEFINE_MATH_OPERATORS
-#include "reducers.h"
+#include <stdint.h>
 
 #include <algorithm>
 #include <filesystem>
+#include <iterator>
+#include <optional>
 #include <ranges>
+#include <string_view>
 #include <tuple>
+#include <vector>
 
 #include "draw_context_menu.h"
 #include "imgui_internal.h"
 #include "petri.h"
+#include "reducers.h"
 #include "rxdispatch.h"
+#include "small_vector.hpp"
+#include "symmetri/callback.h"
+
+namespace symmetri {
+struct DirectMutation;
+}  // namespace symmetri
+
 void moveView(const ImVec2& d) {
   rxdispatch::push([=](model::Model&& m) mutable {
-    m.data->scrolling.x += d.x;
-    m.data->scrolling.y += d.y;
+    m.data->scrolling.x += d.x / m.data->zoom_factor;
+    m.data->scrolling.y += d.y / m.data->zoom_factor;
     return m;
   });
 }
@@ -22,7 +35,7 @@ void moveNode(model::Model::NodeType node_type, size_t idx, const ImVec2& d) {
   rxdispatch::push([=](model::Model&& m) mutable {
     (model::Model::NodeType::Place == node_type ? m.data->p_positions[idx]
                                                 : m.data->t_positions[idx]) +=
-        model::Coordinate{d.x, d.y};
+        model::Coordinate{d.x / m.data->zoom_factor, d.y / m.data->zoom_factor};
     return m;
   });
 }
@@ -44,6 +57,13 @@ std::string viewContainsNameAlready(const std::vector<size_t>& view,
     }
   }
   return std::move(name);
+}
+
+void setArcHoverState(bool is_an_arc_hovered) {
+  rxdispatch::push([=](model::Model&& m) mutable {
+    m.data->arc_hovered = is_an_arc_hovered;
+    return m;
+  });
 }
 
 void addNode(model::Model::NodeType node_type, ImVec2 pos) {
@@ -109,11 +129,12 @@ void removeArc(model::Model::NodeType source_node_type, size_t transition_idx,
   });
 }
 
-void addArc(model::Model::NodeType node_type, size_t source, size_t target,
-            symmetri::Token color) {
+void addArc(model::Model::NodeType source_node_type, size_t source,
+            size_t target, symmetri::Token color) {
   rxdispatch::push([=](model::Model&& m) mutable {
     const size_t transition_idx =
-        model::Model::NodeType::Transition == node_type ? source : target;
+        model::Model::NodeType::Transition == source_node_type ? source
+                                                               : target;
     // remove transition from view
     m.data->t_view.erase(std::remove(m.data->t_view.begin(),
                                      m.data->t_view.end(), transition_idx),
@@ -131,16 +152,19 @@ void addArc(model::Model::NodeType node_type, size_t source, size_t target,
     m.data->t_view.push_back(new_transition_idx);
 
     // add the arc
-    if (model::Model::NodeType::Place == node_type) {
-      auto& p_to_ts = m.data->net.p_to_ts_n[source];
-      m.data->net.input_n[new_transition_idx].push_back({source, color});
-      if (std::find(p_to_ts.begin(), p_to_ts.end(), transition_idx) ==
-          p_to_ts.end()) {
-        p_to_ts.push_back(new_transition_idx);
-      }
-    } else {
-      m.data->net.output_n[new_transition_idx].push_back({target, color});
-    }
+    auto& p_to_ts = m.data->net.p_to_ts_n[source];
+    switch (source_node_type) {
+      case model::Model::NodeType::Place:
+        m.data->net.input_n[new_transition_idx].push_back({source, color});
+        if (std::find(p_to_ts.begin(), p_to_ts.end(), transition_idx) ==
+            p_to_ts.end()) {
+          p_to_ts.push_back(new_transition_idx);
+        }
+        break;
+      case model::Model::NodeType::Transition:
+        m.data->net.output_n[new_transition_idx].push_back({target, color});
+        break;
+    };
 
     std::erase(m.data->drawables, &draw_context_menu);
     return m;
@@ -154,7 +178,7 @@ void removePlace(size_t idx) {
         std::remove(m.data->p_view.begin(), m.data->p_view.end(), idx),
         m.data->p_view.end());
     // remove selection of this node
-    m.data->selected_node_idx.reset();
+    std::erase(m.data->p_highlight, idx);
     // remove marking for this node
     auto [b, e] = std::ranges::remove_if(
         m.data->tokens, [idx](const symmetri::AugmentedToken at) {
@@ -162,7 +186,6 @@ void removePlace(size_t idx) {
         });
     m.data->tokens.erase(b, e);
     std::erase(m.data->drawables, &draw_context_menu);
-
     return m;
   });
 }
@@ -172,10 +195,8 @@ void removeTransition(size_t idx) {
     m.data->t_view.erase(
         std::remove(m.data->t_view.begin(), m.data->t_view.end(), idx),
         m.data->t_view.end());
-    m.data->selected_node_idx.reset();
-    m.data->selected_target_node_idx.reset();
+    std::erase(m.data->t_highlight, idx);
     std::erase(m.data->drawables, &draw_context_menu);
-
     return m;
   });
 }
@@ -191,52 +212,43 @@ void updateArcColor(model::Model::NodeType source_node_type, size_t idx,
   });
 }
 
-ImGuiInputTextCallback updatePriority(const size_t id) {
-  static size_t idx;
-  idx = id;
-  return [](ImGuiInputTextCallbackData* data) -> int {
-    data->ClearSelection();
-    if ((data->Buf != NULL) && (data->Buf[0] == '\0')) {
-    } else if (strcmp(data->Buf, "-") == 0) {
-    } else {
-      const auto priority =
-          std::clamp(std::stoi(data->Buf), INT8_MIN, INT8_MAX);
-      rxdispatch::push([=](model::Model&& m) mutable {
-        m.data->net.priority[idx] = priority;
+int updatePriority(ImGuiInputTextCallbackData* data) {
+  size_t idx = *static_cast<size_t*>(data->UserData);
+  data->ClearSelection();
+  if ((data->Buf != NULL) && (data->Buf[0] == '\0')) {
+  } else if (strcmp(data->Buf, "-") == 0) {
+  } else {
+    const auto priority = std::clamp(std::stoi(data->Buf), INT8_MIN, INT8_MAX);
+    rxdispatch::push([=](model::Model&& m) mutable {
+      m.data->net.priority[idx] = priority;
+      return m;
+    });
+  }
+  return 0;
+}
+
+int updatePlaceName(ImGuiInputTextCallbackData* data) {
+  size_t idx = *static_cast<size_t*>(data->UserData);
+  data->ClearSelection();
+  rxdispatch::push(
+      [=, name = std::string(data->Buf)](model::Model&& m) mutable {
+        m.data->net.place[idx] = name;
         return m;
       });
-    }
-    return 0;
-  };
+  return 0;
 }
 
-ImGuiInputTextCallback updatePlaceName(const size_t id) {
-  static size_t idx;
-  idx = id;
+int updateTransitionName(ImGuiInputTextCallbackData* data) {
+  // we add 1000 to distinguish from places.. hsould be neater someday.
+  size_t idx = (*static_cast<size_t*>(data->UserData)) - 1000;
+  data->ClearSelection();
 
-  return [](ImGuiInputTextCallbackData* data) -> int {
-    data->ClearSelection();
-    rxdispatch::push(
-        [=, name = std::string(data->Buf)](model::Model&& m) mutable {
-          m.data->net.place[idx] = name;
-          return m;
-        });
-    return 0;
-  };
-}
-
-ImGuiInputTextCallback updateTransitionName(const size_t id) {
-  static size_t idx;
-  idx = id;
-  return [](ImGuiInputTextCallbackData* data) -> int {
-    data->ClearSelection();
-    rxdispatch::push(
-        [=, name = std::string(data->Buf)](model::Model&& m) mutable {
-          m.data->net.transition[idx] = name;
-          return m;
-        });
-    return 0;
-  };
+  rxdispatch::push(
+      [=, name = std::string(data->Buf)](model::Model&& m) mutable {
+        m.data->net.transition[idx] = name;
+        return m;
+      });
+  return 0;
 }
 
 void setContextMenuActive() {
@@ -249,7 +261,6 @@ void setContextMenuActive() {
 void setContextMenuInactive() {
   rxdispatch::push([](model::Model&& m) {
     std::erase(m.data->drawables, &draw_context_menu);
-    m.data->selected_target_node_idx.reset();
     return m;
   });
 }
@@ -257,14 +268,33 @@ void setContextMenuInactive() {
 void setSelectedNode(model::Model::NodeType node_type, size_t idx) {
   rxdispatch::push([=](model::Model&& m) {
     m.data->selected_node_idx = {node_type, idx};
+    m.data->p_highlight.clear();
+    m.data->t_highlight.clear();
+    m.data->arc_highlight.clear();
     m.data->selected_arc_idxs.reset();
+    (node_type == model::Model::NodeType::Place ? m.data->p_highlight
+                                                : m.data->t_highlight)
+        .push_back(idx);
+    return m;
+  });
+};
+
+void addHighlightNode(model::Model::NodeType node_type, size_t idx) {
+  rxdispatch::push([=](model::Model&& m) {
+    (node_type == model::Model::NodeType::Place ? m.data->p_highlight
+                                                : m.data->t_highlight)
+        .push_back(idx);
     return m;
   });
 };
 
 void setSelectedTargetNode(model::Model::NodeType node_type, size_t idx) {
   rxdispatch::push([=](model::Model&& m) {
-    m.data->selected_target_node_idx = {node_type, idx};
+    auto& c =
+        (node_type == model::Model::NodeType::Place ? m.data->p_highlight
+                                                    : m.data->t_highlight);
+    c.clear();
+    c.push_back(idx);
     return m;
   });
 };
@@ -272,18 +302,31 @@ void setSelectedTargetNode(model::Model::NodeType node_type, size_t idx) {
 void resetSelection() {
   rxdispatch::push([](model::Model&& m) {
     m.data->selected_node_idx.reset();
+    m.data->p_highlight.clear();
+    m.data->t_highlight.clear();
     m.data->selected_arc_idxs.reset();
-    m.data->selected_target_node_idx.reset();
+    m.data->arc_highlight.clear();
+    return m;
+  });
+};
+
+void addHighlightArc(model::Model::NodeType source_node_type, size_t t_idx,
+                     size_t sub_idx) {
+  rxdispatch::push([=](model::Model&& m) {
+    m.data->arc_highlight.emplace_back(source_node_type, t_idx, sub_idx);
     return m;
   });
 };
 
 void setSelectedArc(model::Model::NodeType source_node_type, size_t t_idx,
-                    size_t p_idx) {
+                    size_t sub_idx) {
   rxdispatch::push([=](model::Model&& m) {
     m.data->selected_node_idx.reset();
-    m.data->selected_target_node_idx.reset();
-    m.data->selected_arc_idxs = {source_node_type, t_idx, p_idx};
+    m.data->p_highlight.clear();
+    m.data->t_highlight.clear();
+    m.data->arc_highlight.clear();
+    m.data->selected_arc_idxs = {source_node_type, t_idx, sub_idx};
+    m.data->arc_highlight.emplace_back(source_node_type, t_idx, sub_idx);
     return m;
   });
 };
@@ -340,6 +383,20 @@ void resetSelectedTargetNode() {
   });
 }
 
+void zoomRelative(float f) {
+  rxdispatch::push([=](model::Model&& model) {
+    model.data->zoom_factor += f;
+    return model;
+  });
+}
+
+void zoomAbsolute(float f) {
+  rxdispatch::push([=](model::Model&& model) {
+    model.data->zoom_factor = f;
+    return model;
+  });
+}
+
 void resetNetView() {
   rxdispatch::push([=](model::Model&& model) {
     auto& m = *model.data;
@@ -367,7 +424,8 @@ void resetNetView() {
 
 void tryFire(size_t transition_idx) {
   rxdispatch::push([=](model::Model&& m) {
-    if (canFire(m.data->net.input_n[transition_idx], m.data->tokens)) {
+    if (m.data->net.input_n[transition_idx].empty() ||
+        canFire(m.data->net.input_n[transition_idx], m.data->tokens)) {
       // deduct
       deductMarking(m.data->tokens, m.data->net.input_n[transition_idx]);
       // add

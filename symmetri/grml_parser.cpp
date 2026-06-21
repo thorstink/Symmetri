@@ -1,10 +1,20 @@
+#include <stddef.h>
+#include <stdint.h>
+
 #include <map>
+#include <set>
 #include <stdexcept>
 #include <string>
+#include <tuple>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include "symmetri/colors.hpp"
 #include "symmetri/parsers.h"
+#include "symmetri/types.h"
 #include "tinyxml2/tinyxml2.h"
+
 using namespace tinyxml2;
 
 namespace symmetri {

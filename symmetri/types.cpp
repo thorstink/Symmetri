@@ -1,9 +1,14 @@
 #include "symmetri/types.h"
 
+#include <stddef.h>
+
 #include <algorithm>
+#include <iterator>
 #include <numeric>
+#include <string_view>
 
 #include "symmetri/colors.hpp"
+
 namespace symmetri {
 
 bool isSynchronous(const DirectMutation&) { return true; }

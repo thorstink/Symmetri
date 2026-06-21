@@ -1,5 +1,9 @@
 #include "petri.h"
 
+#include <array>
+#include <initializer_list>
+#include <iterator>
+
 namespace symmetri {
 std::tuple<std::vector<std::string>, std::vector<std::string>,
            std::vector<Callback>>

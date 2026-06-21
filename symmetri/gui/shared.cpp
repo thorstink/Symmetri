@@ -1,8 +1,11 @@
 #include "shared.h"
 
+#include <array>
+#include <iterator>
+#include <unordered_map>
+
 #include "color.hpp"
 #include "imgui.h"
-#include "symmetri/types.h"
 
 void drawColorDropdownMenu(const std::string& menu_name,
                            const std::vector<std::string_view>& colors,
@@ -30,9 +33,15 @@ ImU32 getColor(symmetri::Token token) {
   if (ptr != std::end(color_table)) {
     return ptr->second;
   } else {
-    const auto rgb = hsv_to_rgb(ratio(), 1., 1.);
-    const auto color = IM_COL32(rgb[0], rgb[1], rgb[2], 128);
+    const auto rgb = hsv_to_rgb(ratio(), .3, .99);
+    const auto color = IM_COL32(rgb[0], rgb[1], rgb[2], 255);
     color_table.insert({token, color});
     return color;
   }
 };
+
+bool IsAnyKeyPressed() {
+  for (int key = ImGuiKey_NamedKey_BEGIN; key < ImGuiKey_NamedKey_END; ++key)
+    if (ImGui::IsKeyPressed((ImGuiKey)key)) return true;
+  return false;
+}

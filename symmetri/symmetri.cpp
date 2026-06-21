@@ -1,8 +1,17 @@
 #include "symmetri/symmetri.h"
 
+#include <stddef.h>
+
+#include <algorithm>
+#include <atomic>
 #include <filesystem>
 #include <future>
+#include <iterator>
+#include <optional>
+#include <tuple>
 
+#include "externals/blockingconcurrentqueue.h"
+#include "externals/small_vector.hpp"
 #include "petri.h"
 #include "symmetri/parsers.h"
 

@@ -2,6 +2,8 @@
 
 /** @file tasks.h */
 
+#include <stddef.h>
+
 #include <atomic>
 #include <functional>
 #include <memory>

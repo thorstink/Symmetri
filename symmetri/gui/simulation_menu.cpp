@@ -1,9 +1,12 @@
 #include "simulation_menu.h"
 
-#include <ranges>
+#include <string>
+#include <vector>
 
-#include "petri.h"
+#include "gui/model.h"
+#include "imgui.h"
 #include "reducers.h"
+
 void draw_simulation_menu(const model::ViewModel& vm) {
   ImGui::Text("Simulation");
   ImGui::Separator();

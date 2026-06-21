@@ -1,20 +1,31 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 
-#include "draw_menu.h"
+#include <stddef.h>
+
+#include <algorithm>
+#include <functional>
+#include <optional>
+#include <string>
+#include <tuple>
+#include <vector>
+
+#include "gui/model.h"
+#include "imgui.h"
 #include "imgui_internal.h"
+#include "petri.h"
 #include "reducers.h"
 #include "shared.h"
-#include "simulation_menu.h"
+#include "symmetri/colors.hpp"
 
 void draw_context_menu(const model::ViewModel& vm) {
   ImGui::OpenPopup("context_menu");
   // Draw context menu
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
   if (ImGui::BeginPopup("context_menu")) {
-    if (vm.selected_node_idx.has_value()) {
+    if (const auto& selected_node_idx = vm.selected_node_idx) {
       const model::Model::NodeType node_type =
-          std::get<0>(vm.selected_node_idx.value());
-      const size_t selected_idx = std::get<1>(vm.selected_node_idx.value());
+          std::get<0>(selected_node_idx.value());
+      const size_t selected_idx = std::get<1>(selected_node_idx.value());
       ImGui::Text(
           "%s '%s'",
           (node_type == model::Model::NodeType::Place ? "Place" : "Transition"),
@@ -27,26 +38,31 @@ void draw_context_menu(const model::ViewModel& vm) {
         for (const auto& node_idx : node_type == model::Model::NodeType::Place
                                         ? vm.t_view
                                         : vm.p_view) {
-          if (node_type == model::Model::NodeType::Place) {
-            drawColorDropdownMenu(vm.net.transition[node_idx], vm.colors,
-                                  [&](auto c) -> void {
-                                    addArc(node_type, selected_idx, node_idx,
-                                           symmetri::Token(c.data()));
-                                  });
+          switch (node_type) {
+            case model::Model::NodeType::Place:
+              drawColorDropdownMenu(vm.net.transition[node_idx], vm.colors,
+                                    [&](auto c) -> void {
+                                      addArc(node_type, selected_idx, node_idx,
+                                             symmetri::Token(c.data()));
+                                    });
+              break;
+            case model::Model::NodeType::Transition:
+              if (ImGui::MenuItem((vm.net.place[node_idx].c_str()))) {
+                addArc(node_type, selected_idx, node_idx, symmetri::Success);
+              }
+              break;
+          };
 
-          } else if (ImGui::MenuItem((vm.net.place[node_idx].c_str()))) {
-            addArc(node_type, selected_idx, node_idx, symmetri::Success);
-          }
           if (ImGui::IsItemHovered()) {
-            const auto target_node_type =
-                node_type == model::Model::NodeType::Place
-                    ? model::Model::NodeType::Transition
-                    : model::Model::NodeType::Place;
-            if (not vm.selected_target_node_idx.has_value() ||
-                vm.selected_target_node_idx.value() !=
-                    std::tuple<model::Model::NodeType, size_t>{target_node_type,
-                                                               node_idx}) {
-              setSelectedTargetNode(target_node_type, node_idx);
+            const auto& highlighted = node_type == model::Model::NodeType::Place
+                                          ? vm.t_highlight
+                                          : vm.p_highlight;
+            if (std::find(highlighted.cbegin(), highlighted.cend(), node_idx) ==
+                highlighted.cend()) {
+              setSelectedTargetNode(node_type == model::Model::NodeType::Place
+                                        ? model::Model::NodeType::Transition
+                                        : model::Model::NodeType::Place,
+                                    node_idx);
             }
           }
         }
