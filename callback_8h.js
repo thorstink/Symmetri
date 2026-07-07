@@ -1,6 +1,6 @@
 var callback_8h =
 [
-    [ "symmetri::identity< T >", "structsymmetri_1_1identity.html", null ],
+    [ "symmetri::identity&lt; T &gt;", "structsymmetri_1_1identity.html", null ],
     [ "symmetri::Callback", "classsymmetri_1_1Callback.html", "classsymmetri_1_1Callback" ],
     [ "symmetri::cancel", "callback_8h.html#ac789f942935da112c594e5222ee043a8", null ],
     [ "symmetri::fire", "callback_8h.html#a369f9434bc62272ce37e6b35d1f8814b", null ],

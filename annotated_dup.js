@@ -1,7 +1,7 @@
 var annotated_dup =
 [
     [ "std", null, [
-      [ "hash< symmetri::Token >", "structstd_1_1hash_3_01symmetri_1_1Token_01_4.html", null ]
+      [ "hash&lt; symmetri::Token &gt;", "structstd_1_1hash_3_01symmetri_1_1Token_01_4.html", null ]
     ] ],
     [ "symmetri", null, [
       [ "Callback", "classsymmetri_1_1Callback.html", "classsymmetri_1_1Callback" ],

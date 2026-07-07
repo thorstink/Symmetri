@@ -10,7 +10,6 @@ var structsymmetri_1_1Petri =
     [ "toTokens", "structsymmetri_1_1Petri.html#a1e76fcc186384956938477f8cd3ba174", null ],
     [ "case_id", "structsymmetri_1_1Petri.html#aa2acc8bf32bcd39c86f5eb029586c34b", null ],
     [ "final_marking", "structsymmetri_1_1Petri.html#abecb436860f487c3dc96b03d19098654", null ],
-    [ "initial_tokens", "structsymmetri_1_1Petri.html#a30687d1a0a6b177d10bb9c675bcd38ee", null ],
     [ "log", "structsymmetri_1_1Petri.html#a480b5841ccff81ba112a8759cfdbd103", null ],
     [ "net", "structsymmetri_1_1Petri.html#a3cace2df8ce3867629374ee971350cb2", null ],
     [ "pool", "structsymmetri_1_1Petri.html#a0bb51fc485b5813c4a66f234952c9e86", null ],

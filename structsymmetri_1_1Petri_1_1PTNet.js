@@ -1,5 +1,6 @@
 var structsymmetri_1_1Petri_1_1PTNet =
 [
+    [ "initial_tokens", "structsymmetri_1_1Petri_1_1PTNet.html#a02a72c7fc5a240d495161b5f6adad17a", null ],
     [ "input_n", "structsymmetri_1_1Petri_1_1PTNet.html#a64832d54c193de2105b25d909231ffe5", null ],
     [ "output_n", "structsymmetri_1_1Petri_1_1PTNet.html#a7717f8a12bc20bdd1a59535df3aa4913", null ],
     [ "p_to_ts_n", "structsymmetri_1_1Petri_1_1PTNet.html#aebdc6941bebfab6f601edbfc449249da", null ],
