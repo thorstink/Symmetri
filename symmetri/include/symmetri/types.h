@@ -52,21 +52,11 @@ struct BasicToken {
     }
   }
   /**
-   * @brief Construct a token carrying `v` as payload; the value is moved or
-   * copied into a shared immutable slot. The color must be bound to
-   * exactly decltype(v) — dataless colors cannot carry payloads.
-   */
-  template <typename T, typename = std::enable_if_t<!std::is_convertible_v<
-                            T, std::shared_ptr<const std::any>>>>
-  BasicToken(P p, Token c, T&& v)
-      : place(std::move(p)),
-        color((requireBinding(c, typeid(std::decay_t<T>)), c)),
-        data(std::make_shared<const std::any>(std::forward<T>(v))) {}
-
-  /**
    * @brief Construct a token from a payload value alone: the color is
-   * inferred through the type↔color bijection. Only compiles for types bound
-   * with CREATE_TYPED_TOKEN.
+   * inferred through the type↔color bijection, so a payload can never sit on
+   * the wrong color. Only compiles for types bound with CREATE_TYPED_TOKEN —
+   * this (and the shared_ptr passthrough above, for pre-wrapped payloads) is
+   * the only way to construct a data-carrying token.
    */
   template <typename T>
     requires requires { color_of<std::decay_t<T>>::value(); }

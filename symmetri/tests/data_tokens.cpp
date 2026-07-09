@@ -78,12 +78,20 @@ TEST_CASE("two typed parameters bind independent of arc order") {
 }
 
 TEST_CASE("payload on a dataless color throws TokenTypeError") {
-  CHECK_THROWS_AS(PlaceToken("p0", Success, Path{{1.0, 1.0}}), TokenTypeError);
+  // The value-carrying constructor infers the color, so a payload on a
+  // dataless color is only expressible via the pre-wrapped passthrough —
+  // which validates the binding at runtime.
+  CHECK_THROWS_AS(
+      PlaceToken("p0", Success,
+                 std::make_shared<const std::any>(Path{{1.0, 1.0}})),
+      TokenTypeError);
 }
 
 TEST_CASE("wrong payload type on a typed color throws TokenTypeError") {
-  CHECK_THROWS_AS(PlaceToken("p0", PathToken, Report{"not a path"}),
-                  TokenTypeError);
+  CHECK_THROWS_AS(
+      PlaceToken("p0", PathToken,
+                 std::make_shared<const std::any>(Report{"not a path"})),
+      TokenTypeError);
 }
 
 TEST_CASE("a bad deposit inside a callback fails the firing, not the app") {
@@ -95,7 +103,8 @@ TEST_CASE("a bad deposit inside a callback fails the firing, not the app") {
   app.registerCallback("t0", []() -> Marking {
     // Success is dataless — this deposit is illegal and throws; the
     // dispatcher turns it into a Failed firing.
-    return {{"p1", Success, Path{{9.0, 9.0}}}};
+    return {
+        {"p1", Success, std::make_shared<const std::any>(Path{{9.0, 9.0}})}};
   });
 
   fire(app);
