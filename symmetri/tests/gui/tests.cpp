@@ -471,11 +471,105 @@ TEST_CASE("updateTransitionOutputColor - changes output token color") {
   clearQueue();
   auto s = makeNet(0, 1);
 
-  CHECK(s.edit.net.output[0] == symmetri::Success);
+  CHECK(std::get<symmetri::Token>(s.edit.net.output[0]) == symmetri::Success);
   updateTransitionOutputColor(0, symmetri::Failed);
   s = drain(std::move(s));
 
-  CHECK(s.edit.net.output[0] == symmetri::Failed);
+  CHECK(std::get<symmetri::Token>(s.edit.net.output[0]) == symmetri::Failed);
+}
+
+TEST_CASE("splitTransitionOutput - seeds per-arc deposits from arc colors") {
+  clearQueue();
+  auto s = makeNet(2, 1);  // p0, p1; t0
+  s.edit.net.output_n[0].push_back({0, symmetri::Success});
+  s.edit.net.output_n[0].push_back({1, symmetri::Failed});
+
+  splitTransitionOutput(0);
+  s = drain(std::move(s));
+
+  const auto& deposits =
+      std::get<std::vector<symmetri::Token>>(s.edit.net.output[0]);
+  REQUIRE(deposits.size() == 2);
+  CHECK(deposits[0] == symmetri::Success);
+  CHECK(deposits[1] == symmetri::Failed);
+}
+
+TEST_CASE("updateTransitionOutputArcColor - edits one deposit of a split") {
+  clearQueue();
+  auto s = makeNet(2, 1);
+  s.edit.net.output_n[0].push_back({0, symmetri::Success});
+  s.edit.net.output_n[0].push_back({1, symmetri::Success});
+
+  splitTransitionOutput(0);
+  updateTransitionOutputArcColor(0, 1, symmetri::Failed);
+  s = drain(std::move(s));
+
+  const auto& deposits =
+      std::get<std::vector<symmetri::Token>>(s.edit.net.output[0]);
+  CHECK(deposits[0] == symmetri::Success);
+  CHECK(deposits[1] == symmetri::Failed);
+}
+
+TEST_CASE("mergeTransitionOutput - collapses to the first deposit color") {
+  clearQueue();
+  auto s = makeNet(2, 1);
+  s.edit.net.output_n[0].push_back({0, symmetri::Failed});
+  s.edit.net.output_n[0].push_back({1, symmetri::Success});
+
+  splitTransitionOutput(0);
+  mergeTransitionOutput(0);
+  s = drain(std::move(s));
+
+  CHECK(std::get<symmetri::Token>(s.edit.net.output[0]) == symmetri::Failed);
+}
+
+TEST_CASE("addArc/removeArc keep a split output spec in lockstep") {
+  clearQueue();
+  auto s = makeNet(2, 1);
+  s.edit.net.output_n[0].push_back({0, symmetri::Success});
+
+  splitTransitionOutput(0);
+  // Adding an output arc grows the deposits, seeded with the arc color.
+  addArc(model::Model::NodeType::Transition, 0 /*t0*/, 1 /*p1*/,
+         symmetri::Failed);
+  s = drain(std::move(s));
+  {
+    const auto& deposits =
+        std::get<std::vector<symmetri::Token>>(s.edit.net.output[0]);
+    REQUIRE(deposits.size() == 2);
+    CHECK(deposits[1] == symmetri::Failed);
+  }
+
+  // Removing the first output arc erases the matching deposit.
+  removeArc(model::Model::NodeType::Transition, 0, 0);
+  s = drain(std::move(s));
+  {
+    const auto& deposits =
+        std::get<std::vector<symmetri::Token>>(s.edit.net.output[0]);
+    REQUIRE(deposits.size() == 1);
+    CHECK(deposits[0] == symmetri::Failed);
+  }
+}
+
+TEST_CASE("tryFire - split spec deposits per-arc colors") {
+  clearQueue();
+  auto s = makeNet(2, 1);
+  // t0 has no inputs (always fireable) and two output arcs.
+  s.edit.net.output_n[0].push_back({0, symmetri::Success});
+  s.edit.net.output_n[0].push_back({1, symmetri::Failed});
+
+  splitTransitionOutput(0);
+  tryFire(0);
+  s = drain(std::move(s));
+
+  REQUIRE(s.edit.tokens.size() == 2);
+  CHECK(s.edit.tokens[0].place == 0);
+  CHECK(s.edit.tokens[0].color == symmetri::Success);
+  CHECK(s.edit.tokens[1].place == 1);
+  CHECK(s.edit.tokens[1].color == symmetri::Failed);
+  // Per-arc deposits log Success, matching the executor's convention.
+  REQUIRE(s.edit.log.size() == 1);
+  CHECK(s.edit.log[0].state == symmetri::Success);
 }
 
 TEST_CASE("updateArcColor - changes color on input arc") {

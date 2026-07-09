@@ -98,6 +98,14 @@ void removeArc(model::Model::NodeType source_node_type, size_t transition_idx,
                      : e.net.output_n[transition_idx];
     if (sub_idx < arcs.size()) {
       arcs.erase(arcs.begin() + sub_idx);
+      // A split output spec is indexed like output_n; shrink it in lockstep.
+      if (source_node_type == model::Model::NodeType::Transition) {
+        if (auto* deposits = std::get_if<std::vector<symmetri::Token>>(
+                &e.net.output[transition_idx]);
+            deposits != nullptr && sub_idx < deposits->size()) {
+          deposits->erase(deposits->begin() + sub_idx);
+        }
+      }
     }
     return e;
   });
@@ -124,8 +132,14 @@ void addArc(model::Model::NodeType source_node_type, size_t source,
         break;
       }
       case model::Model::NodeType::Transition:
-        // transition -> place: output arc.
+        // transition -> place: output arc. A split (per-arc) output spec is
+        // indexed like output_n, so it grows in lockstep, seeded with the new
+        // arc's contract color.
         e.net.output_n[transition_idx].push_back({target, color});
+        if (auto* deposits = std::get_if<std::vector<symmetri::Token>>(
+                &e.net.output[transition_idx])) {
+          deposits->push_back(color);
+        }
         break;
     };
     return e;
@@ -423,13 +437,29 @@ void tryFire(size_t transition_idx) {
         canFire(e.net.input_n[transition_idx], e.tokens)) {
       // deduct
       deductMarking(e.tokens, e.net.input_n[transition_idx]);
-      // add
+      // add — the two OutputSpec shapes mirror FireResult: a single color is
+      // stamped on every output place, per-arc deposits are placed as given
+      // (and log Success, matching the executor's deposit-return convention).
       const auto& lookup_t = e.net.output_n[transition_idx];
-      const auto result = e.net.output[transition_idx];
-      for (const auto& arc : lookup_t) {
-        e.tokens.emplace_back(arc.place, result);
-      }
-      e.log.push_back({transition_idx, result, now});
+      std::visit(
+          [&](const auto& out) {
+            using T = std::decay_t<decltype(out)>;
+            if constexpr (std::is_same_v<T, symmetri::Token>) {
+              for (const auto& arc : lookup_t) {
+                e.tokens.emplace_back(arc.place, out);
+              }
+              e.log.push_back({transition_idx, out, now});
+            } else {
+              for (size_t i = 0; i < lookup_t.size(); i++) {
+                e.tokens.emplace_back(lookup_t[i].place,
+                                      i < out.size()
+                                          ? out[i]
+                                          : symmetri::Token(symmetri::Success));
+              }
+              e.log.push_back({transition_idx, symmetri::Success, now});
+            }
+          },
+          e.net.output[transition_idx]);
     }
     return e;
   });
@@ -437,6 +467,45 @@ void tryFire(size_t transition_idx) {
 void updateTransitionOutputColor(size_t transition_idx, symmetri::Token color) {
   rxdispatch::pushEdit([=](model::EditState&& e) {
     e.net.output[transition_idx] = color;
+    return e;
+  });
+}
+
+void splitTransitionOutput(size_t transition_idx) {
+  rxdispatch::pushEdit([=](model::EditState&& e) {
+    // Per-arc deposits, seeded from the arc contract colors: the default
+    // split simply "deposits what the arcs declare".
+    std::vector<symmetri::Token> deposits;
+    deposits.reserve(e.net.output_n[transition_idx].size());
+    for (const auto& arc : e.net.output_n[transition_idx]) {
+      deposits.push_back(arc.color);
+    }
+    e.net.output[transition_idx] = std::move(deposits);
+    return e;
+  });
+}
+
+void mergeTransitionOutput(size_t transition_idx) {
+  rxdispatch::pushEdit([=](model::EditState&& e) {
+    // Collapse to a single stamp color; keep the first per-arc deposit so
+    // toggling back and forth is not destructive for the common case.
+    const auto* deposits = std::get_if<std::vector<symmetri::Token>>(
+        &e.net.output[transition_idx]);
+    e.net.output[transition_idx] = (deposits != nullptr && !deposits->empty())
+                                       ? deposits->front()
+                                       : symmetri::Token(symmetri::Success);
+    return e;
+  });
+}
+
+void updateTransitionOutputArcColor(size_t transition_idx, size_t sub_idx,
+                                    symmetri::Token color) {
+  rxdispatch::pushEdit([=](model::EditState&& e) {
+    if (auto* deposits = std::get_if<std::vector<symmetri::Token>>(
+            &e.net.output[transition_idx]);
+        deposits != nullptr && sub_idx < deposits->size()) {
+      (*deposits)[sub_idx] = color;
+    }
     return e;
   });
 }

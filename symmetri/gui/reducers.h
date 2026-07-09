@@ -74,7 +74,20 @@ void removeTokenFromPlace(symmetri::AugmentedToken);
 
 void tryFire(size_t transition_idx);
 
+// Set a single stamp color for all output arcs (shape 2 / legacy). Assigning
+// it collapses a split (per-arc) spec.
 void updateTransitionOutputColor(size_t transition_idx, symmetri::Token color);
+
+// Switch the transition to per-arc deposits (shape 1), seeded from the output
+// arcs' contract colors.
+void splitTransitionOutput(size_t transition_idx);
+
+// Collapse per-arc deposits back to a single stamp color (the first deposit).
+void mergeTransitionOutput(size_t transition_idx);
+
+// Edit one deposit of a split output spec; no-op on single-color transitions.
+void updateTransitionOutputArcColor(size_t transition_idx, size_t sub_idx,
+                                    symmetri::Token color);
 
 void deleteSelected(const std::vector<size_t>& t_highlight,
                     const std::vector<size_t>& p_highlight);

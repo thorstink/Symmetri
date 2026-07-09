@@ -45,11 +45,16 @@ using Arc = std::tuple<NodeType, size_t, size_t>;
 // (node-type, node idx)
 using Node = std::tuple<NodeType, size_t>;
 
+// What a transition deposits when it fires in the simulation. Mirrors the two
+// legal shapes of symmetri::FireResult: a single Token is stamped on every
+// output place (legacy / shape 2), a vector holds one deposit color per output
+// arc, indexed like output_n[t] (full cover / shape 1).
+using OutputSpec = std::variant<symmetri::Token, std::vector<symmetri::Token>>;
+
 // A copyable, editor-local net. It mirrors symmetri::Petri::PTNet's fields, but
 // replaces the move-only `store` (std::vector<symmetri::Callback>) with the
-// only thing the editor needs from it: the token each transition outputs when
-// fired
-// (`fire(store[i])`). Being copyable is what lets EditState — and therefore the
+// only thing the editor needs from it: what each transition deposits when
+// fired. Being copyable is what lets EditState — and therefore the
 // undo history — keep real snapshots.
 struct Net {
   std::vector<std::string> place, transition;
@@ -57,7 +62,7 @@ struct Net {
       output_n;  // (place id, colour)
   std::vector<symmetri::SmallVector> p_to_ts_n;
   std::vector<int8_t> priority;
-  std::vector<symmetri::Token> output;  // per-transition fire() result
+  std::vector<OutputSpec> output;  // per-transition fire() deposits
 };
 
 // The undoable document: the net, its marking, layout and the event log. Edit

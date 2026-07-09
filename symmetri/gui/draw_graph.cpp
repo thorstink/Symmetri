@@ -170,7 +170,21 @@ bool draw_arcs(size_t t_idx, const model::ViewModel& vm) {
     }
   }
 
-  const ImU32 output_color = getColor(vm.net.output[t_idx]);
+  // Output arcs are drawn in what the transition deposits on them: the single
+  // stamp color, or the per-arc deposit color when the spec is split.
+  const auto output_color_for = [&](size_t sub_idx) -> ImU32 {
+    return getColor(std::visit(
+        [&](const auto& out) -> symmetri::Token {
+          using T = std::decay_t<decltype(out)>;
+          if constexpr (std::is_same_v<T, symmetri::Token>) {
+            return out;
+          } else {
+            return sub_idx < out.size() ? out[sub_idx]
+                                        : symmetri::Token(symmetri::Success);
+          }
+        },
+        vm.net.output[t_idx]));
+  };
   for (size_t sub_idx = 0; sub_idx < vm.net.output_n[t_idx].size(); sub_idx++) {
     const size_t p_idx = vm.net.output_n[t_idx][sub_idx].place;
     const float opacity =
@@ -186,8 +200,8 @@ bool draw_arcs(size_t t_idx, const model::ViewModel& vm) {
     // Negate offset: output arcs travel in the opposite direction to input
     // arcs, which flips the perpendicular vector, so we compensate to keep arcs
     // on consistent sides relative to the canonical p→t axis.
-    if (draw_bezier_arc(t_center, p_center, -offset, output_color, opacity,
-                        node_pad.x * 0.5f, false)) {
+    if (draw_bezier_arc(t_center, p_center, -offset, output_color_for(sub_idx),
+                        opacity, node_pad.x * 0.5f, false)) {
       an_arc_is_hovered = true;
       if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
         (ImGui::IsKeyDown(ImGuiKey_LeftShift) ? addHighlightArc

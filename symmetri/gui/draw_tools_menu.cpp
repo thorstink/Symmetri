@@ -93,13 +93,43 @@ void draw_selection_menu(const model::ViewModel& vm) {
                      &updatePriority, (void*)&l_priority->first);
     ImGui::Text("Output");
     ImGui::SameLine();
-    if (ImGui::BeginCombo("##output", vm.net.output[idx].toString().data())) {
-      for (const auto& color : vm.colors) {
-        if (ImGui::Selectable(color.data())) {
-          updateTransitionOutputColor(idx, symmetri::Token(color.data()));
+    // Mirrors the two legal deposit shapes: one color stamped on every output
+    // arc, or one deposit per output arc (seeded from the arc colors).
+    const auto* deposits =
+        std::get_if<std::vector<symmetri::Token>>(&vm.net.output[idx]);
+    bool per_arc = deposits != nullptr;
+    if (ImGui::Checkbox("per-arc##output_mode", &per_arc)) {
+      per_arc ? splitTransitionOutput(idx) : mergeTransitionOutput(idx);
+    }
+    if (deposits == nullptr) {
+      const auto& single = std::get<symmetri::Token>(vm.net.output[idx]);
+      if (ImGui::BeginCombo("##output", single.toString().data())) {
+        for (const auto& color : vm.colors) {
+          if (ImGui::Selectable(color.data())) {
+            updateTransitionOutputColor(idx, symmetri::Token(color.data()));
+          }
         }
+        ImGui::EndCombo();
       }
-      ImGui::EndCombo();
+    } else {
+      for (size_t sub_idx = 0; sub_idx < deposits->size(); sub_idx++) {
+        ImGui::PushID(static_cast<int>(sub_idx));
+        const auto& target_place =
+            vm.net.place[vm.net.output_n[idx][sub_idx].place];
+        ImGui::Text("-> %s", target_place.c_str());
+        ImGui::SameLine();
+        if (ImGui::BeginCombo("##arc_output",
+                              (*deposits)[sub_idx].toString().data())) {
+          for (const auto& color : vm.colors) {
+            if (ImGui::Selectable(color.data())) {
+              updateTransitionOutputArcColor(idx, sub_idx,
+                                             symmetri::Token(color.data()));
+            }
+          }
+          ImGui::EndCombo();
+        }
+        ImGui::PopID();
+      }
     }
     ImGui::PopID();
   }
