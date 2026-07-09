@@ -14,6 +14,7 @@ add_executable(${PROJECT_NAME}_symmetri_doctest
   bugs.cpp
   callback.cpp
   colors.cpp
+  data_tokens.cpp
   external_input.cpp
   parser.cpp
   petri_fire.cpp

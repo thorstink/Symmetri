@@ -8,7 +8,9 @@
 #include <cassert>
 #include <cstdint>
 #include <limits>
+#include <stdexcept>
 #include <string_view>
+#include <typeinfo>
 #include <vector>
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -64,53 +66,42 @@ constexpr auto type_name() -> std::string_view {
 namespace symmetri {
 
 /**
+ * @brief Thrown when a payload is attached to (or read from) a token in a way
+ * that contradicts the color's type binding — e.g. putting data on a dataless
+ * color like Success, or putting a std::string on a color bound to a Path.
+ */
+struct TokenTypeError : public std::logic_error {
+  using std::logic_error::logic_error;
+};
+
+/**
+ * @brief Maps a payload type to its (unique) token-color. Specialized by
+ * CREATE_TYPED_TOKEN; the bijection is enforced at compile time — binding the
+ * same payload type to a second color is a redefinition error.
+ */
+template <typename T>
+struct color_of;  // undefined primary: type not bound to any color
+
+/**
  * @brief Tokens are elements that can reside in places. Tokens can have a color
  * which makes them distinguishable from other tokens. Tokens that have the same
  * color are not distinguishable. Users can create their own token-colors by
  * either using the CREATE_CUSTOM_TOKEN-macro (compile-time) or by calling
- * Token's public constructor which takes a token-name.
+ * Token's public constructor which takes a token-name. A color created with
+ * CREATE_TYPED_TOKEN is additionally bound 1:1 to a payload type: tokens of
+ * that color carry that type, and only that type.
  *
  */
 class Token {
- private:
-  constexpr uint8_t find(const char* key) {
-    uint8_t i = 0;
-    while (i < colors.size()) {
-      if (std::string_view(colors[i].data()) == std::string_view(key)) return i;
-      ++i;
-    }
-    return findSlot();
-  }
-
-  constexpr uint8_t findSlot() {
-    uint8_t i = 0;
-    while (i < colors.size()) {
-      if (std::string_view(colors[i].data()).empty()) return i;
-      ++i;
-    }
-    return i;
-  }
-
  public:
   /**
    * @brief Get a list of all the colors
    *
    * @return std::vector<std::string_view>
    */
-  static std::vector<std::string_view> getColors() {
-    std::vector<std::string_view> _colors;
-    _colors.reserve(colors.size());
-    for (const auto& s : colors) {
-      if (strlen(s.data()) > 0) {
-        _colors.emplace_back(s.data());
-      }
-    }
-    return _colors;
-  }
+  static std::vector<std::string_view> getColors();
 
-  constexpr std::string_view toString() const {
-    return std::string_view(colors[id].data());
-  }
+  std::string_view toString() const;
 
   template <class T>
   constexpr bool operator==(const T& t) const {
@@ -127,16 +118,37 @@ class Token {
 
   constexpr uint8_t toIndex() const { return id; }
 
-  constexpr Token(const char* _id) : id(find(_id)) {
-    assert(id < colors.size() &&
-           "There can only be kMaxTokenColors different token-colors.");
-    if (strlen(colors[id].data()) == 0) {
-      strcpy(colors[id].data(), _id);
-    }
-  }
+  Token(const char* _id);
+
+  /**
+   * @brief The payload type this color is bound to, or nullptr for a dataless
+   * color. The binding is established by CREATE_TYPED_TOKEN at static
+   * initialization; colors created any other way (including colors parsed from
+   * net files that were never defined in C++) are dataless.
+   */
+  const std::type_info* boundType() const;
 
  protected:
-  inline static std::array<std::array<char, 64>, 128> colors = {};
+  /**
+   * @brief Bind this color to payload type T. Re-binding to a different type
+   * is a programming error (the type defines the token).
+   */
+  template <typename T>
+  void bind() const {
+    bindTo(typeid(T));
+  }
+  void bindTo(const std::type_info& t) const;
+
+  // The color registries (name and payload-type, indexed by color id) live as
+  // function-local statics defined in colors.cpp — deliberately NOT inline
+  // statics in this header. Inline statics are weak symbols, and when a static
+  // library and the linking application both instantiate them, the linker (in
+  // particular macOS ld) is not guaranteed to coalesce the copies: colors
+  // registered by the application would be invisible to library code. One
+  // definition in one translation unit makes the registry unambiguous.
+  static std::array<std::array<char, 64>, 128>& nameRegistry();
+  static std::array<const std::type_info*, 128>& typeRegistry();
+
   uint8_t id;
 };
 
@@ -155,12 +167,36 @@ struct std::hash<symmetri::Token> {
  * end up in the symmetri namespace.
  *
  */
-#define CREATE_CUSTOM_TOKEN(name)                                   \
-  namespace symmetri {                                              \
-  struct name : public Token {                                      \
-    constexpr name() : Token(sym_impl::type_name<name>().data()) {} \
-  };                                                                \
-  static inline name name;                                          \
+#define CREATE_CUSTOM_TOKEN(name)                         \
+  namespace symmetri {                                    \
+  struct name : public Token {                            \
+    name() : Token(sym_impl::type_name<name>().data()) {} \
+  };                                                      \
+  static inline name name;                                \
+  }
+
+/**
+ * @brief Creates a token-color bound 1:1 to a payload type: every token of
+ * this color carries exactly that type (the type defines the token). The
+ * variadic parameter is the payload type (variadic so template types
+ * containing commas work). The bijection is enforced both ways: re-binding
+ * the color throws, and binding the same payload type to a second color is a
+ * compile-time redefinition error (color_of<T> is specialized twice). Because
+ * of the bijection, the color can be inferred from a payload value — see
+ * BasicToken's inference constructor.
+ *
+ */
+#define CREATE_TYPED_TOKEN(name, ...)                                         \
+  namespace symmetri {                                                        \
+  struct name : public Token {                                                \
+    using payload_t = __VA_ARGS__;                                            \
+    name() : Token(sym_impl::type_name<name>().data()) { bind<payload_t>(); } \
+  };                                                                          \
+  static inline name name;                                                    \
+  template <>                                                                 \
+  struct color_of<__VA_ARGS__> {                                              \
+    static Token value() { return name; }                                     \
+  };                                                                          \
   }
 
 CREATE_CUSTOM_TOKEN(Scheduled)

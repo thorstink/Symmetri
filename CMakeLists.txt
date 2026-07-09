@@ -9,7 +9,7 @@ endif()
 
 project(symmetri VERSION ${CMAKE_MATCH_1})
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -42,4 +42,5 @@ if(BUILD_EXAMPLES)
     add_subdirectory(examples/hello_world)
     add_subdirectory(examples/combinations)
     add_subdirectory(examples/performance)
+    add_subdirectory(examples/typed_tokens)
 endif()

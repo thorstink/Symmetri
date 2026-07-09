@@ -129,13 +129,13 @@ TEST_CASE("Deadlocked transition shows up in marking") {
   app.registerCallback("t0", [] { return Deadlocked; });
   fire(app);
   const auto marking = app.getMarking();
-  for (auto [p, t] : marking) {
+  for (const auto& [p, t, d] : marking) {
     std::cout << t.toString() << ", " << p << ", " << unsigned(t.toIndex())
               << ", " << (Deadlocked == t) << (t == Deadlocked) << std::endl;
   }
   const bool has_deadlock_token =
       std::find_if(marking.cbegin(), marking.cend(), [=](const auto& pc) {
-        return Deadlocked == pc.second && pc.first == "Pc";
+        return Deadlocked == pc.color && pc.place == "Pc";
       }) != marking.end();
   CHECK(has_deadlock_token);
 }
@@ -152,7 +152,7 @@ TEST_CASE("Error'd transition shows up in marking") {
   const auto marking = app.getMarking();
   const bool has_failed_token =
       std::find_if(marking.cbegin(), marking.cend(), [=](const auto& pc) {
-        return Failed == pc.second && pc.first == "Pc";
+        return Failed == pc.color && pc.place == "Pc";
       }) != marking.end();
   CHECK(has_failed_token);
 }

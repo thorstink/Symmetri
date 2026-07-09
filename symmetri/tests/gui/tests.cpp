@@ -248,9 +248,8 @@ TEST_CASE("addArc - place→transition adds to input_n and p_to_ts_n") {
   s = drain(std::move(s));
 
   REQUIRE(s.edit.net.input_n[0].size() == 1);
-  CHECK(std::get<size_t>(s.edit.net.input_n[0][0]) == 0);
-  CHECK(std::get<symmetri::Token>(s.edit.net.input_n[0][0]) ==
-        symmetri::Success);
+  CHECK(s.edit.net.input_n[0][0].place == 0);
+  CHECK(s.edit.net.input_n[0][0].color == symmetri::Success);
   REQUIRE(s.edit.net.p_to_ts_n[0].size() == 1);
   CHECK(s.edit.net.p_to_ts_n[0][0] == 0);
 }
@@ -264,7 +263,7 @@ TEST_CASE("addArc - transition→place adds to output_n only") {
   s = drain(std::move(s));
 
   REQUIRE(s.edit.net.output_n[0].size() == 1);
-  CHECK(std::get<size_t>(s.edit.net.output_n[0][0]) == 0);
+  CHECK(s.edit.net.output_n[0][0].place == 0);
   CHECK(s.edit.net.input_n[0].empty());
 }
 
@@ -334,10 +333,10 @@ TEST_CASE(
   REQUIRE(s.edit.net.place.size() == 1);
   // Arc to old p1 (now p0) must be at index 0.
   REQUIRE(s.edit.net.input_n[0].size() == 1);
-  CHECK(std::get<size_t>(s.edit.net.input_n[0][0]) == 0);
+  CHECK(s.edit.net.input_n[0][0].place == 0);
   // Token for old p1 must shift to index 0.
   REQUIRE(s.edit.tokens.size() == 1);
-  CHECK(std::get<size_t>(s.edit.tokens[0]) == 0);
+  CHECK(s.edit.tokens[0].place == 0);
 }
 
 TEST_CASE("removePlace - drops arcs and tokens referencing the removed place") {
@@ -409,7 +408,7 @@ TEST_CASE("addTokenToPlace - appends token") {
   s = drain(std::move(s));
 
   REQUIRE(s.edit.tokens.size() == 1);
-  CHECK(std::get<size_t>(s.edit.tokens[0]) == 0);
+  CHECK(s.edit.tokens[0].place == 0);
 }
 
 TEST_CASE("removeTokenFromPlace - removes first matching token") {
@@ -452,7 +451,7 @@ TEST_CASE("tryFire - enabled transition fires and updates marking") {
   REQUIRE(s.edit.log.size() == 1);
   // Token was consumed from p0 and produced in p1.
   REQUIRE(s.edit.tokens.size() == 1);
-  CHECK(std::get<size_t>(s.edit.tokens[0]) == 1);
+  CHECK(s.edit.tokens[0].place == 1);
 }
 
 TEST_CASE("tryFire - disabled transition does not fire") {
@@ -487,8 +486,7 @@ TEST_CASE("updateArcColor - changes color on input arc") {
   updateArcColor(model::Model::NodeType::Place, 0, 0, symmetri::Failed);
   s = drain(std::move(s));
 
-  CHECK(std::get<symmetri::Token>(s.edit.net.input_n[0][0]) ==
-        symmetri::Failed);
+  CHECK(s.edit.net.input_n[0][0].color == symmetri::Failed);
 }
 
 TEST_CASE("updateArcColor - changes color on output arc") {
@@ -499,8 +497,7 @@ TEST_CASE("updateArcColor - changes color on output arc") {
   updateArcColor(model::Model::NodeType::Transition, 0, 0, symmetri::Failed);
   s = drain(std::move(s));
 
-  CHECK(std::get<symmetri::Token>(s.edit.net.output_n[0][0]) ==
-        symmetri::Failed);
+  CHECK(s.edit.net.output_n[0][0].color == symmetri::Failed);
 }
 
 TEST_CASE("updatePlaceName - renames place via callback") {

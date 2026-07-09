@@ -13,9 +13,10 @@ void printLog(const symmetri::Eventlog &eventlog) {
 
 symmetri::Marking getGoal(const symmetri::Marking &initial_marking) {
   auto goal = initial_marking;
-  for (auto &[p, c] : goal) {
-    p = (p == "TaskBucket") ? "SuccessfulTasks" : p;
-    c = symmetri::Success;
+  for (auto &token : goal) {
+    token.place =
+        (token.place == "TaskBucket") ? "SuccessfulTasks" : token.place;
+    token.color = symmetri::Success;
   }
   return goal;
 }

@@ -148,12 +148,11 @@ void removePlace(size_t place_idx) {
     const auto reindex = [place_idx](auto& tokens) {
       tokens.erase(std::remove_if(tokens.begin(), tokens.end(),
                                   [place_idx](const auto& at) {
-                                    return std::get<size_t>(at) == place_idx;
+                                    return at.place == place_idx;
                                   }),
                    tokens.end());
       for (auto& at : tokens) {
-        auto& p = std::get<size_t>(at);
-        if (p > place_idx) --p;
+        if (at.place > place_idx) --at.place;
       }
     };
     reindex(e.tokens);                              // marking
@@ -198,9 +197,10 @@ void removeTransition(size_t t_idx) {
 void updateArcColor(model::Model::NodeType source_node_type, size_t idx,
                     size_t sub_idx, const symmetri::Token color) {
   rxdispatch::pushEdit([=](model::EditState&& e) {
-    std::get<symmetri::Token>((source_node_type == model::Model::NodeType::Place
-                                   ? e.net.input_n
-                                   : e.net.output_n)[idx][sub_idx]) = color;
+    (source_node_type == model::Model::NodeType::Place
+         ? e.net.input_n
+         : e.net.output_n)[idx][sub_idx]
+        .color = color;
     return e;
   });
 }
@@ -426,8 +426,8 @@ void tryFire(size_t transition_idx) {
       // add
       const auto& lookup_t = e.net.output_n[transition_idx];
       const auto result = e.net.output[transition_idx];
-      for (const auto& [p, c] : lookup_t) {
-        e.tokens.emplace_back(p, result);
+      for (const auto& arc : lookup_t) {
+        e.tokens.emplace_back(arc.place, result);
       }
       e.log.push_back({transition_idx, result, now});
     }

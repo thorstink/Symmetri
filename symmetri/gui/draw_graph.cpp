@@ -134,13 +134,13 @@ bool draw_arcs(size_t t_idx, const model::ViewModel& vm) {
     const float spread = 30.0f * vm.zoom_factor;
     size_t n = 0, k = 0;
     for (size_t i = 0; i < vm.net.input_n[t_idx].size(); i++) {
-      if (std::get<0>(vm.net.input_n[t_idx][i]) == p_idx) {
+      if (vm.net.input_n[t_idx][i].place == p_idx) {
         if (is_input && i == sub_idx) k = n;
         n++;
       }
     }
     for (size_t i = 0; i < vm.net.output_n[t_idx].size(); i++) {
-      if (std::get<0>(vm.net.output_n[t_idx][i]) == p_idx) {
+      if (vm.net.output_n[t_idx][i].place == p_idx) {
         if (!is_input && i == sub_idx) k = n;
         n++;
       }
@@ -149,7 +149,7 @@ bool draw_arcs(size_t t_idx, const model::ViewModel& vm) {
   };
 
   for (size_t sub_idx = 0; sub_idx < vm.net.input_n[t_idx].size(); sub_idx++) {
-    const auto& [p_idx, color] = vm.net.input_n[t_idx][sub_idx];
+    const auto& [p_idx, color, data] = vm.net.input_n[t_idx][sub_idx];
     const float opacity =
         should_highlight(model::Model::NodeType::Place, t_idx, sub_idx) ? 1.0f
                                                                         : 0.5f;
@@ -172,7 +172,7 @@ bool draw_arcs(size_t t_idx, const model::ViewModel& vm) {
 
   const ImU32 output_color = getColor(vm.net.output[t_idx]);
   for (size_t sub_idx = 0; sub_idx < vm.net.output_n[t_idx].size(); sub_idx++) {
-    const size_t p_idx = std::get<0>(vm.net.output_n[t_idx][sub_idx]);
+    const size_t p_idx = vm.net.output_n[t_idx][sub_idx].place;
     const float opacity =
         should_highlight(model::Model::NodeType::Transition, t_idx, sub_idx)
             ? 1.0f
@@ -238,18 +238,17 @@ void draw_nodes(model::Model::NodeType node_type, size_t idx,
         0.5f * node_window_padding.x, IM_COL32(200, 200, 200, opacity), -5);
     draw_list->AddCircle(offset + GetCenterPos(position, node_window_padding),
                          0.5f * node_window_padding.x, select_color, -5, 3.0f);
-    const auto is_token_in_place = [idx](const auto token) {
-      return std::get<size_t>(token) == idx;
+    const auto is_token_in_place = [idx](const auto& token) {
+      return token.place == idx;
     };
     const size_t tokens_in_place =
         std::ranges::count_if(tokens, is_token_in_place);
     const auto coordinates = getTokenCoordinates(tokens_in_place);
     if (not coordinates.empty()) {
       int i = 0;
-      for (auto color : tokens | std::views::filter(is_token_in_place) |
-                            std::views::transform([](const auto& t) {
-                              return std::get<symmetri::Token>(t);
-                            })) {
+      for (auto color :
+           tokens | std::views::filter(is_token_in_place) |
+               std::views::transform([](const auto& t) { return t.color; })) {
         draw_list->AddCircle(coordinates[i] + offset +
                                  GetCenterPos(position, node_window_padding),
                              0.08f * node_window_padding.x,

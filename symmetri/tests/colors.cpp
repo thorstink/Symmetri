@@ -20,7 +20,7 @@ TEST_CASE("Test color.") {
 
   m.net.registerCallback("t0", &red);
 
-  for (auto [p, c] : m.getMarking()) {
+  for (const auto& [p, c, d] : m.getMarking()) {
     std::cout << p << ", " << unsigned(c.toIndex()) << std::endl;
   }
   // t0 is enabled.
@@ -35,7 +35,7 @@ TEST_CASE("Test color.") {
   // processed but post are not:
   {
     Marking expected = {{"p2", Red}};
-    for (auto [p, c] : marking) {
+    for (const auto& [p, c, d] : marking) {
       std::cout << p << ", " << unsigned(c.toIndex()) << std::endl;
     }
     CHECK(MarkingEquality(marking, expected));

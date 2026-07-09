@@ -26,13 +26,6 @@
 namespace symmetri {
 
 /**
- * @brief AugmentedToken describes a token with a color in a
- * particular place.
- *
- */
-using AugmentedToken = std::tuple<size_t, Token>;
-
-/**
  * @brief a minimal Event representation.
  *
  */
@@ -110,12 +103,14 @@ struct Petri;
 using Reducer = std::function<void(Petri&)>;
 
 /**
- * @brief deducts the set input from the current token distribution
+ * @brief deducts the set input from the current token distribution and returns
+ * the tokens that were consumed (payloads intact), in input-arc order.
  *
  * @param inputs a vector representing the tokens to be removed
+ * @return std::vector<AugmentedToken> the consumed tokens
  */
-void deductMarking(std::vector<AugmentedToken>& tokens,
-                   const SmallVectorInput& inputs);
+std::vector<AugmentedToken> deductMarking(std::vector<AugmentedToken>& tokens,
+                                          const SmallVectorInput& inputs);
 
 /**
  * @brief Petri is a data structure that encodes the Petri net and holds
@@ -264,19 +259,35 @@ struct Petri {
       pool;  ///< A pointer to the threadpool used to defer Callbacks.
 
   /**
-   * @brief Schedules the Callback associated with t on the threadpool
+   * @brief Schedules the Callback associated with t on the threadpool. The
+   * tokens consumed by this firing are handed to the Callback.
    *
    * @param t transition as index in transition vector
+   * @param consumed the tokens this firing deducted from the marking
    */
-  void fireAsynchronous(const size_t t);
+  void fireAsynchronous(const size_t t,
+                        std::vector<AugmentedToken>&& consumed = {});
+
+  /**
+   * @brief Applies a FireResult to the marking: if it carries deposits, those
+   * tokens are placed (each must name an output place of t — others are
+   * dropped); otherwise a token colored `state` is placed in every output
+   * place of t.
+   *
+   * @param result what the fired Callback produced
+   * @param t transition as index in transition vector
+   */
+  void deposit(const FireResult& result, const size_t t);
 
  private:
   /**
-   * @brief Runs the Callback associated with t immediately.
+   * @brief Runs the Callback associated with t immediately. The tokens
+   * consumed by this firing are handed to the Callback.
    *
    * @param t transition as index in transition vector
+   * @param consumed the tokens this firing deducted from the marking
    */
-  void fireSynchronous(const size_t t);
+  void fireSynchronous(const size_t t, std::vector<AugmentedToken>&& consumed);
 };
 
 std::tuple<std::vector<std::string>, std::vector<std::string>,

@@ -40,9 +40,8 @@ void drawTokenLine(const symmetri::AugmentedToken& at, int id) {
   ImGui::PopStyleColor(4);
   ImGui::PopID();
   ImGui::SameLine();
-  ImGui::TextColored(
-      ImGui::ColorConvertU32ToFloat4(getColor(std::get<symmetri::Token>(at))),
-      "%s", std::get<symmetri::Token>(at).toString().data());
+  ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(getColor(at.color)), "%s",
+                     at.color.toString().data());
 }
 
 void draw_selection_menu(const model::ViewModel& vm) {
@@ -64,7 +63,7 @@ void draw_selection_menu(const model::ViewModel& vm) {
     ImGui::Text("Marking");
     int token_id = 0;
     for (const auto& at : vm.tokens | std::views::filter([=](const auto& at) {
-                            return std::get<size_t>(at) == idx;
+                            return at.place == idx;
                           })) {
       drawTokenLine(at, token_id++);
     }
@@ -107,10 +106,10 @@ void draw_selection_menu(const model::ViewModel& vm) {
   if (not vm.arc_highlight.empty()) ImGui::Separator();
 
   for (const auto& [node_type, selected_idx, sub_idx] : vm.arc_highlight) {
-    const auto color = std::get<symmetri::Token>(
-        (node_type == model::Model::NodeType::Place
-             ? vm.net.input_n
-             : vm.net.output_n)[selected_idx][sub_idx]);
+    const auto color = (node_type == model::Model::NodeType::Place
+                            ? vm.net.input_n
+                            : vm.net.output_n)[selected_idx][sub_idx]
+                           .color;
 
     if (node_type == model::Model::NodeType::Place) {
       drawColorDropdownMenu(std::string(color.toString()), vm.colors,
@@ -185,7 +184,7 @@ void draw_tools_menu(const model::ViewModel& vm) {
       ImGui::EndTabItem();
     }
     if (ImGui::BeginTabItem("Marking")) {
-      for (const auto& [place, color] : vm.tokens) {
+      for (const auto& [place, color, data] : vm.tokens) {
         ImGui::Text("%s,", vm.net.place[place].c_str());
         ImGui::SameLine();
         ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(getColor(color)),

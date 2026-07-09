@@ -37,11 +37,10 @@ auto toXml(const model::Net& net,
     s_child->InsertEndChild(s_s_child);
     child->InsertEndChild(s_child);
     for (const auto& token : tokens) {
-      if (std::get<size_t>(token) == idx) {
+      if (token.place == idx) {
         XMLElement* marking = doc->NewElement("initialMarking");
-        marking->SetAttribute(
-            "color",
-            std::string(std::get<symmetri::Token>(token).toString()).c_str());
+        marking->SetAttribute("color",
+                              std::string(token.color.toString()).c_str());
         child->InsertEndChild(marking);
       }
     }
@@ -61,20 +60,16 @@ auto toXml(const model::Net& net,
 
     for (const auto& token : net.input_n[idx]) {
       XMLElement* child = doc->NewElement("arc");
-      child->SetAttribute("source", net.place[std::get<size_t>(token)].c_str());
+      child->SetAttribute("source", net.place[token.place].c_str());
       child->SetAttribute("target", net.transition[idx].c_str());
-      child->SetAttribute(
-          "color",
-          std::string(std::get<symmetri::Token>(token).toString()).c_str());
+      child->SetAttribute("color", std::string(token.color.toString()).c_str());
       root->InsertEndChild(child);
     }
     for (const auto& token : net.output_n[idx]) {
       XMLElement* child = doc->NewElement("arc");
       child->SetAttribute("source", net.transition[idx].c_str());
-      child->SetAttribute("target", net.place[std::get<size_t>(token)].c_str());
-      child->SetAttribute(
-          "color",
-          std::string(std::get<symmetri::Token>(token).toString()).c_str());
+      child->SetAttribute("target", net.place[token.place].c_str());
+      child->SetAttribute("color", std::string(token.color.toString()).c_str());
       root->InsertEndChild(child);
     }
   }

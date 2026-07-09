@@ -69,8 +69,8 @@ ParsedNet parseNet(const std::filesystem::path& file) {
   for (const auto& pl : p.net.place) {
     p.p_positions.push_back(positions.at(pl));
   }
-  for (const auto& [pl, c] : marking) {
-    p.tokens.push_back({symmetri::toIndex(p.net.place, pl), c});
+  for (const auto& [pl, c, d] : marking) {
+    p.tokens.push_back({symmetri::toIndex(p.net.place, pl), c, d});
   }
   return p;
 }
@@ -107,7 +107,7 @@ model::EditReducer appendInstaller(ParsedNet p, std::filesystem::path file) {
     e.net.output.insert(e.net.output.end(), p.net.output.begin(),
                         p.net.output.end());
     const auto offset = [base](auto arcs) {
-      for (auto& [idx, c] : arcs) idx += base;
+      for (auto& arc : arcs) arc.place += base;
       return arcs;
     };
     for (const auto& arcs : p.net.input_n) {
@@ -123,7 +123,7 @@ model::EditReducer appendInstaller(ParsedNet p, std::filesystem::path file) {
     e.p_positions.insert(e.p_positions.end(), p.p_positions.begin(),
                          p.p_positions.end());
     for (auto tok : p.tokens) {
-      std::get<size_t>(tok) += base;
+      tok.place += base;
       e.tokens.push_back(tok);
     }
     e.active_file = file;

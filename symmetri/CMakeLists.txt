@@ -2,6 +2,7 @@ include_directories(include submodules)
 
 # lib
 add_library(${PROJECT_NAME} SHARED
+  colors.cpp
   types.cpp
   tasks.cpp
   symmetri.cpp
@@ -79,6 +80,7 @@ endif()
 
 if(BUILD_GUI)
   add_library(static_${PROJECT_NAME} STATIC
+    colors.cpp
     types.cpp
     tasks.cpp
     symmetri.cpp

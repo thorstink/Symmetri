@@ -37,8 +37,7 @@ populateIoLookups(const Net& _net, const std::vector<Place>& ordered_places) {
   for (const auto& [t, io] : _net) {
     SmallVectorInput q_in, q_out;
     for (const auto& p : io.first) {
-      q_in.push_back(
-          std::make_tuple(toIndex(ordered_places, p.first), p.second));
+      q_in.push_back({toIndex(ordered_places, p.first), p.second});
     }
     input_n.push_back(q_in);
     for (const auto& p : io.second) {
@@ -56,8 +55,8 @@ std::vector<SmallVector> createReversePlaceToTransitionLookup(
   for (size_t p = 0; p < place_count; p++) {
     SmallVector q;
     for (size_t c = 0; c < transition_count; c++) {
-      for (const auto& [input_place, input_color] : input_transitions[c]) {
-        if (p == input_place && std::find(q.begin(), q.end(), c) == q.end()) {
+      for (const auto& arc : input_transitions[c]) {
+        if (p == arc.place && std::find(q.begin(), q.end(), c) == q.end()) {
           q.push_back(c);
         }
       }
@@ -106,30 +105,54 @@ Petri::Petri(const Net& _net, const PriorityTable& _priority,
 std::vector<AugmentedToken> Petri::toTokens(
     const Marking& marking) const noexcept {
   std::vector<AugmentedToken> tokens;
-  for (const auto& [p, c] : marking) {
-    tokens.push_back({toIndex(net.place, p), c});
+  for (const auto& [p, c, data] : marking) {
+    tokens.push_back({toIndex(net.place, p), c, data});
   }
   return tokens;
 }
 
-void Petri::fireSynchronous(const size_t t) {
-  const auto& task = net.store[t];
-  const auto& lookup_t = net.output_n[t];
-  const auto now = Clock::now();
-  log.push_back({t, Started, now});
-  auto result = fire(task);
-  log.push_back({t, result, now});
-  for (const auto& [p, c] : lookup_t) {
-    tokens.push_back({p, result});
+void Petri::deposit(const FireResult& result, const size_t t) {
+  const auto& outputs = net.output_n[t];
+  if (result.deposits.has_value()) {
+    // The callback chose exactly which tokens to place; each must name an
+    // output place of t (deposits elsewhere are dropped — the enabling scan
+    // after a synchronous fire only looks at t's output places).
+    for (const auto& d : *result.deposits) {
+      const size_t p = toIndex(net.place, d.place);
+      const bool is_output =
+          std::find_if(outputs.begin(), outputs.end(), [p](const auto& arc) {
+            return arc.place == p;
+          }) != outputs.end();
+      if (is_output) {
+        tokens.push_back({p, d.color, d.data});
+      }
+    }
+  } else {
+    // Legacy: stamp the result color on every output place.
+    for (const auto& arc : outputs) {
+      tokens.push_back({arc.place, result.state});
+    }
   }
 }
 
-void Petri::fireAsynchronous(const size_t t_i) {
+void Petri::fireSynchronous(const size_t t,
+                            std::vector<AugmentedToken>&& consumed) {
+  const auto& task = net.store[t];
+  const auto now = Clock::now();
+  log.push_back({t, Started, now});
+  auto result = fire(task, consumed);
+  log.push_back({t, result.state, now});
+  deposit(result, t);
+}
+
+void Petri::fireAsynchronous(const size_t t_i,
+                             std::vector<AugmentedToken>&& consumed) {
   // register that we schedule a particular transition
   scheduled_callbacks.push_back(t_i);
   log.push_back({t_i, Scheduled, Clock::now()});
-  // defer execution of the transition to the threadpool
-  pool->push([t_i, this] {
+  // defer execution of the transition to the threadpool; the consumed tokens
+  // (already deducted on the petri loop) travel along to the Callback
+  pool->push([t_i, this, consumed = std::move(consumed)] {
     // log the start on the petri loop;
     reducer_queue->enqueue([t_i, t_start = Clock::now()](Petri& model) {
       model.log.push_back({t_i, Started, t_start});
@@ -137,35 +160,33 @@ void Petri::fireAsynchronous(const size_t t_i) {
 
     // fire the transition and defer a reducer to the petri loop to update the
     // marking and log
-    reducer_queue->enqueue([t_i, result = fire(net.store[t_i])](Petri& model) {
-      // if it is in the active transition set it means it is finished and
-      // we should process it.
-      const auto t_end = model.net.store[t_i].getEndTime();
-      const auto it = std::find(model.scheduled_callbacks.begin(),
-                                model.scheduled_callbacks.end(), t_i);
-      if (it != model.scheduled_callbacks.end()) {
-        const auto& place_list = model.net.output_n[t_i];
-        if (model.tokens.size() + place_list.size() > model.tokens.capacity()) {
-          model.tokens.reserve(
-              std::max(2 * model.tokens.size(),
-                       model.tokens.size() + place_list.size()));
-        }
-        for (const auto& [p, c] : place_list) {
-          model.tokens.emplace_back(p, result);
-        }
-        std::swap(*std::prev(model.scheduled_callbacks.end()), *it);
-        model.scheduled_callbacks.pop_back();
-      };
-      model.log.push_back({t_i, result, t_end});
-    });
+    reducer_queue->enqueue(
+        [t_i, result = fire(net.store[t_i], consumed)](Petri& model) {
+          // if it is in the active transition set it means it is finished and
+          // we should process it.
+          const auto t_end = model.net.store[t_i].getEndTime();
+          const auto it = std::find(model.scheduled_callbacks.begin(),
+                                    model.scheduled_callbacks.end(), t_i);
+          if (it != model.scheduled_callbacks.end()) {
+            model.deposit(result, t_i);
+            std::swap(*std::prev(model.scheduled_callbacks.end()), *it);
+            model.scheduled_callbacks.pop_back();
+          };
+          model.log.push_back({t_i, result.state, t_end});
+        });
   });
 }
 
-void deductMarking(std::vector<AugmentedToken>& tokens,
-                   const SmallVectorInput& inputs) {
+std::vector<AugmentedToken> deductMarking(std::vector<AugmentedToken>& tokens,
+                                          const SmallVectorInput& inputs) {
+  std::vector<AugmentedToken> consumed;
+  consumed.reserve(inputs.size());
   for (const auto& place : inputs) {
-    tokens.erase(std::find(tokens.begin(), tokens.end(), place));
+    auto it = std::find(tokens.begin(), tokens.end(), place);
+    consumed.push_back(std::move(*it));  // carries the payload out
+    tokens.erase(it);
   }
+  return consumed;
 }
 
 void Petri::fireTransitions() {
@@ -182,10 +203,12 @@ void Petri::fireTransitions() {
 
     // fire!
     if (can_fire) {
-      deductMarking(tokens, net.input_n[t_idx]);
-      std::invoke(
-          is_synchronous ? &Petri::fireSynchronous : &Petri::fireAsynchronous,
-          this, t_idx);
+      auto consumed = deductMarking(tokens, net.input_n[t_idx]);
+      if (is_synchronous) {
+        fireSynchronous(t_idx, std::move(consumed));
+      } else {
+        fireAsynchronous(t_idx, std::move(consumed));
+      }
     }
 
     // If the transition couldn't be fired or can not be fired again, remove the
@@ -198,8 +221,8 @@ void Petri::fireTransitions() {
     // if the fired transition was synchronous, we have to check if the new
     // tokens enable possible transitions
     if (can_fire && is_synchronous) {
-      for (const auto& [p, c] : net.output_n[t_idx]) {
-        for (const auto& new_transition : net.p_to_ts_n[p]) {
+      for (const auto& arc : net.output_n[t_idx]) {
+        for (const auto& new_transition : net.p_to_ts_n[arc.place]) {
           if (std::find(ts.begin(), ts.end(), new_transition) == ts.end()) {
             ts.push_back(new_transition);
           }
@@ -219,9 +242,8 @@ Marking Petri::getMarking() const {
   Marking marking;
   marking.reserve(tokens.size());
   std::transform(tokens.cbegin(), tokens.cend(), std::back_inserter(marking),
-                 [&](auto place_index) -> std::pair<std::string, Token> {
-                   return {net.place[std::get<size_t>(place_index)],
-                           std::get<Token>(place_index)};
+                 [&](const AugmentedToken& at) -> PlaceToken {
+                   return {net.place[at.place], at.color, at.data};
                  });
   return marking;
 }

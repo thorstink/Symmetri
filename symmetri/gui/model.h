@@ -76,7 +76,7 @@ struct EditState {
 struct ViewState {
   ViewState();
   bool show_grid = true;
-  Coordinate scrolling;
+  Coordinate scrolling = {0.f, 0.f};
   std::optional<Coordinate> context_menu_pos;
   std::optional<Arc> selected_arc_idxs;
   std::optional<Node> selected_node_idx;

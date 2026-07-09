@@ -49,7 +49,7 @@ gch::small_vector<size_t, 32> possibleTransitions(
   gch::small_vector<size_t, 32> possible_transition_list_n;
   for (const AugmentedToken &place : tokens) {
     // transition index
-    for (const size_t &t : p_to_ts_n[std::get<size_t>(place)]) {
+    for (const size_t &t : p_to_ts_n[place.place]) {
       // transition is not already considered:
       const bool is_unique = std::find(possible_transition_list_n.cbegin(),
                                        possible_transition_list_n.cend(),
