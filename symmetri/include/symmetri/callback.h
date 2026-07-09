@@ -17,10 +17,12 @@ namespace symmetri {
 
 /**
  * @brief The full result of firing a transition. `state` is what the event
- * log records. If `deposits` is set, exactly those tokens are placed (each
- * must name an output place of the transition; omitting an output place is
- * how a callback branches). If it is not set, the legacy behavior applies:
- * a token colored `state` is deposited in every output place.
+ * log records. If `deposits` is set it must take one of two legal shapes:
+ * either it defines a token for every output place of the transition
+ * (placed as given — branch by color, not by omission), or it carries a
+ * single color, which is stamped on every output place (legacy). A marking
+ * matching neither shape is ignored. If `deposits` is not set, a token
+ * colored `state` is deposited in every output place.
  */
 struct FireResult {
   Token state;
@@ -209,9 +211,10 @@ Token fire(const T &callback) {
  *  4. anything else — falls back to the `Token fire(const T&)` customization
  *     point (e.g. PetriNet, DirectMutation, user-specialized types).
  *
- * Every shape may return void, Token, Marking (a set of deposits: exactly
- * those tokens are placed, on a subset of the output places) or FireResult.
- * A payload type mismatch (std::bad_any_cast) yields Failed.
+ * Every shape may return void, Token, Marking (a set of deposits, either
+ * covering all output places exactly or carrying one color for all of them —
+ * see FireResult) or FireResult. A payload type mismatch (std::bad_any_cast)
+ * yields Failed.
  */
 template <typename T>
 FireResult fire(const T &callback,

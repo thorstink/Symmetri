@@ -269,9 +269,11 @@ struct Petri {
                         std::vector<AugmentedToken>&& consumed = {});
 
   /**
-   * @brief Applies a FireResult to the marking: if it carries deposits, those
-   * tokens are placed (each must name an output place of t — others are
-   * dropped); otherwise a token colored `state` is placed in every output
+   * @brief Applies a FireResult to the marking. Deposits are applied only if
+   * they exactly cover all output places of t (placed as given), or if they
+   * carry a single color (that token is stamped on every output place, the
+   * legacy behavior). A marking that matches neither shape is ignored.
+   * Without deposits, a token colored `state` is placed in every output
    * place of t.
    *
    * @param result what the fired Callback produced

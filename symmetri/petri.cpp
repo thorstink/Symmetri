@@ -114,17 +114,46 @@ std::vector<AugmentedToken> Petri::toTokens(
 void Petri::deposit(const FireResult& result, const size_t t) {
   const auto& outputs = net.output_n[t];
   if (result.deposits.has_value()) {
-    // The callback chose exactly which tokens to place; each must name an
-    // output place of t (deposits elsewhere are dropped — the enabling scan
-    // after a synchronous fire only looks at t's output places).
-    for (const auto& d : *result.deposits) {
-      const size_t p = toIndex(net.place, d.place);
-      const bool is_output =
-          std::find_if(outputs.begin(), outputs.end(), [p](const auto& arc) {
-            return arc.place == p;
-          }) != outputs.end();
-      if (is_output) {
-        tokens.push_back({p, d.color, d.data});
+    const auto& deposits = *result.deposits;
+    // A returned marking is applied only in one of two legal shapes:
+    //
+    //  1. It covers ALL output places of t exactly (the deposits' places
+    //     are, as a multiset, the output places): every deposit is placed as
+    //     given. Branching is done by color — a token whose color matches no
+    //     outgoing arc downstream is simply never consumed.
+    //  2. It carries a single color: every output place gets a token of that
+    //     color (payload riding along) — the legacy stamp; place names are
+    //     not even looked at.
+    //
+    // Anything else does not match the transition's outputs and is ignored
+    // entirely. TODO: surface this to the user (a registration-time check is
+    // impossible — deposits are runtime values — but a log entry or Failed
+    // state would make the mistake visible).
+    std::vector<size_t> deposited, expected;
+    deposited.reserve(deposits.size());
+    expected.reserve(outputs.size());
+    for (const auto& d : deposits) {
+      deposited.push_back(toIndex(net.place, d.place));
+    }
+    for (const auto& arc : outputs) {
+      expected.push_back(arc.place);
+    }
+    std::sort(deposited.begin(), deposited.end());
+    std::sort(expected.begin(), expected.end());
+    const bool covers_all_outputs = deposited == expected;
+    const bool single_color =
+        !deposits.empty() &&
+        std::all_of(deposits.begin(), deposits.end(), [&](const auto& d) {
+          return d.color == deposits.front().color;
+        });
+    if (covers_all_outputs) {
+      for (const auto& d : deposits) {
+        tokens.push_back({toIndex(net.place, d.place), d.color, d.data});
+      }
+    } else if (single_color) {
+      for (const auto& arc : outputs) {
+        tokens.push_back(
+            {arc.place, deposits.front().color, deposits.front().data});
       }
     }
   } else {

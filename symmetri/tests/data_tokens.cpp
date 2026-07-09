@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -138,6 +139,67 @@ TEST_CASE("typed token relays across transitions through a typed arc") {
   const auto marking = app.getMarking();
   REQUIRE(marking.size() == 1);
   CHECK(marking[0].get<Report>().text == "2 poses");
+}
+
+TEST_CASE("deposits covering all output places are placed as given") {
+  auto pool = std::make_shared<TaskSystem>(1);
+  Net net = {
+      {"t0",
+       {{{"p_in", Success}}, {{"p_report", ReportToken}, {"p_ok", Success}}}}};
+  Marking m0 = {{"p_in", Success}};
+  PetriNet app(net, "full_cover", pool, m0, {});
+
+  // Both output places get a token; the branch is in the COLOR: p_ok gets a
+  // Failed token, which no Success-colored arc downstream would consume.
+  app.registerCallback("t0", []() -> Marking {
+    return {{"p_report", Report{"r"}}, {"p_ok", Failed}};
+  });
+
+  fire(app);
+  const auto marking = app.getMarking();
+  REQUIRE(marking.size() == 2);
+  CHECK(std::any_of(marking.begin(), marking.end(), [](const auto& pt) {
+    return pt.place == "p_report" && pt.color == ReportToken;
+  }));
+  CHECK(std::any_of(marking.begin(), marking.end(), [](const auto& pt) {
+    return pt.place == "p_ok" && pt.color == Failed;
+  }));
+}
+
+TEST_CASE("a single-color marking stamps every output place (legacy)") {
+  auto pool = std::make_shared<TaskSystem>(1);
+  Net net = {
+      {"t0", {{{"p_in", Success}}, {{"p_a", Success}, {"p_b", Success}}}}};
+  Marking m0 = {{"p_in", Success}};
+  PetriNet app(net, "single_color", pool, m0, {});
+
+  // One color, one entry, and its place name is not even an output: the
+  // single-color rule kicks in and BOTH output places get a Failed token.
+  // Omitting an output place is no longer a branch.
+  app.registerCallback("t0", []() -> Marking { return {{"p_bogus", Failed}}; });
+
+  fire(app);
+  const auto marking = app.getMarking();
+  REQUIRE(marking.size() == 2);
+  CHECK(std::all_of(marking.begin(), marking.end(),
+                    [](const auto& pt) { return pt.color == Failed; }));
+}
+
+TEST_CASE("a marking matching neither shape is ignored entirely") {
+  auto pool = std::make_shared<TaskSystem>(1);
+  Net net = {
+      {"t0", {{{"p_in", Success}}, {{"p_a", Success}, {"p_b", Success}}}}};
+  Marking m0 = {{"p_in", Success}};
+  PetriNet app(net, "mismatch_ignored", pool, m0, {});
+
+  // Two distinct colors AND no exact cover of {p_a, p_b}: the whole marking
+  // is dropped — neither p_a nor p_b receives anything.
+  app.registerCallback("t0", []() -> Marking {
+    return {{"p_a", Success}, {"p_bogus", Report{"stray"}}};
+  });
+
+  fire(app);
+  CHECK(app.getMarking().empty());
 }
 
 TEST_CASE("raw-token shape still works and sees typed payloads") {

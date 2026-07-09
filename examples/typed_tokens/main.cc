@@ -12,13 +12,16 @@
 //                                         \--(Success)------> p_ok
 //   p_defects --(DefectsToken)--> [t_report] --(Success)--> p_done
 //
-// t_inspect BRANCHES: it has two output places but deposits a token in
-// exactly one of them, depending on what it finds in the image.
+// A callback that returns a Marking must shape it in one of two legal ways:
 //
-// t_report additionally misbehaves on purpose: it tries to deposit tokens in
-// places it has no output arc to. Those deposits are DROPPED by the executor
-// — a transition can only put tokens where it is connected, exactly like it
-// can only consume tokens where it is connected.
+//  1. Cover ALL output places (one token per output arc, placed as given).
+//     Branching is done by COLOR, not by omission: deposit a color that no
+//     downstream arc matches and that branch is dead.
+//  2. Use a single color: every output place gets that token — exactly like
+//     returning a bare Token (legacy). Place names are not even looked at.
+//
+// A returned marking that matches neither shape is ignored entirely — the
+// transition then produces nothing (t_report below demonstrates this).
 
 #include <iostream>
 #include <vector>
@@ -42,9 +45,10 @@ CREATE_TYPED_TOKEN(DefectsToken, Defects)
 
 using namespace symmetri;
 
-// Deposits one typed token. The place is named, the color is INFERRED from
-// the payload type (that is what the bijection buys us): it is impossible to
-// accidentally put an Image on a DefectsToken-colored arc.
+// Deposits one typed token — its single output place is covered, so shape 1
+// applies. The place is named, the color is INFERRED from the payload type
+// (that is what the bijection buys us): it is impossible to accidentally put
+// an Image on a DefectsToken-colored arc.
 Marking capture() {
   std::cout << "[t_capture] capturing image 42" << std::endl;
   return {{"p_image", Image{42}}};
@@ -52,33 +56,39 @@ Marking capture() {
 
 // The parameter is matched by color, not by position: the executor looks at
 // the consumed tokens and hands the Image payload to the `const Image&`
-// parameter. Returning a Marking with ONE entry — while the transition has
-// TWO output places — is the branch: the other place simply stays empty.
+// parameter. The returned marking covers BOTH output places (shape 1); the
+// branch is in the colors. On the defect branch, p_ok receives a Failed
+// token — no Success-colored arc downstream will ever consume it, so that
+// path is dead. On the clean branch it is p_defects that gets the dead
+// (dataless Failed) token, and t_report never fires.
 Marking inspect(const Image& img) {
   const Defects defects{{7, 13}};  // pretend we found two defects in the image
   if (defects.box_ids.empty()) {
     std::cout << "[t_inspect] image " << img.id << " is clean" << std::endl;
-    return {{"p_ok", Success}};  // dataless deposit on the Success-colored arc
+    return {{"p_defects", Failed}, {"p_ok", Success}};
   } else {
     std::cout << "[t_inspect] image " << img.id << " has "
               << defects.box_ids.size() << " defects" << std::endl;
-    return {{"p_defects", defects}};  // typed deposit; p_ok stays empty
+    return {{"p_defects", defects}, {"p_ok", Failed}};
   }
 }
 
 // A misbehaving callback: besides its legitimate deposit in p_done, it tries
 // to deposit in p_trigger (a place that EXISTS but that t_report has no
-// output arc to) and in p_bogus (a place that does not exist at all). Both
-// stray deposits are dropped; only the p_done token lands.
+// output arc to) and in p_bogus (a place that does not exist at all). The
+// marking neither covers t_report's output places ({p_done} != {p_done,
+// p_trigger, p_bogus}) nor carries a single color — so it is ignored
+// ENTIRELY: not even the legitimate p_done token lands, and the net
+// deadlocks with p_done empty.
 Marking report(const Defects& defects) {
   std::cout << "[t_report] reporting " << defects.box_ids.size()
             << " defects — and trying to sneak tokens into p_trigger and "
                "p_bogus"
             << std::endl;
   return {
-      {"p_done", Success},     // connected: this token is placed
-      {"p_trigger", Success},  // NOT an output of t_report: dropped
-      {"p_bogus", Success},    // no such place: dropped
+      {"p_done", Success},
+      {"p_trigger", Success},
+      {"p_bogus", DefectsToken, Defects{}},  // second color: shape 2 ruled out
   };
 }
 
@@ -100,11 +110,11 @@ int main(int, char**) {
 
   fire(app);
 
-  // The final marking is a single Success token in p_done. In particular:
-  //  - p_ok is empty (t_inspect branched to p_defects),
-  //  - p_trigger is empty (the stray deposit was dropped; had it landed, the
-  //    net would have looped forever!),
-  //  - p_bogus does not appear anywhere.
+  // Expected final marking:
+  //   p_ok, Failed     <- the dead branch token from t_inspect
+  // and NOTHING in p_done: t_report fired, but its malformed marking was
+  // ignored, so its output place stayed empty. (Had the p_trigger sneak
+  // landed, the net would have looped forever!)
   std::cout << "final marking:" << std::endl;
   for (const auto& token : app.getMarking()) {
     std::cout << "  " << token.place << ", " << token.color.toString()

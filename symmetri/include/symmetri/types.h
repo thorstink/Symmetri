@@ -161,7 +161,8 @@ using Marking =
                               ///< naming the place it resides in. Because
                               ///< tokens can carry payloads, a Marking is also
                               ///< what a callback returns to deposit tokens
-                              ///< into (a subset of) its output places.
+                              ///< into its output places (all of them, or one
+                              ///< color for all — see FireResult).
 
 using PriorityTable =
     std::vector<std::pair<Transition, int8_t>>;  ///< Priority is limited from
