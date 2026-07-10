@@ -79,15 +79,14 @@ std::vector<int8_t> createPriorityLookup(
 
 Petri::Petri(const Net& _net, const PriorityTable& _priority,
              const Marking& _initial_tokens, const Marking& _final_marking,
-             const std::string& _case_id,
-             std::shared_ptr<TaskSystem> threadpool)
+             const std::string& _case_id, std::shared_ptr<Executor> executor)
     : log({}),
       state(Scheduled),
       case_id(_case_id),
       thread_id_(std::nullopt),
       reducer_queue(
           std::make_shared<moodycamel::BlockingConcurrentQueue<Reducer>>(128)),
-      pool(threadpool) {
+      pool(executor) {
   log.reserve(1000);
   tokens.reserve(100);
   scheduled_callbacks.reserve(10);
@@ -181,7 +180,7 @@ void Petri::fireAsynchronous(const size_t t_i,
   log.push_back({t_i, Scheduled, Clock::now()});
   // defer execution of the transition to the threadpool; the consumed tokens
   // (already deducted on the petri loop) travel along to the Callback
-  pool->push([t_i, this, consumed = std::move(consumed)] {
+  pool->post([t_i, this, consumed = std::move(consumed)] {
     // log the start on the petri loop;
     reducer_queue->enqueue([t_i, t_start = Clock::now()](Petri& model) {
       model.log.push_back({t_i, Started, t_start});

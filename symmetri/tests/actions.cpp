@@ -41,3 +41,28 @@ TEST_CASE("Run the executor parallel tasks") {
   CHECK(static_cast<bool>(main_thread != thread_id1));
   CHECK(static_cast<bool>(main_thread != thread_id2));
 }
+
+TEST_CASE("InlineExecutor runs tasks immediately on the calling thread") {
+  auto executor = std::make_shared<InlineExecutor>();
+  bool ran = false;
+  std::thread::id task_thread;
+  executor->post([&] {
+    ran = true;
+    task_thread = std::this_thread::get_id();
+  });
+  // No waiting needed: post() returned means the task completed.
+  CHECK(ran);
+  CHECK(static_cast<bool>(task_thread == std::this_thread::get_id()));
+}
+
+TEST_CASE("TaskSystem satisfies the Executor interface") {
+  // The pool is usable through the Executor base: this is the seam where a
+  // user-provided executor (e.g. one posting into a ROS callback queue) plugs
+  // in without symmetri knowing about it.
+  std::shared_ptr<Executor> executor = std::make_shared<TaskSystem>(1);
+  std::atomic<bool> ran(false);
+  executor->post([&] { ran.store(true); });
+  while (!ran.load()) {
+  }
+  CHECK(ran);
+}

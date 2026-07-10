@@ -116,7 +116,7 @@ std::vector<AugmentedToken> deductMarking(std::vector<AugmentedToken>& tokens,
  * @brief Petri is a data structure that encodes the Petri net and holds
  * pointers to the thread-pool and the reducer-queue. It is optimized for
  * calculating the active transition set and dispatching a Callback to the
- * TaskSystem.
+ * Executor (e.g. a TaskSystem thread pool).
  *
  */
 struct Petri {
@@ -136,7 +136,7 @@ struct Petri {
   explicit Petri(const Net& _net, const PriorityTable& _priority,
                  const Marking& _initial_tokens, const Marking& _final_marking,
                  const std::string& _case_id,
-                 std::shared_ptr<TaskSystem> threadpool);
+                 std::shared_ptr<Executor> executor);
   ~Petri() noexcept = default;
   Petri(Petri const&) = delete;
   Petri(Petri&&) noexcept = delete;
@@ -255,8 +255,9 @@ struct Petri {
                       ///< pointer because it needs to be captured by Reducers
                       ///< which are executed later, guaranteeing the queue is
                       ///< not destroyed while in use.
-  std::shared_ptr<TaskSystem>
-      pool;  ///< A pointer to the threadpool used to defer Callbacks.
+  std::shared_ptr<Executor>
+      pool;  ///< Where deferred Callback bodies run (thread pool, inline,
+             ///< or any user-provided Executor).
 
   /**
    * @brief Schedules the Callback associated with t on the threadpool. The

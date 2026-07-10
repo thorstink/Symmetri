@@ -22,7 +22,7 @@ CREATE_TYPED_TOKEN(Counter, int)
 using namespace symmetri;
 
 TEST_CASE("typed color carries its payload to a color-matched parameter") {
-  auto pool = std::make_shared<TaskSystem>(1);
+  auto pool = std::make_shared<InlineExecutor>();
   // The arc colors are the contract: t0 consumes a PathToken, produces one.
   Net net = {{"t0", {{{"p_in", PathToken}}, {{"p_out", PathToken}}}}};
   Marking m0 = {{"p_in", Path{{1.0, 2.0}, {3.0, 4.0}}}};  // color inferred
@@ -39,7 +39,7 @@ TEST_CASE("typed color carries its payload to a color-matched parameter") {
 }
 
 TEST_CASE("matching is by color, not position: dataless tokens are skipped") {
-  auto pool = std::make_shared<TaskSystem>(1);
+  auto pool = std::make_shared<InlineExecutor>();
   // t0 consumes a Success guard token AND a Counter token — in that arc
   // order. The int parameter must match the Counter token regardless.
   Net net = {
@@ -59,7 +59,7 @@ TEST_CASE("matching is by color, not position: dataless tokens are skipped") {
 }
 
 TEST_CASE("two typed parameters bind independent of arc order") {
-  auto pool = std::make_shared<TaskSystem>(1);
+  auto pool = std::make_shared<InlineExecutor>();
   Net net = {
       {"t0",
        {{{"p_r", ReportToken}, {"p_p", PathToken}}, {{"p_out", Success}}}}};
@@ -95,7 +95,7 @@ TEST_CASE("wrong payload type on a typed color throws TokenTypeError") {
 }
 
 TEST_CASE("a bad deposit inside a callback fails the firing, not the app") {
-  auto pool = std::make_shared<TaskSystem>(1);
+  auto pool = std::make_shared<InlineExecutor>();
   Net net = {{"t0", {{{"p0", Success}}, {{"p1", Success}}}}};
   Marking m0 = {{"p0", Success}};
   PetriNet app(net, "bad_deposit", pool, m0, {});
@@ -115,7 +115,7 @@ TEST_CASE("a bad deposit inside a callback fails the firing, not the app") {
 }
 
 TEST_CASE("parameter without a matching consumed token fails the firing") {
-  auto pool = std::make_shared<TaskSystem>(1);
+  auto pool = std::make_shared<InlineExecutor>();
   // t0 only consumes a dataless Success token, but the callback wants a Path.
   Net net = {{"t0", {{{"p0", Success}}, {{"p1", Success}}}}};
   Marking m0 = {{"p0", Success}};
@@ -130,7 +130,7 @@ TEST_CASE("parameter without a matching consumed token fails the firing") {
 }
 
 TEST_CASE("typed token relays across transitions through a typed arc") {
-  auto pool = std::make_shared<TaskSystem>(1);
+  auto pool = std::make_shared<InlineExecutor>();
   // t0 plans a path, t1 refines it: p_mid's arc color is the contract.
   Net net = {{"t0", {{{"p_go", Success}}, {{"p_mid", PathToken}}}},
              {"t1", {{{"p_mid", PathToken}}, {{"p_end", ReportToken}}}}};
@@ -151,7 +151,7 @@ TEST_CASE("typed token relays across transitions through a typed arc") {
 }
 
 TEST_CASE("deposits covering all output places are placed as given") {
-  auto pool = std::make_shared<TaskSystem>(1);
+  auto pool = std::make_shared<InlineExecutor>();
   Net net = {
       {"t0",
        {{{"p_in", Success}}, {{"p_report", ReportToken}, {"p_ok", Success}}}}};
@@ -176,7 +176,7 @@ TEST_CASE("deposits covering all output places are placed as given") {
 }
 
 TEST_CASE("a single-color marking stamps every output place (legacy)") {
-  auto pool = std::make_shared<TaskSystem>(1);
+  auto pool = std::make_shared<InlineExecutor>();
   Net net = {
       {"t0", {{{"p_in", Success}}, {{"p_a", Success}, {"p_b", Success}}}}};
   Marking m0 = {{"p_in", Success}};
@@ -195,7 +195,7 @@ TEST_CASE("a single-color marking stamps every output place (legacy)") {
 }
 
 TEST_CASE("a marking matching neither shape is ignored entirely") {
-  auto pool = std::make_shared<TaskSystem>(1);
+  auto pool = std::make_shared<InlineExecutor>();
   Net net = {
       {"t0", {{{"p_in", Success}}, {{"p_a", Success}, {"p_b", Success}}}}};
   Marking m0 = {{"p_in", Success}};
@@ -212,7 +212,7 @@ TEST_CASE("a marking matching neither shape is ignored entirely") {
 }
 
 TEST_CASE("raw-token shape still works and sees typed payloads") {
-  auto pool = std::make_shared<TaskSystem>(1);
+  auto pool = std::make_shared<InlineExecutor>();
   Net net = {{"t0", {{{"p0", Counter}}, {{"p1", Success}}}}};
   Marking m0 = {{"p0", 7}};
   PetriNet app(net, "raw", pool, m0, {{"p1", Success}});
@@ -229,7 +229,7 @@ TEST_CASE("raw-token shape still works and sees typed payloads") {
 }
 
 TEST_CASE("legacy nullary callbacks are untouched by the type machinery") {
-  auto pool = std::make_shared<TaskSystem>(1);
+  auto pool = std::make_shared<InlineExecutor>();
   Net net = {{"t0", {{{"p0", Counter}}, {{"p1", Success}}}}};
   Marking m0 = {{"p0", 1}};
   PetriNet app(net, "legacy", pool, m0, {{"p1", Success}});

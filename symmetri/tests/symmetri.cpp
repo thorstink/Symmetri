@@ -27,7 +27,7 @@ std::tuple<Net, PriorityTable, Marking> SymmetriTestNet() {
 
 TEST_CASE("Create a using the net constructor without end condition.") {
   auto [net, priority, initial_marking] = SymmetriTestNet();
-  auto threadpool = std::make_shared<TaskSystem>(1);
+  auto threadpool = std::make_shared<InlineExecutor>();
   Marking goal_marking = {};
   PetriNet app(net, "test_net_without_end", threadpool, initial_marking,
                goal_marking, priority);
@@ -42,7 +42,7 @@ TEST_CASE("Create a using the net constructor without end condition.") {
 }
 
 TEST_CASE("Create a using the net constructor with end condition.") {
-  auto threadpool = std::make_shared<TaskSystem>(1);
+  auto threadpool = std::make_shared<InlineExecutor>();
   auto [net, priority, initial_marking] = SymmetriTestNet();
   Marking goal_marking(
       {{"Pb", Success}, {"Pb", Success}, {"Pd", Success}, {"Pd", Success}});
@@ -63,7 +63,7 @@ TEST_CASE("Create a using pnml constructor.") {
   const std::string pnml_file = std::filesystem::current_path().append(
       "../../../symmetri/tests/assets/PT1.pnml");
 
-  auto threadpool = std::make_shared<TaskSystem>(1);
+  auto threadpool = std::make_shared<InlineExecutor>();
   PriorityTable priority;
   Marking final_marking({{"P1", Success}});
   const auto case_id = "success";
@@ -82,7 +82,7 @@ TEST_CASE("Reuse an application with a new case_id.") {
   Marking goal_marking = {};
   const auto initial_id = "initial0";
   const auto new_id = "something_different0";
-  auto threadpool = std::make_shared<TaskSystem>(1);
+  auto threadpool = std::make_shared<InlineExecutor>();
   PetriNet app(net, initial_id, threadpool, initial_marking, goal_marking,
                priority);
   app.registerCallback("t0", &t0);
@@ -123,7 +123,7 @@ TEST_CASE("Deadlocked transition shows up in marking") {
   auto [net, priority, initial_marking] = SymmetriTestNet();
   Marking goal_marking = {};
   const auto initial_id = "deadlock transition";
-  auto threadpool = std::make_shared<TaskSystem>(1);
+  auto threadpool = std::make_shared<InlineExecutor>();
   PetriNet app(net, initial_id, threadpool, initial_marking, goal_marking,
                priority);
   app.registerCallback("t0", [] { return Deadlocked; });
@@ -144,7 +144,7 @@ TEST_CASE("Error'd transition shows up in marking") {
   auto [net, priority, initial_marking] = SymmetriTestNet();
   Marking goal_marking = {};
   const auto initial_id = "deadlock transition";
-  auto threadpool = std::make_shared<TaskSystem>(1);
+  auto threadpool = std::make_shared<InlineExecutor>();
   PetriNet app(net, initial_id, threadpool, initial_marking, goal_marking,
                priority);
   app.registerCallback("t0", [] { return Failed; });

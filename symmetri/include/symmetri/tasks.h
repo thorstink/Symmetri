@@ -10,6 +10,8 @@
 #include <thread>
 #include <vector>
 
+#include "symmetri/executor.h"
+
 namespace symmetri {
 
 /**
@@ -29,7 +31,7 @@ class TaskQueue;
  * maximum amount of transitions in the net. are ran in parallel.
  * @return std::shared_ptr<const TaskSystem>
  */
-class TaskSystem {
+class TaskSystem : public Executor {
  public:
   using Task = std::function<void()>;
 
@@ -52,6 +54,11 @@ class TaskSystem {
    * @param p
    */
   void push(Task&& p) const;
+
+  /**
+   * @brief The Executor interface: same as push.
+   */
+  void post(Task task) override { push(std::move(task)); }
 
  private:
   void loop();

@@ -55,7 +55,7 @@ TEST_CASE("Test equaliy of nets") {
 TEST_CASE("Run one transition iteration in a petri net") {
   auto [net, priority, m0] = PetriTestNet();
 
-  auto threadpool = std::make_shared<TaskSystem>(1);
+  auto threadpool = std::make_shared<InlineExecutor>();
   Petri m(net, priority, m0, {}, "s", threadpool);
   m.net.registerCallback("t0", &petri0);
   m.net.registerCallback("t1", &petri1);
@@ -98,7 +98,7 @@ TEST_CASE("Run until net dies") {
   using namespace moodycamel;
 
   auto [net, priority, m0] = PetriTestNet();
-  auto threadpool = std::make_shared<TaskSystem>(1);
+  auto threadpool = std::make_shared<InlineExecutor>();
   Petri m(net, priority, m0, {}, "s", threadpool);
   m.net.registerCallback("t0", &petri0);
   m.net.registerCallback("t1", &petri1);
@@ -129,7 +129,7 @@ TEST_CASE("Run until net dies with DirectMutations") {
   auto [net, priority, m0] = PetriTestNet();
   // we can pass an empty story, and DirectMutation will be used for the
   // undefined transitions
-  auto threadpool = std::make_shared<TaskSystem>(1);
+  auto threadpool = std::make_shared<InlineExecutor>();
   Petri m(net, priority, m0, {}, "s", threadpool);
 
   Reducer r;
@@ -156,7 +156,7 @@ TEST_CASE("Fire multiple transitions") {
                {"c", {{{"Pa", Success}}, {}}},
                {"d", {{{"Pa", Success}}, {}}},
                {"e", {{{"Pb", Success}}, {}}}};
-    auto threadpool = std::make_shared<TaskSystem>(1);
+    auto threadpool = std::make_shared<InlineExecutor>();
     // with this initial marking, all but transition e are possible.
     Marking m0 = {
         {"Pa", Success}, {"Pa", Success}, {"Pa", Success}, {"Pa", Success}};
@@ -192,6 +192,6 @@ TEST_CASE("Fire multiple transitions") {
 
 TEST_CASE("create fireable transitions shortlist") {
   auto [net, priority, m0] = PetriTestNet();
-  auto threadpool = std::make_shared<TaskSystem>(1);
+  auto threadpool = std::make_shared<InlineExecutor>();
   Petri m(net, priority, m0, {}, "s", threadpool);
 }

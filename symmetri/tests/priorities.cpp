@@ -16,7 +16,7 @@ TEST_CASE(
     Net net = {{"t0", {{{"Pa", Success}}, {{"Pb", Success}}}},
                {"t1", {{{"Pa", Success}}, {{"Pc", Success}}}}};
     Marking m0 = {{"Pa", Success}};
-    auto threadpool = std::make_shared<TaskSystem>(1);
+    auto threadpool = std::make_shared<InlineExecutor>();
 
     auto m = Petri(net, priority, m0, {}, "s", threadpool);
     m.net.registerCallback("t0", [] {});
@@ -53,7 +53,7 @@ TEST_CASE("Using DirectMutation does not queue reducers.") {
                {"t1", {{{"Pa", Success}}, {{"Pc", Success}}}}};
 
     Marking m0 = {{"Pa", Success}};
-    auto threadpool = std::make_shared<TaskSystem>(1);
+    auto threadpool = std::make_shared<InlineExecutor>();
 
     auto m = Petri(net, priority, m0, {}, "s", threadpool);
     m.fireTransitions();

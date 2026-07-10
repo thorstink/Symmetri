@@ -44,7 +44,7 @@ class PetriNet final {
    * @param priorities
    */
   PetriNet(const std::set<std::string> &petri_net_xmls,
-           const std::string &case_id, std::shared_ptr<TaskSystem> threadpool,
+           const std::string &case_id, std::shared_ptr<Executor> threadpool,
            const Marking &goal_marking = {},
            const PriorityTable &priorities = {});
 
@@ -59,8 +59,8 @@ class PetriNet final {
    * @param priorities
    */
   PetriNet(const Net &net, const std::string &case_id,
-           std::shared_ptr<TaskSystem> threadpool,
-           const Marking &initial_marking, const Marking &goal_marking = {},
+           std::shared_ptr<Executor> threadpool, const Marking &initial_marking,
+           const Marking &goal_marking = {},
            const PriorityTable &priorities = {});
 
   /**

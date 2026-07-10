@@ -138,7 +138,7 @@ FireResult invokeUnpacked(const T &callback,
 /**
  * @brief Checks if the callback is synchronous. Synchronous callbacks are
  * immediately executed inside the Petri net executor. Asynchronous callbacks
- * are deferred to the TaskSystem.
+ * are deferred to the Executor.
  *
  * @tparam T the type of the callback.
  * @return true the callback will be executed synchronously.

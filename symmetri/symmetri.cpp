@@ -19,7 +19,7 @@ namespace symmetri {
 
 PetriNet::PetriNet(const std::set<std::string>& files,
                    const std::string& case_id,
-                   std::shared_ptr<TaskSystem> threadpool,
+                   std::shared_ptr<Executor> threadpool,
                    const Marking& final_marking,
                    const PriorityTable& priorities)
     : impl([&] {
@@ -38,7 +38,7 @@ PetriNet::PetriNet(const std::set<std::string>& files,
       s(impl->net.store) {}
 
 PetriNet::PetriNet(const Net& net, const std::string& case_id,
-                   std::shared_ptr<TaskSystem> threadpool,
+                   std::shared_ptr<Executor> threadpool,
                    const Marking& initial_marking, const Marking& final_marking,
                    const PriorityTable& priorities)
     : impl(std::make_shared<Petri>(net, priorities, initial_marking,
