@@ -1,0 +1,5 @@
+{
+  global:
+    extern "C++" { symmetri::*; };
+  local: *;
+};
