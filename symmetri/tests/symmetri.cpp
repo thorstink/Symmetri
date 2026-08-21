@@ -1,7 +1,6 @@
 #include "symmetri/symmetri.h"
 
 #include <algorithm>
-#include <filesystem>
 #include <future>
 #include <iostream>
 
@@ -60,8 +59,7 @@ TEST_CASE("Create a using the net constructor with end condition.") {
 }
 
 TEST_CASE("Create a using pnml constructor.") {
-  const std::string pnml_file = std::filesystem::current_path().append(
-      "../../../symmetri/tests/assets/PT1.pnml");
+  const std::string pnml_file = ASSETS_DIR "/PT1.pnml";
 
   auto threadpool = std::make_shared<TaskSystem>(1);
   PriorityTable priority;

@@ -19,6 +19,29 @@ using namespace tinyxml2;
 
 namespace symmetri {
 
+namespace {
+/**
+ * @brief Get the child element with a specific name. tinyxml2 returns a
+ * nullptr for elements that are not there, so every required element is
+ * fetched through this function to turn a malformed or missing file into an
+ * exception rather than a dereference of a nullptr.
+ *
+ * @param parent
+ * @param name
+ * @param file the file parent was read from, used for the error message
+ * @return XMLElement*
+ */
+XMLElement *getRequiredChild(XMLNode *parent, const char *name,
+                             const std::string &file) {
+  XMLElement *child = parent->FirstChildElement(name);
+  if (child == nullptr) {
+    throw std::runtime_error("grml-file " + file + " is missing a required <" +
+                             name + ">-element.");
+  }
+  return child;
+}
+}  // namespace
+
 std::tuple<Net, Marking, PriorityTable> readGrml(
     const std::set<std::string> &files) {
   std::set<std::string> places, transitions;
@@ -30,9 +53,12 @@ std::tuple<Net, Marking, PriorityTable> readGrml(
 
   for (auto file : files) {
     XMLDocument net;
-    net.LoadFile(file.c_str());
+    if (net.LoadFile(file.c_str()) != XML_SUCCESS) {
+      throw std::runtime_error("Could not load grml-file " + file + ": " +
+                               net.ErrorStr());
+    }
 
-    XMLElement *levelElement = net.FirstChildElement("model");
+    XMLElement *levelElement = getRequiredChild(&net, "model", file);
     for (XMLElement *child = levelElement->FirstChildElement("node");
          child != NULL; child = child->NextSiblingElement("node")) {
       const auto type = std::string(child->Attribute("nodeType"));

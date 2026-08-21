@@ -1,4 +1,5 @@
-#include <filesystem>
+
+#include <stdexcept>
 
 #include "doctest/doctest.h"
 #include "symmetri/parsers.h"
@@ -7,8 +8,7 @@
 using namespace symmetri;
 
 TEST_CASE("Load p1.pnml net") {
-  const std::string pnml_file = std::filesystem::current_path().append(
-      "../../../symmetri/tests/assets/n1.pnml");
+  const std::string pnml_file = ASSETS_DIR "/n1.pnml";
   const auto &[net, m0] = readPnml({pnml_file});
 
   // for this particular net, the initial marking is:
@@ -32,8 +32,7 @@ TEST_CASE("Load p1.pnml net") {
 }
 
 TEST_CASE("Load p1.grml net") {
-  const std::string grml_file = std::filesystem::current_path().append(
-      "../../../symmetri/tests/assets/n1.grml");
+  const std::string grml_file = ASSETS_DIR "/n1.grml";
   const auto &[net, m0, priorities] = readGrml({grml_file});
 
   // for this particular net, the initial marking is:
@@ -62,8 +61,7 @@ TEST_CASE("Load p1.grml net") {
 }
 
 TEST_CASE("Load p1_multi.pnml net") {
-  const std::string pnml_file = std::filesystem::current_path().append(
-      "../../../symmetri/tests/assets/n1_multi.pnml");
+  const std::string pnml_file = ASSETS_DIR "/n1_multi.pnml";
 
   const auto &[net, m0] = readPnml({pnml_file});
 
@@ -86,11 +84,9 @@ TEST_CASE("Load p1_multi.pnml net") {
 }
 
 TEST_CASE("Compose PT1.pnml and PT2.pnml nets") {
-  const std::string p1 = std::filesystem::current_path().append(
-      "../../../symmetri/tests/assets/PT1.pnml");
+  const std::string p1 = ASSETS_DIR "/PT1.pnml";
 
-  const std::string p2 = std::filesystem::current_path().append(
-      "../../../symmetri/tests/assets/PT2.pnml");
+  const std::string p2 = ASSETS_DIR "/PT2.pnml";
 
   const auto &[net, m0] = readPnml({p1, p2});
 
@@ -105,4 +101,14 @@ TEST_CASE("Compose PT1.pnml and PT2.pnml nets") {
   CHECK(stateNetEquality(net_test, net));
 
   // CHECK(net_test == net);
+}
+
+TEST_CASE("A pnml-file that does not exist throws") {
+  CHECK_THROWS_AS(readPnml({ASSETS_DIR "/does_not_exist.pnml"}),
+                  std::runtime_error);
+}
+
+TEST_CASE("A grml-file that does not exist throws") {
+  CHECK_THROWS_AS(readGrml({ASSETS_DIR "/does_not_exist.grml"}),
+                  std::runtime_error);
 }

@@ -2,12 +2,6 @@ include_directories(${EIGEN3_INCLUDE_DIRS} ../include ..)
 
 include(CTest)
 
-set(test_files
-  assets
-)
-
-install(DIRECTORY ${test_files} DESTINATION ${PROJECT_SOURCE_DIR}/build/symmetri/tests)
-
 add_executable(${PROJECT_NAME}_symmetri_doctest
   tests.cpp
   actions.cpp
@@ -23,4 +17,9 @@ add_executable(${PROJECT_NAME}_symmetri_doctest
   types.cpp
 )
 target_link_libraries(${PROJECT_NAME}_symmetri_doctest PRIVATE ${PROJECT_NAME})
+
+# The tests read their nets from the source tree; passing the location in
+# avoids depending on the working directory the tests happen to be run from.
+target_compile_definitions(${PROJECT_NAME}_symmetri_doctest PRIVATE
+  ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets")
 add_test(${PROJECT_NAME}_symmetri_doctest ${PROJECT_NAME}_symmetri_doctest)
