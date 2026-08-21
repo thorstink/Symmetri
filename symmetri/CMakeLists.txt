@@ -15,9 +15,24 @@ add_library(${PROJECT_NAME} SHARED
 
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 target_link_libraries(${PROJECT_NAME} PUBLIC pthread)
-target_link_options(${PROJECT_NAME} PRIVATE
-  -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/symmetri.map
-)
+
+# Hide symbols that are not part of symmetri's public API (tinyxml2,
+# moodycamel, ...). The mechanism is linker-specific: GNU-style linkers take a
+# version script, Apple's ld64 takes an exported-symbols list.
+if(APPLE)
+  set(symbol_list ${CMAKE_CURRENT_SOURCE_DIR}/symmetri.exported_symbols)
+  target_link_options(${PROJECT_NAME} PRIVATE
+    "-Wl,-exported_symbols_list,${symbol_list}")
+elseif(NOT MSVC)
+  set(symbol_list ${CMAKE_CURRENT_SOURCE_DIR}/symmetri.map)
+  target_link_options(${PROJECT_NAME} PRIVATE
+    "-Wl,--version-script=${symbol_list}")
+endif()
+
+if(DEFINED symbol_list)
+  set_property(TARGET ${PROJECT_NAME} APPEND
+    PROPERTY LINK_DEPENDS ${symbol_list})
+endif()
 
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME})

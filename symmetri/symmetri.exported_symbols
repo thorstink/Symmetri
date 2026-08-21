@@ -1,0 +1,19 @@
+# Mach-O (Apple ld64) counterpart of symmetri.map: export only namespace
+# symmetri, so that vendored/internal dependencies (tinyxml2, moodycamel,
+# gch::small_vector, ...) stay private to the library.
+#
+# ld64 matches mangled names, so the Itanium-ABI encoding of `symmetri::` --
+# `N8symmetri` -- is spelled out for every symbol kind. Keep in sync with
+# symmetri.map.
+#
+# functions and data members
+__ZN8symmetri*
+# const member functions
+__ZNK8symmetri*
+# vtables, typeinfo, typeinfo names
+__ZTVN8symmetri*
+__ZTIN8symmetri*
+__ZTSN8symmetri*
+# function-local statics and their guard variables
+__ZZN8symmetri*
+__ZGVZN8symmetri*
