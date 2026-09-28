@@ -86,6 +86,28 @@ class PetriNet final {
                         Callback &&callback) const noexcept;
 
   /**
+   * @brief Same as registerCallback, but reports whether the Callback was
+   * actually registered.
+   *
+   * @param transition the name of transition
+   * @param callback the callback
+   * @return true the Callback is registered to the transition.
+   * @return false the net does not contain the transition, or the PetriNet is
+   * currently running.
+   */
+  bool tryRegisterCallback(const std::string &transition,
+                           Callback &&callback) const noexcept;
+
+  /**
+   * @brief Get the transitions that still have the default payload
+   * (DirectMutation), i.e. transitions for which no Callback has been
+   * registered. An empty result means all transitions are registered.
+   *
+   * @return std::vector<Transition>
+   */
+  std::vector<Transition> getUnregisteredTransitions() const noexcept;
+
+  /**
    * @brief Construct a Callback of type T in place. This is required for type
    * that are not moveable;
    *

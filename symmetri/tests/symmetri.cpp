@@ -259,3 +259,27 @@ TEST_CASE("Print all Types") {
     std::cout << color << std::endl;
   }
 }
+
+TEST_CASE("Check which transitions are still unregistered") {
+  auto [net, priority, initial_marking] = SymmetriTestNet();
+  auto threadpool = std::make_shared<TaskSystem>(1);
+  PetriNet app(net, "test_unregistered", threadpool, initial_marking, {},
+               priority);
+  auto unregistered = app.getUnregisteredTransitions();
+  std::sort(unregistered.begin(), unregistered.end());
+  CHECK(unregistered == std::vector<Transition>{"t0", "t1"});
+  app.registerCallback("t0", &t0);
+  CHECK(app.getUnregisteredTransitions() == std::vector<Transition>{"t1"});
+  app.registerCallback("t1", &t1);
+  CHECK(app.getUnregisteredTransitions().empty());
+}
+
+TEST_CASE("tryRegisterCallback reports whether the transition exists") {
+  auto [net, priority, initial_marking] = SymmetriTestNet();
+  auto threadpool = std::make_shared<TaskSystem>(1);
+  PetriNet app(net, "test_try_register", threadpool, initial_marking, {},
+               priority);
+  CHECK(app.tryRegisterCallback("t0", &t0));
+  CHECK_FALSE(app.tryRegisterCallback("does_not_exist", &t1));
+  CHECK(app.getUnregisteredTransitions() == std::vector<Transition>{"t1"});
+}
