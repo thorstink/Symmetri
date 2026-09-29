@@ -140,12 +140,6 @@ class Callback {
   friend void resume(const Callback &callback) {
     return callback.self_->resume_();
   }
-  /**
-   * @brief Checks whether this Callback wraps the default DirectMutation.
-   *
-   * @return true if the Callback is a DirectMutation.
-   */
-  bool isDirectMutation() const { return self_->is_direct_mutation_(); }
   auto getEndTime() const {
     return self_->end_t_.load(std::memory_order_relaxed);
   }
@@ -159,7 +153,6 @@ class Callback {
     virtual void pause_() const = 0;
     virtual void resume_() const = 0;
     virtual bool is_synchronous_() const = 0;
-    virtual bool is_direct_mutation_() const = 0;
     mutable std::atomic<Clock::time_point> end_t_{Clock::time_point::min()};
   };
 
@@ -184,9 +177,6 @@ class Callback {
     Eventlog get_log_() const override { return getLog(transition_); }
     void cancel_() const override { return cancel(transition_); }
     bool is_synchronous_() const override { return isSynchronous(transition_); }
-    bool is_direct_mutation_() const override {
-      return std::is_same_v<Transition, DirectMutation>;
-    }
     void pause_() const override { return pause(transition_); }
     void resume_() const override { return resume(transition_); }
     Transition transition_;

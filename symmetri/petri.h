@@ -235,7 +235,7 @@ struct Petri {
      * it is compatible with index lookup.
      *
      */
-    std::vector<Callback> store;
+    std::vector<std::optional<Callback>> store;
     std::vector<AugmentedToken> initial_tokens;  ///< The initial marking
 
     void registerCallback(const std::string& t, Callback&& callback) noexcept {
@@ -280,7 +280,7 @@ struct Petri {
 };
 
 std::tuple<std::vector<std::string>, std::vector<std::string>,
-           std::vector<Callback>>
+           std::vector<std::optional<Callback>>>
 convert(const Net& _net);
 std::tuple<std::vector<SmallVectorInput>, std::vector<SmallVectorInput>>
 populateIoLookups(const Net& _net, const std::vector<Place>& ordered_places);

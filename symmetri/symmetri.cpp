@@ -83,13 +83,13 @@ bool PetriNet::tryRegisterCallback(const std::string& transition,
 std::vector<Transition> PetriNet::getUnregisteredTransitions() const noexcept {
   std::vector<Transition> unregistered;
   for (size_t i = 0; i < impl->net.store.size(); i++) {
-    if (impl->net.store[i].isDirectMutation()) {
+    if (!impl->net.store[i].has_value()) {
       unregistered.push_back(impl->net.transition[i]);
     }
   }
   return unregistered;
 }
-std::vector<Callback>::iterator PetriNet::getCallbackItr(
+std::vector<std::optional<Callback>>::iterator PetriNet::getCallbackItr(
     const std::string& transition_name) const {
   const auto& t = impl->net.transition;
   return impl->net.store.begin() +

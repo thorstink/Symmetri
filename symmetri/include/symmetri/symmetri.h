@@ -4,6 +4,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <utility>
@@ -122,7 +123,7 @@ class PetriNet final {
     if (impl == nullptr || s.empty()) {
       return;
     }
-    s.emplace_back(identity<T>{}, std::forward<Args>(args)...);
+    s.emplace_back(std::in_place, identity<T>{}, std::forward<Args>(args)...);
     *getCallbackItr(transition) = std::move(s.back());
     s.pop_back();
   }
@@ -165,14 +166,14 @@ class PetriNet final {
    * specific name
    *
    * @param transition_name
-   * @return std::vector<Callback>::iterator
+   * @return std::vector<std::optional<Callback>>::iterator
    */
-  std::vector<Callback>::iterator getCallbackItr(
+  std::vector<std::optional<Callback>>::iterator getCallbackItr(
       const std::string &transition_name) const;
 
   const std::shared_ptr<Petri> impl;  ///< Pointer to the implementation, all
   ///< information is stored in Petri
-  std::vector<Callback> &s;
+  std::vector<std::optional<Callback>> &s;
 };
 
 }  // namespace symmetri
