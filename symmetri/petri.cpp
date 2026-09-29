@@ -4,6 +4,8 @@
 #include <initializer_list>
 #include <iterator>
 
+#include "symmetri/colors.hpp"
+
 namespace symmetri {
 std::tuple<std::vector<std::string>, std::vector<std::string>,
            std::vector<std::optional<Callback>>>
@@ -117,8 +119,8 @@ void Petri::fireSynchronous(const size_t t) {
   const auto& lookup_t = net.output_n[t];
   const auto now = Clock::now();
   log.push_back({t, Started, now});
-  // an unregistered transition behaves like a DirectMutation.
-  auto result = task ? fire(*task) : fire(DirectMutation{});
+  // an unregistered transition behaves like a DirectMutation: always success
+  auto result = task ? fire(*task) : symmetri::Success;
   log.push_back({t, result, now});
   for (const auto& [p, c] : lookup_t) {
     tokens.push_back({p, result});
@@ -138,9 +140,9 @@ void Petri::fireAsynchronous(const size_t t_i) {
 
     // fire the transition and defer a reducer to the petri loop to update the
     // marking and log. An unregistered transition behaves like a
-    // DirectMutation.
+    // DirectMutation: always success.
     const auto& task = net.store[t_i];
-    const auto result = task ? fire(*task) : fire(DirectMutation{});
+    const auto result = task ? fire(*task) : symmetri::Success;
     const auto t_end = task ? task->getEndTime() : Clock::now();
     reducer_queue->enqueue([t_i, result, t_end](Petri& model) {
       // if it is in the active transition set it means it is finished and
@@ -251,12 +253,11 @@ Eventlog Petri::getLogInternal() const {
 
   // get event log from parent nets:
   for (const auto& callback : net.store) {
-    if (!callback) {
-      continue;
-    }
-    Eventlog sub_el = getLog(*callback);
-    if (!sub_el.empty()) {
-      eventlog.insert(eventlog.end(), sub_el.begin(), sub_el.end());
+    if (callback) {
+      Eventlog sub_el = getLog(*callback);
+      if (!sub_el.empty()) {
+        eventlog.insert(eventlog.end(), sub_el.begin(), sub_el.end());
+      }
     }
   }
 

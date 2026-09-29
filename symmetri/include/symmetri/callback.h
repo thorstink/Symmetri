@@ -4,7 +4,6 @@
 
 #include <atomic>
 #include <memory>
-#include <type_traits>
 
 #include "symmetri/types.h"
 
