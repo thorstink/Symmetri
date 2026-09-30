@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <format>
 #include <map>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -51,15 +52,18 @@ ParsedNet parseNet(const std::filesystem::path& file) {
   }
 
   ParsedNet p;
-  std::vector<symmetri::Callback> store;
+  std::vector<std::optional<symmetri::Callback>> store;
   std::tie(p.net.transition, p.net.place, store) = symmetri::convert(net);
   std::tie(p.net.input_n, p.net.output_n) =
       symmetri::populateIoLookups(net, p.net.place);
   p.net.priority = symmetri::createPriorityLookup(p.net.transition, pt);
   // Reduce the move-only callbacks to the copyable thing the editor needs: the
-  // token each transition fires to.
+  // token each transition fires to. Freshly loaded transitions have no callback
+  // registered, which the engine treats like a DirectMutation: always Success.
   p.net.output.reserve(store.size());
-  for (const auto& cb : store) p.net.output.push_back(fire(cb));
+  for (const auto& cb : store) {
+    p.net.output.push_back(cb ? fire(*cb) : symmetri::Success);
+  }
 
   p.t_positions.reserve(p.net.transition.size());
   for (const auto& t : p.net.transition) {
