@@ -66,11 +66,30 @@ std::function<void()> PetriNet::getInputTransitionHandle(
 
 void PetriNet::registerCallback(const std::string& transition,
                                 Callback&& callback) const noexcept {
-  if (!impl->thread_id_.load().has_value()) {
-    impl->net.registerCallback(transition, std::forward<Callback>(callback));
-  }
+  tryRegisterCallback(transition, std::forward<Callback>(callback));
 }
-std::vector<Callback>::iterator PetriNet::getCallbackItr(
+
+bool PetriNet::tryRegisterCallback(const std::string& transition,
+                                   Callback&& callback) const noexcept {
+  const auto& t = impl->net.transition;
+  if (impl->thread_id_.load().has_value() ||
+      std::find(t.begin(), t.end(), transition) == t.end()) {
+    return false;
+  }
+  impl->net.registerCallback(transition, std::forward<Callback>(callback));
+  return true;
+}
+
+std::vector<Transition> PetriNet::getUnregisteredTransitions() const noexcept {
+  std::vector<Transition> unregistered;
+  for (size_t i = 0; i < impl->net.store.size(); i++) {
+    if (!impl->net.store[i].has_value()) {
+      unregistered.push_back(impl->net.transition[i]);
+    }
+  }
+  return unregistered;
+}
+std::vector<std::optional<Callback>>::iterator PetriNet::getCallbackItr(
     const std::string& transition_name) const {
   const auto& t = impl->net.transition;
   return impl->net.store.begin() +

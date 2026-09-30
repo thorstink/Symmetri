@@ -4,6 +4,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <utility>
@@ -86,6 +87,28 @@ class PetriNet final {
                         Callback &&callback) const noexcept;
 
   /**
+   * @brief Same as registerCallback, but reports whether the Callback was
+   * actually registered.
+   *
+   * @param transition the name of transition
+   * @param callback the callback
+   * @return true the Callback is registered to the transition.
+   * @return false the net does not contain the transition, or the PetriNet is
+   * currently running.
+   */
+  bool tryRegisterCallback(const std::string &transition,
+                           Callback &&callback) const noexcept;
+
+  /**
+   * @brief Get the transitions that still have the default payload
+   * (DirectMutation), i.e. transitions for which no Callback has been
+   * registered. An empty result means all transitions are registered.
+   *
+   * @return std::vector<Transition>
+   */
+  std::vector<Transition> getUnregisteredTransitions() const noexcept;
+
+  /**
    * @brief Construct a Callback of type T in place. This is required for type
    * that are not moveable;
    *
@@ -100,7 +123,7 @@ class PetriNet final {
     if (impl == nullptr || s.empty()) {
       return;
     }
-    s.emplace_back(identity<T>{}, std::forward<Args>(args)...);
+    s.emplace_back(std::in_place, identity<T>{}, std::forward<Args>(args)...);
     *getCallbackItr(transition) = std::move(s.back());
     s.pop_back();
   }
@@ -143,14 +166,14 @@ class PetriNet final {
    * specific name
    *
    * @param transition_name
-   * @return std::vector<Callback>::iterator
+   * @return std::vector<std::optional<Callback>>::iterator
    */
-  std::vector<Callback>::iterator getCallbackItr(
+  std::vector<std::optional<Callback>>::iterator getCallbackItr(
       const std::string &transition_name) const;
 
   const std::shared_ptr<Petri> impl;  ///< Pointer to the implementation, all
   ///< information is stored in Petri
-  std::vector<Callback> &s;
+  std::vector<std::optional<Callback>> &s;
 };
 
 }  // namespace symmetri

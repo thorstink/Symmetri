@@ -85,7 +85,9 @@ void cancel(const PetriNet &app) {
   app.impl->reducer_queue->enqueue([=](Petri &model) {
     model.state = Canceled;
     for (const auto transition_index : model.scheduled_callbacks) {
-      cancel(model.net.store.at(transition_index));
+      if (const auto& callback = model.net.store.at(transition_index)) {
+        cancel(*callback);
+      }
       model.log.push_back({transition_index, Cancel, Clock::now()});
     }
   });
@@ -95,7 +97,9 @@ void pause(const PetriNet &app) {
   app.impl->reducer_queue->enqueue([](Petri &model) {
     model.state = Paused;
     for (const auto transition_index : model.scheduled_callbacks) {
-      pause(model.net.store.at(transition_index));
+      if (const auto& callback = model.net.store.at(transition_index)) {
+        pause(*callback);
+      }
     }
   });
 }
@@ -104,7 +108,9 @@ void resume(const PetriNet &app) {
   app.impl->reducer_queue->enqueue([](Petri &model) {
     model.state = Started;
     for (const auto transition_index : model.scheduled_callbacks) {
-      resume(model.net.store.at(transition_index));
+      if (const auto& callback = model.net.store.at(transition_index)) {
+        resume(*callback);
+      }
     }
   });
 }

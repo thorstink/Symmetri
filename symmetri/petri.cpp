@@ -4,19 +4,21 @@
 #include <initializer_list>
 #include <iterator>
 
+#include "symmetri/colors.hpp"
+
 namespace symmetri {
 std::tuple<std::vector<std::string>, std::vector<std::string>,
-           std::vector<Callback>>
+           std::vector<std::optional<Callback>>>
 convert(const Net& _net) {
   const auto transition_count = _net.size();
   std::vector<std::string> transitions;
   std::vector<std::string> places;
-  std::vector<Callback> store;
+  std::vector<std::optional<Callback>> store;
   transitions.reserve(transition_count);
   store.reserve(transition_count);
   for (const auto& [t, io] : _net) {
     transitions.push_back(t);
-    store.emplace_back(identity<DirectMutation>{});
+    store.emplace_back(std::nullopt);
     for (const auto& p : io.first) {
       places.push_back(p.first);
     }
@@ -117,7 +119,8 @@ void Petri::fireSynchronous(const size_t t) {
   const auto& lookup_t = net.output_n[t];
   const auto now = Clock::now();
   log.push_back({t, Started, now});
-  auto result = fire(task);
+  // an unregistered transition behaves like a DirectMutation: always success
+  auto result = task ? fire(*task) : symmetri::Success;
   log.push_back({t, result, now});
   for (const auto& [p, c] : lookup_t) {
     tokens.push_back({p, result});
@@ -136,11 +139,14 @@ void Petri::fireAsynchronous(const size_t t_i) {
     });
 
     // fire the transition and defer a reducer to the petri loop to update the
-    // marking and log
-    reducer_queue->enqueue([t_i, result = fire(net.store[t_i])](Petri& model) {
+    // marking and log. An unregistered transition behaves like a
+    // DirectMutation: always success.
+    const auto& task = net.store[t_i];
+    const auto result = task ? fire(*task) : symmetri::Success;
+    const auto t_end = task ? task->getEndTime() : Clock::now();
+    reducer_queue->enqueue([t_i, result, t_end](Petri& model) {
       // if it is in the active transition set it means it is finished and
       // we should process it.
-      const auto t_end = model.net.store[t_i].getEndTime();
       const auto it = std::find(model.scheduled_callbacks.begin(),
                                 model.scheduled_callbacks.end(), t_i);
       if (it != model.scheduled_callbacks.end()) {
@@ -177,7 +183,8 @@ void Petri::fireTransitions() {
   // loop
   while (!ts.empty()) {
     const auto t_idx = ts.front();
-    const bool is_synchronous = isSynchronous(net.store[t_idx]);
+    const auto& callback = net.store[t_idx];
+    const bool is_synchronous = !callback || isSynchronous(*callback);
     const bool can_fire = canFire(net.input_n[t_idx], tokens);
 
     // fire!
@@ -246,9 +253,11 @@ Eventlog Petri::getLogInternal() const {
 
   // get event log from parent nets:
   for (const auto& callback : net.store) {
-    Eventlog sub_el = getLog(callback);
-    if (!sub_el.empty()) {
-      eventlog.insert(eventlog.end(), sub_el.begin(), sub_el.end());
+    if (callback) {
+      Eventlog sub_el = getLog(*callback);
+      if (!sub_el.empty()) {
+        eventlog.insert(eventlog.end(), sub_el.begin(), sub_el.end());
+      }
     }
   }
 
