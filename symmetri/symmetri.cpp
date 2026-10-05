@@ -34,16 +34,14 @@ PetriNet::PetriNet(const std::set<std::string>& files,
           return std::make_shared<Petri>(net, specific_priorities, m0,
                                          final_marking, case_id, threadpool);
         }
-      }()),
-      s(impl->net.store) {}
+      }()) {}
 
 PetriNet::PetriNet(const Net& net, const std::string& case_id,
                    std::shared_ptr<TaskSystem> threadpool,
                    const Marking& initial_marking, const Marking& final_marking,
                    const PriorityTable& priorities)
     : impl(std::make_shared<Petri>(net, priorities, initial_marking,
-                                   final_marking, case_id, threadpool)),
-      s(impl->net.store) {}
+                                   final_marking, case_id, threadpool)) {}
 
 std::function<void()> PetriNet::getInputTransitionHandle(
     const Transition& transition) const noexcept {
@@ -88,13 +86,6 @@ std::vector<Transition> PetriNet::getUnregisteredTransitions() const noexcept {
     }
   }
   return unregistered;
-}
-std::vector<std::optional<Callback>>::iterator PetriNet::getCallbackItr(
-    const std::string& transition_name) const {
-  const auto& t = impl->net.transition;
-  return impl->net.store.begin() +
-         std::distance(t.begin(),
-                       std::find(t.begin(), t.end(), transition_name));
 }
 
 Marking PetriNet::getMarking() const noexcept {

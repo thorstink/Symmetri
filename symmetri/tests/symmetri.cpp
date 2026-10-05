@@ -283,3 +283,56 @@ TEST_CASE("tryRegisterCallback reports whether the transition exists") {
   CHECK_FALSE(app.tryRegisterCallback("does_not_exist", &t1));
   CHECK(app.getUnregisteredTransitions() == std::vector<Transition>{"t1"});
 }
+
+struct NonMovable {
+  explicit NonMovable(std::atomic<int>& counter) : counter_(counter) {}
+  NonMovable(const NonMovable&) = delete;
+  NonMovable(NonMovable&&) = delete;
+  NonMovable& operator=(const NonMovable&) = delete;
+  NonMovable& operator=(NonMovable&&) = delete;
+  std::atomic<int>& counter_;
+};
+
+Token fire(const NonMovable& callback) {
+  callback.counter_++;
+  return Success;
+}
+
+TEST_CASE("tryRegisterCallbackInPlace constructs a non-movable Callback") {
+  auto [net, priority, initial_marking] = SymmetriTestNet();
+  auto threadpool = std::make_shared<TaskSystem>(1);
+  PetriNet app(net, "test_try_register_in_place", threadpool, initial_marking,
+               {}, priority);
+  std::atomic<int> counter = 0;
+  CHECK(app.tryRegisterCallbackInPlace<NonMovable>("t0", counter));
+  CHECK_FALSE(app.tryRegisterCallbackInPlace<NonMovable>("does_not_exist",
+                                                         counter));
+  CHECK(app.getUnregisteredTransitions() == std::vector<Transition>{"t1"});
+  app.registerCallbackInPlace<NonMovable>("t1", counter);
+  CHECK(app.getUnregisteredTransitions().empty());
+  CHECK(fire(app) == Deadlocked);
+  // t0 fires four times and t1 twice for this net and initial marking.
+  CHECK(counter.load() == 6);
+}
+
+TEST_CASE("Registering Callbacks fails while the PetriNet is running") {
+  auto [net, priority, initial_marking] = SymmetriTestNet();
+  auto threadpool = std::make_shared<TaskSystem>(1);
+  PetriNet app(net, "test_try_register_running", threadpool, initial_marking,
+               {}, priority);
+  std::atomic<int> counter = 0;
+  bool registered = true;
+  bool registered_in_place = true;
+  app.registerCallback("t0", [&] {
+    registered = app.tryRegisterCallback("t1", &t1);
+    registered_in_place =
+        app.tryRegisterCallbackInPlace<NonMovable>("t1", counter);
+  });
+  fire(app);
+  CHECK_FALSE(registered);
+  CHECK_FALSE(registered_in_place);
+  CHECK(app.getUnregisteredTransitions() == std::vector<Transition>{"t1"});
+  // once the net stopped running, registering works again.
+  CHECK(app.tryRegisterCallbackInPlace<NonMovable>("t1", counter));
+  CHECK(app.getUnregisteredTransitions().empty());
+}
