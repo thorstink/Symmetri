@@ -134,6 +134,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a2199dda721a5c5ee3b36da2e991c43fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">By registering a input transition you get a handle to manually force a transition to fire. It returns a callable handle that will schedule a reducer for the transition, generating tokens. This only works for transitions that have no input places.  <br /></td></tr>
 <tr class="memitem:a96886ee9b48feb4cf6fd7185542a8309" id="r_a96886ee9b48feb4cf6fd7185542a8309"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a96886ee9b48feb4cf6fd7185542a8309">registerCallback</a> (const std::string &amp;transition, <a class="el" href="classsymmetri_1_1Callback.html">Callback</a> &amp;&amp;callback) const noexcept</td></tr>
 <tr class="memdesc:a96886ee9b48feb4cf6fd7185542a8309"><td class="mdescLeft">&#160;</td><td class="mdescRight">The default transition payload (<a class="el" href="structsymmetri_1_1DirectMutation.html" title="A DirectMutation is a synchronous no-operation function. It simply mutates the mutation on the petri ...">DirectMutation</a>) is overloaded by the <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> supplied for a specific transition.  <br /></td></tr>
+<tr class="memitem:a1c5571a2abefcbd95098be52b5671eb5" id="r_a1c5571a2abefcbd95098be52b5671eb5"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a1c5571a2abefcbd95098be52b5671eb5">tryRegisterCallback</a> (const std::string &amp;transition, <a class="el" href="classsymmetri_1_1Callback.html">Callback</a> &amp;&amp;callback) const noexcept</td></tr>
+<tr class="memdesc:a1c5571a2abefcbd95098be52b5671eb5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Same as registerCallback, but reports whether the <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> was actually registered.  <br /></td></tr>
+<tr class="memitem:a4cd11a7c6c7062f019bc25e6f3df75d3" id="r_a4cd11a7c6c7062f019bc25e6f3df75d3"><td class="memItemLeft">std::vector&lt; <a class="el" href="types_8h.html#a927677c0ed399fac233e3cb054c17d33">Transition</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#a4cd11a7c6c7062f019bc25e6f3df75d3">getUnregisteredTransitions</a> () const noexcept</td></tr>
+<tr class="memdesc:a4cd11a7c6c7062f019bc25e6f3df75d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the transitions that still have the default payload (<a class="el" href="structsymmetri_1_1DirectMutation.html" title="A DirectMutation is a synchronous no-operation function. It simply mutates the mutation on the petri ...">DirectMutation</a>), i.e. transitions for which no <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> has been registered. An empty result means all transitions are registered.  <br /></td></tr>
 <tr class="memitem:ae7ced14535f7cd557bf9b91fe5573f3d" id="r_ae7ced14535f7cd557bf9b91fe5573f3d"><td class="memTemplParams" colspan="2">template&lt;typename T, typename... Args&gt; </td></tr>
 <tr class="memitem:ae7ced14535f7cd557bf9b91fe5573f3d template"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ae7ced14535f7cd557bf9b91fe5573f3d">registerCallbackInPlace</a> (const std::string &amp;transition, Args &amp;&amp;...args) const noexcept</td></tr>
 <tr class="memdesc:ae7ced14535f7cd557bf9b91fe5573f3d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> of type T in place. This is required for type that are not moveable;.  <br /></td></tr>
@@ -326,6 +330,34 @@ void&#160;</td><td class="memItemRight"><b>symmetri::resume</b> (const <a class=
 
 </div>
 </div>
+<a id="a4cd11a7c6c7062f019bc25e6f3df75d3" name="a4cd11a7c6c7062f019bc25e6f3df75d3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4cd11a7c6c7062f019bc25e6f3df75d3">&#9670;&#160;</a></span>getUnregisteredTransitions()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; <a class="el" href="types_8h.html#a927677c0ed399fac233e3cb054c17d33">Transition</a> &gt; symmetri::PetriNet::getUnregisteredTransitions </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel noexcept">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get the transitions that still have the default payload (<a class="el" href="structsymmetri_1_1DirectMutation.html" title="A DirectMutation is a synchronous no-operation function. It simply mutates the mutation on the petri ...">DirectMutation</a>), i.e. transitions for which no <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> has been registered. An empty result means all transitions are registered. </p>
+<dl class="section return"><dt>Returns</dt><dd>std::vector&lt;Transition&gt; </dd></dl>
+
+</div>
+</div>
 <a id="a96886ee9b48feb4cf6fd7185542a8309" name="a96886ee9b48feb4cf6fd7185542a8309"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a96886ee9b48feb4cf6fd7185542a8309">&#9670;&#160;</a></span>registerCallback()</h2>
 
@@ -436,6 +468,47 @@ template&lt;typename T, typename... Args&gt; </div>
 <dl class="section return"><dt>Returns</dt><dd>true </dd>
 <dd>
 false </dd></dl>
+
+</div>
+</div>
+<a id="a1c5571a2abefcbd95098be52b5671eb5" name="a1c5571a2abefcbd95098be52b5671eb5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1c5571a2abefcbd95098be52b5671eb5">&#9670;&#160;</a></span>tryRegisterCallback()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool symmetri::PetriNet::tryRegisterCallback </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;</td>          <td class="paramname"><span class="paramname"><em>transition</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classsymmetri_1_1Callback.html">Callback</a> &amp;&amp;</td>          <td class="paramname"><span class="paramname"><em>callback</em></span>&#160;) const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel noexcept">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Same as registerCallback, but reports whether the <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> was actually registered. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">transition</td><td>the name of transition </td></tr>
+    <tr><td class="paramname">callback</td><td>the callback </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true the <a class="el" href="classsymmetri_1_1Callback.html" title="Callback is a wrapper around any type that you to tie to a transition. Typically this is an invokable...">Callback</a> is registered to the transition. </dd>
+<dd>
+false the net does not contain the transition, or the <a class="el" href="classsymmetri_1_1PetriNet.html" title="PetriNet exposes the possible constructors to create PetriNets. It also allows the user to register a...">PetriNet</a> is currently running. </dd></dl>
 
 </div>
 </div>

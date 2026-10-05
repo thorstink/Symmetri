@@ -5,7 +5,9 @@ var classsymmetri_1_1PetriNet =
     [ "getActiveTransitions", "classsymmetri_1_1PetriNet.html#af325f1545ce10e1336eaf28dc06a858b", null ],
     [ "getInputTransitionHandle", "classsymmetri_1_1PetriNet.html#a2199dda721a5c5ee3b36da2e991c43fe", null ],
     [ "getMarking", "classsymmetri_1_1PetriNet.html#a052c84690dbba3ded455ac3dff8f86f2", null ],
+    [ "getUnregisteredTransitions", "classsymmetri_1_1PetriNet.html#a4cd11a7c6c7062f019bc25e6f3df75d3", null ],
     [ "registerCallback", "classsymmetri_1_1PetriNet.html#a96886ee9b48feb4cf6fd7185542a8309", null ],
     [ "registerCallbackInPlace", "classsymmetri_1_1PetriNet.html#ae7ced14535f7cd557bf9b91fe5573f3d", null ],
-    [ "reuseApplication", "classsymmetri_1_1PetriNet.html#a89bff80f100132e350caf932c06bbda3", null ]
+    [ "reuseApplication", "classsymmetri_1_1PetriNet.html#a89bff80f100132e350caf932c06bbda3", null ],
+    [ "tryRegisterCallback", "classsymmetri_1_1PetriNet.html#a1c5571a2abefcbd95098be52b5671eb5", null ]
 ];

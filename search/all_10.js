@@ -17,5 +17,6 @@ var searchData=
   ['transition_14',['transition',['../structsymmetri_1_1Event.html#a2fa4203222f063102f9799229f966b29',1,'symmetri::Event::transition'],['../structsymmetri_1_1SmallEvent.html#a23a1c88978f1df4efc94f81f18ef0a42',1,'symmetri::SmallEvent::transition'],['../structsymmetri_1_1Petri_1_1PTNet.html#a7711d108af36feabba397d42e87d0b29',1,'symmetri::Petri::PTNet::transition']]],
   ['transitions_15',['transitions',['../md_docs_2symmetri__lib.html#autotoc_md16',1,'Determining the active transitions'],['../md_docs_2symmetri__nets.html#autotoc_md4',1,'Failure at the level of transitions']]],
   ['transitions_20as_20callbacks_16',['Transitions as callbacks',['../md_docs_2symmetri__nets.html#autotoc_md2',1,'']]],
-  ['types_2eh_17',['types.h',['../types_8h.html',1,'']]]
+  ['tryregistercallback_17',['tryRegisterCallback',['../classsymmetri_1_1PetriNet.html#a1c5571a2abefcbd95098be52b5671eb5',1,'symmetri::PetriNet']]],
+  ['types_2eh_18',['types.h',['../types_8h.html',1,'']]]
 ];
