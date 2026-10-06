@@ -4,7 +4,6 @@
 
 #include <functional>
 #include <memory>
-#include <optional>
 #include <set>
 #include <string>
 #include <utility>
@@ -120,12 +119,29 @@ class PetriNet final {
   template <typename T, typename... Args>
   void registerCallbackInPlace(const std::string &transition,
                                Args &&...args) const noexcept {
-    if (impl == nullptr || s.empty()) {
-      return;
+    tryRegisterCallbackInPlace<T>(transition, std::forward<Args>(args)...);
+  }
+
+  /**
+   * @brief Same as registerCallbackInPlace, but reports whether the Callback
+   * was actually registered.
+   *
+   * @tparam T type of the Callback
+   * @tparam Args types of the constructor-arguments
+   * @param transition the name of the transition
+   * @param args arguments for constructor of T
+   * @return true the Callback is registered to the transition.
+   * @return false the net does not contain the transition, or the PetriNet is
+   * currently running.
+   */
+  template <typename T, typename... Args>
+  bool tryRegisterCallbackInPlace(const std::string &transition,
+                                  Args &&...args) const noexcept {
+    if (!canRegisterCallback(transition)) {
+      return false;
     }
-    s.emplace_back(std::in_place, identity<T>{}, std::forward<Args>(args)...);
-    *getCallbackItr(transition) = std::move(s.back());
-    s.pop_back();
+    return tryRegisterCallback(
+        transition, Callback(identity<T>{}, std::forward<Args>(args)...));
   }
 
   /**
@@ -160,20 +176,17 @@ class PetriNet final {
   friend void(symmetri::resume)(const PetriNet &);
   friend Eventlog(symmetri::getLog)(const PetriNet &);
 
- private:
   /**
-   * @brief Get the Callback Itr object in the store for the Callback with a
-   * specific name
+   * @brief Checks whether a Callback can be registered to the transition.
    *
-   * @param transition_name
-   * @return std::vector<std::optional<Callback>>::iterator
+   * @param transition the name of the transition
+   * @return true the net contains the transition and is not running.
+   * @return false otherwise.
    */
-  std::vector<std::optional<Callback>>::iterator getCallbackItr(
-      const std::string &transition_name) const;
+  bool canRegisterCallback(const std::string &transition) const noexcept;
 
   const std::shared_ptr<Petri> impl;  ///< Pointer to the implementation, all
   ///< information is stored in Petri
-  std::vector<std::optional<Callback>> &s;
 };
 
 }  // namespace symmetri
