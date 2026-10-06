@@ -67,11 +67,16 @@ void PetriNet::registerCallback(const std::string& transition,
   tryRegisterCallback(transition, std::forward<Callback>(callback));
 }
 
+bool PetriNet::canRegisterCallback(
+    const std::string& transition) const noexcept {
+  const auto& t = impl->net.transition;
+  return !impl->thread_id_.load().has_value() &&
+         std::find(t.begin(), t.end(), transition) != t.end();
+}
+
 bool PetriNet::tryRegisterCallback(const std::string& transition,
                                    Callback&& callback) const noexcept {
-  const auto& t = impl->net.transition;
-  if (impl->thread_id_.load().has_value() ||
-      std::find(t.begin(), t.end(), transition) == t.end()) {
+  if (!canRegisterCallback(transition)) {
     return false;
   }
   impl->net.registerCallback(transition, std::forward<Callback>(callback));

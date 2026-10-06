@@ -137,6 +137,9 @@ class PetriNet final {
   template <typename T, typename... Args>
   bool tryRegisterCallbackInPlace(const std::string &transition,
                                   Args &&...args) const noexcept {
+    if (!canRegisterCallback(transition)) {
+      return false;
+    }
     return tryRegisterCallback(
         transition, Callback(identity<T>{}, std::forward<Args>(args)...));
   }
@@ -173,7 +176,15 @@ class PetriNet final {
   friend void(symmetri::resume)(const PetriNet &);
   friend Eventlog(symmetri::getLog)(const PetriNet &);
 
- private:
+  /**
+   * @brief Checks whether a Callback can be registered to the transition.
+   *
+   * @param transition the name of the transition
+   * @return true the net contains the transition and is not running.
+   * @return false otherwise.
+   */
+  bool canRegisterCallback(const std::string &transition) const noexcept;
+
   const std::shared_ptr<Petri> impl;  ///< Pointer to the implementation, all
   ///< information is stored in Petri
 };
